@@ -408,7 +408,7 @@ public class PlayerInstantiate : SingletonMonobehaviour<PlayerInstantiate>
     public void LoadingConfirm(int playerIndexToReadyUp)
     {
         // Does not load confirm platy
-        if (sceneManager.EnableConfirm == false)
+        if (SceneFlow.Current.WaitingForConfirm == false)
             return;
 
         LoadingScreenManager.Instance.ConfirmButton(playerIndexToReadyUp);
@@ -444,7 +444,7 @@ public class PlayerInstantiate : SingletonMonobehaviour<PlayerInstantiate>
         // Checks if players are greater then 1 and all players are readied up
         if (readyUpCounter >= PlayerCount && PlayerCount >= 1)
         {
-            SceneManager.Instance.ConfirmLoad();
+            SceneFlow.Current.ConfirmLoad();
         }
         else
         {
@@ -604,7 +604,7 @@ public class PlayerInstantiate : SingletonMonobehaviour<PlayerInstantiate>
     {
         SwapPlayerInputControlSchemeToUI();
 
-        Time.timeScale = 0f;
+        GameAuthority.SetTimeScale(0f);
 
         foreach (PlayerSlot slot in roster.LocalPlayers)
         {
@@ -744,7 +744,7 @@ public class PlayerInstantiate : SingletonMonobehaviour<PlayerInstantiate>
     {
         SwapPlayerInputControlSchemeToDrive();
 
-        Time.timeScale = 1f;
+        GameAuthority.SetTimeScale(1f);
 
         foreach (PlayerSlot slot in roster.LocalPlayers)
             slot.Input.GetComponent<PlayerUIHandler>().MenuCanvas.GetComponent<MenuInteractions>().pauseMenu.OnPlay();

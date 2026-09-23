@@ -21,7 +21,7 @@ public class HotKeys : SingletonMonobehaviour<HotKeys>
 
         if (DevTools.GetKeyDown(KeyCode.Alpha4))
         {
-            SceneManager.Instance.LoadGameScene();
+            SceneFlow.Current.LoadGameScene();
         }
 
         // Test players: F1 adds one, F2 presses A on all of them, F3 unplugs / replugs the newest

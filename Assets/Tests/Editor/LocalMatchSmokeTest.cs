@@ -14,7 +14,7 @@ namespace DoA.Tests
     /// <summary>
     /// Plays a real 4-player local match with virtual controllers and fails on any error or exception: main menu,
     /// player select, loading screen, opening cutscene, tutorial (skipped the way the S hotkey skips it), driving,
-    /// pausing, and a controller that dies mid-race and comes back.
+    /// drifting, boosting and the match clock, pausing, and a controller that dies mid-race, comes back and still drives.
     /// Enters Play Mode and takes a minute or two. Needs a graphics device (tools/run-tests.sh runs Unity with one).
     /// </summary>
     [Category("Smoke")]
@@ -140,9 +140,10 @@ namespace DoA.Tests
                 yield return null;
             }
 
-            // Everyone holds the throttle for 4 seconds
+            // Everyone holds the throttle for 4 seconds while the match clock runs
             BallDriving[] scooters = UnityEngine.Object.FindObjectsOfType<BallDriving>();
             Vector3[] startPositions = scooters.Select(s => s.transform.position).ToArray();
+            float clockAtStart = OrderManager.Instance.GameTimer;
             float driveUntil = Time.realtimeSinceStartup + 4f;
             while (Time.realtimeSinceStartup < driveUntil)
             {
@@ -154,6 +155,30 @@ namespace DoA.Tests
                 InputSystem.QueueStateEvent(pad, new GamepadState());
             for (int i = 0; i < scooters.Length; i++)
                 Assert.Greater(Vector3.Distance(startPositions[i], scooters[i].transform.position), 1f, scooters[i].name + " didn't move");
+            Assert.Less(OrderManager.Instance.GameTimer, clockAtStart - 2f, "the match clock didn't run");
+
+            // Player 1 drifts (X while steering), then boosts (A)
+            BallDriving hostScooter = ScooterOf(0);
+            deadline = Deadline(5);
+            while (!hostScooter.Drifting)
+            {
+                FailIfLate(log, deadline, "player 1 to drift");
+                InputSystem.QueueStateEvent(host, new GamepadState { rightTrigger = 1f, leftStick = new Vector2(1f, 0f) }.WithButton(GamepadButton.West));
+                yield return null;
+            }
+            InputSystem.QueueStateEvent(host, new GamepadState());
+            deadline = Deadline(5);
+            nextPress = 0;
+            while (!hostScooter.Boosting)
+            {
+                FailIfLate(log, deadline, "player 1 to boost");
+                if (Time.realtimeSinceStartup >= nextPress)
+                {
+                    Press(host, GamepadButton.South);
+                    nextPress = Time.realtimeSinceStartup + PRESS_EVERY;
+                }
+                yield return null;
+            }
 
             // Player 1 pauses, then resumes
             Press(host, GamepadButton.Start);
@@ -206,6 +231,21 @@ namespace DoA.Tests
                 yield return null;
             }
 
+            // Player 4 drives on with the controller that came back
+            BallDriving lostScooter = ScooterOf(3);
+            deadline = Deadline(5);
+            nextPress = 0;
+            while (!lostScooter.Boosting)
+            {
+                FailIfLate(log, deadline, "player 4 to boost after reconnecting");
+                if (Time.realtimeSinceStartup >= nextPress)
+                {
+                    Press(lost, GamepadButton.South);
+                    nextPress = Time.realtimeSinceStartup + PRESS_EVERY;
+                }
+                yield return null;
+            }
+
             Assert.AreEqual(Constants.MAX_PLAYERS, Players(), "players still in the match");
             log.Dispose();
             Assert.IsEmpty(log.Problems, "Errors during the match:\n\n" + string.Join("\n\n", log.Problems));
@@ -253,6 +293,11 @@ namespace DoA.Tests
         static int Players()
         {
             return PlayerInstantiate.Instance == null ? 0 : PlayerInstantiate.Instance.PlayerCount;
+        }
+
+        static BallDriving ScooterOf(int slot)
+        {
+            return PlayerInstantiate.Instance.Roster[slot].Player.GetComponentInChildren<BallDriving>();
         }
 
         /// <summary>

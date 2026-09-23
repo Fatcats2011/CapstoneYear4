@@ -52,11 +52,23 @@ public class GameManager : SingletonMonobehaviour<GameManager>
     }
 
     ///<summary>
-    /// Allows swapping of game states, and also invokes right event when swapping
+    /// Asks for a game state. The authority (this machine in a local match, the host online) switches to it; an online
+    /// client ignores the request and follows the host's state instead
     ///</summary>
     public void SetGameState(GameState state)
     {
-        Time.timeScale = 1f;
+        if (!GameAuthority.IsAuthority)
+            return;
+
+        ApplyGameState(state);
+    }
+
+    ///<summary>
+    /// Switches to a game state and invokes its events. Online clients call this with the state the host sent
+    ///</summary>
+    public void ApplyGameState(GameState state)
+    {
+        GameAuthority.SetTimeScale(1f);
 
         mainState = state;
 

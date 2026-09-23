@@ -61,6 +61,8 @@ public class BallDriving : MonoBehaviour
     public GameObject Sphere { get { return sphere; } }
     [Tooltip("An input manager class, from the correlated InputReceiver object")]
     [SerializeField] private InputManager inp;
+    private IDriveInput driveInput; // set when something other than this prefab's controller drives the scooter
+    private bool listening; // from Start until the scooter is destroyed: drift and boost follow the driver's buttons
     [Tooltip("Reference to the order manager object")]
     [SerializeField] private OrderHandler orderHandler;
     [Tooltip("Reference to the left slipstream trail")]
@@ -329,6 +331,49 @@ public class BallDriving : MonoBehaviour
     }
 
     /// <summary>
+    /// Who drives this scooter: the controller on this machine unless something else is set. Can change at any time
+    /// </summary>
+    public IDriveInput DriveInput
+    {
+        get { return driveInput ?? inp; }
+        set
+        {
+            if (listening)
+                StopListening();
+            driveInput = value;
+            if (listening)
+                StartListening();
+        }
+    }
+
+    private void StartListening()
+    {
+        IDriveInput driver = DriveInput;
+        if (driver == null)
+            return;
+
+        driver.DriftButton += DriftFlag;
+        driver.BoostButton += BoostFlag;
+    }
+
+    private void StopListening()
+    {
+        IDriveInput driver = DriveInput;
+        if (driver == null)
+            return;
+
+        driver.DriftButton -= DriftFlag;
+        driver.BoostButton -= BoostFlag;
+    }
+
+    private void OnDestroy()
+    {
+        if (listening)
+            StopListening();
+        listening = false;
+    }
+
+    /// <summary>
     /// Standard Start. Just used to get references, get initial values, and subscribe to events
     /// </summary>
     private void Start()
@@ -355,8 +400,8 @@ public class BallDriving : MonoBehaviour
         //baseFriction = selfPhysicsMaterial.dynamicFriction;
         //frictionDifference = brakingFriction - baseFriction;
 
-        inp.WestFaceEvent += DriftFlag; //subscribes to WestFaceEvent
-        inp.SouthFaceEvent += BoostFlag; //subscribes to SouthFaceEvent
+        listening = true;
+        StartListening(); // drift on the drift button, boost on the boost button
 
         scaledVelocityMax = accelerationPower * CSV_RATIO;
 
@@ -396,9 +441,10 @@ public class BallDriving : MonoBehaviour
         if (!canDrive)
             return;
 
-        leftStick = inp.LeftStickValue;
-        leftTrig = inp.LeftTriggerValue;
-        rightTrig = inp.RightTriggerValue;
+        IDriveInput driver = DriveInput;
+        leftStick = driver.Steer;
+        leftTrig = driver.Brake;
+        rightTrig = driver.Accelerate;
 
         // checks for playing engine and brake sounds
         if (csv == 0)

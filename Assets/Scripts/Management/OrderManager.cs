@@ -119,6 +119,10 @@ public class OrderManager : SingletonMonobehaviour<OrderManager>
 
     private void Update()
     {
+        // Online, the host runs the waves, the order spawns and the golden order's value; clients show what it sends
+        if (!GameAuthority.IsAuthority)
+            return;
+
         // HOTKEY
         if(DevTools.GetKeyDown(KeyCode.Y))
         {
@@ -245,6 +249,10 @@ public class OrderManager : SingletonMonobehaviour<OrderManager>
 
     private void InitTutorial()
     {
+        // Online, the host hands out the tutorial orders
+        if (!GameAuthority.IsAuthority)
+            return;
+
         TutorialManager.Instance.ShouldTutorialize = true;
         foreach (PlayerSlot player in PlayerInstantiate.Instance.Roster.Players)
         {
@@ -264,6 +272,10 @@ public class OrderManager : SingletonMonobehaviour<OrderManager>
     /// </summary>
     private void InitGame()
     {
+        // Online, the host picks and spawns the orders
+        if (!GameAuthority.IsAuthority)
+            return;
+
         //finalOrder.EraseGoldWithoutDelivering();
         OnDeleteActiveOrders?.Invoke();
 
@@ -283,6 +295,10 @@ public class OrderManager : SingletonMonobehaviour<OrderManager>
     /// </summary>
     public void InitWave()
     {
+        // Online, the host runs the waves
+        if (!GameAuthority.IsAuthority)
+            return;
+
         waveTimer = waveLengthInSeconds;
         try
         {
@@ -638,12 +654,12 @@ public class OrderManager : SingletonMonobehaviour<OrderManager>
     /// <returns></returns>
     private IEnumerator PostGameClarity(bool isFinal)
     {
-        Time.timeScale = 0.5f;
+        GameAuthority.SetTimeScale(0.5f);
         yield return new WaitForSeconds(postGameLinger/2);
-        Time.timeScale = 1.0f;
+        GameAuthority.SetTimeScale(1.0f);
         if (!isFinal)
         {
-            SceneManager.Instance.LoadFinalOrderScene();
+            SceneFlow.Current.LoadFinalOrderScene();
         }
         else
         {

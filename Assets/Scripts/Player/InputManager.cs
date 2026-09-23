@@ -10,7 +10,7 @@ using static UnityEngine.InputSystem.InputAction;
 /// Gets input from the controller and stores it in accessible variables.
 /// Some of these are accessed constantly, some push events. Depends on the purpose of the control.
 /// </summary>
-public class InputManager : MonoBehaviour
+public class InputManager : MonoBehaviour, IDriveInput
 {
     // North Face Press
     public event Action<bool> NorthFaceEvent;
@@ -174,4 +174,17 @@ public class InputManager : MonoBehaviour
             StartPadEvent?.Invoke(startPadValue);
         }
     }
+
+    // What the scooter, emotes and camera read (IDriveInput). The callbacks above keep their names: the player prefab's
+    // PlayerInput events call them
+    float IDriveInput.Steer { get { return leftStickValue; } }
+    float IDriveInput.Accelerate { get { return rightTriggerValue; } }
+    float IDriveInput.Brake { get { return leftTriggerValue; } }
+    float IDriveInput.CameraX { get { return rightStickXValue; } }
+    float IDriveInput.CameraY { get { return rightStickYValue; } }
+    bool IDriveInput.LookBehind { get { return rightStickValue; } }
+
+    event Action<bool> IDriveInput.DriftButton { add { WestFaceEvent += value; } remove { WestFaceEvent -= value; } }
+    event Action<bool> IDriveInput.BoostButton { add { SouthFaceEvent += value; } remove { SouthFaceEvent -= value; } }
+    event Action<Vector2> IDriveInput.EmotePad { add { DPadEvent += value; } remove { DPadEvent -= value; } }
 }

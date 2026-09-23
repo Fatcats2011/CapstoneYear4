@@ -60,7 +60,7 @@
 - [ ] Boost, drift tiers 1–3, phasing (only in that player's view), steal, clash, water respawn.
 - [ ] Pause from any player (host vs sub pause menu), resume, return to menu.
 - [ ] Unplug/replug a controller mid-match (after Task 1.3).
-- [ ] EditMode tests green: Window → General → Test Runner → EditMode → Run All. It includes an automated 4-player match (`LocalMatchSmokeTest`, 1–2 minutes: menus, loading, cutscene, driving, pause, controller unplug) — let it play. Command line: `bash tools/run-tests.sh` (see `docs/testing.md`).
+- [ ] EditMode tests green: Window → General → Test Runner → EditMode → Run All. It includes an automated 4-player match (`LocalMatchSmokeTest`, 1–2 minutes: menus, loading, cutscene, driving, drifting, boosting, the match clock, pause, controller unplug and replug) — let it play. Command line: `bash tools/run-tests.sh` (see `docs/testing.md`).
 - Short on controllers? F1 adds a virtual test player, F2 presses A on all of them, F3 unplugs / replugs the newest (editor and development builds; see `docs/dev-hotkeys.md`). The title screen only lets player 1 in, so add the others in player select.
 
 ---
@@ -148,7 +148,7 @@ Checks (press Play from `SplashScreen`):
 - Keyboard: press a key on the title screen → "Connect a controller to play" appears for 3 seconds.
 - Performance: 4 players (your controller + F1 ×3 in player select) → golden-order scene → Window → Analysis → Profiler → F4 through Low / Medium / High; note the CPU and GPU frame times for each.
 - Aspect ratios: Game view at 1280×800 (Steam Deck) and 2560×1080 with 1, 2 and 4 players — check the HUD isn't cut off.
-- Test Runner → EditMode → Run All: 97 passed (the smoke test plays a match for a minute or two).
+- Test Runner → EditMode → Run All: 151 passed (the smoke test plays a match for a minute or two).
 
 ---
 
@@ -156,7 +156,7 @@ Checks (press Play from `SplashScreen`):
 
 Goal: identical game, but a player's identity and authority no longer live in `PlayerInput`, so Phase 3 can plug in netcode.
 
-Progress (2026-09-23): Phase 2A (`2026-09-23-phase2a-roster-and-smoke-test.md`) — automated 4-player match test and the player roster (Task 2.1). Next: Phase 2B (Tasks 2.3–2.5); Task 2.2 needs the editor.
+Progress (2026-09-23): Phase 2A (`2026-09-23-phase2a-roster-and-smoke-test.md`) — automated 4-player match test and the player roster (Task 2.1). Phase 2B (`2026-09-23-phase2b-input-authority-scene-flow.md`) — Tasks 2.3–2.5. Left: Task 2.2 (needs the editor).
 
 ### Task 2.1: Player roster
 
@@ -169,22 +169,23 @@ Progress (2026-09-23): Phase 2A (`2026-09-23-phase2a-roster-and-smoke-test.md`) 
 
 - [ ] `Player - Cinemachine.prefab` → **PlayerAvatar** (sphere Rigidbody, scooter/ghost model, `BallDriving`, `OrderHandler`, `Respawn`, `SoundPool`, emote bubble, compass marker) + **PlayerView** (6 cameras, Cinemachine rigs, Menu/Driving canvases, `PlayerInput`, `PlayerUIHandler`, `MenuInteractions`, `OrbitalCamera`).
 - [ ] Local player = Avatar + View; remote player (Phase 3) = Avatar only.
+- [ ] Connect each avatar to its view's controller at runtime through `DriveInput` (`BallDriving`, `EmoteHandler`, `OrbitalCamera`; Phase 2B). First make `InputManager` raise its button events with `?.Invoke`: a controller whose scooter is gone, or listens to another driver, otherwise throws on A, X and the d-pad.
 
 ### Task 2.3: Input abstraction
 
-- [ ] `IDriveInput` (steer, accelerate, brake, drift, boost, camera X/Y + button events), implemented by `InputManager`; `BallDriving`, `EmoteHandler`, `OrbitalCamera` read the interface instead of `InputManager` fields.
+- [x] `IDriveInput` (steer, accelerate, brake, drift, boost, camera X/Y + button events), implemented by `InputManager`; `BallDriving`, `EmoteHandler`, `OrbitalCamera` read the interface instead of `InputManager` fields. *(`Assets/Scripts/Player/IDriveInput.cs`. Each of the three has a `DriveInput` property: the prefab's `InputManager` unless something else is set. The button listeners move with it, so Task 2.2 can connect an avatar to its view at runtime.)*
 
 ### Task 2.4: Authority seam
 
-- [ ] `GameAuthority.IsAuthority`: always `true` offline, host-only online.
-- [ ] `GameManager`: `SetGameState` = authority request; new `ApplyGameState(GameState)` fires the existing `OnSwap*` events (listeners unchanged).
-- [ ] Gate authority-only logic: order spawning + wave timers (`OrderManager.Update/InitWave`), pickup/delivery (`OrderBeacon.OnTriggerStay`), steal/clash (`OrderHandler.OnTriggerEnter/AttemptSteal`), scoring (`OrderHandler.DeliverOrder`, golden bonus in `Order.EraseOrder`), spawns (`SpawnManager`), respawn point choice (`RespawnManager`), all `Random` calls (order shuffle, drop height).
-- [ ] `Time.timeScale` pause (`PlayerInstantiate.cs:699`) and end-of-round slow-mo (`OrderManager.cs:644`) → local mode only.
+- [x] `GameAuthority.IsAuthority`: always `true` offline, host-only online. *(`GameAuthority.Role` = `Offline` / `Host` / `Client`; `IsOnline` too. Phase 3 sets the role when a session starts and ends.)*
+- [x] `GameManager`: `SetGameState` = authority request; new `ApplyGameState(GameState)` fires the existing `OnSwap*` events (listeners unchanged).
+- [x] Gate authority-only logic: order spawning + wave timers (`OrderManager.Update/InitWave`), pickup/delivery (`OrderBeacon.OnTriggerStay`), steal/clash (`OrderHandler.OnTriggerEnter/AttemptSteal`), scoring (`OrderHandler.DeliverOrder`, golden bonus in `Order.EraseOrder`), spawns (`SpawnManager`), respawn point choice (`RespawnManager`), all `Random` calls (order shuffle, drop height). *(Gated: `OrderManager.Update/InitWave/InitGame/InitTutorial` (the shuffle runs in `InitGame`), `OrderBeacon.OnTriggerStay`, `OrderHandler.OnTriggerEnter/AttemptSteal`, the golden bonus (`OrderHandler.AwardGoldenBonus`). `DeliverOrder` needs no gate of its own (only the gated beacon calls it). Not gated, see Tasks 3.3, 3.5 and 3.6: spawns (fixed per slot, placed by each scooter's owner), the respawn point and the drop height (they wait for the host's answer).)*
+- [x] `Time.timeScale` pause (`PlayerInstantiate.cs:699`) and end-of-round slow-mo (`OrderManager.cs:644`) → local mode only. *(Every write goes through `GameAuthority.SetTimeScale`, which does nothing online; a test fails if a script writes `Time.timeScale` directly.)*
 
 ### Task 2.5: Scene flow seam
 
-- [ ] Put the custom loader (`Menu/SceneManager.cs` async load + confirm) behind an `ISceneFlow` interface so Phase 3 can swap in NGO's scene manager.
-- [ ] Tests: §R checklist passes unchanged.
+- [x] Put the custom loader (`Menu/SceneManager.cs` async load + confirm) behind an `ISceneFlow` interface so Phase 3 can swap in NGO's scene manager. *(`ISceneFlow` + `SceneFlow.Current`: the local loader unless online play sets another. A test fails if a script uses `SceneManager.Instance` directly. `PlayerInstantiate` still hears the local loader's `OnConfirmToLoad` directly — online has no loading-screen confirm.)*
+- [x] Tests: §R checklist passes unchanged.
 
 ---
 
@@ -206,24 +207,26 @@ Progress (2026-09-23): Phase 2A (`2026-09-23-phase2a-roster-and-smoke-test.md`) 
 
 - [ ] `NetworkPlayer` (NetworkObject on PlayerAvatar): NetworkVariables for slot, company, colour, hat, score, ready, and a flags byte (boosting / phasing / drifting / drift tier).
 - [ ] Owner-authoritative movement: the owner runs `BallDriving` physics; owner-authoritative `NetworkTransform` (the `ClientNetworkTransform` pattern) with interpolation on sphere + control; non-owners make the sphere kinematic and skip `BallDriving` Update/FixedUpdate.
+- [ ] Spawns: each owner puts its own scooter on its slot's spawn point (`SpawnManager.SpawnPoint`); the host doesn't place other machines' scooters.
 - [ ] Remote players' boost/phase/drift visuals and sounds come from the flags byte.
 
 ### Task 3.4: Game state, timers, scenes
 
 - [ ] `NetworkGameState`: `NetworkVariable<GameState>`; the host sets it, every peer calls `GameManager.ApplyGameState` in `OnValueChanged`.
-- [ ] Wave/game timers → host-owned `NetworkVariable<double>` end times in server time; clients compute remaining time for the UI.
+- [ ] Wave/game timers → host-owned `NetworkVariable<double>` end times in server time; clients compute remaining time for the UI. *(Phase 2B already stops `OrderManager.Update` on clients, so their clocks wait for this.)*
 - [ ] Loads via `NetworkManager.SceneManager.LoadScene`; start the cutscene on `OnLoadEventCompleted` (replaces the loading-screen confirm).
 
 ### Task 3.5: Orders
 
 - [ ] NetworkObject on every scene-placed `Order`; NetworkVariables for state (Inactive / AtPickup / Held / Dropped / Delivered), holder slot and value.
 - [ ] Only the host runs `OrderBeacon.OnTriggerStay` and `OrderManager` spawning; clients drive meshes, beacons and compass markers from `OnValueChanged`.
+- [ ] Dropped orders: the host picks the drop height (`Order.Drop`'s `Random.Range`) and clients get the landing spot.
 
 ### Task 3.6: Steals, clashes, respawns
 
 - [ ] Steal: the attacker's client detects the overlap while boosting → `RequestStealServerRpc(victimSlot)`; the host checks distance ≤ trigger radius + lag tolerance, attacker boosting, victim not boosting, per-pair cooldown → first valid request wins → result replicates.
 - [ ] Clash: host → `ClientRpc` to both owners → each calls `BounceOff` locally.
-- [ ] Respawn: the owner detects water → `ServerRpc`; the host drops that player's orders and picks a `RespawnPoint` → `ClientRpc` to the owner runs the respawn animation.
+- [ ] Respawn: the owner detects water → `ServerRpc`; the host drops that player's orders and picks a `RespawnPoint` → `ClientRpc` to the owner runs the respawn animation. *(Moves `RespawnManager.GetRespawnPoint` and `RespawnPoint.InUse` to the host.)*
 - [ ] Tests: EditMode tests for the steal arbitration rules (pure C# class); 2 clients stealing simultaneously at 150 ms → one steal, same holder everywhere.
 
 ### Task 3.7: Local-only and one-shot systems
@@ -231,7 +234,7 @@ Progress (2026-09-23): Phase 2A (`2026-09-23-phase2a-roster-and-smoke-test.md`) 
 - [ ] Not networked: pedestrians (`CivilianAgent`), kickables, DOTween animations, particles, cameras, compass UI, speed lines.
 - [ ] One-shots via `ClientRpc`: boost start, drift boost, emotes (`EmoteHandler`), horn/phase sounds.
 - [ ] Cutscenes: host sets the state; each client plays the Timeline locally; only the host can skip.
-- [ ] Online pause = local overlay only (no `Time.timeScale`); the host's menu adds **End match**.
+- [ ] Online pause = local overlay only (no `Time.timeScale`); the host's menu adds **End match**. *(`GameAuthority.SetTimeScale` already ignores pauses online. `ControllerDisconnectPolicy.ShouldPause` still reads `Time.timeScale == 0` to tell whether the game is paused — change that here.)*
 
 ### Task 3.8: Disconnects & versions
 

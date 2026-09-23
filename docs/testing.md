@@ -6,7 +6,7 @@
 - It includes **LocalMatchSmokeTest**, an automated 4-player match that takes a minute or two:
   - It presses Play in the menu scene and joins 4 virtual controllers.
   - It plays through player select, the loading screen, the opening cutscene and a skipped tutorial.
-  - It drives, pauses, unplugs player 4's controller and plugs it back in.
+  - It drives, drifts and boosts, checks the match clock runs, pauses, then unplugs player 4's controller, plugs it back in and boosts with it.
   - It fails on any error or exception on the way.
 - Leave the editor alone while it plays. Controllers you touch count as input.
 - Run a single test: select it in the Test Runner → **Run Selected**.

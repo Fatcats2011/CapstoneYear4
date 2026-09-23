@@ -96,7 +96,7 @@ public class ResultsMenu : SingletonMonobehaviour<ResultsMenu>
         {
             return;
         }
-        SceneManager.Instance.InvokeMenuSceneEvent();
+        SceneFlow.Current.ReturnToMenu();
 
         for (int i = 0; i < displayText.Length; i++)
         {

@@ -7,6 +7,12 @@ using UnityEngine;
 public class OrbitalCamera : MonoBehaviour
 {
     [SerializeField] InputManager inputManager;
+    IDriveInput driveInput; // set when something other than this prefab's controller turns the camera
+
+    /// <summary>
+    /// Whose right stick turns this camera: the controller on this machine unless something else is set
+    /// </summary>
+    public IDriveInput DriveInput { get { return driveInput ?? inputManager; } set { driveInput = value; } }
 
     [Header("Horizontal Movement")]
     [SerializeField] CinemachineVirtualCamera virtualCameraMain;
@@ -42,13 +48,14 @@ public class OrbitalCamera : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
+        IDriveInput driver = DriveInput;
         fovValue = Mathf.Lerp(fovValue, passInFOV, changeSpeed);
 
         // Custom joystick camera aim
-        if (!inputManager.RightStickValue && reverseCamera == false)
+        if (!driver.LookBehind && reverseCamera == false)
         {
-            realXAxis = RangeMutations.Map_Linear(inputManager.RightStickXValue, -1, 1, -maxXAngle, maxXAngle);
-            realYAxis = RangeMutations.Map_Linear(inputManager.RightStickYValue, -1, 1, yAngleMinMax.x, yAngleMinMax.y);
+            realXAxis = RangeMutations.Map_Linear(driver.CameraX, -1, 1, -maxXAngle, maxXAngle);
+            realYAxis = RangeMutations.Map_Linear(driver.CameraY, -1, 1, yAngleMinMax.x, yAngleMinMax.y);
 
             smoothXAxis = Mathf.Lerp(smoothXAxis, realXAxis, smoothSpeedValue);
             smoothYAxis = Mathf.Lerp(smoothYAxis, realYAxis, smoothSpeedValue);
@@ -63,13 +70,13 @@ public class OrbitalCamera : MonoBehaviour
 
         }
         // Reset look behind
-        if (!inputManager.RightStickValue && reverseCamera == true)
+        if (!driver.LookBehind && reverseCamera == true)
         {
             reverseCamera = false;
             smoothXAxis = 0f;
         }
         // Static look behind
-        else if(inputManager.RightStickValue)
+        else if(driver.LookBehind)
         {
             reverseCamera = true;
 

@@ -357,7 +357,7 @@ public class Order : MonoBehaviour
         {
             if (playerHolding != null)
             {
-                playerHolding.Score += OrderManager.Instance.FinalOrderValue - (int)Constants.OrderValue.Golden; // beacon code already adds base gold value
+                playerHolding.AwardGoldenBonus(OrderManager.Instance.FinalOrderValue); // delivering already added the base gold value
                 playerHolding.HasGoldenOrder = false;
             }
             if (GameManager.Instance.MainState == GameState.FinalPackage) // gold order was legit delivered

@@ -53,6 +53,8 @@ public class OrderHandler : MonoBehaviour
 
     [SerializeField] Animator playerAnimator;
 
+    private ISceneFlow sceneFlow; // the scene flow this handler listens to while enabled
+
     private void Start()
     {
         /*score = 0; // init score to 0
@@ -69,7 +71,8 @@ public class OrderHandler : MonoBehaviour
     private void OnEnable()
     {
         ball.OnBoostStart += AttemptSteal;
-        SceneManager.Instance.OnReturnToMenu += ResetHandler;
+        sceneFlow = SceneFlow.Current;
+        sceneFlow.OnReturnToMenu += ResetHandler;
         GameManager.Instance.OnSwapAnything += UpdateScore;
         GameManager.Instance.OnSwapStartingCutscene += InitHandler;
     }
@@ -77,7 +80,7 @@ public class OrderHandler : MonoBehaviour
     private void OnDisable()
     {
         ball.OnBoostStart -= AttemptSteal;
-        SceneManager.Instance.OnReturnToMenu -= ResetHandler;
+        sceneFlow.OnReturnToMenu -= ResetHandler;
         GameManager.Instance.OnSwapAnything -= UpdateScore;
         GameManager.Instance.OnSwapStartingCutscene -= InitHandler;
     }
@@ -165,6 +168,19 @@ public class OrderHandler : MonoBehaviour
         
         if(tutHandler.HasLearnt)
             ball.SetBoostModifier(hasOrder);
+    }
+
+    /// <summary>
+    /// Adds what the golden order earned while it was held, on top of its base value (delivering it already scored that)
+    /// </summary>
+    /// <param name="finalOrderValue">What the golden order was worth when it was delivered</param>
+    public void AwardGoldenBonus(int finalOrderValue)
+    {
+        // Online, only the host changes scores
+        if (!GameAuthority.IsAuthority)
+            return;
+
+        score += finalOrderValue - (int)Constants.OrderValue.Golden;
     }
 
     /// <summary>
@@ -350,6 +366,10 @@ public class OrderHandler : MonoBehaviour
     /// </summary>
     public void AttemptSteal()
     {
+        // Online, only the host decides steals and clashes
+        if (!GameAuthority.IsAuthority)
+            return;
+
         if (playerTouching == null)
         {
             return;
@@ -373,6 +393,10 @@ public class OrderHandler : MonoBehaviour
     /// <param name="other">Collider player has hit. Will attempt to steal if this hitbox is another player</param>
     private void OnTriggerEnter(Collider other)
     {
+        // Online, only the host decides steals and clashes
+        if (!GameAuthority.IsAuthority)
+            return;
+
         OrderHandler otherHandler;
         try
         {

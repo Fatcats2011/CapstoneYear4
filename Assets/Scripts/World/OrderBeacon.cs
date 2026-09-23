@@ -209,6 +209,10 @@ public class OrderBeacon : MonoBehaviour
     /// <param name="other"></param>
     private void OnTriggerStay(Collider other)
     {
+        // Online, only the host decides pickups and deliveries
+        if (!GameAuthority.IsAuthority)
+            return;
+
         if (!canInteract || !order.CanPickup)
             return;
 

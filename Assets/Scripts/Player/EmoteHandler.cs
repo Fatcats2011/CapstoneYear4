@@ -11,6 +11,8 @@ public class EmoteHandler : MonoBehaviour
     [Header("Player Information")]
     [Tooltip("GO on the player prefab with the InputManager component.")]
     [SerializeField] private InputManager input;
+    private IDriveInput driveInput; // set when something other than this prefab's controller drives the player
+    private bool listening; // while enabled: emotes follow the driver's d-pad
 
     [Tooltip("GO on the player prefab with the SoundPool component.")]
     [SerializeField] private SoundPool soundPool;
@@ -40,11 +42,43 @@ public class EmoteHandler : MonoBehaviour
 
     private void OnEnable()
     {
-        input.DPadEvent += Emote;
+        listening = true;
+        StartListening();
     }
     private void OnDisable()
     {
-        input.DPadEvent -= Emote;
+        StopListening();
+        listening = false;
+    }
+
+    /// <summary>
+    /// Whose d-pad shows emotes: the controller on this machine unless something else is set. Can change at any time
+    /// </summary>
+    public IDriveInput DriveInput
+    {
+        get { return driveInput ?? input; }
+        set
+        {
+            if (listening)
+                StopListening();
+            driveInput = value;
+            if (listening)
+                StartListening();
+        }
+    }
+
+    private void StartListening()
+    {
+        IDriveInput driver = DriveInput;
+        if (driver != null)
+            driver.EmotePad += Emote;
+    }
+
+    private void StopListening()
+    {
+        IDriveInput driver = DriveInput;
+        if (driver != null)
+            driver.EmotePad -= Emote;
     }
 
     /// <summary>

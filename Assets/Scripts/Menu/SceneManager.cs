@@ -7,7 +7,7 @@ using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
-public class SceneManager : SingletonMonobehaviour<SceneManager>
+public class SceneManager : SingletonMonobehaviour<SceneManager>, ISceneFlow
 {
     [SerializeField] PlayerInstantiate playerInstantiate;
     public event Action OnReturnToMenu;
@@ -71,6 +71,11 @@ public class SceneManager : SingletonMonobehaviour<SceneManager>
     {
         OnReturnToMenu?.Invoke(); 
     }
+
+    // The local scene flow (ISceneFlow): LoadGameScene, LoadFinalOrderScene, ConfirmLoad and OnReturnToMenu are this
+    // class's own public members
+    void ISceneFlow.ReturnToMenu() { InvokeMenuSceneEvent(); }
+    bool ISceneFlow.WaitingForConfirm { get { return enableConfirm; } }
 
     ///<summary>
     /// Main method that loads the menu

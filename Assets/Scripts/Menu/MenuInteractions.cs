@@ -295,7 +295,7 @@ public class MenuInteractions : MonoBehaviour
     ///</summary>
     private void PlayerConfirmLoad(bool button)
     {
-        if (!SceneManager.Instance.EnableConfirm && !loadReady)
+        if (!SceneFlow.Current.WaitingForConfirm && !loadReady)
             return;
 
         loadReady = true;

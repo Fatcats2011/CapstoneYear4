@@ -27,7 +27,7 @@ public class ResultsUI : MonoBehaviour
     /// </summary>
     private void ResetGame()
     {
-        SceneManager.Instance.InvokeMenuSceneEvent();
+        SceneFlow.Current.ReturnToMenu();
         //GameManager.Instance.SetGameState(GameState.Menu);
     }
 }
