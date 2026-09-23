@@ -35,7 +35,7 @@ public class TutorialManager : SingletonMonobehaviour<TutorialManager>
 
     private void Update()
     {
-        if (Input.GetKeyDown(KeyCode.S) && GameManager.Instance.MainState == GameState.Tutorial)
+        if (DevTools.GetKeyDown(KeyCode.S) && GameManager.Instance.MainState == GameState.Tutorial)
         {
             foreach (TutorialHandler handler in handlers)
             {

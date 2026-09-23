@@ -120,13 +120,13 @@ public class OrderManager : SingletonMonobehaviour<OrderManager>
     private void Update()
     {
         // HOTKEY
-        if(Input.GetKeyDown(KeyCode.Y))
+        if(DevTools.GetKeyDown(KeyCode.Y))
         {
             OnDeleteActiveOrders?.Invoke();
         }
 
         // HOTKEY
-        if (Input.GetKeyDown(KeyCode.Alpha5))
+        if (DevTools.GetKeyDown(KeyCode.Alpha5))
         {
             wave = 3;
             InitWave();
@@ -199,7 +199,7 @@ public class OrderManager : SingletonMonobehaviour<OrderManager>
         }
 
         // HOTKEY
-        if(Input.GetKeyDown(KeyCode.P))
+        if(DevTools.GetKeyDown(KeyCode.P))
         {
             countdown = !countdown;
         }

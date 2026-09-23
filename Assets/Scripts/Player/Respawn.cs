@@ -99,7 +99,7 @@ public class Respawn : MonoBehaviour
 
     private void Update()
     {
-        if(Input.GetKeyDown(KeyCode.R))
+        if(DevTools.GetKeyDown(KeyCode.R))
         {
             StartRespawnCoroutine();
         }

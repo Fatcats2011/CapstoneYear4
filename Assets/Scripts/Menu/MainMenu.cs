@@ -36,7 +36,7 @@ public class MainMenu : SingletonMonobehaviour<MainMenu>
 
     public void Update()
     {
-        if (Input.GetKeyDown(KeyCode.L))
+        if (DevTools.GetKeyDown(KeyCode.L))
         {
             if (playerInstantiate == null)
                 playerInstantiate = PlayerInstantiate.Instance;

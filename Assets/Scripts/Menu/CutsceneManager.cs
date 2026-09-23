@@ -37,7 +37,7 @@ public class CutsceneManager : SingletonMonobehaviour<CutsceneManager>
     private void Update()
     {
         // Skips cutscene
-        if (Input.GetKeyDown(KeyCode.L))
+        if (DevTools.GetKeyDown(KeyCode.L))
         {
             if (cutsceneCoroutine != null)
                 StopCoroutine(cutsceneCoroutine);

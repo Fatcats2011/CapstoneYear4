@@ -282,12 +282,12 @@ public class BallDriving : MonoBehaviour
         GameManager.Instance.OnSwapGoldenCutscene += ResetBoost;
         GameManager.Instance.OnSwapMenu += ResetBoost;
 
-        GameManager.Instance.OnSwapStartingCutscene += () => FreezeBall(true);
-        GameManager.Instance.OnSwapGoldenCutscene += () => FreezeBall(true);
-        GameManager.Instance.OnSwapResults += () => FreezeBall(true);
+        GameManager.Instance.OnSwapStartingCutscene += FreezeBallForGameState;
+        GameManager.Instance.OnSwapGoldenCutscene += FreezeBallForGameState;
+        GameManager.Instance.OnSwapResults += FreezeBallForGameState;
 
-        GameManager.Instance.OnSwapTutorial += () => FreezeBall(false);
-        GameManager.Instance.OnSwapFinalPackage += () => FreezeBall(false);
+        GameManager.Instance.OnSwapTutorial += UnfreezeBallForGameState;
+        GameManager.Instance.OnSwapFinalPackage += UnfreezeBallForGameState;
     }
 
     private void OnDisable()
@@ -296,12 +296,36 @@ public class BallDriving : MonoBehaviour
         GameManager.Instance.OnSwapGoldenCutscene -= ResetBoost;
         GameManager.Instance.OnSwapMenu -= ResetBoost;
 
-        GameManager.Instance.OnSwapGoldenCutscene -= () => FreezeBall(true);
-        GameManager.Instance.OnSwapStartingCutscene -= () => FreezeBall(true);
-        GameManager.Instance.OnSwapResults -= () => FreezeBall(true);
+        GameManager.Instance.OnSwapGoldenCutscene -= FreezeBallForGameState;
+        GameManager.Instance.OnSwapStartingCutscene -= FreezeBallForGameState;
+        GameManager.Instance.OnSwapResults -= FreezeBallForGameState;
 
-        GameManager.Instance.OnSwapTutorial -= () => FreezeBall(false);
-        GameManager.Instance.OnSwapFinalPackage -= () => FreezeBall(false);
+        GameManager.Instance.OnSwapTutorial -= UnfreezeBallForGameState;
+        GameManager.Instance.OnSwapFinalPackage -= UnfreezeBallForGameState;
+    }
+
+    /// <summary>
+    /// Freezes the ball when the game state takes control away from the player (cutscenes, results)
+    /// </summary>
+    private void FreezeBallForGameState()
+    {
+        FreezeBall(true);
+    }
+
+    /// <summary>
+    /// Unfreezes the ball when the game state hands control back to the player
+    /// </summary>
+    private void UnfreezeBallForGameState()
+    {
+        FreezeBall(false);
+    }
+
+    /// <summary>
+    /// Sends this player's rumble to another controller (after it takes over from a disconnected one)
+    /// </summary>
+    public void SetGamepad(Gamepad gamepad)
+    {
+        pad = gamepad;
     }
 
     /// <summary>
@@ -355,7 +379,7 @@ public class BallDriving : MonoBehaviour
     /// </summary>
     private void Update()
     {
-        if(Input.GetKeyDown(KeyCode.B))
+        if(DevTools.GetKeyDown(KeyCode.B))
             ResetBoost();
 
         transform.position = sphere.transform.position - new Vector3(0, 0.97f, 0); //makes the scooter follow the sphere

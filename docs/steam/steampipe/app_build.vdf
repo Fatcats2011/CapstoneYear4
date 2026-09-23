@@ -1,0 +1,32 @@
+"AppBuild"
+{
+	"AppID" "APP_ID"
+	"Desc" "Dead on Arrival Windows build"
+
+	// Folder containing DeadOnArrival.exe and DeadOnArrival_Data (relative to this file)
+	"ContentRoot" "..\..\..\Builds\Windows\"
+	// SteamPipe logs and cache (keep out of git)
+	"BuildOutput" "..\..\..\Builds\steampipe-output\"
+
+	// Uncomment to push straight to a branch (never "default" from a script)
+	// "SetLive" "beta"
+
+	"Depots"
+	{
+		"WINDOWS_DEPOT_ID"
+		{
+			"FileMapping"
+			{
+				"LocalPath" "*"
+				"DepotPath" "."
+				"recursive" "1"
+			}
+			// Unity writes these next to the build; players don't need them
+			"FileExclusion" "*.pdb"
+			// Dev-only file for launching outside Steam; Valve advises not shipping it
+			"FileExclusion" "steam_appid.txt"
+			"FileExclusion" "*_BurstDebugInformation_DoNotShip*"
+			"FileExclusion" "*_BackUpThisFolder_ButDontShipItWithYourGame*"
+		}
+	}
+}

@@ -13,13 +13,11 @@ public class Rumbler : MonoBehaviour
 
     private void Start()
     {
-        Gamepad.current.SetMotorSpeeds(0f, 0f);
         InputSystem.ResetHaptics();
     }
 
     private void OnApplicationQuit()
     {
-        Gamepad.current.SetMotorSpeeds(0f, 0f);
         InputSystem.ResetHaptics();
     }
 
@@ -31,7 +29,7 @@ public class Rumbler : MonoBehaviour
         suspendedLow = low;
         suspendedHigh = high;
 
-        pad.SetMotorSpeeds(low, high);
+        pad?.SetMotorSpeeds(low, high);
         suspendedInEffect = true;
     }
 
@@ -39,7 +37,7 @@ public class Rumbler : MonoBehaviour
     {
         suspendedHigh = 0;
         suspendedLow = 0;
-        pad.SetMotorSpeeds(0f, 0f);
+        pad?.SetMotorSpeeds(0f, 0f);
         suspendedInEffect = false;
     }
 
@@ -61,7 +59,7 @@ public class Rumbler : MonoBehaviour
     private IEnumerator PulseTime(float duration, Gamepad pad, bool breakSuspension)
     {
         yield return new WaitForSeconds(duration);
-        pad.SetMotorSpeeds(breakSuspension ? 0f : suspendedLow, breakSuspension ? 0f : suspendedHigh);
+        pad?.SetMotorSpeeds(breakSuspension ? 0f : suspendedLow, breakSuspension ? 0f : suspendedHigh);
     }
 
     private void StartPulseTime(float duration, Gamepad pad, bool breakSuspension)

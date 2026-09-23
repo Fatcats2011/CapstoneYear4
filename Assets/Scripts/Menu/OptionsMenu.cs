@@ -2,11 +2,12 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
-using System.Runtime.Serialization.Formatters.Binary;
 using UnityEngine;
 
 public class OptionsMenu : SingletonMonobehaviour<OptionsMenu>
 {
+    const string SETTINGS_FILE_NAME = "settings.cfg";
+
     [Header("Options Numbers")]
     [SerializeField] float[] volumeValues;
 
@@ -27,11 +28,20 @@ public class OptionsMenu : SingletonMonobehaviour<OptionsMenu>
     [SerializeField] GameObject[] fullscreenSelectorPositions;
     [SerializeField] int fullscreenPosition;
 
+    [Header("Graphics Quality Info")]
+    [Tooltip("Optional row: until the options screen has a Quality row, quality stays at its saved or default level")]
+    [SerializeField] GameObject qualitySelector;
+    [SerializeField] GameObject[] qualitySelectorPositions = new GameObject[0];
+    int qualityPosition;
+
+    bool QualityRowExists => qualitySelector != null && qualitySelectorPositions != null && qualitySelectorPositions.Length >= GraphicsQuality.LEVEL_COUNT;
+
     public enum OptionSelected
     {
         BGM = 0,
         SFX = 1,
-        FULLSCREEN = 2
+        FULLSCREEN = 2,
+        QUALITY = 3
     }
     public OptionSelected optionSelected;
 
@@ -49,32 +59,23 @@ public class OptionsMenu : SingletonMonobehaviour<OptionsMenu>
         LoadOptions();
     }
 
+    string SettingsFilePath => Path.Combine(Application.persistentDataPath, SETTINGS_FILE_NAME);
+
     ///<summary>
     /// Saves the game's option settings
     ///</summary>
     public void SaveOptions()
     {
-        BinaryFormatter bf = new BinaryFormatter();
-        FileStream file;
+        GameSettings settings = new GameSettings(bgmPosition, sfxPosition, fullscreenPosition, qualityPosition);
 
-        // checks if file already exists
-        if(File.Exists(Application.persistentDataPath + "/settings.dat"))
+        try
         {
-            file = File.Open(Application.persistentDataPath + "/settings.dat", FileMode.Open);
+            File.WriteAllText(SettingsFilePath, settings.ToText());
         }
-        else
+        catch (Exception e) // a full disk or read-only folder shouldn't break the menu
         {
-            file = File.Create(Application.persistentDataPath + "/settings.dat");
+            Debug.LogWarning($"Could not save settings to {SettingsFilePath}: {e.Message}");
         }
-
-        OptionsSave data = new OptionsSave();
-
-        data.bgmPositionSave = bgmPosition;
-        data.sfxPositionSave = sfxPosition;
-        data.fullscreenSave = fullscreenPosition;
-
-        bf.Serialize(file, data);
-        file.Close();
     }
 
     ///<summary>
@@ -82,22 +83,23 @@ public class OptionsMenu : SingletonMonobehaviour<OptionsMenu>
     ///</summary>
     public void LoadOptions()
     {
-        // Determines if save file exists to load
-        if (File.Exists(Application.persistentDataPath + "/settings.dat"))
+        // The values set in the inspector are the defaults
+        GameSettings settings = new GameSettings(bgmPosition, sfxPosition, fullscreenPosition, GraphicsQuality.DefaultLevel(SteamManager.IsSteamDeck));
+
+        try
         {
-            BinaryFormatter bf = new BinaryFormatter();
-            FileStream file = File.Open(Application.persistentDataPath + "/settings.dat", FileMode.Open);
-
-            OptionsSave data = (OptionsSave)bf.Deserialize(file);
-
-            // Clamps loaded values incase data was tampered with
-            bgmPosition = Mathf.Clamp(data.bgmPositionSave, 0, 11);
-            sfxPosition = Mathf.Clamp(data.sfxPositionSave, 0, 11);
-            fullscreenPosition = Mathf.Clamp(data.fullscreenSave, 0, 1);
-
-            // Closes file reader
-            file.Close();
+            if (File.Exists(SettingsFilePath))
+                settings = GameSettings.Parse(File.ReadAllText(SettingsFilePath), settings);
         }
+        catch (Exception e) // an unreadable file falls back to the defaults
+        {
+            Debug.LogWarning($"Could not load settings from {SettingsFilePath}: {e.Message}");
+        }
+
+        bgmPosition = settings.bgmPosition;
+        sfxPosition = settings.sfxPosition;
+        fullscreenPosition = settings.fullscreenPosition;
+        qualityPosition = settings.qualityLevel;
 
         // Loads values as either loaded values or defualt values
         bgmValue = volumeValues[bgmPosition];
@@ -107,6 +109,8 @@ public class OptionsMenu : SingletonMonobehaviour<OptionsMenu>
         soundManager.SetSFX(sfxValue);
 
         UpdateFullscreen(fullscreenPosition);
+
+        GraphicsQuality.Apply(qualityPosition);
 
         //UpdateSelectors();
     }
@@ -122,6 +126,10 @@ public class OptionsMenu : SingletonMonobehaviour<OptionsMenu>
 
         fullscreenSelector.transform.position = new Vector3(fullscreenSelectorPositions[fullscreenPosition].transform.position.x,
             fullscreenSelector.transform.position.y, fullscreenSelector.transform.position.z);
+
+        if (QualityRowExists)
+            qualitySelector.transform.position = new Vector3(qualitySelectorPositions[qualityPosition].transform.position.x,
+                qualitySelector.transform.position.y, qualitySelector.transform.position.z);
     }
 
     ///<summary>
@@ -254,10 +262,30 @@ public class OptionsMenu : SingletonMonobehaviour<OptionsMenu>
                 }
             }
 
-            fullscreenSelector.transform.position = new Vector3(fullscreenSelectorPositions[fullscreenPosition].transform.position.x, 
+            fullscreenSelector.transform.position = new Vector3(fullscreenSelectorPositions[fullscreenPosition].transform.position.x,
                 fullscreenSelector.transform.position.y, fullscreenSelector.transform.position.z);
 
             UpdateFullscreen(fullscreenPosition);
+        }
+        else if (optionSelected == OptionSelected.QUALITY && QualityRowExists)
+        {
+            // Positive Scroll
+            if (direction)
+            {
+                if (qualityPosition < GraphicsQuality.LEVEL_COUNT - 1)
+                    qualityPosition = qualityPosition + 1;
+            }
+            // Negative Scroll
+            else
+            {
+                if (qualityPosition > 0)
+                    qualityPosition = qualityPosition - 1;
+            }
+
+            qualitySelector.transform.position = new Vector3(qualitySelectorPositions[qualityPosition].transform.position.x,
+                qualitySelector.transform.position.y, qualitySelector.transform.position.z);
+
+            GraphicsQuality.Apply(qualityPosition);
         }
     }
 
@@ -289,12 +317,4 @@ public class OptionsMenu : SingletonMonobehaviour<OptionsMenu>
             Screen.fullScreen = true;
         }
     }
-}
-
-[Serializable]
-public class OptionsSave
-{
-    public int bgmPositionSave;
-    public int sfxPositionSave;
-    public int fullscreenSave;
 }

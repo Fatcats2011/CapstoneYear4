@@ -16,6 +16,17 @@ public class QAManager : SingletonMonobehaviour<QAManager>
 
     private string fileName = "QAData.csv";
 
+    static string dataDirectory;
+
+    /// <summary>
+    /// Folder the playtest CSV is written to. Never StreamingAssets, which ships inside builds.
+    /// </summary>
+    public static string DataDirectory
+    {
+        get { return dataDirectory ?? Path.Combine(Application.persistentDataPath, "Playtest"); }
+        set { dataDirectory = value; }
+    }
+
     private bool generateHeatmap = true;
     public bool GenerateHeatmap { get { return generateHeatmap; } }
 
@@ -85,6 +96,9 @@ public class QAManager : SingletonMonobehaviour<QAManager>
     /// </summary>
     private void SendData()
     {
+        // Playtest data is only recorded in the editor and development builds
+        if (!DevTools.Enabled) { return; }
+
 #if UNITY_EDITOR
         if (!recordData) { return; }
 #endif
@@ -110,10 +124,12 @@ public class QAManager : SingletonMonobehaviour<QAManager>
     /// <param name="data">Array of data to write. Each element is a new column.</param>
     private void WriteCSV(string fileName, string[] data)
     {
-        string filePath = Path.Combine(Application.streamingAssetsPath, fileName);
+        string filePath = Path.Combine(DataDirectory, fileName);
 
         try
         {
+            Directory.CreateDirectory(DataDirectory);
+
             if (!File.Exists(filePath))
             {
                 File.WriteAllLines(filePath, new[] { string.Join(",", columns) });
@@ -139,10 +155,12 @@ public class QAManager : SingletonMonobehaviour<QAManager>
     /// <param name="fileName">Name of CSV file.</param>
     private void WriteEmptyLine(string fileName)
     {
-        string filePath = Path.Combine(Application.streamingAssetsPath, fileName);
+        string filePath = Path.Combine(DataDirectory, fileName);
 
         try
         {
+            Directory.CreateDirectory(DataDirectory);
+
             if (!File.Exists(filePath))
             {
                 File.WriteAllLines(filePath, new[] { string.Join(",", columns) });

@@ -48,7 +48,7 @@ public class TutorialHandler : MonoBehaviour
     private void Update()
     {
         // HOTKEY
-        if(Input.GetKeyDown(KeyCode.S))
+        if(DevTools.GetKeyDown(KeyCode.S))
         {
             if(!hasLearnt)
             {

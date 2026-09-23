@@ -102,7 +102,7 @@ public class SoundManager : SingletonMonobehaviour<SoundManager>
         GameManager.Instance.OnSwapGoldenCutscene += PlayFinalTheme;
         GameManager.Instance.OnSwapResults += PlayResultsTheme;
         // reset snapshot
-        GameManager.Instance.OnSwapAnything += () => ChangeSnapshot("gameplay");
+        GameManager.Instance.OnSwapAnything += ResetSnapshotToGameplay;
     }
     private void OnDisable()
     {
@@ -112,7 +112,15 @@ public class SoundManager : SingletonMonobehaviour<SoundManager>
         GameManager.Instance.OnSwapGoldenCutscene -= PlayFinalTheme;
         GameManager.Instance.OnSwapResults -= PlayResultsTheme;
         // reset snapshot
-        GameManager.Instance.OnSwapAnything -= () => ChangeSnapshot("gameplay");
+        GameManager.Instance.OnSwapAnything -= ResetSnapshotToGameplay;
+    }
+
+    /// <summary>
+    /// Returns the mix to the gameplay snapshot whenever the game state changes
+    /// </summary>
+    private void ResetSnapshotToGameplay()
+    {
+        ChangeSnapshot("gameplay");
     }
 
     /// <summary>

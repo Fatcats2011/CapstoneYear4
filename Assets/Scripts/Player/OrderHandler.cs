@@ -79,12 +79,12 @@ public class OrderHandler : MonoBehaviour
         ball.OnBoostStart -= AttemptSteal;
         SceneManager.Instance.OnReturnToMenu -= ResetHandler;
         GameManager.Instance.OnSwapAnything -= UpdateScore;
-        GameManager.Instance.OnSwapStartingCutscene += InitHandler;
+        GameManager.Instance.OnSwapStartingCutscene -= InitHandler;
     }
 
     private void Update()
     {
-        if (Input.GetKeyDown(KeyCode.T))
+        if (DevTools.GetKeyDown(KeyCode.T))
             DropEverything(order1Position.position, order2Position.position);
 
         canTakeOrder = order1 == null || order2 == null;

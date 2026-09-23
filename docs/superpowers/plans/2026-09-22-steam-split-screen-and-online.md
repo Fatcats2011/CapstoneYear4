@@ -61,71 +61,94 @@
 - [ ] Pause from any player (host vs sub pause menu), resume, return to menu.
 - [ ] Unplug/replug a controller mid-match (after Task 1.3).
 - [ ] EditMode tests green: Window → General → Test Runner → EditMode → Run All.
+- Short on controllers? F1 adds a virtual test player, F2 presses A on all of them, F3 unplugs / replugs the newest (editor and development builds; see `docs/dev-hotkeys.md`).
 
 ---
 
 ## Phase 1 — Ship local split-screen on Steam ("as is")
 
+Progress (2026-09-23): code done in Phase 1A (`2026-09-22-phase1a-release-hardening.md`) and Phase 1B (`2026-09-23-phase1b-controllers-and-quality.md`), 75 EditMode tests. Open items are editor work, art, the Steamworks dashboard (needs the App ID) and store/legal — see **Partner steps** at the end of Phase 1.
+
 ### Task 1.1: Stability fixes
 
-- [ ] Delete the dead **Player Left** listener: `Alex Player Testing.unity` → *Instantiation Manager* → PlayerInputManager → Player Left Event (it calls `RemovePlayerReference`, which doesn't exist). Don't rewire it to `RemovePlayerRef`, which would then run twice.
-- [ ] `RemoveFromPlayerArray` returns `0` when the player isn't found → return `-1` and guard the caller (`PlayerInstantiate.cs:388-399`, caller `:335-338`).
-- [ ] `OrderHandler.OnDisable` subscribes instead of unsubscribing: `+= InitHandler` → `-= InitHandler` (`OrderHandler.cs:82`).
-- [ ] Lambdas unsubscribed with a new lambda never unsubscribe → store the delegate in a field: `BallDriving.cs:285-304`, `SoundManager.cs:105/115`, `OrderHandler.cs:311/319`.
-- [ ] `SpawnManager` loops `i <= MAX_PLAYERS` inside an empty `catch` → `i < MAX_PLAYERS`, remove the empty catch (`SpawnManager.cs:57-78`, `:90-108`).
-- [ ] `PlayerCameraResizer.Update` copies the viewport to follower cameras only once (`initalized` flag) → re-copy whenever `referenceCam.rect` changes (`PlayerCameraResizer.cs:106-123`); check P1's Icon Camera after P3/P4 join.
-- [ ] `Rumbler.Start` / `OnApplicationQuit` use `Gamepad.current` without a null check → keep only `InputSystem.ResetHaptics()` (`Rumbler.cs:14-24`).
-- [ ] Exactly one active AudioListener: the bootstrap scene has 4 (*Black Camera Render*, *Color Camera Render*, *Menu Audio Listener*, *Sound Manager*) → removes ~7,000 "3 audio listeners" warnings per session.
-- [ ] Tests: EditMode test for `CalculateRects` (1–4 players → expected rects) and for `RemoveFromPlayerArray` (unknown player → `-1`); §R checklist.
+- [ ] Delete the dead **Player Left** listener: `Alex Player Testing.unity` → *Instantiation Manager* → PlayerInputManager → Player Left Event (it calls `RemovePlayerReference`, which doesn't exist). Don't rewire it to `RemovePlayerRef`, which would then run twice. *(Partner step — scene edit.)*
+- [x] `RemoveFromPlayerArray` returns `0` when the player isn't found → return `-1` and guard the caller (`PlayerInstantiate.cs:388-399`, caller `:335-338`).
+- [x] `OrderHandler.OnDisable` subscribes instead of unsubscribing: `+= InitHandler` → `-= InitHandler` (`OrderHandler.cs:82`).
+- [x] Lambdas unsubscribed with a new lambda never unsubscribe → store the delegate in a field: `BallDriving.cs:285-304`, `SoundManager.cs:105/115`, `OrderHandler.cs:311/319`. *(The `OrderHandler` game-end lambda was left: its `OrderManager` is destroyed every match, so it can't pile up.)*
+- [ ] `SpawnManager` loops `i <= MAX_PLAYERS` inside an empty `catch` → `i < MAX_PLAYERS`, remove the empty catch (`SpawnManager.cs:57-78`, `:90-108`). *(Moved to Phase 2: Task 2.1 rewrites it.)*
+- [x] `PlayerCameraResizer.Update` copies the viewport to follower cameras only once (`initalized` flag) → re-copy whenever `referenceCam.rect` changes (`PlayerCameraResizer.cs:106-123`); check P1's Icon Camera after P3/P4 join.
+- [x] `Rumbler.Start` / `OnApplicationQuit` use `Gamepad.current` without a null check → keep only `InputSystem.ResetHaptics()` (`Rumbler.cs:14-24`).
+- [ ] Exactly one active AudioListener: the bootstrap scene has 4 (*Black Camera Render*, *Color Camera Render*, *Menu Audio Listener*, *Sound Manager*) → removes ~7,000 "3 audio listeners" warnings per session. *(Partner step — scene edit.)*
+- [x] Tests: EditMode test for `CalculateRects` (1–4 players → expected rects) and for `RemoveFromPlayerArray` (unknown player → `-1`); §R checklist.
 
 ### Task 1.2: Release-build hygiene
 
-- [ ] Debug hotkeys → wrap in `#if UNITY_EDITOR || DEVELOPMENT_BUILD`:
+- [x] Debug hotkeys → wrap in `#if UNITY_EDITOR || DEVELOPMENT_BUILD` *(done as `DevTools.GetKeyDown`; every key is listed in `docs/dev-hotkeys.md`)*:
   - `HotKeys.cs:12-24` (1/2 = wave −/+, 4 = load game)
   - `OrderManager.cs:123-133` (Y = delete orders, 5 = jump to wave 3), `:202-205` (P = freeze timer)
   - `TutorialManager.cs:38`, `TutorialHandler.cs:51` (S = skip tutorial)
   - `CutsceneManager.cs:40` (L = skip cutscene), `MainMenu.cs:39` (L = kick all players)
   - `BallDriving.cs:358` (B = reset boost), `OrderHandler.cs:87` (T = drop orders), `Respawn.cs:102` (R = respawn)
-- [ ] QA telemetry off in release: same define around `QAManager.SendData` (`QAManager.cs:86-104`) and the heatmap writes (`HeatmapCamera.cs:67,102`); delete `Assets/StreamingAssets/QAData.csv` and `Assets/StreamingAssets/HeatMaps/` (StreamingAssets ships inside the build).
-- [ ] Settings save: replace `BinaryFormatter` (`OptionsMenu.cs:55-111`) with `JsonUtility` → `settings.json` via `File.WriteAllText`; wrap loading in `try/catch` so a corrupt file falls back to defaults.
-- [ ] Player Settings: version `1.0` → `1.0.0`, icon, splash. Optional: IL2CPP backend (needs the *Windows Build Support (IL2CPP)* module + Visual Studio *Desktop development with C++*).
-- [ ] Tests: EditMode round-trip test for settings JSON (save → load → same values; garbage file → defaults). A non-development build ignores all hotkeys and writes nothing next to the `.exe`.
+- [x] QA telemetry off in release: same define around `QAManager.SendData` (`QAManager.cs:86-104`) and the heatmap writes (`HeatmapCamera.cs:67,102`); delete `Assets/StreamingAssets/QAData.csv` and `Assets/StreamingAssets/HeatMaps/` (StreamingAssets ships inside the build). *(Playtest data moved to `docs/playtest-data/`; `HeatmapCamera` is switched off in code and left as is.)*
+- [x] Settings save: replace `BinaryFormatter` (`OptionsMenu.cs:55-111`) with `JsonUtility` → `settings.json` via `File.WriteAllText`; wrap loading in `try/catch` so a corrupt file falls back to defaults. *(Done as plain `key=value` lines in **`settings.cfg`** (`GameSettings.cs`), so a damaged file only loses the lines it can't read.)*
+- [ ] Player Settings: version `1.0` → `1.0.0`, icon, splash. Optional: IL2CPP backend (needs the *Windows Build Support (IL2CPP)* module + Visual Studio *Desktop development with C++*). *(Partner step — Project Settings.)*
+- [x] Tests: EditMode round-trip test for settings JSON (save → load → same values; garbage file → defaults). A non-development build ignores all hotkeys and writes nothing next to the `.exe`.
 
 ### Task 1.3: Controllers
 
-- [ ] Device lost/regained: wire `PlayerInput` **Device Lost / Device Regained** events on the player prefab (empty today) → pause + "Reconnect P#" on that player's viewport; resume when regained.
-- [ ] Zero controllers / keyboard press on the title screen → show "Connect a controller" (today keyboard joins are silently destroyed in `PlayerInstantiate.cs:120`).
-- [ ] Recommended: keyboard as one player (add a *Keyboard&Mouse* scheme to `Assets/Resources/CapstoneYear4.inputactions`, allow it in `AddPlayerReference`).
-- [ ] Button prompts: device `is DualShockGamepad` (covers DualShock 4 + DualSense) → PlayStation glyphs, `SwitchProControllerHID` → Nintendo, else Xbox.
-- [ ] Tests: unplug/replug each of 4 pads mid-match; Xbox, DualShock 4, DualSense and Switch Pro all join and rumble.
+- [x] Device lost/regained: wire `PlayerInput` **Device Lost / Device Regained** events on the player prefab (empty today) → pause + "Reconnect P#" on that player's viewport; resume when regained. *(Wired in code (`PlayerInstantiate.AddPlayerReference`). Mid-race the match pauses and "P# controller disconnected" covers that player's view (`ControllerPrompts`). Any controller — the same one or another — takes the player back (`ReplacementControllerListener`); new players can't join meanwhile. The match stays paused until someone picks Resume.)*
+- [x] Zero controllers / keyboard press on the title screen → show "Connect a controller" (today keyboard joins are silently destroyed in `PlayerInstantiate.cs:120`). *(Shown on the title screen and in the lobby, never mid-match; unrecognised controllers get "That controller isn't supported".)*
+- [ ] Recommended: keyboard as one player (add a *Keyboard&Mouse* scheme to `Assets/Resources/CapstoneYear4.inputactions`, allow it in `AddPlayerReference`). *(Not started: menus and prompts show controller buttons only.)*
+- [ ] Button prompts: device `is DualShockGamepad` (covers DualShock 4 + DualSense) → PlayStation glyphs, `SwitchProControllerHID` → Nintendo, else Xbox. *(Needs PlayStation / Nintendo versions of `Assets/Sprites/UI/MenUI_Buttons.png` first.)*
+- [ ] Tests: unplug/replug each of 4 pads mid-match; Xbox, DualShock 4, DualSense and Switch Pro all join and rumble. *(Partner step; F3 simulates an unplug.)*
 
 ### Task 1.4: Settings & performance
 
-- [ ] Options menu: add resolution, window mode, VSync, frame cap and quality preset (today: fullscreen toggle + 2 volumes).
-- [ ] Quality presets for `Assets/Rendering/URP Asset.asset` (today: MSAA 8x, HDR, 4096 shadow map, SSAO + decals + outlines on every player renderer), e.g. Low = no MSAA, no SSAO, 1024 shadows; High = MSAA 4x, 2048 shadows.
-- [ ] Phase-camera render texture is a fixed 1920×1080 per player (`PlayerCameraResizer.cs:87`) → size it to that player's viewport.
-- [ ] Targets: 4 players at 1080p ≥ 60 fps on a GTX 1060-class GPU; Steam Deck ≥ 30 fps at 1280×800. Profile the 4-player golden-order scene first.
-- [ ] Aspect ratios: `PlayerInstantiate.CalculateRects` assumes 16:9 → check 16:10 (Steam Deck) and 21:9.
+- [ ] Options menu: add resolution, window mode, VSync, frame cap and quality preset (today: fullscreen toggle + 2 volumes). *(Quality is done in code and saved; its row needs menu art — partner step. Resolution / window mode / VSync / frame cap not started: builds run borderless at desktop resolution with VSync on.)*
+- [x] Quality presets for `Assets/Rendering/URP Asset.asset` (today: MSAA 8x, HDR, 4096 shadow map, SSAO + decals + outlines on every player renderer), e.g. Low = no MSAA, no SSAO, 1024 shadows; High = MSAA 4x, 2048 shadows. *(Done as `GraphicsQuality`: High = the asset as authored; Medium = MSAA 4×, 200 m shadows, 2 cascades; Low = no MSAA, 100 m, 1 cascade. SSAO stays on (it lives in the 12 renderers). Steam Deck starts on Medium.)*
+- [x] Phase-camera render texture is a fixed 1920×1080 per player (`PlayerCameraResizer.cs:87`) → size it to that player's viewport.
+- [ ] Targets: 4 players at 1080p ≥ 60 fps on a GTX 1060-class GPU; Steam Deck ≥ 30 fps at 1280×800. Profile the 4-player golden-order scene first. *(Partner step: F1 ×3 for 4 players, F4 to switch quality.)*
+- [ ] Aspect ratios: `PlayerInstantiate.CalculateRects` assumes 16:9 → check 16:10 (Steam Deck) and 21:9. *(Viewports are fractions of the screen, so each view keeps the screen's shape, and the phase texture now follows it (tested at 1280×800 and 2560×1080). Still to check by eye: the HUD at 16:10 and 21:9 in the Game view.)*
 - [ ] Tests: Profiler capture per preset, before/after.
 
 ### Task 1.5: Steamworks (no netcode needed)
 
-- [ ] Steamworks partner account → $100 Steam Direct fee → App ID. New accounts wait 30 days before a first release; the Coming Soon page must be live ≥ 2 weeks before launch.
-- [ ] Install Steamworks.NET (Package Manager → Add from git URL: `https://github.com/rlabrecque/Steamworks.NET.git?path=/com.rlabrecque.steamworks.net`).
-- [ ] `SteamManager` in the bootstrap scene: `SteamAPI.RestartAppIfNecessary(appId)` (builds only) → `SteamAPI.Init()` → `SteamAPI.RunCallbacks()` every frame → `SteamAPI.Shutdown()` on quit. Use App ID 480 (Spacewar) + `steam_appid.txt` until yours exists.
+- [ ] Steamworks partner account → $100 Steam Direct fee → App ID. New accounts wait 30 days before a first release; the Coming Soon page must be live ≥ 2 weeks before launch. *(Fee paid 2026-09-22; App ID pending.)*
+- [x] Install Steamworks.NET (Package Manager → Add from git URL: `https://github.com/rlabrecque/Steamworks.NET.git?path=/com.rlabrecque.steamworks.net`). *(Pinned to `#2025.164.1`.)*
+- [x] `SteamManager` in the bootstrap scene: `SteamAPI.RestartAppIfNecessary(appId)` (builds only) → `SteamAPI.Init()` → `SteamAPI.RunCallbacks()` every frame → `SteamAPI.Shutdown()` on quit. Use App ID 480 (Spacewar) + `steam_appid.txt` until yours exists. *(It creates itself before the first scene loads, so no scene holds it. When the App ID arrives: `SteamStartup.APP_ID`, `steam_appid.txt`, `docs/steam/steampipe/app_build.vdf`.)*
 - [ ] **Remote Play Together**: enable it in Steamworks settings and tag *Shared/Split Screen*. Friends then join your couch game over the internet with zero netcode (Steam streams the host's screen; guests' pads appear as local gamepads). This is online play on day one.
 - [ ] Steam Input: set the default config to Gamepad. Test that one PlayStation pad doesn't join as **two** players (physical HID + Steam's virtual Xbox pad); if it does, opt PlayStation controllers out of Steam Input.
-- [ ] Steam Cloud (Auto-Cloud): root `WinAppDataLocalLow`, path `The Boo Crew/Dead on Arrival`, pattern `settings.json`.
+- [ ] Steam Cloud (Auto-Cloud): root `WinAppDataLocalLow`, path `The Boo Crew/Dead on Arrival`, pattern `settings.cfg`.
 - [ ] Optional: achievements (first delivery, win holding the golden order), Rich Presence ("Delivering — 3 players").
-- [ ] Builds via SteamPipe: `steamcmd +login <user> +run_app_build <path>\app_build_<appid>.vdf +quit`; use a `beta` branch for testers; request Steam Deck compatibility review.
+- [ ] Builds via SteamPipe: `steamcmd +login <user> +run_app_build <path>\app_build_<appid>.vdf +quit`; use a `beta` branch for testers; request Steam Deck compatibility review. *(Template and steps ready in `docs/steam/steampipe/`.)*
 - [ ] Tests: launch from the Steam client, overlay (Shift+Tab) works, a Remote Play Together session with one remote friend works.
 
 ### Task 1.6: Store & legal
 
 - [ ] Written agreement from every contributor (IP ownership, revenue split, credits); check the school's student-IP policy.
-- [ ] License audit → `LICENSES.md`: OToon (Asset Store EULA), DOTween, Cinemachine 2.1, Udar SceneField, Noisy Nodes, `Assets/Fonts`, all music/SFX.
-- [ ] Store page: header 920×430, small 462×174, main 1232×706, vertical 748×896, library 600×900 + hero 3840×1240; 5+ screenshots; trailer; tags (Local Multiplayer, Shared/Split Screen PvP, Party, Racing); price; content survey.
+- [x] License audit → `LICENSES.md`: OToon (Asset Store EULA), DOTween, Cinemachine 2.1, Udar SceneField, Noisy Nodes, `Assets/Fonts`, all music/SFX. *(Inventory done; its ⚠️/❌ items still need answers — fonts, audio, brand names.)*
+- [ ] Store page: header 920×430, small 462×174, main 1232×706, vertical 748×896, library 600×900 + hero 3840×1240; 5+ screenshots; trailer; tags (Local Multiplayer, Shared/Split Screen PvP, Party, Racing); price; content survey. *(Text drafted in `docs/steam/store-page-draft.md`.)*
 - [ ] Submit store page + build for Valve review (a few business days each) → release.
+
+### Partner steps (Unity editor)
+
+Scene and Project Settings edits (the code can't safely make them while the editor is open):
+
+- *Alex Player Testing* → **Instantiation Manager** → Player Input Manager → **Player Left Event**: remove the entry (it points at a method that no longer exists).
+- *Alex Player Testing*: remove the **Audio Listener** component from **Black Camera Render** and **Color Camera Render** (keep Sound Manager's).
+- Project Settings → Player: **Version** `1.0.0`, set the **Default Icon**.
+- Options screen **Quality** row (optional — until then the saved or default quality applies):
+  - *Alex Player Testing* → **Options Canvas**: duplicate the Fullscreen row (label + its 2 points) as "Quality" with **3** points: Low, Medium, High.
+  - Add the new label to **OptionsMenu → Selector Objects** as the 4th entry.
+  - Assign **Quality Selector** and the 3 points to **Quality Selector Positions** on **OptionsMenu**.
+
+Checks (press Play from `SplashScreen`):
+
+- Reconnect: F1 twice (two test players join) → F2 → start a match → F3 (the newest test player's controller unplugs: the match pauses and "P3 controller disconnected" covers their view) → F1 (a new test controller takes that player over; nobody new joins) → pick Resume. Then try it with a real controller: unplug it mid-race, plug in a different one, press A.
+- Keyboard: press a key on the title screen → "Connect a controller to play" appears for 3 seconds.
+- Performance: 4 players (F1 ×3) → golden-order scene → Window → Analysis → Profiler → F4 through Low / Medium / High; note the CPU and GPU frame times for each.
+- Aspect ratios: Game view at 1280×800 (Steam Deck) and 2560×1080 with 1, 2 and 4 players — check the HUD isn't cut off.
+- Test Runner → EditMode → Run All: 75 passed.
 
 ---
 

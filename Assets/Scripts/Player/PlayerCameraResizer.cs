@@ -74,6 +74,7 @@ public class PlayerCameraResizer : MonoBehaviour
     [SerializeField] BallDriving ballDriving;
     [SerializeField] DrivingIndicators drivingIndicators;
     bool initalized = false;
+    Rect followedRect;
 
     public int cameraLayer = 0;
     public int playerWorldLayer = 0;
@@ -84,10 +85,7 @@ public class PlayerCameraResizer : MonoBehaviour
     {
         phaseTransitionMaterialMain = new Material(phaseTransitionMaterial);
 
-        phaseCameraRT = new RenderTexture(1920,1080,24, RenderTextureFormat.ARGB32);
-        phaseCamera.targetTexture = phaseCameraRT;
-
-        phaseTransitionMaterialMain.SetTexture(HashReference._mainTexProperty, phaseCamera.targetTexture);
+        ResizePhaseTexture();
 
         phaseRender.GetComponent<Image>().material = phaseTransitionMaterialMain;
     }
@@ -103,24 +101,71 @@ public class PlayerCameraResizer : MonoBehaviour
             phaseCamera.transform.position = referenceCam.transform.position;
         }
 
-        // Returns if updated already
-        if (initalized)
+        // Keeps the phase transition texture the size of this player's view (players joining or leaving, window resized)
+        if (phaseCameraRT != null)
+            ResizePhaseTexture();
+
+        // Waits until the player is given their first split-screen viewport
+        if (!initalized && referenceCam.rect.x == viewPortRectDefault.x && referenceCam.rect.y == viewPortRectDefault.y
+            && referenceCam.rect.width == viewPortRectDefault.z && referenceCam.rect.height == viewPortRectDefault.w)
             return;
 
-        // If it does not equal default, then player is initalized and the other cameras should follow.
-        if(referenceCam.rect.x != viewPortRectDefault.x || referenceCam.rect.y != viewPortRectDefault.y 
-            || referenceCam.rect.width != viewPortRectDefault.z || referenceCam.rect.height != viewPortRectDefault.w)
+        // Returns if the other cameras already match
+        if (initalized && referenceCam.rect == followedRect)
+            return;
+
+        // Players joining or leaving resize the reference cam, so the other cameras follow every change
+        foreach (Camera cam in camerasToFollow)
         {
-
-            // Loops through each cam
-            foreach(Camera cam in camerasToFollow)
-            {
-                // Updates to be equal to reference cam
-                cam.rect = new Rect(referenceCam.rect.x, referenceCam.rect.y, referenceCam.rect.width, referenceCam.rect.height);
-            }
-
-            initalized = true;
+            cam.rect = referenceCam.rect;
         }
+
+        followedRect = referenceCam.rect;
+        initalized = true;
+    }
+
+    ///<summary>
+    /// Renders the phase camera at this player's view size in pixels, so the transition isn't stretched or drawn bigger than the view
+    ///</summary>
+    private void ResizePhaseTexture()
+    {
+        int width = Mathf.Max(1, referenceCam.pixelWidth);
+        int height = Mathf.Max(1, referenceCam.pixelHeight);
+
+        if (phaseCameraRT != null && phaseCameraRT.width == width && phaseCameraRT.height == height)
+            return;
+
+        ReleasePhaseTexture();
+
+        phaseCameraRT = new RenderTexture(width, height, 24, RenderTextureFormat.ARGB32);
+        phaseCamera.targetTexture = phaseCameraRT;
+        phaseTransitionMaterialMain.SetTexture(HashReference._mainTexProperty, phaseCameraRT);
+    }
+
+    ///<summary>
+    /// Frees the phase camera's texture
+    ///</summary>
+    private void ReleasePhaseTexture()
+    {
+        if (phaseCameraRT == null)
+            return;
+
+        if (phaseCamera != null)
+            phaseCamera.targetTexture = null;
+
+        phaseCameraRT.Release();
+
+        if (Application.isPlaying)
+            Destroy(phaseCameraRT);
+        else
+            DestroyImmediate(phaseCameraRT);
+
+        phaseCameraRT = null;
+    }
+
+    private void OnDestroy()
+    {
+        ReleasePhaseTexture();
     }
 
     ///<summary>
