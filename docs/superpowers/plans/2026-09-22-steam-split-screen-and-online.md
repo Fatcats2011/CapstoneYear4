@@ -60,8 +60,8 @@
 - [ ] Boost, drift tiers 1–3, phasing (only in that player's view), steal, clash, water respawn.
 - [ ] Pause from any player (host vs sub pause menu), resume, return to menu.
 - [ ] Unplug/replug a controller mid-match (after Task 1.3).
-- [ ] EditMode tests green: Window → General → Test Runner → EditMode → Run All.
-- Short on controllers? F1 adds a virtual test player, F2 presses A on all of them, F3 unplugs / replugs the newest (editor and development builds; see `docs/dev-hotkeys.md`).
+- [ ] EditMode tests green: Window → General → Test Runner → EditMode → Run All. It includes an automated 4-player match (`LocalMatchSmokeTest`, 1–2 minutes: menus, loading, cutscene, driving, pause, controller unplug) — let it play. Command line: `bash tools/run-tests.sh` (see `docs/testing.md`).
+- Short on controllers? F1 adds a virtual test player, F2 presses A on all of them, F3 unplugs / replugs the newest (editor and development builds; see `docs/dev-hotkeys.md`). The title screen only lets player 1 in, so add the others in player select.
 
 ---
 
@@ -75,7 +75,7 @@ Progress (2026-09-23): code done in Phase 1A (`2026-09-22-phase1a-release-harden
 - [x] `RemoveFromPlayerArray` returns `0` when the player isn't found → return `-1` and guard the caller (`PlayerInstantiate.cs:388-399`, caller `:335-338`).
 - [x] `OrderHandler.OnDisable` subscribes instead of unsubscribing: `+= InitHandler` → `-= InitHandler` (`OrderHandler.cs:82`).
 - [x] Lambdas unsubscribed with a new lambda never unsubscribe → store the delegate in a field: `BallDriving.cs:285-304`, `SoundManager.cs:105/115`, `OrderHandler.cs:311/319`. *(The `OrderHandler` game-end lambda was left: its `OrderManager` is destroyed every match, so it can't pile up.)*
-- [ ] `SpawnManager` loops `i <= MAX_PLAYERS` inside an empty `catch` → `i < MAX_PLAYERS`, remove the empty catch (`SpawnManager.cs:57-78`, `:90-108`). *(Moved to Phase 2: Task 2.1 rewrites it.)*
+- [x] `SpawnManager` loops `i <= MAX_PLAYERS` inside an empty `catch` → `i < MAX_PLAYERS`, remove the empty catch (`SpawnManager.cs:57-78`, `:90-108`). *(Done in Phase 2A with the roster. The empty catch was hiding a 4-player bug: the golden-round scenes list 3 spawn points, so player 4 was never moved to the start of the golden round; they now use their normal "Spawn 4" point, which sits in line with the other three.)*
 - [x] `PlayerCameraResizer.Update` copies the viewport to follower cameras only once (`initalized` flag) → re-copy whenever `referenceCam.rect` changes (`PlayerCameraResizer.cs:106-123`); check P1's Icon Camera after P3/P4 join.
 - [x] `Rumbler.Start` / `OnApplicationQuit` use `Gamepad.current` without a null check → keep only `InputSystem.ResetHaptics()` (`Rumbler.cs:14-24`).
 - [ ] Exactly one active AudioListener: the bootstrap scene has 4 (*Black Camera Render*, *Color Camera Render*, *Menu Audio Listener*, *Sound Manager*) → removes ~7,000 "3 audio listeners" warnings per session. *(Partner step — scene edit.)*
@@ -107,7 +107,7 @@ Progress (2026-09-23): code done in Phase 1A (`2026-09-22-phase1a-release-harden
 - [ ] Options menu: add resolution, window mode, VSync, frame cap and quality preset (today: fullscreen toggle + 2 volumes). *(Quality is done in code and saved; its row needs menu art — partner step. Resolution / window mode / VSync / frame cap not started: builds run borderless at desktop resolution with VSync on.)*
 - [x] Quality presets for `Assets/Rendering/URP Asset.asset` (today: MSAA 8x, HDR, 4096 shadow map, SSAO + decals + outlines on every player renderer), e.g. Low = no MSAA, no SSAO, 1024 shadows; High = MSAA 4x, 2048 shadows. *(Done as `GraphicsQuality`: High = the asset as authored; Medium = MSAA 4×, 200 m shadows, 2 cascades; Low = no MSAA, 100 m, 1 cascade. SSAO stays on (it lives in the 12 renderers). Steam Deck starts on Medium.)*
 - [x] Phase-camera render texture is a fixed 1920×1080 per player (`PlayerCameraResizer.cs:87`) → size it to that player's viewport.
-- [ ] Targets: 4 players at 1080p ≥ 60 fps on a GTX 1060-class GPU; Steam Deck ≥ 30 fps at 1280×800. Profile the 4-player golden-order scene first. *(Partner step: F1 ×3 for 4 players, F4 to switch quality.)*
+- [ ] Targets: 4 players at 1080p ≥ 60 fps on a GTX 1060-class GPU; Steam Deck ≥ 30 fps at 1280×800. Profile the 4-player golden-order scene first. *(Partner step: F1 ×3 in player select for 4 players, F4 to switch quality.)*
 - [ ] Aspect ratios: `PlayerInstantiate.CalculateRects` assumes 16:9 → check 16:10 (Steam Deck) and 21:9. *(Viewports are fractions of the screen, so each view keeps the screen's shape, and the phase texture now follows it (tested at 1280×800 and 2560×1080). Still to check by eye: the HUD at 16:10 and 21:9 in the Game view.)*
 - [ ] Tests: Profiler capture per preset, before/after.
 
@@ -144,11 +144,11 @@ Scene and Project Settings edits (the code can't safely make them while the edit
 
 Checks (press Play from `SplashScreen`):
 
-- Reconnect: F1 twice (two test players join) → F2 → start a match → F3 (the newest test player's controller unplugs: the match pauses and "P3 controller disconnected" covers their view) → F1 (a new test controller takes that player over; nobody new joins) → pick Resume. Then try it with a real controller: unplug it mid-race, plug in a different one, press A.
+- Reconnect: join with your controller and pick Play → in player select, F1 twice (two test players join as P2 and P3; the title screen only lets player 1 in) → F2 and ready up yourself → confirm the loading screen (F2 + your A) → F3 mid-race (the newest test player's controller unplugs: the match pauses and "P3 controller disconnected" covers their view) → F1 (a new test controller takes that player over; nobody new joins) → pick Resume. Then try it with a real controller: unplug it mid-race, plug in a different one, press A.
 - Keyboard: press a key on the title screen → "Connect a controller to play" appears for 3 seconds.
-- Performance: 4 players (F1 ×3) → golden-order scene → Window → Analysis → Profiler → F4 through Low / Medium / High; note the CPU and GPU frame times for each.
+- Performance: 4 players (your controller + F1 ×3 in player select) → golden-order scene → Window → Analysis → Profiler → F4 through Low / Medium / High; note the CPU and GPU frame times for each.
 - Aspect ratios: Game view at 1280×800 (Steam Deck) and 2560×1080 with 1, 2 and 4 players — check the HUD isn't cut off.
-- Test Runner → EditMode → Run All: 75 passed.
+- Test Runner → EditMode → Run All: 97 passed (the smoke test plays a match for a minute or two).
 
 ---
 
@@ -156,12 +156,14 @@ Checks (press Play from `SplashScreen`):
 
 Goal: identical game, but a player's identity and authority no longer live in `PlayerInput`, so Phase 3 can plug in netcode.
 
+Progress (2026-09-23): Phase 2A (`2026-09-23-phase2a-roster-and-smoke-test.md`) — automated 4-player match test and the player roster (Task 2.1). Next: Phase 2B (Tasks 2.3–2.5); Task 2.2 needs the editor.
+
 ### Task 2.1: Player roster
 
-- [ ] `PlayerSlot` (slot 0–3, company/colour/hat index, `isLocal`, `ownerClientId`, `PlayerInput` or `null`) + `PlayerRoster` as the single source of truth instead of `PlayerInstantiate.PlayerInputs`.
-- [ ] Migrate every user of the `PlayerInput[]` array: `BeconIndicator`, `DrivingIndicators`, `BoostPadManager`, `CutoutManager`, `OrderManager`, `MainMenu`, `PlayerSelectCanvas`, `Menu/SceneManager`, `SpawnManager`, `CompassMarker`, `ScoreManager`, `QAManager`, `LoadingScreenManager`, `MenuInteractions`, `PlayerInstantiate`.
-- [ ] Keep the per-slot mapping: player layer `10+slot`, camera layer `17+slot`, icon layer `24+slot`, URP renderer `slot+1` (main) / `slot+5` (phase), phasing = `Physics.IgnoreLayerCollision(9, 10+slot)`.
-- [ ] Tests: EditMode tests for slot assignment (fills lowest free slot, frees on leave, max 4); §R checklist.
+- [x] `PlayerSlot` (slot 0–3, company/colour/hat index, `isLocal`, `ownerClientId`, `PlayerInput` or `null`) + `PlayerRoster` as the single source of truth instead of `PlayerInstantiate.PlayerInputs`. *(`PlayerInstantiate.Roster`; `PlayerCount` is `Roster.Count`. `IsLocal` means "has a `PlayerInput`". Colour and hat stay in `CustomizationSelector` until Phase 3's `NetworkPlayer` needs them.)*
+- [x] Migrate every user of the `PlayerInput[]` array. *(Loops use `Players` for what every player has (scooter, orders, spawns, cutouts, tutorial orders, lobby prompts, loading buttons) and `LocalPlayers` for what belongs to a split-screen view on this machine (camera, menus, compass UI, per-view indicators and boost pads). `QAManager` never used the array.)*
+- [x] Keep the per-slot mapping: player layer `10+slot`, camera layer `17+slot`, icon layer `24+slot`, URP renderer `slot+1` (main) / `slot+5` (phase), phasing = `Physics.IgnoreLayerCollision(9, 10+slot)`. *(Unchanged in `AddPlayerReference`.)*
+- [x] Tests: EditMode tests for slot assignment (fills lowest free slot, frees on leave, max 4); §R checklist. *(`PlayerRosterTests`; §R's play-through is automated by `LocalMatchSmokeTest`.)*
 
 ### Task 2.2: Split the player prefab
 

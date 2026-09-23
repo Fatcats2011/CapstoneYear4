@@ -162,7 +162,7 @@ public class SceneManager : SingletonMonobehaviour<SceneManager>
                 {
                     yield return new WaitForSeconds(5f);
                     // Sets up the loading scene with the amount of players
-                    LoadingScreenManager.Instance.InitalizeButtonGameobjects(PlayerInstantiate.Instance.PlayerInputs);
+                    LoadingScreenManager.Instance.InitalizeButtonGameobjects(PlayerInstantiate.Instance.Roster);
                     enableConfirm = true;
                     break;
                 }

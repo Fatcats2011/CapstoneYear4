@@ -82,26 +82,26 @@ public class DrivingIndicators : MonoBehaviour
         playersToKeepTrackOf = new GameObject[4];
         playerCameraTransforms = new Transform[4];
 
-        for (int i = 0; i < playerInstantiate.PlayerInputs.Length; i++)
+        // Every other split-screen view on this machine sees this player's indicator, turned towards its camera
+        foreach (PlayerSlot viewer in playerInstantiate.Roster.LocalPlayers)
         {
-            PlayerInput playerInput = playerInstantiate.PlayerInputs[i];
+            if (viewer.Input == thisPlayer)
+                continue;
 
-            if (playerInput != null && playerInput != thisPlayer)
+            int i = viewer.Index;
+            playersToKeepTrackOf[i] = viewer.Player.GetComponentInChildren<BallDriving>().gameObject;
+
+            playerCameraTransforms[i] = viewer.Input.GetComponent<PlayerCameraResizer>().PlayerReferenceCamera.transform;
+
+            playersRotationObjects[i].SetActive(true);
+
+            List<GameObject> needToSwitch = new List<GameObject>
             {
-                playersToKeepTrackOf[i] = playerInput.gameObject.GetComponentInChildren<BallDriving>().gameObject;
+                playersRotationObjects[i],
+                playersRotationObjects[i].transform.GetChild(0).gameObject
+            };
 
-                playerCameraTransforms[i] = playerInput.gameObject.GetComponent<PlayerCameraResizer>().PlayerReferenceCamera.transform;
-
-                playersRotationObjects[i].SetActive(true);
-
-                List<GameObject> needToSwitch = new List<GameObject>
-                {
-                    playersRotationObjects[i],
-                    playersRotationObjects[i].transform.GetChild(0).gameObject
-                };
-
-                PlayerCameraResizer.UpdatePlayerObjectLayer(needToSwitch, i, iconCamera);
-            }
+            PlayerCameraResizer.UpdatePlayerObjectLayer(needToSwitch, i, iconCamera);
         }
     }
 

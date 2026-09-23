@@ -22,13 +22,10 @@ public class CutoutManager : MonoBehaviour
 
     private void SpawnCutouts()
     {
-        for (int i = 0; i < Constants.MAX_PLAYERS; i++)
+        foreach (PlayerSlot player in PlayerInstantiate.Instance.Roster.Players)
         {
-            if (PlayerInstantiate.Instance.PlayerInputs[i] == null)
-                continue;
-
-            cutouts[i].gameObject.SetActive(true);
-            cutouts[i].InitCutout();
+            cutouts[player.Index].gameObject.SetActive(true);
+            cutouts[player.Index].InitCutout();
         }
     }
 }

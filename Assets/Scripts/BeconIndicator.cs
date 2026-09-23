@@ -98,16 +98,12 @@ public class BeconIndicator : MonoBehaviour
         playersToKeepTrackOf = new GameObject[4];
         playerCameraTransforms = new Transform[4];
 
-        for (int i = 0; i < PlayerInstantiate.Instance.PlayerInputs.Length; i++)
+        // Each split-screen view on this machine sees its own copy of the beacon, turned towards its camera
+        foreach (PlayerSlot viewer in PlayerInstantiate.Instance.Roster.LocalPlayers)
         {
-            PlayerInput playerInput = PlayerInstantiate.Instance.PlayerInputs[i];
-
-            if (playerInput != null)
-            {
-                playersToKeepTrackOf[i] = playerInput.gameObject.GetComponentInChildren<BallDriving>().gameObject;
-                playerCameraTransforms[i] = playerInput.gameObject.GetComponent<PlayerCameraResizer>().PlayerReferenceCamera.transform;
-                beconRotationObjects[i].SetActive(true);
-            }
+            playersToKeepTrackOf[viewer.Index] = viewer.Player.GetComponentInChildren<BallDriving>().gameObject;
+            playerCameraTransforms[viewer.Index] = viewer.Input.GetComponent<PlayerCameraResizer>().PlayerReferenceCamera.transform;
+            beconRotationObjects[viewer.Index].SetActive(true);
         }
 
         // plays the spawn animation for the becon

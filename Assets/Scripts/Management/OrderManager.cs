@@ -246,14 +246,11 @@ public class OrderManager : SingletonMonobehaviour<OrderManager>
     private void InitTutorial()
     {
         TutorialManager.Instance.ShouldTutorialize = true;
-        for (int i=0;i<Constants.MAX_PLAYERS;i++)
+        foreach (PlayerSlot player in PlayerInstantiate.Instance.Roster.Players)
         {
-            if (PlayerInstantiate.Instance.PlayerInputs[i] == null)
-                continue;
-
-            tutorialOrders[i].InitOrder(false);
-            OnDeleteActiveOrders += tutorialOrders[i].EraseOrder;
-            IncrementCounters(tutorialOrders[i].Value, 1);
+            tutorialOrders[player.Index].InitOrder(false);
+            OnDeleteActiveOrders += tutorialOrders[player.Index].EraseOrder;
+            IncrementCounters(tutorialOrders[player.Index].Value, 1);
         }
     }
 

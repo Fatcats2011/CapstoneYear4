@@ -1,7 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.InputSystem;
 using UnityEngine.UI;
 
 public class LoadingScreenManager : SingletonMonobehaviour<LoadingScreenManager>
@@ -14,22 +13,18 @@ public class LoadingScreenManager : SingletonMonobehaviour<LoadingScreenManager>
     [SerializeField] GameObject[] ButtonColors;
 
     ///<summary>
-    /// Initalizes the button objects based on player count
+    /// Shows a confirm button for every player, packed left to right in slot order
     ///</summary>
-    public void InitalizeButtonGameobjects(PlayerInput[] playerInputs)
+    public void InitalizeButtonGameobjects(PlayerRoster roster)
     {
         int buttons = 0;
 
-        // Loops for all spawned players
-        for (int i = 0; i < playerInputs.Length; i++)
+        foreach (PlayerSlot player in roster.Players)
         {
-            if (playerInputs[i] == null)
-                continue;
-
-            ButtonGameobjects[i].gameObject.transform.position = buttonPositions[buttons].transform.position;
+            ButtonGameobjects[player.Index].gameObject.transform.position = buttonPositions[buttons].transform.position;
 
             // Enables buttons required for players
-            ButtonGameobjects[i].gameObject.SetActive(true);
+            ButtonGameobjects[player.Index].gameObject.SetActive(true);
 
             buttons++;
         }

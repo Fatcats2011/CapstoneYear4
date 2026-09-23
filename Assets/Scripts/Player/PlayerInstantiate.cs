@@ -18,13 +18,12 @@ public class PlayerInstantiate : SingletonMonobehaviour<PlayerInstantiate>
     [Tooltip("Enables or disables the ability for players to spawn into the lobby")]
     [SerializeField] bool allowPlayerSpawn = true;
 
-    [Tooltip("This value is our current player count, ie the # of players in match")]
-    [SerializeField] int playerCount = 0;
-    public int PlayerCount { get { return playerCount; } }
+    // Who is in each of the 4 player slots
+    readonly PlayerRoster roster = new PlayerRoster();
+    public PlayerRoster Roster { get { return roster; } }
 
-    [Tooltip("the list of availible player input class objects")]
-    [SerializeField] PlayerInput[] availiblePlayerInputs = new PlayerInput[Constants.MAX_PLAYERS];
-    public PlayerInput[] PlayerInputs { get { return availiblePlayerInputs; } }
+    // How many players have joined
+    public int PlayerCount { get { return roster.Count; } }
     [Tooltip("The indexed array of player spawn positions")]
     [SerializeField] GameObject[] menuSpawnPositions = new GameObject[Constants.MAX_PLAYERS];
 
@@ -127,7 +126,7 @@ public class PlayerInstantiate : SingletonMonobehaviour<PlayerInstantiate>
         if(playerInput.currentControlScheme != "Gamepad")
         {
             // Only controllers can play: outside a match, tell whoever pressed a key or an unsupported controller why nothing happened
-            if (allowPlayerSpawn || playerCount == 0)
+            if (allowPlayerSpawn || PlayerCount == 0)
                 ShowUnsupportedDeviceHint(playerInput.devices.Count > 0 ? playerInput.devices[0] : null);
 
             Destroy(playerInput.gameObject);
@@ -135,7 +134,7 @@ public class PlayerInstantiate : SingletonMonobehaviour<PlayerInstantiate>
         }
 
         // If player spawn is disabled
-        if(allowPlayerSpawn == false && playerCount >= 1)
+        if(allowPlayerSpawn == false && PlayerCount >= 1)
         {
 
             Destroy(playerInput.gameObject);
@@ -143,7 +142,17 @@ public class PlayerInstantiate : SingletonMonobehaviour<PlayerInstantiate>
         }
 
 
-        if (playerCount <= 0)
+        bool isFirstPlayer = PlayerCount == 0;
+
+        // Takes the lowest free slot
+        PlayerSlot slot = roster.JoinLocal(playerInput);
+        if (slot == null)
+        {
+            Destroy(playerInput.gameObject);
+            return;
+        }
+
+        if (isFirstPlayer)
         {
 
             playerInput.gameObject.GetComponent<PlayerUIHandler>().menuInteractions.hostPlayer = true;
@@ -156,24 +165,13 @@ public class PlayerInstantiate : SingletonMonobehaviour<PlayerInstantiate>
             playerInput.gameObject.GetComponent<PlayerUIHandler>().menuInteractions.SwapToPlayerSelect();
         }
 
-        // Up the player count
-        playerCount++;
-
         GameObject ColliderObject = playerInput.gameObject.GetComponentInChildren<SphereCollider>().gameObject;
         BallDriving ballDriving = playerInput.gameObject.GetComponentInChildren<BallDriving>();
         Camera baseCam = playerInput.camera;
         PlayerCameraResizer playerCameraResizer = playerInput.gameObject.GetComponentInChildren<PlayerCameraResizer>();
 
-        int nextFillSlot = 0;
-
-        for(int i = 0; i < availiblePlayerInputs.Length; i++)
-        {
-            if (availiblePlayerInputs[i] == null)
-            {
-                nextFillSlot = i + 1;
-                break;
-            }
-        }
+        int nextFillSlot = slot.Index + 1;
+        slot.Company = companies[slot.Index];
 
         // Update tag of player
         switch (nextFillSlot)
@@ -208,7 +206,7 @@ public class PlayerInstantiate : SingletonMonobehaviour<PlayerInstantiate>
                 break;
         }
 
-        playerCameraResizer.InitalizeCompanyScooter(companies[nextFillSlot - 1]);
+        playerCameraResizer.InitalizeCompanyScooter(slot.Company);
 
         // Updates the main virtual camera based on the player number
         playerCameraResizer.UpdateMainVirtualCameras(nextFillSlot);
@@ -223,9 +221,7 @@ public class PlayerInstantiate : SingletonMonobehaviour<PlayerInstantiate>
         playerInput.gameObject.name = "P" + nextFillSlot.ToString();
         playerInput.gameObject.transform.parent = playerHolder.transform;
         // assign a company to each player
-        playerInput.gameObject.GetComponentInChildren<OrderHandler>().CompanyInfo = companies[nextFillSlot - 1];
-
-        AddToPlayerArray(playerInput);
+        playerInput.gameObject.GetComponentInChildren<OrderHandler>().CompanyInfo = slot.Company;
 
         // Pauses the match if this player's controller disconnects, and clears the reconnect message when it comes back
         playerInput.deviceLostEvent.AddListener(OnPlayerControllerLost);
@@ -253,20 +249,19 @@ public class PlayerInstantiate : SingletonMonobehaviour<PlayerInstantiate>
     public void SetAllPlayerSpawn()
     {
         // Loops for all spawned players
-        for (int i = 0; i < availiblePlayerInputs.Length; i++)
+        foreach (PlayerSlot slot in roster.Players)
         {
-            if (availiblePlayerInputs[i] == null)
-                continue;
+            int i = slot.Index;
 
             // Resets the velocity of the players
-            availiblePlayerInputs[i].GetComponentInChildren<Rigidbody>().velocity = Vector3.zero;
+            slot.Player.GetComponentInChildren<Rigidbody>().velocity = Vector3.zero;
 
             // reset position and rotation of ball and controller
-            availiblePlayerInputs[i].GetComponentInChildren<Rigidbody>().transform.position = menuSpawnPositions[i].transform.position;
-            availiblePlayerInputs[i].GetComponentInChildren<Rigidbody>().transform.rotation = menuSpawnPositions[i].transform.rotation;
+            slot.Player.GetComponentInChildren<Rigidbody>().transform.position = menuSpawnPositions[i].transform.position;
+            slot.Player.GetComponentInChildren<Rigidbody>().transform.rotation = menuSpawnPositions[i].transform.rotation;
 
-            availiblePlayerInputs[i].GetComponentInChildren<BallDriving>().transform.position = menuSpawnPositions[i].transform.position;
-            availiblePlayerInputs[i].GetComponentInChildren<BallDriving>().transform.rotation = menuSpawnPositions[i].transform.rotation;
+            slot.Player.GetComponentInChildren<BallDriving>().transform.position = menuSpawnPositions[i].transform.position;
+            slot.Player.GetComponentInChildren<BallDriving>().transform.rotation = menuSpawnPositions[i].transform.rotation;
         }
     }
 
@@ -275,29 +270,15 @@ public class PlayerInstantiate : SingletonMonobehaviour<PlayerInstantiate>
     ///</summary>
     private void UpdatePlayerCameraRects()
     {
-        cameraRects = SplitScreenLayout.CalculateRects(playerCount);
-
-        if (cameraRects.Length <= 0)
-            return;
+        // Only players on this machine have a split-screen view
+        cameraRects = SplitScreenLayout.CalculateRects(roster.LocalCount);
 
         int cameraRectCounter = 0;
 
-        for (int i = 0; i < availiblePlayerInputs.Length; i++)
+        foreach (PlayerSlot slot in roster.LocalPlayers)
         {
-            if (availiblePlayerInputs[i] != null)
-            {
-                if (cameraRectCounter < cameraRects.Length)
-                {
-                    Rect temp = cameraRects[cameraRectCounter];
-                    availiblePlayerInputs[i].camera.rect = temp;
-                    cameraRectCounter++;
-                }
-                else
-                {
-                    // Handle the case where there are more non-null player inputs than camera rects
-                    break;
-                }
-            }
+            slot.Input.camera.rect = cameraRects[cameraRectCounter];
+            cameraRectCounter++;
         }
     }
 
@@ -312,13 +293,13 @@ public class PlayerInstantiate : SingletonMonobehaviour<PlayerInstantiate>
             return;
         }
 
-        int position = RemoveFromPlayerArray(playerInput);
+        int position = roster.Leave(playerInput);
 
         //Enabled text for fillslot text based on player's removed position
         if (position >= 0)
             PlayerSelectCanvas.Instance.TogglePressButtonTexts(position, true);
 
-        ScoreManager.Instance.UpdateOrderHandlers(availiblePlayerInputs);
+        ScoreManager.Instance.UpdateOrderHandlers(roster);
         
         Destroy(playerInput.gameObject);
 
@@ -330,58 +311,16 @@ public class PlayerInstantiate : SingletonMonobehaviour<PlayerInstantiate>
         CheckReadyUpCount();
     }
 
-    public void SubtractPlayerCount()
-    {
-        playerCount--;
-    }
-
     ///<summary>
     /// Destroys all connected players
     ///</summary>
     public void ClearPlayerArray()
     {
-        for (int i = 0; i < Constants.MAX_PLAYERS; i++)
-        {
-            if (availiblePlayerInputs[i] != null)
-            {
-                Destroy(availiblePlayerInputs[i].gameObject);
-                availiblePlayerInputs[i] = null;
-                playerCount--;
-            }
-        }
+        foreach (PlayerSlot slot in roster.Players)
+            Destroy(slot.Player);
+        roster.Clear();
 
         UpdateControllerPrompts();
-    }
-
-    ///<summary>
-    /// Adds the player input to the player array
-    ///</summary>
-    public void AddToPlayerArray(PlayerInput playerInput)
-    {
-        for (int i = 0; i < Constants.MAX_PLAYERS; i++)
-        {
-            if (availiblePlayerInputs[i] == null)
-            {
-                availiblePlayerInputs[i] = playerInput;
-                break;
-            }
-        }
-    }
-
-    ///<summary>
-    /// Removes the player input from the player array, returns position where it was removed, or -1 if the player was not in the array
-    ///</summary>
-    public int RemoveFromPlayerArray(PlayerInput playerInput)
-    {
-        for (int i = 0; i < Constants.MAX_PLAYERS; i++)
-        {
-            if (availiblePlayerInputs[i] == playerInput)
-            {
-                availiblePlayerInputs[i] = null;
-                return i;
-            }
-        }
-        return -1;
     }
 
     ///<summary>
@@ -390,7 +329,7 @@ public class PlayerInstantiate : SingletonMonobehaviour<PlayerInstantiate>
     public void ReadyUp(int playerIndexToReadyUp)
     {
         playerReadyUp[playerIndexToReadyUp] = true;
-        availiblePlayerInputs[playerIndexToReadyUp].gameObject.GetComponent<PlayerUIHandler>().customizationSelector.SetDisableOptionsCustomization(true);
+        roster[playerIndexToReadyUp].Input.GetComponent<PlayerUIHandler>().customizationSelector.SetDisableOptionsCustomization(true);
         CheckReadyUpCount();
     }
 
@@ -400,7 +339,7 @@ public class PlayerInstantiate : SingletonMonobehaviour<PlayerInstantiate>
     public void UnreadyUp(int playerIndexToReadyUp)
     {
         playerReadyUp[playerIndexToReadyUp] = false;
-        availiblePlayerInputs[playerIndexToReadyUp].gameObject.GetComponent<PlayerUIHandler>().customizationSelector.SetDisableOptionsCustomization(false);
+        roster[playerIndexToReadyUp].Input.GetComponent<PlayerUIHandler>().customizationSelector.SetDisableOptionsCustomization(false);
         if (readyUpCountdown != null)
         {
             PlayerSelectCanvas.Instance.StopCountdown();
@@ -436,7 +375,7 @@ public class PlayerInstantiate : SingletonMonobehaviour<PlayerInstantiate>
         }
 
         // Checks if players are greater then 1 and all players are readied up
-        if (readyUpCounter >= playerCount && playerCount >= 1)
+        if (readyUpCounter >= PlayerCount && PlayerCount >= 1)
         {
             if(readyUpCountdown == null)
                 readyUpCountdown = StartCoroutine(ReadyUpCountdown());
@@ -503,7 +442,7 @@ public class PlayerInstantiate : SingletonMonobehaviour<PlayerInstantiate>
         }
 
         // Checks if players are greater then 1 and all players are readied up
-        if (readyUpCounter >= playerCount && playerCount >= 1)
+        if (readyUpCounter >= PlayerCount && PlayerCount >= 1)
         {
             SceneManager.Instance.ConfirmLoad();
         }
@@ -558,22 +497,19 @@ public class PlayerInstantiate : SingletonMonobehaviour<PlayerInstantiate>
     /// </summary>
     private void SwapMenuTypeForAllPlayers(MenuType menuType)
     {
-        for (int i = 0; i < Constants.MAX_PLAYERS; i++)
+        foreach (PlayerSlot slot in roster.LocalPlayers)
         {
-            if (availiblePlayerInputs[i] == null)
-                continue;
-
-            availiblePlayerInputs[i].gameObject.GetComponent<PlayerUIHandler>().menuInteractions.SwapMenuType(menuType);
+            slot.Input.GetComponent<PlayerUIHandler>().menuInteractions.SwapMenuType(menuType);
 
             // If swapping to pause menu, reparent menu ui to game-camera
             if (menuType == MenuType.PauseMenu)
             {
-                availiblePlayerInputs[i].gameObject.GetComponent<PlayerCameraResizer>().ReparentMenuCameraStack(true);
+                slot.Input.GetComponent<PlayerCameraResizer>().ReparentMenuCameraStack(true);
             }
             // If swapping to other menu, reparent menu ui to player-camera on main menu
             else if (menuType == MenuType.MainMenu || menuType == MenuType.ResultsMenu)
             {
-                availiblePlayerInputs[i].gameObject.GetComponent<PlayerCameraResizer>().ReparentMenuCameraStack(false);
+                slot.Input.GetComponent<PlayerCameraResizer>().ReparentMenuCameraStack(false);
             }
         }
     }
@@ -583,16 +519,13 @@ public class PlayerInstantiate : SingletonMonobehaviour<PlayerInstantiate>
     ///</summary>
     public void SwapPlayerInputControlSchemeToUI()
     {
-        for (int i = 0; i < Constants.MAX_PLAYERS; i++)
+        foreach (PlayerSlot slot in roster.LocalPlayers)
         {
-            if (availiblePlayerInputs[i] == null)
-                continue;
+            slot.Input.GetComponent<PlayerCameraResizer>().SwapCanvas(true);
 
-            availiblePlayerInputs[i].gameObject.GetComponent<PlayerCameraResizer>().SwapCanvas(true);
-
-            availiblePlayerInputs[i].actions.FindActionMap("UI").Enable();
-            availiblePlayerInputs[i].actions.FindActionMap("Player").Disable();
-            availiblePlayerInputs[i].actions.FindActionMap("Load").Disable();
+            slot.Input.actions.FindActionMap("UI").Enable();
+            slot.Input.actions.FindActionMap("Player").Disable();
+            slot.Input.actions.FindActionMap("Load").Disable();
         }
     }
 
@@ -601,16 +534,13 @@ public class PlayerInstantiate : SingletonMonobehaviour<PlayerInstantiate>
     ///</summary>
     public void SwapPlayerInputControlSchemeToDrive()
     {
-        for (int i = 0; i < Constants.MAX_PLAYERS; i++)
+        foreach (PlayerSlot slot in roster.LocalPlayers)
         {
-            if (availiblePlayerInputs[i] == null)
-                continue;
+            slot.Input.GetComponent<PlayerCameraResizer>().SwapCanvas(false);
 
-            availiblePlayerInputs[i].gameObject.GetComponent<PlayerCameraResizer>().SwapCanvas(false);
-
-            availiblePlayerInputs[i].actions.FindActionMap("UI").Disable();
-            availiblePlayerInputs[i].actions.FindActionMap("Player").Enable();
-            availiblePlayerInputs[i].actions.FindActionMap("Load").Disable();
+            slot.Input.actions.FindActionMap("UI").Disable();
+            slot.Input.actions.FindActionMap("Player").Enable();
+            slot.Input.actions.FindActionMap("Load").Disable();
         }
     }
 
@@ -619,14 +549,11 @@ public class PlayerInstantiate : SingletonMonobehaviour<PlayerInstantiate>
     ///</summary>
     public void SwapPlayerInputControlSchemeToLoad()
     {
-        for (int i = 0; i < Constants.MAX_PLAYERS; i++)
+        foreach (PlayerSlot slot in roster.LocalPlayers)
         {
-            if (availiblePlayerInputs[i] == null)
-                continue;
-
-            availiblePlayerInputs[i].actions.FindActionMap("UI").Disable();
-            availiblePlayerInputs[i].actions.FindActionMap("Player").Disable();
-            availiblePlayerInputs[i].actions.FindActionMap("Load").Enable();
+            slot.Input.actions.FindActionMap("UI").Disable();
+            slot.Input.actions.FindActionMap("Player").Disable();
+            slot.Input.actions.FindActionMap("Load").Enable();
         }
     }
 
@@ -666,13 +593,8 @@ public class PlayerInstantiate : SingletonMonobehaviour<PlayerInstantiate>
     ///</summary>
     public void ResetPlayerCanvas()
     {
-        for (int i = 0; i < Constants.MAX_PLAYERS; i++)
-        {
-            if (availiblePlayerInputs[i] == null)
-                continue;
-
-            availiblePlayerInputs[i].gameObject.GetComponent<PlayerUIHandler>().MenuCanvas.GetComponent<MenuInteractions>().ResetCanvas();
-        }
+        foreach (PlayerSlot slot in roster.LocalPlayers)
+            slot.Input.GetComponent<PlayerUIHandler>().MenuCanvas.GetComponent<MenuInteractions>().ResetCanvas();
     }
 
     ///<summary>
@@ -684,21 +606,20 @@ public class PlayerInstantiate : SingletonMonobehaviour<PlayerInstantiate>
 
         Time.timeScale = 0f;
 
-        for (int i = 0; i < Constants.MAX_PLAYERS; i++)
+        foreach (PlayerSlot slot in roster.LocalPlayers)
         {
-            if (availiblePlayerInputs[i] == null)
-                continue;
+            MenuInteractions menu = slot.Input.GetComponent<PlayerUIHandler>().MenuCanvas.GetComponent<MenuInteractions>();
 
             // For one who paused
-            if (playerInput == availiblePlayerInputs[i])
+            if (playerInput == slot.Input)
             {
-                availiblePlayerInputs[i].gameObject.GetComponent<PlayerUIHandler>().MenuCanvas.GetComponent<MenuInteractions>().hostPause = true;
-                availiblePlayerInputs[i].gameObject.GetComponent<PlayerUIHandler>().MenuCanvas.GetComponent<MenuInteractions>().pauseMenu.OnPause(PauseMenu.PauseType.Host);
+                menu.hostPause = true;
+                menu.pauseMenu.OnPause(PauseMenu.PauseType.Host);
             }
             else
             {
-                availiblePlayerInputs[i].gameObject.GetComponent<PlayerUIHandler>().MenuCanvas.GetComponent<MenuInteractions>().hostPause = false;
-                availiblePlayerInputs[i].gameObject.GetComponent<PlayerUIHandler>().MenuCanvas.GetComponent<MenuInteractions>().pauseMenu.OnPause(PauseMenu.PauseType.Sub);
+                menu.hostPause = false;
+                menu.pauseMenu.OnPause(PauseMenu.PauseType.Sub);
             }
         }
     }
@@ -716,7 +637,7 @@ public class PlayerInstantiate : SingletonMonobehaviour<PlayerInstantiate>
     ///</summary>
     private void OnPlayerControllerLost(PlayerInput lostPlayer)
     {
-        int lostSlot = Array.IndexOf(availiblePlayerInputs, lostPlayer);
+        int lostSlot = roster.IndexOf(lostPlayer);
         if (lostSlot < 0)
             return;
 
@@ -727,14 +648,15 @@ public class PlayerInstantiate : SingletonMonobehaviour<PlayerInstantiate>
         if (!ControllerDisconnectPolicy.ShouldPause(lostPlayerMenu.curentMenuType == MenuType.PauseMenu, Time.timeScale == 0f))
             return;
 
-        bool[] slotHasController = new bool[availiblePlayerInputs.Length];
-        for (int i = 0; i < availiblePlayerInputs.Length; i++)
+        bool[] slotHasController = new bool[Constants.MAX_PLAYERS];
+        for (int i = 0; i < slotHasController.Length; i++)
         {
-            slotHasController[i] = availiblePlayerInputs[i] != null && !IsMissingController(availiblePlayerInputs[i].user);
+            PlayerSlot slot = roster[i];
+            slotHasController[i] = slot != null && slot.IsLocal && !IsMissingController(slot.Input.user);
         }
 
         int hostSlot = ControllerDisconnectPolicy.PickPauseHost(slotHasController, lostSlot);
-        availiblePlayerInputs[hostSlot].gameObject.GetComponent<PlayerUIHandler>().menuInteractions.PauseGame(true);
+        roster[hostSlot].Input.GetComponent<PlayerUIHandler>().menuInteractions.PauseGame(true);
     }
 
     ///<summary>
@@ -754,7 +676,7 @@ public class PlayerInstantiate : SingletonMonobehaviour<PlayerInstantiate>
         if (slot < 0)
             return;
 
-        PlayerInput player = availiblePlayerInputs[slot];
+        PlayerInput player = roster[slot].Input;
 
         // Replaces the lost controller too, so it won't also drive this player if it comes back later
         InputUser.PerformPairingWithDevice(gamepad, player.user, InputUserPairingOptions.UnpairCurrentDevicesFromUser);
@@ -780,10 +702,11 @@ public class PlayerInstantiate : SingletonMonobehaviour<PlayerInstantiate>
     ///</summary>
     private bool[] SlotsMissingController()
     {
-        bool[] missing = new bool[availiblePlayerInputs.Length];
-        for (int i = 0; i < availiblePlayerInputs.Length; i++)
+        bool[] missing = new bool[Constants.MAX_PLAYERS];
+        for (int i = 0; i < missing.Length; i++)
         {
-            missing[i] = availiblePlayerInputs[i] != null && IsMissingController(availiblePlayerInputs[i].user);
+            PlayerSlot slot = roster[i];
+            missing[i] = slot != null && slot.IsLocal && IsMissingController(slot.Input.user);
         }
         return missing;
     }
@@ -806,7 +729,7 @@ public class PlayerInstantiate : SingletonMonobehaviour<PlayerInstantiate>
         for (int i = 0; i < missing.Length; i++)
         {
             if (missing[i])
-                ControllerPrompts.Instance.ShowReconnect(i, availiblePlayerInputs[i].camera.rect);
+                ControllerPrompts.Instance.ShowReconnect(i, roster[i].Input.camera.rect);
             else
                 ControllerPrompts.Instance.HideReconnect(i);
         }
@@ -823,13 +746,8 @@ public class PlayerInstantiate : SingletonMonobehaviour<PlayerInstantiate>
 
         Time.timeScale = 1f;
 
-        for (int i = 0; i < Constants.MAX_PLAYERS; i++)
-        {
-            if (availiblePlayerInputs[i] == null)
-                continue;
-
-            availiblePlayerInputs[i].gameObject.GetComponent<PlayerUIHandler>().MenuCanvas.GetComponent<MenuInteractions>().pauseMenu.OnPlay();
-        }
+        foreach (PlayerSlot slot in roster.LocalPlayers)
+            slot.Input.GetComponent<PlayerUIHandler>().MenuCanvas.GetComponent<MenuInteractions>().pauseMenu.OnPlay();
     }
 
     /// <summary>
@@ -837,12 +755,9 @@ public class PlayerInstantiate : SingletonMonobehaviour<PlayerInstantiate>
     /// </summary>
     public void PlayerUpdateDrivingIndicators()
     {
-        for (int i = 0; i < Constants.MAX_PLAYERS; i++)
-        {
-            if (availiblePlayerInputs[i] == null)
-                continue;
-            availiblePlayerInputs[i].gameObject.GetComponentInChildren<DrivingIndicators>().UpdatePlayerReferencesForObjects();
-        }
+        // Every player's scooter carries the indicators that the views on this machine see
+        foreach (PlayerSlot slot in roster.Players)
+            slot.Player.GetComponentInChildren<DrivingIndicators>().UpdatePlayerReferencesForObjects();
     }
 
 }

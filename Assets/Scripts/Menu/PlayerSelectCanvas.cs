@@ -3,7 +3,6 @@ using System.Collections;
 using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
-using UnityEngine.InputSystem;
 
 public class PlayerSelectCanvas : SingletonMonobehaviour<PlayerSelectCanvas>
 {
@@ -19,7 +18,7 @@ public class PlayerSelectCanvas : SingletonMonobehaviour<PlayerSelectCanvas>
     {
         playerInstantiate = PlayerInstantiate.Instance;
 
-        TogglePressButtonOnAllTexts(playerInstantiate.PlayerInputs);
+        TogglePressButtonOnAllTexts(playerInstantiate.Roster);
     }
 
     public void BeginCountdown()
@@ -38,16 +37,11 @@ public class PlayerSelectCanvas : SingletonMonobehaviour<PlayerSelectCanvas>
         pressButtonTexts[position].SetActive(toggleOnOff);
     }
 
-    // Toggles the press button text on all player's positions that are in-game
-    public void TogglePressButtonOnAllTexts(PlayerInput[] playerInputs)
+    // Hides the join prompt of every taken slot
+    public void TogglePressButtonOnAllTexts(PlayerRoster roster)
     {
-        for(int i = 0; i < playerInputs.Length; i++)
-        {
-            if (playerInputs[i] == null)
-                continue;
-
-            TogglePressButtonTexts(i, false);
-        }
+        foreach (PlayerSlot player in roster.Players)
+            TogglePressButtonTexts(player.Index, false);
     }
 
 }

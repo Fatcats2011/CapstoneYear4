@@ -42,7 +42,7 @@ public class MainMenu : SingletonMonobehaviour<MainMenu>
                 playerInstantiate = PlayerInstantiate.Instance;
 
             playerInstantiate.ClearPlayerArray();
-            ScoreManager.Instance.UpdateOrderHandlers(playerInstantiate.PlayerInputs);
+            ScoreManager.Instance.UpdateOrderHandlers(playerInstantiate.Roster);
 
             p1ConnectedController.text = "";
 

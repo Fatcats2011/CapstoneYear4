@@ -253,7 +253,6 @@ public class MenuInteractions : MonoBehaviour
         {
             if(hostPlayer == false)
             {
-                PlayerInstantiate.Instance.SubtractPlayerCount();
                 PlayerInstantiate.Instance.RemovePlayerRef(transform.parent.gameObject.transform.parent.GetComponent<PlayerInput>());
             }
             else

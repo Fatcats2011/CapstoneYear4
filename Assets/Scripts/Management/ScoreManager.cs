@@ -1,7 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.InputSystem;
 using UnityEngine.Rendering;
 
 /// <summary>
@@ -39,17 +38,14 @@ public class ScoreManager : SingletonMonobehaviour<ScoreManager>
     }
 
     /// <summary>
-    /// Recounts the order handlers, to resize array incase of player removal
+    /// Recounts the order handlers from the roster, to resize the list in case a player left
     /// </summary>
-    public void UpdateOrderHandlers(PlayerInput[] playerInputs)
+    public void UpdateOrderHandlers(PlayerRoster roster)
     {
         orderHandlers.Clear();
 
-        foreach(PlayerInput handHandler in playerInputs)
-        {
-            if (handHandler != null)
-                orderHandlers.Add(handHandler.GetComponentInChildren<OrderHandler>());
-        }
+        foreach (PlayerSlot player in roster.Players)
+            orderHandlers.Add(player.Player.GetComponentInChildren<OrderHandler>());
     }
 
     /// <summary>

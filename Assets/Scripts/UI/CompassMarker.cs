@@ -1,6 +1,5 @@
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.InputSystem;
 using UnityEngine.UIElements;
 
 ///<summary>
@@ -34,14 +33,9 @@ public class CompassMarker : MonoBehaviour
         if(playerInstantiate == null)
             playerInstantiate = PlayerInstantiate.Instance;
 
-        //To be used upon package spawning
-        foreach (PlayerInput player in playerInstantiate.PlayerInputs )
-        {
-            if (player == null)
-                continue;
-
-            player.gameObject.GetComponentInChildren<Compass>().AddCompassMarker(this);
-        }
+        // Every split-screen view on this machine has a compass
+        foreach (PlayerSlot player in playerInstantiate.Roster.LocalPlayers)
+            player.Player.GetComponentInChildren<Compass>().AddCompassMarker(this);
     }
 
     ///<summary>
@@ -52,15 +46,8 @@ public class CompassMarker : MonoBehaviour
         if (playerInstantiate == null)
             playerInstantiate = PlayerInstantiate.Instance;
 
-        for (int i = 0; i < Constants.MAX_PLAYERS; i++)
-        {
-            if (playerInstantiate.PlayerInputs[i] == null)
-                continue;
-
-            PlayerInput player = playerInstantiate.PlayerInputs[i];
-
-            player.gameObject.GetComponentInChildren<Compass>().RemoveCompassMarker(this);
-        }
+        foreach (PlayerSlot player in playerInstantiate.Roster.LocalPlayers)
+            player.Player.GetComponentInChildren<Compass>().RemoveCompassMarker(this);
     }
 
     ///<summary>
@@ -73,13 +60,7 @@ public class CompassMarker : MonoBehaviour
         if (playerInstantiate == null)
             playerInstantiate = PlayerInstantiate.Instance;
 
-        //To be used upon package spawning
-        foreach (PlayerInput player in playerInstantiate.PlayerInputs)
-        {
-            if (player == null)
-                continue;
-
-            player.gameObject.GetComponentInChildren<Compass>().ChangeCompassMarkerIcon(this, isCarried);
-        }
+        foreach (PlayerSlot player in playerInstantiate.Roster.LocalPlayers)
+            player.Player.GetComponentInChildren<Compass>().ChangeCompassMarkerIcon(this, isCarried);
     }
 }

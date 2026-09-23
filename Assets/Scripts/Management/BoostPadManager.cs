@@ -1,7 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.InputSystem;
 
 public class BoostPadManager : SingletonMonobehaviour<BoostPadManager>
 {
@@ -43,15 +42,9 @@ public class BoostPadManager : SingletonMonobehaviour<BoostPadManager>
         // Loops and adds player references
         playersToKeepTrackOf = new GameObject[4];
 
-        for (int i = 0; i < playerInstantiate.PlayerInputs.Length; i++)
-        {
-            PlayerInput playerInput = playerInstantiate.PlayerInputs[i];
-
-            if (playerInput != null)
-            {
-                playersToKeepTrackOf[i] = playerInput.gameObject.GetComponentInChildren<BallDriving>().gameObject;
-            }
-        }
+        // Each split-screen view on this machine has its own copy of every pad, pointed at that view's scooter
+        foreach (PlayerSlot viewer in playerInstantiate.Roster.LocalPlayers)
+            playersToKeepTrackOf[viewer.Index] = viewer.Player.GetComponentInChildren<BallDriving>().gameObject;
     }
 
 }

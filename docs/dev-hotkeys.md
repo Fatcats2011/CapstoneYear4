@@ -6,12 +6,14 @@ Every key below goes through `DevTools.GetKeyDown`: it works in the Unity editor
 
 | Key | Where it works | What it does | Code |
 |---|---|---|---|
-| F1 | Anywhere | Plugs in a virtual controller ("DoA Test Pad") and presses A on it, so it joins as the next player — or, while a player's controller is missing, takes over that player | `TestPlayers.Add` via `HotKeys.cs` |
+| F1 | Player select (the title screen only lets player 1 in) | Plugs in a virtual controller ("DoA Test Pad") and presses A on it, so it joins as the next player — or, while a player's controller is missing mid-match, takes over that player | `TestPlayers.Add` via `HotKeys.cs` |
 | F2 | Anywhere | Presses A on every test controller (ready up, confirm the loading screen) | `TestPlayers.PressSouthOnAll` |
 | F3 | Anywhere | Unplugs the newest test controller; press again to plug it back in (tests the disconnect pause and "reconnect" message) | `TestPlayers.ToggleNewest` |
 | F4 | Anywhere | Cycles graphics quality Low → Medium → High (not saved; logged to the Console) | `GraphicsQuality.Apply` via `HotKeys.cs` |
 
 Test controllers are removed when Play Mode ends. They don't move: steer with your real controller as P1.
+
+The title screen only lets player 1 join: join with your controller (or F1), pick Play, then press F1 in player select for each extra player.
 
 Any key press, F-keys included, also counts as a keyboard trying to join, so on the title screen and in the lobby the "Connect a controller to play" hint appears for a few seconds. That's expected.
 

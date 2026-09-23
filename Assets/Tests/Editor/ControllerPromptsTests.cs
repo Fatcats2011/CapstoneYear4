@@ -115,7 +115,8 @@ namespace DoA.Tests
         {
             PlayerInstantiate instantiate = objects.Add<PlayerInstantiate>();
             Reflect.SetField(instantiate, "allowPlayerSpawn", false); // spawning is off from the loading screen on
-            Reflect.SetField(instantiate, "playerCount", 2);
+            instantiate.Roster.JoinLocal(objects.Add<PlayerInput>());
+            instantiate.Roster.JoinLocal(objects.Add<PlayerInput>());
             PlayerInput playerWithoutController = objects.Add<PlayerInput>();
             LogAssert.Expect(LogType.Error, new Regex("Destroy may not be called from edit mode"));
 
