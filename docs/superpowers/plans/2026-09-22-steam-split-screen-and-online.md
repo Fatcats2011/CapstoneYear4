@@ -148,7 +148,7 @@ Checks (press Play from `SplashScreen`):
 - Keyboard: press a key on the title screen → "Connect a controller to play" appears for 3 seconds.
 - Performance: 4 players (your controller + F1 ×3 in player select) → golden-order scene → Window → Analysis → Profiler → F4 through Low / Medium / High; note the CPU and GPU frame times for each.
 - Aspect ratios: Game view at 1280×800 (Steam Deck) and 2560×1080 with 1, 2 and 4 players — check the HUD isn't cut off.
-- Test Runner → EditMode → Run All: 167 passed (the smoke test plays a match for a minute or two).
+- Test Runner → EditMode → Run All: 208 passed (the smoke test plays a match for a minute or two).
 
 ---
 
@@ -191,17 +191,19 @@ Progress (2026-09-23): Phase 2A (`2026-09-23-phase2a-roster-and-smoke-test.md`) 
 
 ## Phase 3 — Online multiplayer (Netcode for GameObjects + Steam)
 
+Progress (2026-09-24): Phase 3A (`2026-09-24-phase3a-online-session.md`) — Task 3.1, plus the online session: host / join / leave, join rules, roles and end reasons (`OnlineSession`, `JoinRules`, `docs/online.md`).
+
 ### Task 3.1: Packages & transports
 
-- [ ] `com.unity.netcode.gameobjects`: latest **1.x** (2.x needs Unity 6).
-- [ ] Unity Transport for editor/LAN testing; a Steam transport for builds (the community *SteamNetworkingSockets* transport for Steamworks.NET, from `Unity-Technologies/multiplayer-community-contributions`; pin a commit that supports your NGO version).
-- [ ] ParrelSync to run 2–4 editor instances; the Multiplayer Tools network simulator (Unity Transport) or *clumsy* for 150 ms / 1% loss tests.
+- [x] `com.unity.netcode.gameobjects`: latest **1.x** (2.x needs Unity 6). *(1.15.1, with Unity Transport 1.5.0.)*
+- [x] Unity Transport for editor/LAN testing; a Steam transport for builds (the community *SteamNetworkingSockets* transport for Steamworks.NET, from `Unity-Technologies/multiplayer-community-contributions`; pin a commit that supports your NGO version). *(`OnlineSession.HostDirect` / `JoinDirect` use Unity Transport; `HostSteam` / `JoinSteam` use the Steam transport, pinned at `d862504b`, the last commit built for Netcode 1.x.)*
+- [x] ParrelSync to run 2–4 editor instances; the Multiplayer Tools network simulator (Unity Transport) or *clumsy* for 150 ms / 1% loss tests. *(ParrelSync 1.5.3. Unity Transport 1.5's own simulator instead of Multiplayer Tools: **Tools → Dead on Arrival → Online → Bad Connection** adds 150 ms / 1%. See `docs/online.md`.)*
 
 ### Task 3.2: Steam lobby flow
 
 - [ ] Main menu → **Play Online** → *Host* (create a friends-only or public lobby, 4 slots, metadata `game=doa`, `build=<version>`) or *Join* (overlay invite via `GameLobbyJoinRequested_t`, or a lobby list filtered by `game` + `build`).
 - [ ] Lobby screen reuses Player Select; the host assigns slots/companies, and players pick colour/hat.
-- [ ] Host presses Start → `NetworkManager.StartHost()`; clients `StartClient()` to the host's SteamID → networked scene load.
+- [ ] Host presses Start → `NetworkManager.StartHost()`; clients `StartClient()` to the host's SteamID → networked scene load. *(`OnlineSession.HostSteam` / `JoinSteam(hostSteamId)` exist, Phase 3A.)*
 
 ### Task 3.3: Network player
 
@@ -245,8 +247,8 @@ Progress (2026-09-23): Phase 2A (`2026-09-23-phase2a-roster-and-smoke-test.md`) 
 ### Task 3.8: Disconnects & versions
 
 - [ ] Client leaves → the host drops/erases its orders, despawns its avatar, recomputes placements.
-- [ ] Host leaves → clients return to the menu with "Host left the match".
-- [ ] Reject mismatched builds (lobby `build` metadata + NGO connection-approval payload).
+- [ ] Host leaves → clients return to the menu with "Host left the match". *(The client's session ends with `OnlineSession.HOST_LEFT`; returning to the menu with the message is still to do.)*
+- [ ] Reject mismatched builds (lobby `build` metadata + NGO connection-approval payload). *(Approval half done: `JoinRules` compares `Application.version`. A build whose Netcode setup differs is dropped by Netcode before approval, with no reason, so the lobby filter matters.)*
 - [ ] Tests: kill a client mid-delivery; kill the host mid-match.
 
 ### Task 3.9 (optional, post-launch): Online + couch

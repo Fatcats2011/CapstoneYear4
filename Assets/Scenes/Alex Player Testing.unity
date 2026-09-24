@@ -38,7 +38,6 @@ RenderSettings:
   m_ReflectionIntensity: 1
   m_CustomReflection: {fileID: 0}
   m_Sun: {fileID: 0}
-  m_IndirectSpecularColor: {r: 0.18386838, g: 0.22901553, b: 0.30311254, a: 1}
   m_UseRadianceAmbientProbe: 0
 --- !u!157 &3
 LightmapSettings:
@@ -1491,12 +1490,6 @@ MonoBehaviour:
   playerHolder: {fileID: 1523402770}
   sceneManager: {fileID: 1202921221}
   allowPlayerSpawn: 0
-  playerCount: 0
-  availiblePlayerInputs:
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
   menuSpawnPositions:
   - {fileID: 1481550534}
   - {fileID: 240412193}
@@ -7057,6 +7050,8 @@ MonoBehaviour:
   - {fileID: 892346822}
   - {fileID: 591617895}
   fullscreenPosition: 0
+  qualitySelector: {fileID: 0}
+  qualitySelectorPositions: []
   optionSelected: 0
   selector: {fileID: 2028853058}
   selectorObjects:
@@ -7313,12 +7308,12 @@ MonoBehaviour:
   m_RequiresColorTexture: 0
   m_Version: 2
   m_TaaSettings:
-    quality: 3
-    frameInfluence: 0.1
-    jitterScale: 1
-    mipBias: 0
-    varianceClampScale: 0.9
-    contrastAdaptiveSharpening: 0
+    m_Quality: 3
+    m_FrameInfluence: 0.1
+    m_JitterScale: 1
+    m_MipBias: 0
+    m_VarianceClampScale: 0.9
+    m_ContrastAdaptiveSharpening: 0
 --- !u!81 &977400996
 AudioListener:
   m_ObjectHideFlags: 0
@@ -7326,7 +7321,7 @@ AudioListener:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 977400994}
-  m_Enabled: 1
+  m_Enabled: 0
 --- !u!20 &977400997
 Camera:
   m_ObjectHideFlags: 0
@@ -9269,12 +9264,12 @@ MonoBehaviour:
   m_RequiresColorTexture: 0
   m_Version: 2
   m_TaaSettings:
-    quality: 3
-    frameInfluence: 0.1
-    jitterScale: 1
-    mipBias: 0
-    varianceClampScale: 0.9
-    contrastAdaptiveSharpening: 0
+    m_Quality: 3
+    m_FrameInfluence: 0.1
+    m_JitterScale: 1
+    m_MipBias: 0
+    m_VarianceClampScale: 0.9
+    m_ContrastAdaptiveSharpening: 0
 --- !u!81 &1282224665
 AudioListener:
   m_ObjectHideFlags: 0
@@ -9282,7 +9277,7 @@ AudioListener:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1282224663}
-  m_Enabled: 1
+  m_Enabled: 0
 --- !u!20 &1282224666
 Camera:
   m_ObjectHideFlags: 0
@@ -15996,12 +15991,12 @@ MonoBehaviour:
   m_RequiresColorTexture: 0
   m_Version: 2
   m_TaaSettings:
-    quality: 3
-    frameInfluence: 0.1
-    jitterScale: 1
-    mipBias: 0
-    varianceClampScale: 0.9
-    contrastAdaptiveSharpening: 0
+    m_Quality: 3
+    m_FrameInfluence: 0.1
+    m_JitterScale: 1
+    m_MipBias: 0
+    m_VarianceClampScale: 0.9
+    m_ContrastAdaptiveSharpening: 0
 --- !u!4 &6154915407385569055
 Transform:
   m_ObjectHideFlags: 0

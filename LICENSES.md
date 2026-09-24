@@ -14,6 +14,10 @@ Inventory for the Steam release (2026-09-22). "Used" = referenced by a build sce
 | Udar SceneField | `Assets/Plugins/Udar` | "© 2022 Udar Ltd." — no license text in repo | ⚠️ | Likely an Asset Store package → Asset Store EULA; confirm. |
 | Noisy Nodes | `Packages` (git: JimmyCushnie/Noisy-Nodes) | WTFPL v2 | ✅ | |
 | Steamworks.NET 2025.164.1 | `Packages` (git: rlabrecque/Steamworks.NET) | MIT | ✅ | Wrapper code. |
+| Netcode for GameObjects 1.15.1 | `Packages` (Unity registry) | MIT (© Unity Technologies) | ✅ | Online play (Phase 3). |
+| Unity Transport 1.5.0, Collections 1.2.4, Mono Cecil 1.11.6 | `Packages` (installed with Netcode) | Unity Companion License | ✅ | |
+| SteamNetworkingSockets transport (community) | `Packages` (git: Unity-Technologies/multiplayer-community-contributions, pinned `d862504b`) | MIT | ✅ | Keep the copyright notice. |
+| ParrelSync 1.5.3 | `Packages` (git: VeriorPies/ParrelSync) | MIT | ✅ | Editor only; not in builds. |
 | Steamworks SDK runtime (`steam_api64.dll` etc., shipped inside Steamworks.NET) | build `Plugins` folder | Steamworks SDK Access Agreement | ✅ | Redistributable with a Steam game; covered by your Steamworks partner agreement. |
 | OToon – URP Toon Shading | `Assets/OToon- URP Toon Shading` | Unity Asset Store EULA | ⚠️ | Confirm who bought it; Asset Store tool licenses can be per seat. |
 | OToon demo content (Unity-chan) | `Assets/OToon- URP Toon Shading/Demo(Can be delete)` | Unity-Chan License | ❌ | Not used by the build scenes — delete before release. |
