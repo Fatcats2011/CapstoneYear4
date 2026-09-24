@@ -87,6 +87,17 @@ namespace DoA.Tests
                 + Reflect.HandlerCount(controller, "DPadEvent", listener), "after unsubscribing");
         }
 
+        // A controller whose scooter is gone, or whose scooter listens to another driver, has nobody on its buttons
+        [Test]
+        public void InputManager_ButtonPressesNobodyListensTo_AreIgnored()
+        {
+            InputManager controller = objects.Add<InputManager>();
+
+            Assert.DoesNotThrow(() => controller.SouthFaceTrigger(default), "A");
+            Assert.DoesNotThrow(() => controller.WestFaceTrigger(default), "X");
+            Assert.DoesNotThrow(() => controller.NorthFaceTrigger(default), "Y");
+        }
+
         /// <summary>
         /// A scooter with just enough around it to run Start
         /// </summary>

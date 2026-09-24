@@ -79,7 +79,7 @@ public class ResultsMenu : SingletonMonobehaviour<ResultsMenu>
             OrderHandler currHandler = ScoreManager.Instance.GetHandlerOfIndex(i);
 
             // Set player animations
-            Animator playerAnim = currHandler.transform.parent.GetComponent<PlayerCameraResizer>().playerAnimator;
+            Animator playerAnim = currHandler.PlayerAnimator;
             playerAnim.SetInteger(HashReference._endStatusFloat, i + 1);
 
             if (currHandler != null)
@@ -107,7 +107,7 @@ public class ResultsMenu : SingletonMonobehaviour<ResultsMenu>
         for (int i = 0; i < PlayerInstantiate.Instance.PlayerCount; i++)
         {
             OrderHandler currHandler = ScoreManager.Instance.GetHandlerOfIndex(i);
-            Animator playerAnim = currHandler.transform.parent.GetComponent<PlayerCameraResizer>().playerAnimator;
+            Animator playerAnim = currHandler.PlayerAnimator;
             playerAnim.SetInteger(HashReference._endStatusFloat, 0);
         }
     }

@@ -52,6 +52,7 @@ public class OrderHandler : MonoBehaviour
     public CompanyInformation CompanyInfo { get {  return companyInfo; } set {  companyInfo = value; } }
 
     [SerializeField] Animator playerAnimator;
+    public Animator PlayerAnimator { get { return playerAnimator; } } // the scooter's animator (the results screen plays placements on it)
 
     private ISceneFlow sceneFlow; // the scene flow this handler listens to while enabled
 

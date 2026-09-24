@@ -13,8 +13,9 @@ namespace DoA.Tests
 {
     /// <summary>
     /// Plays a real 4-player local match with virtual controllers and fails on any error or exception: main menu,
-    /// player select, loading screen, opening cutscene, tutorial (skipped the way the S hotkey skips it), driving,
-    /// drifting, boosting and the match clock, pausing, and a controller that dies mid-race, comes back and still drives.
+    /// player select (where a player leaves and joins again), loading screen, opening cutscene, tutorial (skipped the way
+    /// the S hotkey skips it), driving, drifting, boosting and the match clock, pausing, and a controller that dies
+    /// mid-race, comes back and still drives.
     /// Enters Play Mode and takes a minute or two. Needs a graphics device (tools/run-tests.sh runs Unity with one).
     /// </summary>
     [Category("Smoke")]
@@ -80,6 +81,37 @@ namespace DoA.Tests
                     yield return null;
                 }
             }
+
+            // Player 4 leaves player select with B (a player who hasn't readied up may leave), then joins again with A
+            Gamepad leaver = TestPlayers.Pads[Constants.MAX_PLAYERS - 1];
+            deadline = Deadline(10);
+            nextPress = 0;
+            while (Players() == Constants.MAX_PLAYERS)
+            {
+                FailIfLate(log, deadline, "player 4 to leave player select");
+                if (Time.realtimeSinceStartup >= nextPress)
+                {
+                    Press(leaver, GamepadButton.East);
+                    nextPress = Time.realtimeSinceStartup + PRESS_EVERY;
+                }
+                yield return null;
+            }
+            deadline = Deadline(10);
+            nextPress = 0;
+            while (Players() < Constants.MAX_PLAYERS)
+            {
+                FailIfLate(log, deadline, "player 4 to join again");
+                if (Time.realtimeSinceStartup >= nextPress)
+                {
+                    Press(leaver, GamepadButton.South);
+                    nextPress = Time.realtimeSinceStartup + PRESS_EVERY;
+                }
+                yield return null;
+            }
+
+            // The golden round's leaderboard and the results screen name each player after their scooter's top object
+            for (int slot = 0; slot < Constants.MAX_PLAYERS; slot++)
+                Assert.AreEqual("P" + (slot + 1), ScooterOf(slot).transform.parent.name, "player " + (slot + 1) + "'s name on the leaderboard");
             Gamepad[] pads = TestPlayers.Pads.ToArray();
 
             // Everyone readies up; after a 3 second countdown the game scene starts loading

@@ -219,6 +219,8 @@ public class PlayerInstantiate : SingletonMonobehaviour<PlayerInstantiate>
 
         // Update the naming scheme of the input reciever
         playerInput.gameObject.name = "P" + nextFillSlot.ToString();
+        // Its scooter's top object (PlayerAvatar) gets the same name: the leaderboard and the results screen show it
+        ballDriving.transform.parent.name = playerInput.gameObject.name;
         playerInput.gameObject.transform.parent = playerHolder.transform;
         // assign a company to each player
         playerInput.gameObject.GetComponentInChildren<OrderHandler>().CompanyInfo = slot.Company;

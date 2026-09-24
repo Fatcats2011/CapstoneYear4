@@ -125,7 +125,7 @@ public class InputManager : MonoBehaviour, IDriveInput
     public void NorthFaceTrigger(CallbackContext context)
     {
         northFaceValue = context.ReadValueAsButton();
-        NorthFaceEvent(northFaceValue);
+        NorthFaceEvent?.Invoke(northFaceValue);
     }
 
     /// <summary>
@@ -135,7 +135,7 @@ public class InputManager : MonoBehaviour, IDriveInput
     public void WestFaceTrigger(CallbackContext context) 
     {
         westFaceValue = context.ReadValueAsButton();
-        WestFaceEvent(westFaceValue);
+        WestFaceEvent?.Invoke(westFaceValue);
     }
 
     /// <summary>
@@ -145,7 +145,7 @@ public class InputManager : MonoBehaviour, IDriveInput
     public void SouthFaceTrigger(CallbackContext context)
     {
         southFaceValue = context.ReadValueAsButton();
-        SouthFaceEvent(southFaceValue);
+        SouthFaceEvent?.Invoke(southFaceValue);
     }
 
     /// <summary>
@@ -157,7 +157,7 @@ public class InputManager : MonoBehaviour, IDriveInput
         dpadValue = context.ReadValue<Vector2>();
         if(dpadValue.x * dpadValue.x == 1f || dpadValue.y * dpadValue.y == 1f) // ensure only one direction is being pressed
         {
-            DPadEvent(dpadValue);
+            DPadEvent?.Invoke(dpadValue);
         }
     }
 
