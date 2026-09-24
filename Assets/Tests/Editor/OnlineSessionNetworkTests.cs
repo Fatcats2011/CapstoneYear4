@@ -64,7 +64,6 @@ namespace DoA.Tests
 
             Assert.AreEqual(NetworkRole.Client, client.Role, "the client's part");
             Assert.AreEqual(NetworkRole.Host, host.Role, "the host's part");
-            Assert.AreEqual(NetworkRole.Client, GameAuthority.Role, "this machine's part (the client set it last)");
             Assert.AreEqual(2, host.PlayersIn, "players the host let in");
             Assert.IsFalse(host.HostDirect(THIS_COMPUTER, PORT), "hosting again while hosting");
             Assert.AreEqual(2, host.PlayersIn, "players after hosting again");
@@ -203,7 +202,6 @@ namespace DoA.Tests
 
             Assert.AreEqual(OnlineSession.CONNECTION_LOST, ended.Reason);
             Assert.AreEqual(NetworkRole.Offline, host.Role);
-            Assert.AreEqual(NetworkRole.Offline, GameAuthority.Role, "this machine is local again");
         }
     }
 }

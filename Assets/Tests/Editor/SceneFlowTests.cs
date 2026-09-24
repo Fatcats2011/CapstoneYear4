@@ -156,6 +156,18 @@ namespace DoA.Tests
         }
 
         [Test]
+        public void ReadyUpCountdown_StartsTheMatchThroughTheSceneFlow()
+        {
+            FakeSceneFlow flow = new FakeSceneFlow();
+            SceneFlow.Current = flow;
+            SceneManager loader = objects.Add<SceneManager>();
+
+            Reflect.Invoke(loader, "StartMatch"); // what OnReadiedUp calls when the countdown ends
+
+            Assert.AreEqual(1, flow.GameLoads);
+        }
+
+        [Test]
         public void OrderHandler_EnabledThenDisabled_LeavesTheFlowItListenedTo()
         {
             Reflect.SetSingleton(objects.Add<GameManager>());

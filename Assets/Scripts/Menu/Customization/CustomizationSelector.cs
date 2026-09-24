@@ -8,6 +8,18 @@ public class CustomizationSelector : MonoBehaviour
     private bool disableOptionsCustomization = false;
     public void SetDisableOptionsCustomization(bool newValue) { disableOptionsCustomization = newValue; }
 
+    /// <summary>The ghost colours to choose from</summary>
+    public IReadOnlyList<PlayerColorInformationSO> Colours { get { return playerColors; } }
+
+    /// <summary>The hats to choose from</summary>
+    public IReadOnlyList<PlayerHatInformationSO> Hats { get { return playerHats; } }
+
+    /// <summary>The chosen colour: an index into Colours</summary>
+    public int ColourIndex { get { return currentPlayerColor; } }
+
+    /// <summary>The chosen hat: an index into Hats</summary>
+    public int HatIndex { get { return currentPlayerHat; } }
+
     [Header("Character Customization Options")]
     [SerializeField] CustomizationChanging customizationChanging;
 

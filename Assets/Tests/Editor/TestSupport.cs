@@ -50,6 +50,11 @@ namespace DoA.Tests
             FindField(target.GetType(), name).SetValue(target, value);
         }
 
+        public static object GetField(object target, string name)
+        {
+            return FindField(target.GetType(), name).GetValue(target);
+        }
+
         public static object Invoke(object target, string methodName, params object[] args)
         {
             MethodInfo method = FindMethod(target.GetType(), methodName, args.Length);

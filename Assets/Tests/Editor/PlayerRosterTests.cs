@@ -178,5 +178,63 @@ namespace DoA.Tests
             Assert.IsEmpty(roster.Players);
             Assert.AreEqual(0, roster.JoinLocal(NewController("Next")).Index);
         }
+
+        [Test]
+        public void JoinLocalAt_TakesTheGivenSlot_EvenWithLowerOnesFree()
+        {
+            PlayerRoster roster = new PlayerRoster();
+            PlayerInput mine = NewController("Mine");
+
+            PlayerSlot slot = roster.JoinLocalAt(mine, 2);
+
+            Assert.AreEqual(2, slot.Index);
+            Assert.IsTrue(slot.IsLocal);
+            Assert.AreSame(mine, slot.Input);
+            Assert.IsNull(roster[0]);
+            Assert.AreEqual(1, roster.Count);
+        }
+
+        [Test]
+        public void JoinLocalAt_ATakenOrMissingSlot_OrAPlayerAlreadyIn_ReturnsNull()
+        {
+            PlayerRoster roster = new PlayerRoster();
+            PlayerInput first = NewController("First");
+            roster.JoinLocalAt(first, 1);
+
+            Assert.IsNull(roster.JoinLocalAt(NewController("Second"), 1), "taken slot");
+            Assert.IsNull(roster.JoinLocalAt(first, 3), "already in");
+            Assert.IsNull(roster.JoinLocalAt(NewController("Third"), Constants.MAX_PLAYERS), "no such slot");
+            Assert.AreEqual(1, roster.Count);
+        }
+
+        [Test]
+        public void JoinRemoteAt_TakesTheSeatAsAnotherMachinesPlayer()
+        {
+            PlayerRoster roster = new PlayerRoster();
+            GameObject scooter = objects.NewGameObject("Remote");
+
+            PlayerSlot slot = roster.JoinRemoteAt(scooter, 7, 3);
+
+            Assert.AreEqual(3, slot.Index);
+            Assert.IsFalse(slot.IsLocal);
+            Assert.AreEqual(7UL, slot.OwnerClientId);
+            Assert.AreSame(scooter, slot.Player);
+            Assert.IsNull(roster.JoinRemoteAt(objects.NewGameObject("Other"), 8, 3), "taken seat");
+            Assert.IsNull(roster.JoinRemoteAt(scooter, 7, 2), "already seated");
+            Assert.AreEqual(1, roster.Count);
+        }
+
+        [Test]
+        public void LeaveSlot_FreesIt_Once()
+        {
+            PlayerRoster roster = new PlayerRoster();
+            roster.JoinRemoteAt(objects.NewGameObject("Remote"), 7, 1);
+
+            Assert.IsTrue(roster.LeaveSlot(1));
+            Assert.IsNull(roster[1]);
+            Assert.AreEqual(0, roster.Count);
+            Assert.IsFalse(roster.LeaveSlot(1), "already free");
+            Assert.IsFalse(roster.LeaveSlot(-1), "no such slot");
+        }
     }
 }

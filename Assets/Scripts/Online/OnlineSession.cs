@@ -13,9 +13,10 @@ using Unity.Netcode.Transports.UTP;
 using UnityEngine;
 
 /// <summary>
-/// This machine's online match: hosts one or joins one, lets players in by JoinRules, and keeps GameAuthority.Role in
-/// step (Host or Client while the session runs, Offline once it ends). Builds its own Netcode NetworkManager and
-/// transport, so no scene holds it. Nothing creates a session in a local match. See docs/online.md
+/// This machine's online match: hosts one or joins one, lets players in by JoinRules, seats them, spawns the match and
+/// every machine's player, and reports its role (Host or Client while the session runs, Offline once it ends);
+/// OnlineGame makes that this machine's GameAuthority.Role. Builds its own Netcode NetworkManager and transport, so no
+/// scene holds it. Nothing creates a session in a local match. See docs/online.md
 /// </summary>
 public class OnlineSession : MonoBehaviour
 {
@@ -33,9 +34,11 @@ public class OnlineSession : MonoBehaviour
     /// <summary>Logged when a Steam session can't start</summary>
     public const string NO_STEAM = "Online: Steam isn't running, so this machine can't host or join over Steam.";
 
-    readonly HashSet<ulong> seats = new HashSet<ulong>(); // host: the players it let in, itself included
+    readonly SeatTable seats = new SeatTable(); // host: who sits where, itself included
     bool reachedHost; // client: the host let this machine in
     bool leaving;     // Leave was called, so the end that follows is expected
+    OnlinePrefabs prefabs; // what the host spawns
+    readonly List<OnlinePlayer> players = new List<OnlinePlayer>();
 #if !DISABLESTEAMWORKS
     SteamNetworkingSocketsTransport steam; // added the first time a Steam session starts
 #endif
@@ -57,6 +60,24 @@ public class OnlineSession : MonoBehaviour
 
     /// <summary>How many players the host has let in, the host included</summary>
     public int PlayersIn { get { return seats.Count; } }
+
+    /// <summary>Every machine's player in this session, as this machine has them (the host spawns them)</summary>
+    public IReadOnlyList<OnlinePlayer> Players { get { return players; } }
+
+    /// <summary>The host's game state in this session (null until the host spawns it)</summary>
+    public OnlineMatch Match { get; private set; }
+
+    /// <summary>A player's OnlinePlayer arrived on this machine (this machine's own included)</summary>
+    public event Action<OnlinePlayer> PlayerSpawned;
+
+    /// <summary>A player's OnlinePlayer went: they left, or the session ended</summary>
+    public event Action<OnlinePlayer> PlayerDespawned;
+
+    /// <summary>The host's OnlineMatch arrived on this machine</summary>
+    public event Action<OnlineMatch> MatchSpawned;
+
+    /// <summary>The session's part changed (Offline, Host, Client)</summary>
+    public event Action<NetworkRole> RoleChanged;
 
     /// <summary>
     /// Raised when a session ends without Leave, with the reason to show: the host left, turned this player away or
@@ -88,6 +109,11 @@ public class OnlineSession : MonoBehaviour
         network.OnClientDisconnectCallback += session.OnDisconnected;
         network.OnClientStopped += session.OnClientStopped;
         network.OnServerStopped += session.OnServerStopped;
+
+        // Every build lists the same network prefabs, or Netcode drops a joiner before the host hears of them
+        session.prefabs = OnlinePrefabs.Load();
+        network.AddNetworkPrefab(session.prefabs.PlayerPrefab);
+        network.AddNetworkPrefab(session.prefabs.MatchPrefab);
         session.Network = network;
         return session;
     }
@@ -189,6 +215,14 @@ public class OnlineSession : MonoBehaviour
         return string.IsNullOrEmpty(netcodeReason) ? HOST_UNREACHABLE : netcodeReason;
     }
 
+    /// <summary>
+    /// Host: a player's seat, 0-3 (their slot on every machine), or -1 if they have none. The host sits in seat 0
+    /// </summary>
+    public int SeatOf(ulong clientId)
+    {
+        return seats.SeatOf(clientId);
+    }
+
     bool StartHost()
     {
         seats.Clear(); // the host takes the first seat while Netcode starts
@@ -198,6 +232,8 @@ public class OnlineSession : MonoBehaviour
         IsRunning = true;
         SetRole(NetworkRole.Host);
         Debug.Log("Online: hosting version " + Version);
+        Spawn(prefabs.MatchPrefab, NetworkManager.ServerClientId, false);
+        Spawn(prefabs.PlayerPrefab, NetworkManager.ServerClientId, true); // seat 0
         return true;
     }
 
@@ -224,7 +260,7 @@ public class OnlineSession : MonoBehaviour
         response.CreatePlayerObject = false; // the match spawns the scooters (roadmap Task 3.3)
 
         if (response.Approved)
-            seats.Add(request.ClientNetworkId); // counted now: Netcode lists the player later in the frame
+            seats.Take(request.ClientNetworkId); // seated now: Netcode lists the player later in the frame
         else
             Debug.Log("Online: turned a player away: " + refusal);
     }
@@ -246,7 +282,10 @@ public class OnlineSession : MonoBehaviour
         if (Network.IsServer)
         {
             if (clientId != NetworkManager.ServerClientId)
+            {
                 Debug.Log("Online: player " + clientId + " joined (" + seats.Count + " in)");
+                Spawn(prefabs.PlayerPrefab, clientId, true);
+            }
             return;
         }
 
@@ -258,7 +297,7 @@ public class OnlineSession : MonoBehaviour
     // Host: a player left, so their seat is free (the host's own client only goes when the host stops: End clears it)
     void OnDisconnected(ulong clientId)
     {
-        if (Network.IsServer && clientId != NetworkManager.ServerClientId && seats.Remove(clientId))
+        if (Network.IsServer && clientId != NetworkManager.ServerClientId && seats.Free(clientId) >= 0)
             Debug.Log("Online: player " + clientId + " left (" + seats.Count + " in)");
     }
 
@@ -292,9 +331,44 @@ public class OnlineSession : MonoBehaviour
         Ended?.Invoke(reason);
     }
 
+    // Host: spawns a network object on every machine (tied to this session's Netcode, which matters when several run in
+    // one process, as in tests). Netcode destroys a player's object when that player leaves
+    void Spawn(GameObject prefab, ulong owner, bool isPlayer)
+    {
+        Network.SpawnManager.InstantiateAndSpawn(prefab.GetComponent<NetworkObject>(), owner, false, isPlayer);
+    }
+
+    // OnlinePlayer and OnlineMatch report here as they arrive and go
+    internal void AddPlayer(OnlinePlayer player)
+    {
+        players.Add(player);
+        PlayerSpawned?.Invoke(player);
+    }
+
+    internal void RemovePlayer(OnlinePlayer player)
+    {
+        if (players.Remove(player))
+            PlayerDespawned?.Invoke(player);
+    }
+
+    internal void SetMatch(OnlineMatch match)
+    {
+        Match = match;
+        MatchSpawned?.Invoke(match);
+    }
+
+    internal void ClearMatch(OnlineMatch match)
+    {
+        if (Match == match)
+            Match = null;
+    }
+
     void SetRole(NetworkRole role)
     {
+        bool changed = role != Role;
         Role = role;
-        GameAuthority.Role = role;
+
+        if (changed)
+            RoleChanged?.Invoke(role);
     }
 }

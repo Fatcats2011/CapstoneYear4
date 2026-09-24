@@ -26,6 +26,22 @@ public class MainMenu : SingletonMonobehaviour<MainMenu>
     public void OnEnable()
     {
         gameManager = GameManager.Instance;
+
+        // The menus follow the game state, whoever switched it: online, a client follows the host
+        if (gameManager != null)
+        {
+            gameManager.OnSwapPlayerSelect += ShowPlayerSelect;
+            gameManager.OnSwapMenu += ShowTitleScreen;
+        }
+    }
+
+    void OnDisable()
+    {
+        if (gameManager != null)
+        {
+            gameManager.OnSwapPlayerSelect -= ShowPlayerSelect;
+            gameManager.OnSwapMenu -= ShowTitleScreen;
+        }
     }
 
     public void Start()
@@ -110,8 +126,6 @@ public class MainMenu : SingletonMonobehaviour<MainMenu>
 
     public void SwapToPlayerSelect()
     {
-        PlayerSelectCanvas.enabled = true;
-
         GameManager.Instance.SetGameState(GameState.PlayerSelect);
     }
 
@@ -145,10 +159,19 @@ public class MainMenu : SingletonMonobehaviour<MainMenu>
 
     public void SwapToMainMenu()
     {
+        GameManager.Instance.SetGameState(GameState.Menu);
+    }
+
+    void ShowPlayerSelect()
+    {
+        PlayerSelectCanvas.enabled = true;
+    }
+
+    void ShowTitleScreen()
+    {
         PlayerSelectCanvas.enabled = false;
         OptionsCanvas.enabled = false;
         CreditsCanvas.enabled = false;
-        GameManager.Instance.SetGameState(GameState.Menu);
     }
 
     public void Player1ControllerConnected(PlayerInput playerInput)

@@ -130,7 +130,7 @@ public class OrderHandler : MonoBehaviour
 
             SetDrivingIndicators();
         }
-        if(tutHandler.HasLearnt)
+        if (tutHandler != null && tutHandler.HasLearnt)
             ball.SetBoostModifier(hasOrder);
     }
 
@@ -165,9 +165,9 @@ public class OrderHandler : MonoBehaviour
 
         SetDrivingIndicators();
 
-        numberHandler.UpdateScoreUI(score.ToString());
-        
-        if(tutHandler.HasLearnt)
+        ShowScore();
+
+        if (tutHandler != null && tutHandler.HasLearnt)
             ball.SetBoostModifier(hasOrder);
     }
 
@@ -348,18 +348,26 @@ public class OrderHandler : MonoBehaviour
         placement = 0;
         score = 0;
         ball.SetBoostModifier(hasOrder);
-        numberHandler.UpdateScoreUI(score.ToString());
+        ShowScore();
     }
 
     private void UpdateScore()
     {
-        numberHandler.UpdateScoreUI(score.ToString());
+        ShowScore();
         ScoreManager.Instance.UpdatePlacement();
     }
 
     public void UpdatePlacement()
     {
-        numberHandler.UpdatePlacement(placement);
+        if (numberHandler != null)
+            numberHandler.UpdatePlacement(placement);
+    }
+
+    // The score and placing show in this player's HUD; another machine's scooter has none here
+    private void ShowScore()
+    {
+        if (numberHandler != null)
+            numberHandler.UpdateScoreUI(score.ToString());
     }
 
     /// <summary>

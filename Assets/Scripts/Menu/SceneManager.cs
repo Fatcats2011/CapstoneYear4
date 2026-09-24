@@ -45,7 +45,7 @@ public class SceneManager : SingletonMonobehaviour<SceneManager>, ISceneFlow
     private void Start()
     {
         playerInstantiate = PlayerInstantiate.Instance;
-        playerInstantiate.OnReadiedUp += LoadGameScene;
+        playerInstantiate.OnReadiedUp += StartMatch;
 
         OnReturnToMenu += LoadMenuScene;
         OnConfirmToLoad += SwapToSceneAfterConfirm;
@@ -57,7 +57,7 @@ public class SceneManager : SingletonMonobehaviour<SceneManager>, ISceneFlow
 
     private void OnDisable()
     {
-        playerInstantiate.OnReadiedUp -= LoadGameScene;
+        playerInstantiate.OnReadiedUp -= StartMatch;
         
         OnReturnToMenu -= LoadMenuScene;
         OnConfirmToLoad -= SwapToSceneAfterConfirm;
@@ -76,6 +76,15 @@ public class SceneManager : SingletonMonobehaviour<SceneManager>, ISceneFlow
     // class's own public members
     void ISceneFlow.ReturnToMenu() { InvokeMenuSceneEvent(); }
     bool ISceneFlow.WaitingForConfirm { get { return enableConfirm; } }
+
+    ///<summary>
+    /// Everyone is ready in player select: the match starts through the scene flow (this loader offline; online, the
+    /// online flow)
+    ///</summary>
+    private void StartMatch()
+    {
+        SceneFlow.Current.LoadGameScene();
+    }
 
     ///<summary>
     /// Main method that loads the menu

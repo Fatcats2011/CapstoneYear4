@@ -82,6 +82,10 @@ public class DrivingIndicators : MonoBehaviour
         playersToKeepTrackOf = new GameObject[4];
         playerCameraTransforms = new Transform[4];
 
+        // A scooter can be asked before its Start (online, one can arrive in the same frame as a state change)
+        if (playerInstantiate == null)
+            playerInstantiate = PlayerInstantiate.Instance;
+
         // Every other split-screen view on this machine sees this player's indicator, turned towards its camera
         foreach (PlayerSlot viewer in playerInstantiate.Roster.LocalPlayers)
         {

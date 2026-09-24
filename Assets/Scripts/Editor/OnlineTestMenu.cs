@@ -2,8 +2,9 @@ using UnityEditor;
 using UnityEngine;
 
 /// <summary>
-/// Tools → Dead on Arrival → Online: hosts or joins a session between two editors on this computer (ParrelSync) before
-/// the online menus exist, and can make the connection bad on purpose. Play Mode only. See docs/online.md
+/// Tools → Dead on Arrival → Online: hosts (and goes into player select, the online lobby) or joins a session between
+/// two editors on this computer (ParrelSync) before the online menus exist, and can make the connection bad on purpose.
+/// The game plays over the session (OnlineGame). Play Mode only. See docs/online.md
 /// </summary>
 public static class OnlineTestMenu
 {
@@ -28,13 +29,32 @@ public static class OnlineTestMenu
     [MenuItem(MENU + "Host", false, 1)]
     static void Host()
     {
+        if (!OnlineGame.CanGoOnline())
+        {
+            Debug.LogWarning(OnlineGame.ONE_PLAYER);
+            return;
+        }
+
         if (!Prepare().HostDirect(THIS_COMPUTER, OnlineSession.DIRECT_PORT))
+        {
             Debug.LogWarning("Online: couldn't host. Is another editor hosting on port " + OnlineSession.DIRECT_PORT + "?");
+            return;
+        }
+
+        // The online lobby is player select
+        if (GameManager.Instance != null && GameManager.Instance.MainState == GameState.Menu)
+            MainMenu.Instance.SwapToPlayerSelect();
     }
 
     [MenuItem(MENU + "Join This Computer", false, 2)]
     static void Join()
     {
+        if (!OnlineGame.CanGoOnline())
+        {
+            Debug.LogWarning(OnlineGame.ONE_PLAYER);
+            return;
+        }
+
         Prepare().JoinDirect(THIS_COMPUTER, OnlineSession.DIRECT_PORT);
     }
 
@@ -48,7 +68,9 @@ public static class OnlineTestMenu
     [MenuItem(MENU + "Join This Computer", true)]
     static bool CanStart()
     {
-        return Application.isPlaying && (session == null || !session.IsRunning);
+        // The game joins a session through its managers, which load with the title screen (not on the splash screen)
+        return Application.isPlaying && GameManager.Instance != null && PlayerInstantiate.Instance != null
+            && (session == null || !session.IsRunning);
     }
 
     [MenuItem(MENU + "Leave", true)]
@@ -76,7 +98,10 @@ public static class OnlineTestMenu
     internal static OnlineSession Prepare()
     {
         if (session == null)
+        {
             session = OnlineSession.Create(Application.version);
+            OnlineGame.Attach(session);
+        }
 
         bool bad = BadConnection;
         session.Direct.SetDebugSimulatorParameters(bad ? BAD_DELAY_MS : 0, 0, bad ? BAD_LOSS_PERCENT : 0);

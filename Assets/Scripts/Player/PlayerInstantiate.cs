@@ -53,6 +53,9 @@ public class PlayerInstantiate : SingletonMonobehaviour<PlayerInstantiate>
     ReplacementControllerListener ReplacementListener =>
         replacementListener ??= new ReplacementControllerListener(GiveControllerToMissingPlayer, ShowUnsupportedDeviceHint);
     CutsceneManager cutsceneManager;
+
+    // Online: the seat the host gave this machine's one player (-1 offline)
+    int onlineSeat = -1;
        
     ///<summary>
     /// OnEnable, where i set event methods
@@ -133,8 +136,16 @@ public class PlayerInstantiate : SingletonMonobehaviour<PlayerInstantiate>
             return;
         }
 
+        // Online, this machine has one player, in the seat the host gave them
+        bool online = onlineSeat >= 0;
+        if (online && roster.LocalCount > 0)
+        {
+            Destroy(playerInput.gameObject);
+            return;
+        }
+
         // If player spawn is disabled
-        if(allowPlayerSpawn == false && PlayerCount >= 1)
+        if(!online && allowPlayerSpawn == false && PlayerCount >= 1)
         {
 
             Destroy(playerInput.gameObject);
@@ -142,10 +153,10 @@ public class PlayerInstantiate : SingletonMonobehaviour<PlayerInstantiate>
         }
 
 
-        bool isFirstPlayer = PlayerCount == 0;
+        bool isFirstPlayer = online || PlayerCount == 0;
 
-        // Takes the lowest free slot
-        PlayerSlot slot = roster.JoinLocal(playerInput);
+        // Takes the lowest free slot (online: the seat)
+        PlayerSlot slot = online ? roster.JoinLocalAt(playerInput, onlineSeat) : roster.JoinLocal(playerInput);
         if (slot == null)
         {
             Destroy(playerInput.gameObject);
@@ -154,11 +165,17 @@ public class PlayerInstantiate : SingletonMonobehaviour<PlayerInstantiate>
 
         if (isFirstPlayer)
         {
+            MenuInteractions menus = playerInput.gameObject.GetComponent<PlayerUIHandler>().menuInteractions;
+            menus.hostPlayer = true;
 
-            playerInput.gameObject.GetComponent<PlayerUIHandler>().menuInteractions.hostPlayer = true;
-            playerInput.gameObject.GetComponent<PlayerUIHandler>().menuInteractions.SwapMenuType(MenuType.MainMenu);
-
-            MainMenu.Instance.Player1ControllerConnected(playerInput);
+            // Online, this machine's player can arrive (or move seats) while the host is in player select
+            if (online && gameManager.MainState == GameState.PlayerSelect)
+                menus.SwapToPlayerSelect();
+            else
+            {
+                menus.SwapMenuType(MenuType.MainMenu);
+                MainMenu.Instance.Player1ControllerConnected(playerInput);
+            }
         }
         else
         {
@@ -252,19 +269,27 @@ public class PlayerInstantiate : SingletonMonobehaviour<PlayerInstantiate>
     {
         // Loops for all spawned players
         foreach (PlayerSlot slot in roster.Players)
-        {
-            int i = slot.Index;
+            PlaceOnPodium(slot);
+    }
 
-            // Resets the velocity of the players
-            slot.Player.GetComponentInChildren<Rigidbody>().velocity = Vector3.zero;
+    ///<summary>
+    /// Stands a player's scooter on their slot's podium
+    ///</summary>
+    private void PlaceOnPodium(PlayerSlot slot)
+    {
+        int i = slot.Index;
+        Rigidbody ball = slot.Player.GetComponentInChildren<Rigidbody>();
 
-            // reset position and rotation of ball and controller
-            slot.Player.GetComponentInChildren<Rigidbody>().transform.position = menuSpawnPositions[i].transform.position;
-            slot.Player.GetComponentInChildren<Rigidbody>().transform.rotation = menuSpawnPositions[i].transform.rotation;
+        // Resets the velocity of the players (another machine's scooter is kinematic: nothing to reset)
+        if (!ball.isKinematic)
+            ball.velocity = Vector3.zero;
 
-            slot.Player.GetComponentInChildren<BallDriving>().transform.position = menuSpawnPositions[i].transform.position;
-            slot.Player.GetComponentInChildren<BallDriving>().transform.rotation = menuSpawnPositions[i].transform.rotation;
-        }
+        // reset position and rotation of ball and controller
+        ball.transform.position = menuSpawnPositions[i].transform.position;
+        ball.transform.rotation = menuSpawnPositions[i].transform.rotation;
+
+        slot.Player.GetComponentInChildren<BallDriving>(true).transform.position = menuSpawnPositions[i].transform.position;
+        slot.Player.GetComponentInChildren<BallDriving>(true).transform.rotation = menuSpawnPositions[i].transform.rotation;
     }
 
     ///<summary>
@@ -295,6 +320,14 @@ public class PlayerInstantiate : SingletonMonobehaviour<PlayerInstantiate>
             return;
         }
 
+        LeaveLocal(playerInput);
+    }
+
+    ///<summary>
+    /// A player on this machine leaves: their slot is free and their player object goes
+    ///</summary>
+    private void LeaveLocal(PlayerInput playerInput)
+    {
         int position = roster.Leave(playerInput);
 
         //Enabled text for fillslot text based on player's removed position
@@ -326,6 +359,78 @@ public class PlayerInstantiate : SingletonMonobehaviour<PlayerInstantiate>
     }
 
     ///<summary>
+    /// The company a slot plays for
+    ///</summary>
+    public CompanyInformation CompanyForSlot(int slot)
+    {
+        return companies[slot];
+    }
+
+    ///<summary>
+    /// Online: another machine's player takes their seat here. Their scooter (made with RemoteAvatar) stands on the
+    /// seat's podium in the seat's company colours, named like a local player. Returns their slot, or null when the seat
+    /// is taken
+    ///</summary>
+    public PlayerSlot AddRemotePlayer(GameObject avatar, int seat, ulong ownerClientId)
+    {
+        PlayerSlot slot = roster.JoinRemoteAt(avatar, ownerClientId, seat);
+        if (slot == null)
+            return null;
+
+        slot.Company = companies[seat];
+        BallDriving ballDriving = avatar.GetComponentInChildren<BallDriving>(true);
+        ballDriving.Sphere.layer = 10 + seat; // their ball's player layer, as for a local player
+        ballDriving.playerIndex = seat + 1;
+        avatar.name = "P" + (seat + 1);
+        avatar.transform.SetParent(playerHolder.transform);
+        avatar.GetComponentInChildren<OrderHandler>(true).CompanyInfo = slot.Company;
+        ScooterLook.ShowCompany(avatar, slot.Company);
+        PlaceOnPodium(slot);
+
+        // Like a local player joining: their seat isn't ready, which stops the countdown
+        SetRemoteReady(seat, false);
+        PlayerSelectCanvas.Instance.TogglePressButtonTexts(seat, false);
+        return slot;
+    }
+
+    ///<summary>
+    /// Online: another machine's player left. Their seat is free and the ready count is redone
+    ///</summary>
+    public void RemoveRemotePlayer(int seat)
+    {
+        PlayerSlot slot = roster[seat];
+        if (slot == null || slot.IsLocal)
+            return;
+
+        roster.LeaveSlot(seat);
+        playerReadyUp[seat] = false;
+        PlayerSelectCanvas.Instance.TogglePressButtonTexts(seat, true);
+        Destroy(slot.Player);
+        ScoreManager.Instance.UpdateOrderHandlers(roster);
+        CheckReadyUpCount();
+    }
+
+    ///<summary>
+    /// Whether a slot's player is ready in player select
+    ///</summary>
+    public bool IsReady(int slot)
+    {
+        return playerReadyUp[slot];
+    }
+
+    ///<summary>
+    /// Online: another machine's player readied up or stopped being ready (they have no menus here)
+    ///</summary>
+    public void SetRemoteReady(int slot, bool ready)
+    {
+        playerReadyUp[slot] = ready;
+        if (ready)
+            CheckReadyUpCount();
+        else
+            StopReadyUpCountdown();
+    }
+
+    ///<summary>
     /// Sets the index player to ready
     ///</summary>
     public void ReadyUp(int playerIndexToReadyUp)
@@ -342,6 +447,14 @@ public class PlayerInstantiate : SingletonMonobehaviour<PlayerInstantiate>
     {
         playerReadyUp[playerIndexToReadyUp] = false;
         roster[playerIndexToReadyUp].Input.GetComponent<PlayerUIHandler>().customizationSelector.SetDisableOptionsCustomization(false);
+        StopReadyUpCountdown();
+    }
+
+    ///<summary>
+    /// Stops the ready-up countdown if it's counting
+    ///</summary>
+    private void StopReadyUpCountdown()
+    {
         if (readyUpCountdown != null)
         {
             PlayerSelectCanvas.Instance.StopCountdown();
@@ -697,6 +810,42 @@ public class PlayerInstantiate : SingletonMonobehaviour<PlayerInstantiate>
     public static bool IsMissingController(InputUser user)
     {
         return user.valid && user.lostDevices.Count > 0;
+    }
+
+    ///<summary>
+    /// Online: the seat this machine's one player sits in (-1 offline)
+    ///</summary>
+    public int OnlineSeat { get { return onlineSeat; } }
+
+    ///<summary>
+    /// Online: this machine's player sits in the seat the host gave them (-1 = offline again). A player already in
+    /// another slot moves there: they leave and join again next frame with the same controller, so every slot-bound
+    /// part (layers, cameras, company, podium) is set up as for any join. A player joining later takes the seat
+    ///</summary>
+    public void SetOnlineSeat(int seat)
+    {
+        onlineSeat = seat;
+        if (seat < 0)
+            return;
+
+        foreach (PlayerSlot local in roster.LocalPlayers)
+        {
+            if (local.Index != seat)
+                StartCoroutine(MoveToOnlineSeat(local.Input));
+            return; // one player per machine online
+        }
+    }
+
+    private IEnumerator MoveToOnlineSeat(PlayerInput player)
+    {
+        Gamepad pad = player.GetDevice<Gamepad>();
+        LeaveLocal(player);
+
+        // The old player lets go of the controller when it's destroyed, at the end of this frame
+        yield return null;
+
+        if (pad != null && pad.added)
+            PlayerInputManager.instance.JoinPlayer(-1, -1, "Gamepad", pad);
     }
 
     ///<summary>

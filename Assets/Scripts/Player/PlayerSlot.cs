@@ -35,7 +35,7 @@ public class PlayerSlot
     public bool IsLocal => Input != null;
 
     /// <summary>
-    /// The online client that owns this player (0 when playing offline)
+    /// The online client that owns another machine's player (0 for this machine's players and offline)
     /// </summary>
     public ulong OwnerClientId { get; }
 

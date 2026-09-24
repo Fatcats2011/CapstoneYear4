@@ -62,6 +62,17 @@ namespace DoA.Tests
         }
 
         [Test]
+        public void Create_RegistersThePlayersAndTheMatchWithNetcode()
+        {
+            OnlineSession session = NewSession();
+            OnlinePrefabs prefabs = OnlinePrefabs.Load();
+
+            // Every build must list the same network prefabs, or Netcode drops the joiner before the host hears of them
+            Assert.IsTrue(session.Network.NetworkConfig.Prefabs.Contains(prefabs.PlayerPrefab), "players");
+            Assert.IsTrue(session.Network.NetworkConfig.Prefabs.Contains(prefabs.MatchPrefab), "the match");
+        }
+
+        [Test]
         public void Approve_TheHostItself_IsLetInWhateverItSends()
         {
             OnlineSession session = NewSession();
@@ -84,6 +95,20 @@ namespace DoA.Tests
             Assert.IsFalse(late.Approved);
             Assert.AreEqual(JoinRules.FULL, late.Reason);
             Assert.AreEqual(Constants.MAX_PLAYERS, session.PlayersIn);
+        }
+
+        [Test]
+        public void Approve_SeatsPlayersInTheOrderTheyJoin_TheHostFirst()
+        {
+            OnlineSession session = NewSession();
+            Approve(session, NetworkManager.ServerClientId, "1.0.0");
+            Approve(session, 5, "1.0.0");
+            Approve(session, 9, "1.0.0");
+
+            Assert.AreEqual(0, session.SeatOf(NetworkManager.ServerClientId));
+            Assert.AreEqual(1, session.SeatOf(5));
+            Assert.AreEqual(2, session.SeatOf(9));
+            Assert.AreEqual(-1, session.SeatOf(3), "never joined");
         }
 
         [Test]

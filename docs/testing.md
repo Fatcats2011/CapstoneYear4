@@ -9,6 +9,8 @@
   - It drives, drifts and boosts, checks the match clock runs, pauses, then unplugs player 4's controller, plugs it back in and boosts with it.
   - It fails on any error or exception on the way.
 - `OnlineSessionNetworkTests` start online hosts and clients on this computer (127.0.0.1, port 7791) in an empty Play Mode scene, a few seconds per test. Nothing needs to be running for them.
+  - `OnlinePlayersNetworkTests` (port 7792) do the same for seats, players' choices and the host's game states.
+  - `RemoteAvatarTests`, `OnlineSeatTests` and `OnlineGameNetworkTests` (port 7793) play in the real menu scene, about 10–20 s each. In `OnlineGameNetworkTests`, the other machine is a session without the game.
 - Leave the editor alone while it plays. Controllers you touch count as input.
 - Run a single test: select it in the Test Runner → **Run Selected**.
 

@@ -148,7 +148,7 @@ Checks (press Play from `SplashScreen`):
 - Keyboard: press a key on the title screen → "Connect a controller to play" appears for 3 seconds.
 - Performance: 4 players (your controller + F1 ×3 in player select) → golden-order scene → Window → Analysis → Profiler → F4 through Low / Medium / High; note the CPU and GPU frame times for each.
 - Aspect ratios: Game view at 1280×800 (Steam Deck) and 2560×1080 with 1, 2 and 4 players — check the HUD isn't cut off.
-- Test Runner → EditMode → Run All: 208 passed (the smoke test plays a match for a minute or two).
+- Test Runner → EditMode → Run All: 258 passed (the smoke test plays a match for a minute or two).
 
 ---
 
@@ -191,7 +191,15 @@ Progress (2026-09-23): Phase 2A (`2026-09-23-phase2a-roster-and-smoke-test.md`) 
 
 ## Phase 3 — Online multiplayer (Netcode for GameObjects + Steam)
 
-Progress (2026-09-24): Phase 3A (`2026-09-24-phase3a-online-session.md`) — Task 3.1, plus the online session: host / join / leave, join rules, roles and end reasons (`OnlineSession`, `JoinRules`, `docs/online.md`).
+Progress (2026-09-24):
+- Phase 3A (`2026-09-24-phase3a-online-session.md`) — Task 3.1, plus the online session: host / join / leave, join rules, roles and end reasons (`OnlineSession`, `JoinRules`, `docs/online.md`).
+- Phase 3B (`2026-09-24-phase3b-online-player-select.md`) — online player select:
+  - Seats, and `OnlinePlayer` (seat, colour, hat, ready).
+  - Other machines' scooters (`RemoteAvatar`, `ScooterLook`).
+  - Clients follow the host's game states (`OnlineMatch`), wired up by `OnlineGame`.
+- Next:
+  - Phase 3C: driving together. Pose sync, the flags byte, Netcode scene loads, spawns (Tasks 3.3 bullets 2–4, 3.4 bullets 2–3).
+  - Phase 3D: the Steam lobby and a Play Online menu (Task 3.2).
 
 ### Task 3.1: Packages & transports
 
@@ -202,12 +210,12 @@ Progress (2026-09-24): Phase 3A (`2026-09-24-phase3a-online-session.md`) — Tas
 ### Task 3.2: Steam lobby flow
 
 - [ ] Main menu → **Play Online** → *Host* (create a friends-only or public lobby, 4 slots, metadata `game=doa`, `build=<version>`) or *Join* (overlay invite via `GameLobbyJoinRequested_t`, or a lobby list filtered by `game` + `build`).
-- [ ] Lobby screen reuses Player Select; the host assigns slots/companies, and players pick colour/hat.
+- [ ] Lobby screen reuses Player Select; the host assigns slots/companies, and players pick colour/hat. *(Phase 3B: player select is the online lobby. Seats give companies; colour, hat and ready sync. The Steam lobby screen is still to do.)*
 - [ ] Host presses Start → `NetworkManager.StartHost()`; clients `StartClient()` to the host's SteamID → networked scene load. *(`OnlineSession.HostSteam` / `JoinSteam(hostSteamId)` exist, Phase 3A.)*
 
 ### Task 3.3: Network player
 
-- [ ] `NetworkPlayer` (NetworkObject on PlayerAvatar): NetworkVariables for slot, company, colour, hat, score, ready, and a flags byte (boosting / phasing / drifting / drift tier).
+- [ ] `NetworkPlayer` (NetworkObject on PlayerAvatar): NetworkVariables for slot, company, colour, hat, score, ready, and a flags byte (boosting / phasing / drifting / drift tier). *(Phase 3B: `OnlinePlayer` has seat (company follows), colour, hat and ready. It's named `OnlinePlayer` because Unity still declares an obsolete `UnityEngine.NetworkPlayer`. It's its own network prefab, not on `PlayerAvatar`: see the Phase 3B plan's Ruling 1. Score and the flags byte come with driving.)*
 - [ ] Owner-authoritative movement: the owner runs `BallDriving` physics; owner-authoritative `NetworkTransform` (the `ClientNetworkTransform` pattern) with interpolation on sphere + control; non-owners make the sphere kinematic and skip `BallDriving` Update/FixedUpdate.
 - [ ] Spawns: each owner puts its own scooter on its slot's spawn point (`SpawnManager.SpawnPoint`); the host doesn't place other machines' scooters.
 - [ ] Remote players' boost/phase/drift visuals and sounds come from the flags byte.
@@ -217,10 +225,17 @@ Progress (2026-09-24): Phase 3A (`2026-09-24-phase3a-online-session.md`) — Tas
   - Guard those uses, or keep those scripts off on remote avatars.
   - The company look (scooter material, logo decals, indicator sprites) comes from the view (`PlayerCameraResizer.InitalizeCompanyScooter`): move it to the avatar so remote players get their colours.
   - A local online player can keep its nested avatar, e.g. handed to NGO through a prefab instance handler.
+  - *(Phase 3B:*
+    - *`RemoteAvatar` turns off `BallDriving`, `Respawn` and `PhaseIndicator`, and makes the ball kinematic. `ScooterLook` dresses it by path: company, colour, hat.*
+    - *`OrderHandler` and `PlayerCameraResizer.UpdatePlayerObjectLayer` are guarded. `DrivingIndicators` finds `PlayerInstantiate` itself, and `SkideeSkidoo` unsubscribes.*
+    - *The local player keeps its view; `OnlinePlayer` is separate.*
+    - *Still to do for the match:*
+      - *`Order.EraseOrder` and `OrderBeacon` look up `Compass`.*
+      - *Trigger messages still reach disabled scripts, so `Respawn.OnTriggerEnter` (water) and `OrderHandler`'s triggers run on a remote scooter once it moves.)*
 
 ### Task 3.4: Game state, timers, scenes
 
-- [ ] `NetworkGameState`: `NetworkVariable<GameState>`; the host sets it, every peer calls `GameManager.ApplyGameState` in `OnValueChanged`.
+- [x] `NetworkGameState`: `NetworkVariable<GameState>`; the host sets it, every peer calls `GameManager.ApplyGameState` in `OnValueChanged`. *(Phase 3B: `OnlineMatch` sends every state as an ordered `ClientRpc`, plus a variable holding the latest for players who join. States can switch twice in a frame, and a variable alone would skip the first. `GameManager.StateApplied` tells the host's `OnlineGame`. Clients show the host's options and credits as the title screen.)*
 - [ ] Wave/game timers → host-owned `NetworkVariable<double>` end times in server time; clients compute remaining time for the UI. *(Phase 2B already stops `OrderManager.Update` on clients, so their clocks wait for this.)*
 - [ ] Loads via `NetworkManager.SceneManager.LoadScene`; start the cutscene on `OnLoadEventCompleted` (replaces the loading-screen confirm).
 

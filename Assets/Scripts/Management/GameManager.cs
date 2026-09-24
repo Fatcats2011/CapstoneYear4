@@ -43,6 +43,12 @@ public class GameManager : SingletonMonobehaviour<GameManager>
     public event Action OnSwapResults;
     public event Action OnSwapAnything;
 
+    /// <summary>
+    /// Raised for every state switched to, before that state's own event, so a state switched to from inside another
+    /// state's event is told after it. Online, the host sends each one to the clients
+    /// </summary>
+    public event Action<GameState> StateApplied;
+
     // other important events
     public event Action OnFinalOrderDelivered;
 
@@ -71,6 +77,7 @@ public class GameManager : SingletonMonobehaviour<GameManager>
         GameAuthority.SetTimeScale(1f);
 
         mainState = state;
+        StateApplied?.Invoke(state);
 
         if(mainState != GameState.Tutorial)
             OnSwapAnything?.Invoke();

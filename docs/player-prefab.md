@@ -22,3 +22,6 @@ At runtime both top objects are named `P1`–`P4`: the golden round's leaderboar
 - Never apply the view's added parts to `PlayerAvatar.prefab` (Overrides → Apply All, or Apply to Prefab 'PlayerAvatar'): every avatar would get cameras and menus.
 - Never revert the nested `PlayerAvatar` (Overrides → Revert All): the local player would lose its cameras and menus.
 - `PlayerPrefabTests` (Test Runner → EditMode) fails if either happens.
+- Online, another machine's player is `PlayerAvatar.prefab` alone (`RemoteAvatar`), dressed by path (`ScooterLook`).
+  - The paths lead to the scooter body, logos, ghost, eyelids and hat.
+  - Renaming or moving one of those means updating `ScooterLook`'s paths; `ScooterLookTests` fails until then.

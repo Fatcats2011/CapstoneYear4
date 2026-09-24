@@ -90,6 +90,30 @@ public class PlayerRoster
     }
 
     ///<summary>
+    /// Online: puts this machine's player in the seat the host gave them. Returns their slot, or null when that slot
+    /// is taken or doesn't exist, or they already have one
+    ///</summary>
+    public PlayerSlot JoinLocalAt(PlayerInput input, int slot)
+    {
+        if (input == null || !IsFree(slot) || IndexOf(input) >= 0)
+            return null;
+
+        return Take(new PlayerSlot(slot, input.gameObject, input, 0));
+    }
+
+    ///<summary>
+    /// Online: puts another machine's player in their seat. Returns their slot, or null when that slot is taken or
+    /// doesn't exist, or they already have one
+    ///</summary>
+    public PlayerSlot JoinRemoteAt(GameObject player, ulong ownerClientId, int slot)
+    {
+        if (player == null || !IsFree(slot) || SlotOfPlayer(player) >= 0)
+            return null;
+
+        return Take(new PlayerSlot(slot, player, null, ownerClientId));
+    }
+
+    ///<summary>
     /// Frees the slot of a player on this machine. Returns the freed slot, or -1 if they weren't in the roster
     ///</summary>
     public int Leave(PlayerInput input)
@@ -101,6 +125,19 @@ public class PlayerRoster
             Count--;
         }
         return index;
+    }
+
+    ///<summary>
+    /// Frees a slot, whoever is in it (online: another machine's player left). Returns whether it was taken
+    ///</summary>
+    public bool LeaveSlot(int slot)
+    {
+        if (slot < 0 || slot >= slots.Length || slots[slot] == null)
+            return false;
+
+        slots[slot] = null;
+        Count--;
+        return true;
     }
 
     ///<summary>
@@ -127,6 +164,11 @@ public class PlayerRoster
         for (int i = 0; i < slots.Length; i++)
             slots[i] = null;
         Count = 0;
+    }
+
+    bool IsFree(int slot)
+    {
+        return slot >= 0 && slot < slots.Length && slots[slot] == null;
     }
 
     int FirstFreeSlot()

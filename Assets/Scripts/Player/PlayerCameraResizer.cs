@@ -255,7 +255,9 @@ public class PlayerCameraResizer : MonoBehaviour
         }
 
         // Update icon camera to not render self layer
-        iconCamera.cullingMask &= ~(1 << layer);
+        // (another machine's scooter has no icon camera here)
+        if (iconCamera != null)
+            iconCamera.cullingMask &= ~(1 << layer);
     }
 
     ///<summary>

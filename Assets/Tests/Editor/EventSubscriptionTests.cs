@@ -73,5 +73,16 @@ namespace DoA.Tests
             Assert.AreEqual(0, Reflect.HandlerCount(scene, "OnReturnToMenu", handler));
             Assert.AreEqual(0, Reflect.HandlerCount(ball, "OnBoostStart", handler));
         }
+
+        [Test]
+        public void SkideeSkidoo_EnabledThenDisabled_LeavesNoGameStateHandlers()
+        {
+            SkideeSkidoo skids = objects.Add<SkideeSkidoo>();
+
+            Reflect.Invoke(skids, "OnEnable");
+            Reflect.Invoke(skids, "OnDisable");
+
+            Assert.AreEqual(0, GameStateHandlersOf(skids));
+        }
     }
 }
