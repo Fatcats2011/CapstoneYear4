@@ -148,7 +148,7 @@ Checks (press Play from `SplashScreen`):
 - Keyboard: press a key on the title screen → "Connect a controller to play" appears for 3 seconds.
 - Performance: 4 players (your controller + F1 ×3 in player select) → golden-order scene → Window → Analysis → Profiler → F4 through Low / Medium / High; note the CPU and GPU frame times for each.
 - Aspect ratios: Game view at 1280×800 (Steam Deck) and 2560×1080 with 1, 2 and 4 players — check the HUD isn't cut off.
-- Test Runner → EditMode → Run All: 311 passed (the smoke test plays a match for a minute or two).
+- Test Runner → EditMode → Run All: 316 passed (the smoke test plays a match for a minute or two).
 
 ---
 
@@ -200,7 +200,8 @@ Progress (2026-09-28):
 - Phase 3C (`2026-09-27-phase3c-driving-together.md`) — driving together:
   - The match loads on every machine and starts together (`OnlineSceneFlow`, held loads). The host takes everyone back to the menu.
   - Each machine drives its own scooter, and the others follow it (`OnlineScooter`, `OnlineDriving`), with its boost, drift and sparks (`DriveFlags`).
-  - The host's match clock on every machine (`MatchClock`). No tutorial online yet.
+  - The host's match clock on every machine (`MatchClock`). No tutorial online yet: players start in the city.
+  - 2026-09-28 fixes: players start on the city start points online, not at the tutorial's start; a machine leaving on the loading screen no longer starts another ready-up countdown.
 - Next:
   - Phase 3D: the Steam lobby and a Play Online menu (Task 3.2).
   - Then orders (Task 3.5), steals, clashes and respawns (3.6), one-shots and sounds (3.7), and disconnects (3.8).
@@ -221,7 +222,7 @@ Progress (2026-09-28):
 
 - [ ] `NetworkPlayer` (NetworkObject on PlayerAvatar): NetworkVariables for slot, company, colour, hat, score, ready, and a flags byte (boosting / phasing / drifting / drift tier). *(Phase 3B: `OnlinePlayer` has seat (company follows), colour, hat and ready. It's named `OnlinePlayer` because Unity still declares an obsolete `UnityEngine.NetworkPlayer`. It's its own network prefab, not on `PlayerAvatar`: see the Phase 3B plan's Ruling 1. Score and the flags byte come with driving.)*
 - [x] Owner-authoritative movement: the owner runs `BallDriving` physics; owner-authoritative `NetworkTransform` (the `ClientNetworkTransform` pattern) with interpolation on sphere + control; non-owners make the sphere kinematic and skip `BallDriving` Update/FixedUpdate. *(Phase 3C: through two proxies on a per-player `OnlineScooter`, each an `OwnerNetworkTransform`: the ball, and the model's world pose. `OnlineDriving` copies them every frame. The proxies start parked below the map; long moves teleport.)*
-- [x] Spawns: each owner puts its own scooter on its slot's spawn point (`SpawnManager.SpawnPoint`); the host doesn't place other machines' scooters. *(Phase 3C: `SpawnManager` places `LocalPlayers` only.)*
+- [x] Spawns: each owner puts its own scooter on its slot's spawn point (`SpawnManager.SpawnPoint`); the host doesn't place other machines' scooters. *(Phase 3C: `SpawnManager` places `LocalPlayers` only. Online, without the tutorial, they start on the city start points, `nonTutorialSpawnPositions` (`SpawnManager.PlacePlayersAtStart`).)*
 - [x] Remote players' boost/phase/drift visuals and sounds come from the flags byte. *(Phase 3C: `DriveFlags` on `OnlineScooter`. `BallDriving.ShowRemote` drives the trail, skid marks, sparks and rider. Sounds come with Task 3.7.)*
 - [ ] A remote avatar (`PlayerAvatar.prefab` alone) has no view:
   - Its view fields are empty: `BallDriving.inp` / `cameraResizer` / `orbitalCamera`, `OrderHandler.numberHandler`, `PhaseIndicator.hornSliderLeft` / `hornSliderRight`, `DrivingIndicators.iconCamera` / `thisPlayer`.
@@ -249,6 +250,7 @@ Progress (2026-09-28):
 - [ ] NetworkObject on every scene-placed `Order`; NetworkVariables for state (Inactive / AtPickup / Held / Dropped / Delivered), holder slot and value.
 - [ ] Only the host runs `OrderBeacon.OnTriggerStay` and `OrderManager` spawning; clients drive meshes, beacons and compass markers from `OnValueChanged`.
 - [ ] Dropped orders: the host picks the drop height (`Order.Drop`'s `Random.Range`) and clients get the landing spot.
+- [ ] The tutorial online (it teaches orders): `TutorialManager.IsSkipped` turns it back on. Players then start at the tutorial again (`SpawnManager.PlacePlayersAtStart`), and `IncrementAlumni` must count every machine's players, not just this machine's handlers.
 
 ### Task 3.6: Steals, clashes, respawns
 
@@ -270,6 +272,7 @@ Progress (2026-09-28):
 - [ ] Host leaves → clients return to the menu with "Host left the match". *(The client's session ends with `OnlineSession.HOST_LEFT`; returning to the menu with the message is still to do.)*
 - [ ] Reject mismatched builds (lobby `build` metadata + NGO connection-approval payload). *(Approval half done: `JoinRules` compares `Application.version`. A build whose Netcode setup differs is dropped by Netcode before approval, with no reason, so the lobby filter matters.)*
 - [ ] Tests: kill a client mid-delivery; kill the host mid-match.
+- [ ] Long loads: in the editor, the first load of the game scene took 31 s. Two test sessions in one Unity process lost their connection during it: Unity Transport's disconnect timeout is 30 s. Time a build's load on a slow PC; if it comes close, raise the timeout while loading.
 
 ### Task 3.9 (optional, post-launch): Online + couch
 

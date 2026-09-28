@@ -409,7 +409,11 @@ public class PlayerInstantiate : SingletonMonobehaviour<PlayerInstantiate>
             PlayerSelectCanvas.Instance.TogglePressButtonTexts(seat, true);
         Destroy(slot.Player);
         ScoreManager.Instance.UpdateOrderHandlers(roster);
-        CheckReadyUpCount(); // mid-match nobody is ready: every player unreadies as the opening cutscene starts
+
+        // Only player select counts down to a match. From the loading screen to the opening cutscene everyone is still
+        // ready, and a countdown there would start another match
+        if (gameManager.MainState == GameState.PlayerSelect)
+            CheckReadyUpCount();
     }
 
     ///<summary>

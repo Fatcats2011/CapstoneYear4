@@ -55,11 +55,11 @@ Online multiplayer is being built in steps (roadmap Phase 3: `docs/superpowers/p
   - A scooter that spawns or respawns far away appears there at once. It doesn't slide across the map.
   - Until its machine sends a first position, it stays where it was (its podium).
 - **The host runs the match:** its states (cutscenes, waves, results) and its match clock reach every machine.
-  - Online there's no tutorial yet. It teaches orders, which aren't shared between machines yet.
+  - Online there's no tutorial yet. It teaches orders, which aren't shared between machines yet. The players start in the city instead, on the spawn manager's city start points (`TutorialManager.IsSkipped`).
 - **Back to the menu:**
   - The host takes everyone back, from the results or its pause menu. On a client, the results screen waits for the host.
   - A client picking "main menu" on its own leaves the session.
-- **A machine that leaves mid-match:** its scooter goes on every other machine, and the match goes on.
+- **A machine that leaves mid-match:** its scooter goes on every other machine, and the match goes on. One that leaves on the loading screen: the match starts without it.
 - How it works:
   - **Scene loads:**
     - `OnlineSceneFlow` and `LoadRound`: the host starts every load, counts who's ready and shows the scene.
@@ -88,7 +88,7 @@ Online multiplayer is being built in steps (roadmap Phase 3: `docs/superpowers/p
   - Editor 1 shows `Online: player 1 joined (2 in)`.
 - Change colour or hat in one editor and watch the other.
 - Ready up in both. After the countdown both show the loading screen, and the game appears in both at once: the host waits for the other editor.
-  - The opening cutscene plays in each, then driving starts (no tutorial online).
+  - The opening cutscene plays in each, then driving starts in the city (no tutorial online).
   - Drive in one editor and watch the other: the scooter moves there, boosting and drifting.
 - Pause in editor 1 and pick **Main Menu**: both go back to the menu, still in the session. In editor 2 (a client), **Main Menu** leaves the session.
 - **Leave** ends a session. When the host leaves, editor 2 shows `Online: session ended: The host left the match.`
@@ -109,7 +109,7 @@ Online multiplayer is being built in steps (roadmap Phase 3: `docs/superpowers/p
   - Only the host's player collects orders, and other machines don't see them.
   - The results count only the host's deliveries.
   - The golden round ends when the host delivers the golden order.
-- There's no tutorial online (it teaches orders).
+- There's no tutorial online (it teaches orders): players start in the city.
 - **Other machines' scooters are silent**, and a respawn shows as a jump without the ghost animation (roadmap Tasks 3.6–3.7).
 - When the main game ends, only the host's scooter stops; the others keep driving until the golden round loads.
 - If the host leaves mid-match, clients stay where they are, offline (roadmap Task 3.8).

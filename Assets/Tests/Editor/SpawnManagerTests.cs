@@ -11,6 +11,7 @@ namespace DoA.Tests
         [TearDown]
         public void TearDown()
         {
+            GameAuthority.Role = NetworkRole.Offline;
             objects.DestroyAll();
         }
 
@@ -52,6 +53,50 @@ namespace DoA.Tests
             scooter.transform.SetParent(player.transform);
             scooter.AddComponent<BallDriving>();
             return ball.AddComponent<Rigidbody>();
+        }
+
+        /// <summary>
+        /// A spawn manager with two seats' start points: at the start of the tutorial, and in the city
+        /// </summary>
+        SpawnManager StartingSpawns(PlayerInstantiate instantiate, out GameObject[] tutorial, out GameObject[] city)
+        {
+            SpawnManager spawns = objects.Add<SpawnManager>();
+            tutorial = new[] { Point("Tutorial 1", 1), Point("Tutorial 2", 2) };
+            city = new[] { Point("City 1", 11), Point("City 2", 12) };
+            Reflect.SetField(spawns, "gameSpawnPositions", tutorial);
+            Reflect.SetField(spawns, "nonTutorialSpawnPositions", city);
+            Reflect.SetField(spawns, "playerInstantiate", instantiate);
+            return spawns;
+        }
+
+        [Test]
+        public void PlacePlayersAtStart_LocalMatch_PlayersStartAtTheTutorial()
+        {
+            PlayerInstantiate instantiate = objects.Add<PlayerInstantiate>();
+            SpawnManager spawns = StartingSpawns(instantiate, out GameObject[] tutorial, out GameObject[] city);
+            Rigidbody first = AddLocalPlayer(instantiate.Roster, "P1");
+            Rigidbody second = AddLocalPlayer(instantiate.Roster, "P2");
+
+            spawns.PlacePlayersAtStart();
+
+            Assert.AreEqual(tutorial[0].transform.position, first.transform.position);
+            Assert.AreEqual(tutorial[1].transform.position, second.transform.position);
+        }
+
+        [TestCase(NetworkRole.Host)]
+        [TestCase(NetworkRole.Client)]
+        public void PlacePlayersAtStart_Online_WhereTheTutorialIsSkipped_PlayersStartInTheCity(NetworkRole role)
+        {
+            GameAuthority.Role = role;
+            PlayerInstantiate instantiate = objects.Add<PlayerInstantiate>();
+            SpawnManager spawns = StartingSpawns(instantiate, out GameObject[] tutorial, out GameObject[] city);
+            Rigidbody first = AddLocalPlayer(instantiate.Roster, "P1");
+            Rigidbody second = AddLocalPlayer(instantiate.Roster, "P2");
+
+            spawns.PlacePlayersAtStart();
+
+            Assert.AreEqual(city[0].transform.position, first.transform.position, "seat 1's city point");
+            Assert.AreEqual(city[1].transform.position, second.transform.position, "seat 2's city point");
         }
 
         [Test]

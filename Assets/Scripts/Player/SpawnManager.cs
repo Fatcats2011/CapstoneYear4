@@ -9,6 +9,7 @@ public class SpawnManager : SingletonMonobehaviour<SpawnManager>
 
     [Tooltip("The spawn positions of the players as they start the game")]
     [SerializeField] GameObject[] gameSpawnPositions = new GameObject[Constants.MAX_PLAYERS];
+    [Tooltip("Where the players start when the tutorial is skipped (online): in the city")]
     [SerializeField] GameObject[] nonTutorialSpawnPositions = new GameObject[Constants.MAX_PLAYERS];
     [SerializeField] GameObject[] goldenPackageSpawnPositions = new GameObject[Constants.MAX_PLAYERS];
 
@@ -52,9 +53,7 @@ public class SpawnManager : SingletonMonobehaviour<SpawnManager>
     ///</summary>
     private void SpawnPlayersStartOfGame()
     {
-        // Each machine places its own players: online, another machine's scooter is where its owner puts it
-        foreach (PlayerSlot player in playerInstantiate.Roster.LocalPlayers)
-            PlacePlayer(player, SpawnPoint(player.Index, gameSpawnPositions, null));
+        PlacePlayersAtStart();
 
         // Every scooter shows on this machine's compasses
         foreach (PlayerSlot player in playerInstantiate.Roster.Players)
@@ -62,6 +61,19 @@ public class SpawnManager : SingletonMonobehaviour<SpawnManager>
 
         // After players have been placed, begin main loop
         gameManager.SetGameState(GameState.MainLoop);
+    }
+
+    ///<summary>
+    /// Puts this machine's players on their starting spawn points: at the start of the tutorial, or in the city when
+    /// the tutorial is skipped (online)
+    ///</summary>
+    public void PlacePlayersAtStart()
+    {
+        GameObject[] startPoints = TutorialManager.IsSkipped ? nonTutorialSpawnPositions : gameSpawnPositions;
+
+        // Each machine places its own players: online, another machine's scooter is where its owner puts it
+        foreach (PlayerSlot player in playerInstantiate.Roster.LocalPlayers)
+            PlacePlayer(player, SpawnPoint(player.Index, startPoints, null));
     }
 
     ///<summary>

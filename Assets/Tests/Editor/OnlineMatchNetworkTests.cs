@@ -102,9 +102,10 @@ namespace DoA.Tests
             return loader != null && Reflect.GetField(loader, "sceneLoad") != null;
         }
 
-        static GameObject[] GameSpawns()
+        // Where the players start online: in the city, as the tutorial is skipped
+        static GameObject[] CitySpawns()
         {
-            return (GameObject[])Reflect.GetField(SpawnManager.Instance, "gameSpawnPositions");
+            return (GameObject[])Reflect.GetField(SpawnManager.Instance, "nonTutorialSpawnPositions");
         }
 
         [UnityTest]
@@ -167,7 +168,7 @@ namespace DoA.Tests
 
             // Each machine places its own scooter: this one on seat 1's spawn point. The other machine's is where its owner
             // puts it; it hasn't shared a pose, so it's still where it stood in the menu
-            Assert.Less(Vector3.Distance(GameSpawns()[0].transform.position, ScooterIn(0).Sphere.transform.position), 1.5f, "this machine's scooter on its spawn point");
+            Assert.Less(Vector3.Distance(CitySpawns()[0].transform.position, ScooterIn(0).Sphere.transform.position), 1.5f, "this machine's scooter on its city spawn point");
             Assert.Less(Vector3.Distance(theirSpot, ScooterIn(1).Sphere.transform.position), 0.01f, "the other machine's scooter isn't placed here");
 
             // The first wave starts after the opening cutscene, without the tutorial: online it's skipped until orders are shared
@@ -258,6 +259,61 @@ namespace DoA.Tests
         }
 
         [UnityTest]
+        public IEnumerator Hosting_AMachineLeavingDuringTheLoadingScreen_TheMatchStillStarts()
+        {
+            EditorSceneManager.playModeStartScene = AssetDatabase.LoadAssetAtPath<SceneAsset>(MENU_SCENE);
+            yield return new EnterPlayMode();
+            LogAssert.ignoreFailingMessages = true;
+            LogCollector log = new LogCollector();
+            float deadline = Time.realtimeSinceStartup + 60;
+            while (State() != GameState.Menu && Time.realtimeSinceStartup < deadline)
+                yield return null;
+            TestPlayers.Add();
+            deadline = Time.realtimeSinceStartup + 10;
+            while (PlayerInstantiate.Instance.PlayerCount < 1 && Time.realtimeSinceStartup < deadline)
+                yield return null;
+
+            OnlineSession host = OnlineSession.Create(VERSION);
+            OnlineGame.Attach(host);
+            Assert.IsTrue(host.HostDirect(THIS_COMPUTER, PORT), "hosting");
+            GameManager.Instance.SetGameState(GameState.PlayerSelect);
+            OnlineSession other = OnlineSession.Create(VERSION); // another machine: a session without the game
+            other.JoinDirect(THIS_COMPUTER, PORT);
+            deadline = Time.realtimeSinceStartup + WAIT;
+            while (!(Slot(1) != null && other.Match != null) && Time.realtimeSinceStartup < deadline)
+                yield return null;
+            Assert.IsNotNull(Slot(1), "their scooter is in seat 2");
+
+            // The match loads. This machine's player readied up for it, and stays ready until the opening cutscene
+            PlayerInstantiate.Instance.ReadyUp(0);
+            SceneFlow.Current.LoadGameScene();
+            Assert.AreEqual(GameState.Loading, State(), "the loading screen");
+
+            // They leave before their machine has it loaded: their seat goes, and nobody counts down to another match
+            log.MachinesLeave(); // Windows may report a leaving machine's closed port: see LogCollector.CLOSED_PORT
+            other.Leave();
+            deadline = Time.realtimeSinceStartup + WAIT;
+            while (host.PlayersIn > 1 && Time.realtimeSinceStartup < deadline)
+                yield return null;
+            yield return null;
+            Assert.IsNull(Slot(1), "their seat is free");
+            Assert.IsNull(Reflect.GetField(PlayerInstantiate.Instance, "readyUpCountdown"), "nobody counts down to another match");
+
+            // The host stops waiting for them: the match starts here, with this machine's scooter in the city
+            deadline = Time.realtimeSinceStartup + LOADING;
+            while (!(ActiveScene() == GAME && State() == GameState.MainLoop) && Time.realtimeSinceStartup < deadline)
+                yield return null;
+            Assert.AreEqual(GAME, ActiveScene());
+            Assert.AreEqual(GameState.MainLoop, State(), "the opening cutscene started, and the players are placed");
+            Assert.Less(Vector3.Distance(CitySpawns()[0].transform.position, ScooterIn(0).Sphere.transform.position), 1.5f, "this machine's scooter on its city spawn point");
+
+            host.Leave();
+            yield return null;
+            log.Dispose();
+            Assert.IsEmpty(log.Problems, "Errors:\n\n" + string.Join("\n\n", log.Problems));
+        }
+
+        [UnityTest]
         public IEnumerator Joining_TheHostsMatchLoadsHere_ItsStatesWaitForTheScene_AndTheHostBringsUsBack()
         {
             EditorSceneManager.playModeStartScene = AssetDatabase.LoadAssetAtPath<SceneAsset>(MENU_SCENE);
@@ -301,8 +357,8 @@ namespace DoA.Tests
                 yield return null;
             Assert.AreEqual(GAME, ActiveScene());
             Assert.AreEqual(GameState.MainLoop, State(), "the host's states arrived in order");
-            Assert.Less(Vector3.Distance(GameSpawns()[1].transform.position, ScooterIn(1).Sphere.transform.position), 1.5f,
-                "the opening cutscene put this machine's scooter on seat 2's spawn point: the state waited for the scene");
+            Assert.Less(Vector3.Distance(CitySpawns()[1].transform.position, ScooterIn(1).Sphere.transform.position), 1.5f,
+                "the opening cutscene put this machine's scooter on seat 2's city spawn point: the state waited for the scene");
 
             // Another machine's scooter isn't placed here: its owner places it (it hasn't shared a pose: it's where it stood)
             Assert.Less(Vector3.Distance(hostSpot, ScooterIn(0).Sphere.transform.position), 0.01f, "the host's scooter isn't placed here");

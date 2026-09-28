@@ -17,6 +17,12 @@ public class TutorialManager : SingletonMonobehaviour<TutorialManager>
     private bool shouldTutorialize = true;
     public bool ShouldTutorialize { get { return shouldTutorialize; } set { shouldTutorialize = value; } }
 
+    /// <summary>
+    /// Whether matches skip the tutorial: online they do, until orders are shared between machines (roadmap Task 3.5).
+    /// Without it, the players start in the city instead of at the start of the tutorial (SpawnManager)
+    /// </summary>
+    public static bool IsSkipped { get { return GameAuthority.IsOnline; } }
+
     private List<TutorialHandler> handlers = new List<TutorialHandler>();
 
     public delegate void TutorialComplete();
@@ -88,7 +94,7 @@ public class TutorialManager : SingletonMonobehaviour<TutorialManager>
     /// </summary>
     private void SkipWhenOnline()
     {
-        if (GameAuthority.IsOnline)
+        if (IsSkipped)
             StartCoroutine(SkipOnline());
     }
 
