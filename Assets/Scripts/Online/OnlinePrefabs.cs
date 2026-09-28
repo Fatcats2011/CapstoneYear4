@@ -1,7 +1,7 @@
 using UnityEngine;
 
 /// <summary>
-/// What online play spawns: its two network objects, the scooter shown for another machine's player, and the local
+/// What online play spawns: its three network objects, the scooter shown for another machine's player, and the local
 /// player's prefab (its player select lists the colours and hats). The one asset is Resources/Online/OnlinePrefabs
 /// </summary>
 [CreateAssetMenu(fileName = "OnlinePrefabs", menuName = "Dead on Arrival/Online Prefabs")]
@@ -14,6 +14,7 @@ public class OnlinePrefabs : ScriptableObject
     [SerializeField] GameObject matchPrefab;
     [SerializeField] GameObject remoteAvatarPrefab;
     [SerializeField] GameObject localPlayerPrefab;
+    [SerializeField] GameObject scooterPrefab;
 
     /// <summary>A NetworkPlayer: the host spawns one per machine</summary>
     public GameObject PlayerPrefab { get { return playerPrefab; } }
@@ -26,6 +27,9 @@ public class OnlinePrefabs : ScriptableObject
 
     /// <summary>Player - Cinemachine.prefab: a player on this machine</summary>
     public GameObject LocalPlayerPrefab { get { return localPlayerPrefab; } }
+
+    /// <summary>An OnlineScooter: the host spawns one per machine, beside its OnlinePlayer</summary>
+    public GameObject ScooterPrefab { get { return scooterPrefab; } }
 
     /// <summary>The asset (null if it's missing)</summary>
     public static OnlinePrefabs Load()

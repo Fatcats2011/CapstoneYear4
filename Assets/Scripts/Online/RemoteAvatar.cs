@@ -27,6 +27,16 @@ public class RemoteAvatar : MonoBehaviour
         return remote;
     }
 
+    /// <summary>
+    /// Whether a part (a script, a collider) belongs to another machine's scooter. Online, such a scooter doesn't act on
+    /// this machine until orders and steals are shared (roadmap Tasks 3.5-3.6): no water, orders, steals or clashes
+    /// here. Its own machine does those, and its pose shows the result
+    /// </summary>
+    public static bool IsRemote(Component part)
+    {
+        return part != null && part.GetComponentInParent<RemoteAvatar>(true) != null;
+    }
+
     void TurnOffOwnerParts()
     {
         Driving = GetComponentInChildren<BallDriving>(true);

@@ -69,12 +69,16 @@ namespace DoA.Tests
             Assert.AreEqual(2, host.PlayersIn, "players after hosting again");
 
             // One side at a time: closing both in one frame makes Windows report the closed port as a socket error
+            LogCollector log = new LogCollector();
+            log.MachinesLeave(); // Windows may report a leaving machine's closed port: see LogCollector.CLOSED_PORT
             client.Leave();
             deadline = Time.realtimeSinceStartup + WAIT;
             while (host.PlayersIn > 1 && Time.realtimeSinceStartup < deadline)
                 yield return null;
             host.Leave();
             yield return null;
+            log.Dispose();
+            Assert.IsEmpty(log.Problems, "Errors while machines left:\n\n" + string.Join("\n\n", log.Problems));
         }
 
         [UnityTest]
@@ -120,6 +124,8 @@ namespace DoA.Tests
             while (client.Role != NetworkRole.Client && Time.realtimeSinceStartup < deadline)
                 yield return null;
 
+            LogCollector log = new LogCollector();
+            log.MachinesLeave(); // Windows may report a leaving machine's closed port: see LogCollector.CLOSED_PORT
             host.Leave();
             deadline = Time.realtimeSinceStartup + WAIT;
             while (clientEnded.Reason == null && Time.realtimeSinceStartup < deadline)
@@ -129,6 +135,8 @@ namespace DoA.Tests
             Assert.AreEqual(NetworkRole.Offline, client.Role, "the client is local again");
             Assert.AreEqual(NetworkRole.Offline, host.Role, "the host is local again");
             Assert.IsNull(hostEnded.Reason, "the host left on purpose");
+            log.Dispose();
+            Assert.IsEmpty(log.Problems, "Errors while machines left:\n\n" + string.Join("\n\n", log.Problems));
         }
 
         [UnityTest]
@@ -147,6 +155,8 @@ namespace DoA.Tests
             while (client.Role != NetworkRole.Client && Time.realtimeSinceStartup < deadline)
                 yield return null;
 
+            LogCollector log = new LogCollector();
+            log.MachinesLeave(); // Windows may report a leaving machine's closed port: see LogCollector.CLOSED_PORT
             client.Leave();
             deadline = Time.realtimeSinceStartup + WAIT;
             while (host.PlayersIn > 1 && Time.realtimeSinceStartup < deadline)
@@ -159,6 +169,8 @@ namespace DoA.Tests
 
             host.Leave();
             yield return null;
+            log.Dispose();
+            Assert.IsEmpty(log.Problems, "Errors while machines left:\n\n" + string.Join("\n\n", log.Problems));
         }
 
         [UnityTest]

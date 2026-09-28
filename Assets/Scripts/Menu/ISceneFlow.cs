@@ -26,6 +26,31 @@ public interface ISceneFlow
     void ConfirmLoad();
 }
 
+/// <summary>The scenes an online match loads on every machine</summary>
+public enum MatchScene { Game, FinalOrder }
+
+/// <summary>
+/// The local loader's online side (SceneManager): it loads a match scene behind the loading screen and holds it there
+/// until the host has heard that every machine has it (OnlineSceneFlow)
+/// </summary>
+public interface IMatchLoader
+{
+    /// <summary>Loads a match scene behind the loading screen, and holds it until ShowHeld</summary>
+    void LoadHeld(MatchScene scene);
+
+    /// <summary>Raised once the held scene is loaded, ready to show</summary>
+    event Action HeldSceneReady;
+
+    /// <summary>Shows the held scene</summary>
+    void ShowHeld();
+
+    /// <summary>
+    /// Raised after any scene loads, once its objects are awake (before their Start): a held scene shown, or the menu
+    /// after going back
+    /// </summary>
+    event Action SceneUp;
+}
+
 /// <summary>
 /// The scene flow the game uses: the local loader (SceneManager) unless online play sets another
 /// </summary>
@@ -40,5 +65,13 @@ public static class SceneFlow
     {
         get { return current ?? SceneManager.Instance; }
         set { current = value; }
+    }
+
+    /// <summary>
+    /// The local loader's held loads, for online play (null until the menu scene's loader exists)
+    /// </summary>
+    public static IMatchLoader Loader
+    {
+        get { return SceneManager.Instance; }
     }
 }

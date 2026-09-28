@@ -1,52 +1,286 @@
+using System;
+using System.Collections.Generic;
 using NUnit.Framework;
-using UnityEngine;
-using UnityEngine.TestTools;
 
 namespace DoA.Tests
 {
+    // The local loader's held loads, as the online flow sees them
+    class FakeMatchLoader : IMatchLoader
+    {
+        public readonly List<MatchScene> HeldLoads = new List<MatchScene>();
+        public int Shows;
+
+        public event Action HeldSceneReady;
+        public event Action SceneUp;
+
+        public void LoadHeld(MatchScene scene) { HeldLoads.Add(scene); }
+        public void ShowHeld() { Shows++; }
+
+        public void RaiseHeldSceneReady() { HeldSceneReady?.Invoke(); }
+        public void RaiseSceneUp() { SceneUp?.Invoke(); }
+    }
+
+    // A session's match, as the online flow sees it: what this machine sent, and messages to raise
+    class FakeMatchLink : IMatchLink
+    {
+        public bool IsHost { get; set; }
+        public readonly List<MatchScene> Loads = new List<MatchScene>();
+        public readonly List<MatchScene> Shows = new List<MatchScene>();
+        public readonly List<MatchScene> Reported = new List<MatchScene>();
+        public int Returns;
+
+        public event Action<MatchScene> LoadRequested;
+        public event Action<MatchScene> ShowRequested;
+        public event Action ReturnRequested;
+        public event Action<ulong, MatchScene> MachineLoaded;
+
+        public void RequestLoad(MatchScene scene) { Loads.Add(scene); }
+        public void RequestShow(MatchScene scene) { Shows.Add(scene); }
+        public void RequestReturn() { Returns++; }
+        public void ReportLoaded(MatchScene scene) { Reported.Add(scene); }
+
+        public void RaiseLoadRequested(MatchScene scene) { LoadRequested?.Invoke(scene); }
+        public void RaiseShowRequested(MatchScene scene) { ShowRequested?.Invoke(scene); }
+        public void RaiseReturnRequested() { ReturnRequested?.Invoke(); }
+        public void RaiseMachineLoaded(ulong machine, MatchScene scene) { MachineLoaded?.Invoke(machine, scene); }
+    }
+
     /// <summary>
-    /// The scene flow while online: starting a match online waits for Phase 3C (it says so and loads nothing); going
-    /// back to the menu uses the local loader; the loading screen never waits for A
+    /// The scene flow while online, with a fake loader and a fake session:
+    /// - The host starts every load on every machine, and shows the scene once every machine has it loaded or has left.
+    /// - A client loads what the host asks, says when it's ready, shows it when told, and is "changing" until the new
+    ///   scene is up.
+    /// - Only the host starts loads. The host takes everyone back to the menu; a client going back alone leaves the
+    ///   session first.
+    /// - The loading screen never waits for A.
     /// </summary>
     public class OnlineSceneFlowTests
     {
-        [Test]
-        public void Loads_WaitForPhase3C_AndSaySo()
+        const ulong HOST = 0;
+        const ulong CLIENT = 1;
+
+        FakeSceneFlow local;
+        FakeMatchLoader loader;
+        FakeMatchLink link;
+        OnlineSceneFlow flow;
+        int leaves;
+        int sceneChanges;
+
+        [SetUp]
+        public void SetUp()
         {
-            FakeSceneFlow local = new FakeSceneFlow();
-            OnlineSceneFlow flow = new OnlineSceneFlow(local);
-            LogAssert.Expect(LogType.Warning, OnlineSceneFlow.NOT_YET);
-            LogAssert.Expect(LogType.Warning, OnlineSceneFlow.NOT_YET);
+            local = new FakeSceneFlow();
+            loader = new FakeMatchLoader();
+            link = new FakeMatchLink();
+            flow = new OnlineSceneFlow(local, loader);
+            leaves = 0;
+            sceneChanges = 0;
+            flow.SceneChanged += CountSceneChange;
+        }
+
+        void CountSceneChange() { sceneChanges++; }
+
+        void Leave() { leaves++; }
+
+        static IEnumerable<ulong> BothMachines() { return new[] { HOST, CLIENT }; }
+
+        void LinkAsHost()
+        {
+            link.IsHost = true;
+            flow.Link(link, BothMachines, HOST, Leave);
+        }
+
+        void LinkAsClient()
+        {
+            link.IsHost = false;
+            flow.Link(link, BothMachines, CLIENT, Leave);
+        }
+
+        [Test]
+        public void Host_LoadingTheGame_AsksEveryMachine_AndHoldsItHereToo()
+        {
+            LinkAsHost();
+
+            flow.LoadGameScene();
+
+            CollectionAssert.AreEqual(new[] { MatchScene.Game }, link.Loads, "every machine is asked");
+            CollectionAssert.AreEqual(new[] { MatchScene.Game }, loader.HeldLoads, "it loads here, held behind the loading screen");
+            Assert.AreEqual(0, loader.Shows, "nothing shown yet");
+            CollectionAssert.IsEmpty(link.Shows);
+        }
+
+        [Test]
+        public void Host_ShowsTheScene_OnlyOnceEveryMachineHasItLoaded()
+        {
+            LinkAsHost();
+            flow.LoadGameScene();
+
+            loader.RaiseHeldSceneReady();
+            Assert.AreEqual(0, loader.Shows, "the other machine is still loading");
+
+            link.RaiseMachineLoaded(CLIENT, MatchScene.Game);
+            Assert.AreEqual(1, loader.Shows, "shown here");
+            CollectionAssert.AreEqual(new[] { MatchScene.Game }, link.Shows, "and on every machine");
+
+            loader.RaiseSceneUp();
+            Assert.AreEqual(0, sceneChanges, "the host holds no states for its scene");
+        }
+
+        [Test]
+        public void Host_AReportForAnotherScene_DoesntCount()
+        {
+            LinkAsHost();
+            flow.LoadGameScene();
+            loader.RaiseHeldSceneReady();
+
+            link.RaiseMachineLoaded(CLIENT, MatchScene.FinalOrder);
+
+            Assert.AreEqual(0, loader.Shows);
+        }
+
+        [Test]
+        public void Host_AMachineThatLeavesDuringTheLoad_IsNoLongerWaitedFor()
+        {
+            LinkAsHost();
+            flow.LoadGameScene();
+            loader.RaiseHeldSceneReady();
+
+            flow.MachineLeft(CLIENT);
+
+            Assert.AreEqual(1, loader.Shows, "the match starts without it");
+        }
+
+        [Test]
+        public void Host_TheGoldenRoundsScene_LoadsTheSameWay()
+        {
+            LinkAsHost();
+
+            flow.LoadFinalOrderScene();
+            link.RaiseMachineLoaded(CLIENT, MatchScene.FinalOrder);
+            loader.RaiseHeldSceneReady();
+
+            CollectionAssert.AreEqual(new[] { MatchScene.FinalOrder }, link.Loads);
+            CollectionAssert.AreEqual(new[] { MatchScene.FinalOrder }, loader.HeldLoads);
+            Assert.AreEqual(1, loader.Shows);
+        }
+
+        [Test]
+        public void Host_ReturnToMenu_TakesEveryoneBack()
+        {
+            LinkAsHost();
+
+            flow.ReturnToMenu();
+
+            Assert.AreEqual(1, link.Returns, "every machine");
+            Assert.AreEqual(1, local.MenuReturns, "and this one");
+            Assert.AreEqual(0, leaves, "the host stays in its session");
+        }
+
+        [Test]
+        public void Client_NeverStartsALoadItself()
+        {
+            LinkAsClient();
 
             flow.LoadGameScene();
             flow.LoadFinalOrderScene();
 
-            Assert.AreEqual(0, local.GameLoads + local.FinalOrderLoads, "nothing loaded");
+            CollectionAssert.IsEmpty(link.Loads, "the host starts every load");
+            CollectionAssert.IsEmpty(loader.HeldLoads);
         }
 
         [Test]
-        public void ReturnToMenu_UsesTheLocalLoader_AndItsListeners()
+        public void Client_LoadsWhatTheHostAsks_AndSaysWhenItsReady()
         {
-            FakeSceneFlow local = new FakeSceneFlow();
-            OnlineSceneFlow flow = new OnlineSceneFlow(local);
+            LinkAsClient();
+
+            link.RaiseLoadRequested(MatchScene.Game);
+            CollectionAssert.AreEqual(new[] { MatchScene.Game }, loader.HeldLoads, "held behind the loading screen");
+            CollectionAssert.IsEmpty(link.Reported, "not loaded yet");
+
+            loader.RaiseHeldSceneReady();
+            CollectionAssert.AreEqual(new[] { MatchScene.Game }, link.Reported, "the host hears it's ready");
+            Assert.AreEqual(0, loader.Shows, "until the host says");
+        }
+
+        [Test]
+        public void Client_ShowsWhenTheHostSays_AndIsChangingUntilTheSceneIsUp()
+        {
+            LinkAsClient();
+            link.RaiseLoadRequested(MatchScene.Game);
+            loader.RaiseHeldSceneReady();
+
+            link.RaiseShowRequested(MatchScene.Game);
+            Assert.AreEqual(1, loader.Shows, "shown");
+            Assert.IsTrue(flow.Changing, "the scene is coming up");
+            Assert.AreEqual(0, sceneChanges);
+
+            loader.RaiseSceneUp();
+            Assert.IsFalse(flow.Changing);
+            Assert.AreEqual(1, sceneChanges, "the held states can go");
+        }
+
+        [Test]
+        public void Client_TheHostTakingEveryoneBack_BringsItBackToo()
+        {
+            LinkAsClient();
+
+            link.RaiseReturnRequested();
+            Assert.AreEqual(1, local.MenuReturns, "back to the menu");
+            Assert.IsTrue(flow.Changing, "the menu is coming up");
+            Assert.AreEqual(0, leaves, "still in the session");
+
+            loader.RaiseSceneUp();
+            Assert.IsFalse(flow.Changing);
+            Assert.AreEqual(1, sceneChanges);
+        }
+
+        [Test]
+        public void Client_ReturnToMenu_LeavesTheSessionFirst()
+        {
+            LinkAsClient();
+
+            flow.ReturnToMenu();
+
+            Assert.AreEqual(1, leaves, "it can't come back into the host's match");
+            Assert.AreEqual(1, local.MenuReturns);
+            Assert.AreEqual(0, link.Returns, "only the host takes everyone");
+        }
+
+        [Test]
+        public void Unlinked_ItFollowsNoSessionAnyMore()
+        {
+            LinkAsClient();
+            flow.Unlink();
+
+            link.RaiseLoadRequested(MatchScene.Game);
+            loader.RaiseHeldSceneReady();
+            flow.LoadGameScene();
+
+            CollectionAssert.IsEmpty(loader.HeldLoads);
+            CollectionAssert.IsEmpty(link.Reported);
+        }
+
+        [Test]
+        public void ReturnToMenu_ListenersHearTheLocalLoader()
+        {
             int heard = 0;
             flow.OnReturnToMenu += () => heard++;
 
             flow.ReturnToMenu();
 
-            Assert.AreEqual(1, local.MenuReturns);
+            Assert.AreEqual(1, local.MenuReturns, "not in a session: straight back");
             Assert.AreEqual(1, heard, "listeners of the online flow hear the local loader");
         }
 
         [Test]
         public void TheLoadingScreen_NeverWaitsForA()
         {
-            FakeSceneFlow local = new FakeSceneFlow { WaitingForConfirm = true };
-            OnlineSceneFlow flow = new OnlineSceneFlow(local);
+            FakeSceneFlow waiting = new FakeSceneFlow { WaitingForConfirm = true };
+            OnlineSceneFlow online = new OnlineSceneFlow(waiting, loader);
 
-            Assert.IsFalse(flow.WaitingForConfirm);
-            flow.ConfirmLoad();
-            Assert.AreEqual(0, local.Confirms);
+            Assert.IsFalse(online.WaitingForConfirm);
+            online.ConfirmLoad();
+            Assert.AreEqual(0, waiting.Confirms);
         }
     }
 }

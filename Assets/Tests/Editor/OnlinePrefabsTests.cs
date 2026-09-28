@@ -6,7 +6,7 @@ using UnityEngine;
 namespace DoA.Tests
 {
     /// <summary>
-    /// What online play spawns (Resources/Online/OnlinePrefabs): two network objects that carry data, the scooter shown
+    /// What online play spawns (Resources/Online/OnlinePrefabs): three network objects that carry data, the scooter shown
     /// for another machine's player, and the local player's prefab, whose player select lists the colours and hats
     /// </summary>
     public class OnlinePrefabsTests
@@ -24,6 +24,27 @@ namespace DoA.Tests
 
             AssertNetworkPrefab(prefabs.PlayerPrefab, typeof(OnlinePlayer));
             AssertNetworkPrefab(prefabs.MatchPrefab, typeof(OnlineMatch));
+            AssertNetworkPrefab(prefabs.ScooterPrefab, typeof(OnlineScooter));
+        }
+
+        [Test]
+        public void TheScooterPrefab_CarriesItsPoseInTwoOwnerMovedProxies_ParkedUntilItsFirstPose()
+        {
+            GameObject scooter = OnlinePrefabs.Load().ScooterPrefab;
+            OwnerNetworkTransform ball = scooter.transform.Find("Ball").GetComponent<OwnerNetworkTransform>();
+            OwnerNetworkTransform model = scooter.transform.Find("Model").GetComponent<OwnerNetworkTransform>();
+
+            Assert.IsTrue(ball.SyncPositionX && ball.SyncPositionY && ball.SyncPositionZ, "the ball's position");
+            Assert.IsTrue(ball.SyncRotAngleY && !ball.SyncRotAngleX && !ball.SyncRotAngleZ, "the scooter's heading only");
+            Assert.IsTrue(model.SyncPositionX && model.SyncPositionY && model.SyncPositionZ
+                && model.SyncRotAngleX && model.SyncRotAngleY && model.SyncRotAngleZ, "the model's whole pose");
+            Assert.IsTrue(model.UseQuaternionSynchronization, "lean, drift, slope and wheelie together");
+            foreach (OwnerNetworkTransform proxy in new[] { ball, model })
+            {
+                Assert.IsFalse(proxy.SyncScaleX || proxy.SyncScaleY || proxy.SyncScaleZ, proxy.name + ": no scale");
+                Assert.IsTrue(proxy.Interpolate, proxy.name + ": smoothed");
+                Assert.AreEqual(OnlineScooter.PARKED_Y, proxy.transform.localPosition.y, proxy.name + " is parked");
+            }
         }
 
         static void AssertNetworkPrefab(GameObject prefab, System.Type script)

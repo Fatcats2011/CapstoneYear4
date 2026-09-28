@@ -13,8 +13,8 @@ using Unity.Netcode.Transports.UTP;
 using UnityEngine;
 
 /// <summary>
-/// This machine's online match: hosts one or joins one, lets players in by JoinRules, seats them, spawns the match and
-/// every machine's player, and reports its role (Host or Client while the session runs, Offline once it ends);
+/// This machine's online match: hosts one or joins one, lets players in by JoinRules, seats them, spawns the match, and
+/// every machine's player and scooter, and reports its role (Host or Client while the session runs, Offline once it ends);
 /// OnlineGame makes that this machine's GameAuthority.Role. Builds its own Netcode NetworkManager and transport, so no
 /// scene holds it. Nothing creates a session in a local match. See docs/online.md
 /// </summary>
@@ -39,6 +39,7 @@ public class OnlineSession : MonoBehaviour
     bool leaving;     // Leave was called, so the end that follows is expected
     OnlinePrefabs prefabs; // what the host spawns
     readonly List<OnlinePlayer> players = new List<OnlinePlayer>();
+    readonly List<OnlineScooter> scooters = new List<OnlineScooter>();
 #if !DISABLESTEAMWORKS
     SteamNetworkingSocketsTransport steam; // added the first time a Steam session starts
 #endif
@@ -63,6 +64,9 @@ public class OnlineSession : MonoBehaviour
 
     /// <summary>Every machine's player in this session, as this machine has them (the host spawns them)</summary>
     public IReadOnlyList<OnlinePlayer> Players { get { return players; } }
+
+    /// <summary>Every machine's scooter in this session, as this machine has them (the host spawns them)</summary>
+    public IReadOnlyList<OnlineScooter> Scooters { get { return scooters; } }
 
     /// <summary>The host's game state in this session (null until the host spawns it)</summary>
     public OnlineMatch Match { get; private set; }
@@ -114,6 +118,7 @@ public class OnlineSession : MonoBehaviour
         session.prefabs = OnlinePrefabs.Load();
         network.AddNetworkPrefab(session.prefabs.PlayerPrefab);
         network.AddNetworkPrefab(session.prefabs.MatchPrefab);
+        network.AddNetworkPrefab(session.prefabs.ScooterPrefab);
         session.Network = network;
         return session;
     }
@@ -234,6 +239,7 @@ public class OnlineSession : MonoBehaviour
         Debug.Log("Online: hosting version " + Version);
         Spawn(prefabs.MatchPrefab, NetworkManager.ServerClientId, false);
         Spawn(prefabs.PlayerPrefab, NetworkManager.ServerClientId, true); // seat 0
+        Spawn(prefabs.ScooterPrefab, NetworkManager.ServerClientId, false);
         return true;
     }
 
@@ -285,6 +291,7 @@ public class OnlineSession : MonoBehaviour
             {
                 Debug.Log("Online: player " + clientId + " joined (" + seats.Count + " in)");
                 Spawn(prefabs.PlayerPrefab, clientId, true);
+                Spawn(prefabs.ScooterPrefab, clientId, false);
             }
             return;
         }
@@ -361,6 +368,17 @@ public class OnlineSession : MonoBehaviour
     {
         if (Match == match)
             Match = null;
+    }
+
+    // OnlineScooter reports here as it arrives and goes
+    internal void AddScooter(OnlineScooter scooter)
+    {
+        scooters.Add(scooter);
+    }
+
+    internal void RemoveScooter(OnlineScooter scooter)
+    {
+        scooters.Remove(scooter);
     }
 
     void SetRole(NetworkRole role)

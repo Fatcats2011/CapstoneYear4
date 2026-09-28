@@ -16,3 +16,4 @@ MonoBehaviour:
   matchPrefab: {fileID: 4723841637655729643, guid: 549dc82f6c9ff604da4aae5657dd8b2f, type: 3}
   remoteAvatarPrefab: {fileID: 3024872148987796983, guid: fe705839d57ef804db9b99fe872215f2, type: 3}
   localPlayerPrefab: {fileID: 1867894801688539398, guid: 40683586dd376e44e83fe92a83a02d92, type: 3}
+  scooterPrefab: {fileID: 4254633343070331335, guid: 5c85203ea595b4b418daae2e4dc5cd3d, type: 3}

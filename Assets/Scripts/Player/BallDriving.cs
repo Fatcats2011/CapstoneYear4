@@ -26,6 +26,7 @@ public class BallDriving : MonoBehaviour
     private const float DRIFT_HOP_AMOUNT = 0.25f; //How high the little pre-drift hop is
     private const float DRIFT_HOP_TIME = 0.4f; //How fast the little hop is in seconds
     private const float WHEELIE_AMOUNT = 45f; //Degrees that the scooter rotates when doing a wheelie
+    public const float SCOOTER_BELOW_BALL = 0.97f; //How far below its ball's centre the scooter sits (it follows the ball there)
 
     private const float GROUNDCHECK_DISTANCE = 1.3f; //How long the ray that checks for the ground is
     private const float CSV_RATIO = 0.35f; //Don't touch
@@ -53,6 +54,7 @@ public class BallDriving : MonoBehaviour
     [Header("Setup")]
     [Tooltip("Reference to the scooter model (specifically whatever empty is right above the first object with any actual mesh)")]
     [SerializeField] private Transform scooterModel;
+    public Transform ScooterModel { get { return scooterModel; } }
     [Tooltip("Reference to the empty used for checking the scooter's normal to the ground")]
     [SerializeField] private Transform scooterNormal;
     public Transform ScooterNormal { get { return scooterNormal; } }
@@ -331,6 +333,61 @@ public class BallDriving : MonoBehaviour
     }
 
     /// <summary>
+    /// What this scooter is doing (online, its machine sends this with its pose)
+    /// </summary>
+    public DriveFlags Flags
+    {
+        get { return new DriveFlags(boosting, drifting, driftDirection > 0, driftTier, grounded, phasing); }
+    }
+
+    /// <summary>
+    /// Another machine's scooter (this script is off there, and drives nothing): shows what its owner's scooter is doing,
+    /// so its boost trail, skid marks, drift sparks and rider behave as for a scooter driven here
+    /// </summary>
+    /// <param name="flags">What the owner's scooter is doing</param>
+    /// <param name="speed">How fast it's going, in m/s</param>
+    public void ShowRemote(DriveFlags flags, float speed)
+    {
+        FindSparks();
+
+        bool boostStarts = flags.Boosting && !boosting;
+        boosting = flags.Boosting;
+        drifting = flags.Drifting;
+        grounded = flags.Grounded;
+        phasing = flags.Phasing;
+
+        int direction = flags.DriftRight ? 1 : -1;
+        if (flags.DriftTier != driftTier || direction != driftDirection)
+        {
+            driftTier = flags.DriftTier;
+            driftDirection = direction;
+            DriftSparkSet(driftTier);
+        }
+
+        // The boost trail (TrailHandler) grows on each boost
+        if (boostStarts)
+            OnBoostStart?.Invoke();
+
+        playerAnimator.SetFloat(HashReference._speedFloat, RangeMutations.Map_Linear(speed, 0, 30, 0, 10));
+    }
+
+    /// <summary>
+    /// The drift sparks, in the particle basket. Start finds them; another machine's scooter never starts
+    /// </summary>
+    private void FindSparks()
+    {
+        if (baseSpark != null)
+            return;
+
+        baseSpark = particleBasket.GetChild(0).GetComponent<ParticleManipulator>();
+        wideSpark = particleBasket.GetChild(1).GetComponent<ParticleManipulator>();
+        flare1Spark = particleBasket.GetChild(2).GetComponent<ParticleManipulator>();
+        flare2Spark = particleBasket.GetChild(3).GetComponent<ParticleManipulator>();
+        flare3Spark = particleBasket.GetChild(4).GetComponent<ParticleManipulator>();
+        longSpark = particleBasket.GetChild(5).GetComponent<ParticleManipulator>();
+    }
+
+    /// <summary>
     /// Who drives this scooter: the controller on this machine unless something else is set. Can change at any time
     /// </summary>
     public IDriveInput DriveInput
@@ -408,12 +465,7 @@ public class BallDriving : MonoBehaviour
         respawn = sphere.GetComponent<Respawn>(); // get respawn component
         soundPool = GetComponent<SoundPool>();
 
-        baseSpark = particleBasket.GetChild(0).GetComponent<ParticleManipulator>();
-        wideSpark = particleBasket.GetChild(1).GetComponent<ParticleManipulator>();
-        flare1Spark = particleBasket.GetChild(2).GetComponent<ParticleManipulator>();
-        flare2Spark = particleBasket.GetChild(3).GetComponent<ParticleManipulator>();
-        flare3Spark = particleBasket.GetChild(4).GetComponent<ParticleManipulator>();
-        longSpark = particleBasket.GetChild(5).GetComponent<ParticleManipulator>();
+        FindSparks();
 
         orderHandler.GotHit += SpinOut;
         orderHandler.Clash += BallClash;
@@ -427,7 +479,7 @@ public class BallDriving : MonoBehaviour
         if(DevTools.GetKeyDown(KeyCode.B))
             ResetBoost();
 
-        transform.position = sphere.transform.position - new Vector3(0, 0.97f, 0); //makes the scooter follow the sphere
+        transform.position = sphere.transform.position - new Vector3(0, SCOOTER_BELOW_BALL, 0); //makes the scooter follow the sphere
 
         //Assigns drag
         sphereBody.drag = startingDrag;

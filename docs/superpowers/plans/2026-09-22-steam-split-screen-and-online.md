@@ -148,7 +148,7 @@ Checks (press Play from `SplashScreen`):
 - Keyboard: press a key on the title screen → "Connect a controller to play" appears for 3 seconds.
 - Performance: 4 players (your controller + F1 ×3 in player select) → golden-order scene → Window → Analysis → Profiler → F4 through Low / Medium / High; note the CPU and GPU frame times for each.
 - Aspect ratios: Game view at 1280×800 (Steam Deck) and 2560×1080 with 1, 2 and 4 players — check the HUD isn't cut off.
-- Test Runner → EditMode → Run All: 258 passed (the smoke test plays a match for a minute or two).
+- Test Runner → EditMode → Run All: 311 passed (the smoke test plays a match for a minute or two).
 
 ---
 
@@ -191,15 +191,19 @@ Progress (2026-09-23): Phase 2A (`2026-09-23-phase2a-roster-and-smoke-test.md`) 
 
 ## Phase 3 — Online multiplayer (Netcode for GameObjects + Steam)
 
-Progress (2026-09-24):
+Progress (2026-09-28):
 - Phase 3A (`2026-09-24-phase3a-online-session.md`) — Task 3.1, plus the online session: host / join / leave, join rules, roles and end reasons (`OnlineSession`, `JoinRules`, `docs/online.md`).
 - Phase 3B (`2026-09-24-phase3b-online-player-select.md`) — online player select:
   - Seats, and `OnlinePlayer` (seat, colour, hat, ready).
   - Other machines' scooters (`RemoteAvatar`, `ScooterLook`).
   - Clients follow the host's game states (`OnlineMatch`), wired up by `OnlineGame`.
+- Phase 3C (`2026-09-27-phase3c-driving-together.md`) — driving together:
+  - The match loads on every machine and starts together (`OnlineSceneFlow`, held loads). The host takes everyone back to the menu.
+  - Each machine drives its own scooter, and the others follow it (`OnlineScooter`, `OnlineDriving`), with its boost, drift and sparks (`DriveFlags`).
+  - The host's match clock on every machine (`MatchClock`). No tutorial online yet.
 - Next:
-  - Phase 3C: driving together. Pose sync, the flags byte, Netcode scene loads, spawns (Tasks 3.3 bullets 2–4, 3.4 bullets 2–3).
   - Phase 3D: the Steam lobby and a Play Online menu (Task 3.2).
+  - Then orders (Task 3.5), steals, clashes and respawns (3.6), one-shots and sounds (3.7), and disconnects (3.8).
 
 ### Task 3.1: Packages & transports
 
@@ -216,9 +220,9 @@ Progress (2026-09-24):
 ### Task 3.3: Network player
 
 - [ ] `NetworkPlayer` (NetworkObject on PlayerAvatar): NetworkVariables for slot, company, colour, hat, score, ready, and a flags byte (boosting / phasing / drifting / drift tier). *(Phase 3B: `OnlinePlayer` has seat (company follows), colour, hat and ready. It's named `OnlinePlayer` because Unity still declares an obsolete `UnityEngine.NetworkPlayer`. It's its own network prefab, not on `PlayerAvatar`: see the Phase 3B plan's Ruling 1. Score and the flags byte come with driving.)*
-- [ ] Owner-authoritative movement: the owner runs `BallDriving` physics; owner-authoritative `NetworkTransform` (the `ClientNetworkTransform` pattern) with interpolation on sphere + control; non-owners make the sphere kinematic and skip `BallDriving` Update/FixedUpdate.
-- [ ] Spawns: each owner puts its own scooter on its slot's spawn point (`SpawnManager.SpawnPoint`); the host doesn't place other machines' scooters.
-- [ ] Remote players' boost/phase/drift visuals and sounds come from the flags byte.
+- [x] Owner-authoritative movement: the owner runs `BallDriving` physics; owner-authoritative `NetworkTransform` (the `ClientNetworkTransform` pattern) with interpolation on sphere + control; non-owners make the sphere kinematic and skip `BallDriving` Update/FixedUpdate. *(Phase 3C: through two proxies on a per-player `OnlineScooter`, each an `OwnerNetworkTransform`: the ball, and the model's world pose. `OnlineDriving` copies them every frame. The proxies start parked below the map; long moves teleport.)*
+- [x] Spawns: each owner puts its own scooter on its slot's spawn point (`SpawnManager.SpawnPoint`); the host doesn't place other machines' scooters. *(Phase 3C: `SpawnManager` places `LocalPlayers` only.)*
+- [x] Remote players' boost/phase/drift visuals and sounds come from the flags byte. *(Phase 3C: `DriveFlags` on `OnlineScooter`. `BallDriving.ShowRemote` drives the trail, skid marks, sparks and rider. Sounds come with Task 3.7.)*
 - [ ] A remote avatar (`PlayerAvatar.prefab` alone) has no view:
   - Its view fields are empty: `BallDriving.inp` / `cameraResizer` / `orbitalCamera`, `OrderHandler.numberHandler`, `PhaseIndicator.hornSliderLeft` / `hornSliderRight`, `DrivingIndicators.iconCamera` / `thisPlayer`.
   - Its `Control` has no `Compass`, `TutorialHandler` or `Rumbler`, which `OrderHandler`, `Order.EraseOrder`, `OrderBeacon` and `BallDriving` fetch with `GetComponent`.
@@ -229,15 +233,16 @@ Progress (2026-09-24):
     - *`RemoteAvatar` turns off `BallDriving`, `Respawn` and `PhaseIndicator`, and makes the ball kinematic. `ScooterLook` dresses it by path: company, colour, hat.*
     - *`OrderHandler` and `PlayerCameraResizer.UpdatePlayerObjectLayer` are guarded. `DrivingIndicators` finds `PlayerInstantiate` itself, and `SkideeSkidoo` unsubscribes.*
     - *The local player keeps its view; `OnlinePlayer` is separate.*
-    - *Still to do for the match:*
-      - *`Order.EraseOrder` and `OrderBeacon` look up `Compass`.*
-      - *Trigger messages still reach disabled scripts, so `Respawn.OnTriggerEnter` (water) and `OrderHandler`'s triggers run on a remote scooter once it moves.)*
+    - *Phase 3C: another machine's scooter doesn't respawn, collect orders, steal, clash or freeze on this machine (`RemoteAvatar.IsRemote`), so `Compass` lookups never reach it.)*
 
 ### Task 3.4: Game state, timers, scenes
 
 - [x] `NetworkGameState`: `NetworkVariable<GameState>`; the host sets it, every peer calls `GameManager.ApplyGameState` in `OnValueChanged`. *(Phase 3B: `OnlineMatch` sends every state as an ordered `ClientRpc`, plus a variable holding the latest for players who join. States can switch twice in a frame, and a variable alone would skip the first. `GameManager.StateApplied` tells the host's `OnlineGame`. Clients show the host's options and credits as the title screen.)*
-- [ ] Wave/game timers → host-owned `NetworkVariable<double>` end times in server time; clients compute remaining time for the UI. *(Phase 2B already stops `OrderManager.Update` on clients, so their clocks wait for this.)*
-- [ ] Loads via `NetworkManager.SceneManager.LoadScene`; start the cutscene on `OnLoadEventCompleted` (replaces the loading-screen confirm).
+- [x] Wave/game timers → host-owned `NetworkVariable<double>` end times in server time; clients compute remaining time for the UI. *(Phase 3C: `OnlineMatch.ClockEnd`, plus started and golden round. Clients' `OrderManager.FollowHostClock` feeds their UI.)*
+- [x] Loads via `NetworkManager.SceneManager.LoadScene`; start the cutscene on `OnLoadEventCompleted` (replaces the loading-screen confirm). *(Phase 3C, done differently:*
+  - *Netcode's scene manager stays off. It breaks joining from an unsaved Play Mode scene, and it would sync the menu scene that holds every manager.*
+  - *Instead the host coordinates the game's own loader: every machine loads the scene held and reports, then the host shows it everywhere at once (`OnlineSceneFlow`, `LoadRound`).*
+  - *The opening cutscene starts on each machine when it's shown.)*
 
 ### Task 3.5: Orders
 
@@ -257,7 +262,7 @@ Progress (2026-09-24):
 - [ ] Not networked: pedestrians (`CivilianAgent`), kickables, DOTween animations, particles, cameras, compass UI, speed lines.
 - [ ] One-shots via `ClientRpc`: boost start, drift boost, emotes (`EmoteHandler` — not on the live player prefab yet, only in `NewDrive Test.unity`), horn/phase sounds.
 - [ ] Cutscenes: host sets the state; each client plays the Timeline locally; only the host can skip.
-- [ ] Online pause = local overlay only (no `Time.timeScale`); the host's menu adds **End match**. *(`GameAuthority.SetTimeScale` already ignores pauses online. `ControllerDisconnectPolicy.ShouldPause` still reads `Time.timeScale == 0` to tell whether the game is paused — change that here.)*
+- [ ] Online pause = local overlay only (no `Time.timeScale`); the host's menu adds **End match**. *(`GameAuthority.SetTimeScale` already ignores pauses online. `ControllerDisconnectPolicy.ShouldPause` still reads `Time.timeScale == 0` to tell whether the game is paused — change that here.)* *(Phase 3C: the host's "Main Menu" takes everyone back; a client's leaves the session.)*
 
 ### Task 3.8: Disconnects & versions
 

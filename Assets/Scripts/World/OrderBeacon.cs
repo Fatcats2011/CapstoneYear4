@@ -216,7 +216,7 @@ public class OrderBeacon : MonoBehaviour
         if (!canInteract || !order.CanPickup)
             return;
 
-        if (other.name == "Ball Of Fun")
+        if (IsPlayersBall(other))
         {
             Transform parent = other.transform.parent;
             OrderHandler orderHandler = parent.GetComponentInChildren<OrderHandler>();
@@ -237,5 +237,14 @@ public class OrderBeacon : MonoBehaviour
                 }
             }
         }
+    }
+
+    /// <summary>
+    /// Whether a collider is the ball of a scooter this machine drives. Another machine's scooter (online) doesn't pick up
+    /// or deliver here: orders stay the host's own until roadmap Task 3.5
+    /// </summary>
+    public static bool IsPlayersBall(Collider other)
+    {
+        return other.name == "Ball Of Fun" && !RemoteAvatar.IsRemote(other);
     }
 }

@@ -31,7 +31,7 @@ Online multiplayer is being built in steps (roadmap Phase 3: `docs/superpowers/p
   - Every other player's scooter stands on its podium, in its company's colours, with their ghost colour and hat, which update as they change them.
   - Who's ready counts on every machine.
 - **Clients follow the host's menus:** title screen and player select. The host's options and credits show as the title screen.
-- **The match doesn't start online yet** (Phase 3C). When the ready-up countdown ends, the Console says `Online: starting an online match isn't in yet…` and nothing loads. Leave the session to play locally.
+- **When everyone's ready, the match starts on every machine** (Phase 3C, below).
 - How it works:
   - **Network objects.** The host spawns two kinds of small network objects: `OnlineMatch` (its game state, sent one state at a time and in order) and an `OnlinePlayer` per machine (seat, colour, hat, ready).
     - The prefabs are in `Assets/Prefabs/Online/`, listed in `Assets/Resources/Online/OnlinePrefabs.asset`.
@@ -44,6 +44,35 @@ Online multiplayer is being built in steps (roadmap Phase 3: `docs/superpowers/p
   - **Another machine's scooter** is `PlayerAvatar.prefab` alone (`RemoteAvatar`).
     - Its controls, physics, water respawns and horn gauge are off.
     - It's dressed by `ScooterLook` (see `docs/player-prefab.md`).
+
+### Phase 3C: driving together
+
+- **Starting the match.** When everyone's ready, the host starts the load on every machine:
+  - Each machine loads the game behind its loading screen and tells the host when it's done. Online there's no "press A".
+  - Once every machine has it (or has left), the host shows it everywhere, and the match starts together.
+  - The golden round's scene loads the same way.
+- **Each machine drives its own scooter.** Every other machine shows it where its owner has it, with its boost trail, skid marks, drift sparks and rider.
+  - A scooter that spawns or respawns far away appears there at once. It doesn't slide across the map.
+  - Until its machine sends a first position, it stays where it was (its podium).
+- **The host runs the match:** its states (cutscenes, waves, results) and its match clock reach every machine.
+  - Online there's no tutorial yet. It teaches orders, which aren't shared between machines yet.
+- **Back to the menu:**
+  - The host takes everyone back, from the results or its pause menu. On a client, the results screen waits for the host.
+  - A client picking "main menu" on its own leaves the session.
+- **A machine that leaves mid-match:** its scooter goes on every other machine, and the match goes on.
+- How it works:
+  - **Scene loads:**
+    - `OnlineSceneFlow` and `LoadRound`: the host starts every load, counts who's ready and shows the scene.
+    - `SceneManager`'s held loads (`IMatchLoader`) do the loading.
+    - A state that reaches a client while its new scene is still coming up waits for it (`OnlineGame`).
+    - Netcode's own scene management stays off.
+  - **`OnlineScooter`:** one per machine, beside its `OnlinePlayer`.
+    - Two proxies carry its pose, each moved by its owner through an `OwnerNetworkTransform`: the ball, and the model's world pose (slope, lean, drift, hop and wheelie).
+    - `DriveFlags` say what it's doing.
+    - The proxies wait parked 10 km below the map until the first pose.
+  - **`OnlineDriving`** (added by `OnlineGame`) runs every frame: it sends this machine's scooter out, and shows the others on their `RemoteAvatar` (`ScooterPose`, `BallDriving.ShowRemote`).
+  - **The match clock** is the host's end time, in Netcode's server time (`MatchClock`, on `OnlineMatch`).
+  - **Another machine's scooter doesn't act on this machine** (`RemoteAvatar.IsRemote`): no water, orders, steals, clashes or end-of-game freeze here. Its own machine does those.
 
 ## Two editors on one computer (ParrelSync)
 
@@ -58,7 +87,10 @@ Online multiplayer is being built in steps (roadmap Phase 3: `docs/superpowers/p
   - Each editor shows the other's scooter.
   - Editor 1 shows `Online: player 1 joined (2 in)`.
 - Change colour or hat in one editor and watch the other.
-- Ready up in both. The countdown runs, then ends with the "isn't in yet" message.
+- Ready up in both. After the countdown both show the loading screen, and the game appears in both at once: the host waits for the other editor.
+  - The opening cutscene plays in each, then driving starts (no tutorial online).
+  - Drive in one editor and watch the other: the scooter moves there, boosting and drifting.
+- Pause in editor 1 and pick **Main Menu**: both go back to the menu, still in the session. In editor 2 (a client), **Main Menu** leaves the session.
 - **Leave** ends a session. When the host leaves, editor 2 shows `Online: session ended: The host left the match.`
 - Only change files in the original editor: clones share them.
 
@@ -73,7 +105,14 @@ Online multiplayer is being built in steps (roadmap Phase 3: `docs/superpowers/p
 - Hosting fails if another program uses port 7777.
 - Direct joins give up after 10 seconds.
 - On one computer, when one side closes (or both close at once), Unity Transport may log `All socket receive requests were marked as failed…` as an error in the other editor: Windows reporting the closed port. The session was ending anyway.
-- The match can't start online yet (Phase 3C).
+- **Orders, steals and clashes are the host's alone** until roadmap Tasks 3.5–3.6:
+  - Only the host's player collects orders, and other machines don't see them.
+  - The results count only the host's deliveries.
+  - The golden round ends when the host delivers the golden order.
+- There's no tutorial online (it teaches orders).
+- **Other machines' scooters are silent**, and a respawn shows as a jump without the ghost animation (roadmap Tasks 3.6–3.7).
+- When the main game ends, only the host's scooter stops; the others keep driving until the golden round loads.
+- If the host leaves mid-match, clients stay where they are, offline (roadmap Task 3.8).
 - An empty seat still says "press A to join" on every machine, though only a machine's first controller can take a seat online.
 - When the host leaves, clients stay in player select with their own player. Going back to the menu with the message is roadmap Task 3.8.
 - There's no "Play Online" in the game's menus yet: the Online menu above is the way in (roadmap Task 3.2).

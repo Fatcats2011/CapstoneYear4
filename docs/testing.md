@@ -11,6 +11,10 @@
 - `OnlineSessionNetworkTests` start online hosts and clients on this computer (127.0.0.1, port 7791) in an empty Play Mode scene, a few seconds per test. Nothing needs to be running for them.
   - `OnlinePlayersNetworkTests` (port 7792) do the same for seats, players' choices and the host's game states.
   - `RemoteAvatarTests`, `OnlineSeatTests` and `OnlineGameNetworkTests` (port 7793) play in the real menu scene, about 10–20 s each. In `OnlineGameNetworkTests`, the other machine is a session without the game.
+  - `OnlineScootersNetworkTests` (port 7794, empty scene): every machine's scooter, its pose and flags, and long moves that jump.
+  - `OnlineDrivingNetworkTests` (port 7795, menu scene): another machine's scooter following its owner, and this machine's reaching the others.
+  - `OnlineMatchNetworkTests` (port 7796): a whole online start, hosting and joining, and a machine leaving mid-match. They load the game scene, so about a minute each.
+  - When a machine leaves, Windows often reports its closed port to the others, and Unity Transport logs that as an error (`docs/online.md`, Known limits). Tests where machines leave call `LogCollector.MachinesLeave()` first: that one message is let through, and any other error still fails the test.
 - Leave the editor alone while it plays. Controllers you touch count as input.
 - Run a single test: select it in the Test Runner → **Run Selected**.
 

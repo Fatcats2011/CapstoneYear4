@@ -214,6 +214,10 @@ public class Respawn : MonoBehaviour
 
     private void OnTriggerEnter(Collider other)
     {
+        // Another machine's scooter (online): its own machine respawns it (this script is off there, but triggers still arrive)
+        if (RemoteAvatar.IsRemote(this))
+            return;
+
         if (other.tag == "Water")
         {
             StartRespawnCoroutine();

@@ -101,12 +101,16 @@ namespace DoA.Tests
             Assert.IsTrue(Sees(host, 2), "the host sees both players");
             Assert.IsFalse(PlayerInSeat(host, 1).IsOwner, "on the host, seat 1 is another machine's player");
 
+            LogCollector log = new LogCollector();
+            log.MachinesLeave(); // Windows may report a leaving machine's closed port: see LogCollector.CLOSED_PORT
             client.Leave();
             deadline = Time.realtimeSinceStartup + WAIT;
             while (host.PlayersIn > 1 && Time.realtimeSinceStartup < deadline)
                 yield return null;
             host.Leave();
             yield return null;
+            log.Dispose();
+            Assert.IsEmpty(log.Problems, "Errors while machines left:\n\n" + string.Join("\n\n", log.Problems));
         }
 
         [UnityTest]
@@ -140,12 +144,16 @@ namespace DoA.Tests
             Assert.AreEqual(2, PlayerInSeat(client, 1).Colour, "unchanged on its own machine");
             Assert.IsTrue(onHost.Ready, "unchanged on the host");
 
+            LogCollector log = new LogCollector();
+            log.MachinesLeave(); // Windows may report a leaving machine's closed port: see LogCollector.CLOSED_PORT
             client.Leave();
             deadline = Time.realtimeSinceStartup + WAIT;
             while (host.PlayersIn > 1 && Time.realtimeSinceStartup < deadline)
                 yield return null;
             host.Leave();
             yield return null;
+            log.Dispose();
+            Assert.IsEmpty(log.Problems, "Errors while machines left:\n\n" + string.Join("\n\n", log.Problems));
         }
 
         [UnityTest]
@@ -184,12 +192,16 @@ namespace DoA.Tests
                 yield return null;
             Assert.AreEqual(GameState.MainLoop, host.Match.State);
 
+            LogCollector log = new LogCollector();
+            log.MachinesLeave(); // Windows may report a leaving machine's closed port: see LogCollector.CLOSED_PORT
             client.Leave();
             deadline = Time.realtimeSinceStartup + WAIT;
             while (host.PlayersIn > 1 && Time.realtimeSinceStartup < deadline)
                 yield return null;
             host.Leave();
             yield return null;
+            log.Dispose();
+            Assert.IsEmpty(log.Problems, "Errors while machines left:\n\n" + string.Join("\n\n", log.Problems));
         }
 
         [UnityTest]
@@ -213,6 +225,8 @@ namespace DoA.Tests
                 yield return null;
             Assert.IsTrue(PlayerInSeat(second, 2).IsOwner, "the second joiner sits in seat 2");
 
+            LogCollector log = new LogCollector();
+            log.MachinesLeave(); // Windows may report a leaving machine's closed port: see LogCollector.CLOSED_PORT
             first.Leave();
             deadline = Time.realtimeSinceStartup + WAIT;
             while (!(Sees(host, 2) && Sees(second, 2)) && Time.realtimeSinceStartup < deadline)
@@ -238,6 +252,8 @@ namespace DoA.Tests
                 yield return null;
             host.Leave();
             yield return null;
+            log.Dispose();
+            Assert.IsEmpty(log.Problems, "Errors while machines left:\n\n" + string.Join("\n\n", log.Problems));
         }
     }
 }

@@ -32,6 +32,7 @@ namespace DoA.Tests
         [TearDown]
         public void TearDown()
         {
+            GameAuthority.Role = NetworkRole.Offline;
             SceneFlow.Current = null;
             Time.timeScale = 1f;
             Reflect.SetSingleton<SceneManager>(null);
@@ -109,6 +110,25 @@ namespace DoA.Tests
             Reflect.Invoke(results, "ResetGame");
 
             Assert.AreEqual(1, flow.MenuReturns);
+        }
+
+        [Test]
+        public void ResultsScreen_OnlineOnAClient_WaitsForTheHostToTakeEveryoneBack()
+        {
+            FakeSceneFlow flow = new FakeSceneFlow();
+            SceneFlow.Current = flow;
+            Reflect.SetSingleton(objects.Add<PlayerInstantiate>()); // no players to reset
+            ResultsMenu results = objects.Add<ResultsMenu>();
+            Reflect.SetField(results, "displayText", new TMPro.TMP_Text[0]);
+            Reflect.SetField(results, "canQuit", true);
+
+            GameAuthority.Role = NetworkRole.Client;
+            results.ConfirmMenu();
+            Assert.AreEqual(0, flow.MenuReturns, "a client waits: the host takes everyone back");
+
+            GameAuthority.Role = NetworkRole.Host;
+            results.ConfirmMenu();
+            Assert.AreEqual(1, flow.MenuReturns, "the host goes, and takes everyone");
         }
 
         [Test]

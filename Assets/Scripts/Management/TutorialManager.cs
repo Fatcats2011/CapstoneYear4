@@ -25,12 +25,14 @@ public class TutorialManager : SingletonMonobehaviour<TutorialManager>
     private void OnEnable()
     {
         GameManager.Instance.OnSwapBegin += handlers.Clear;
+        GameManager.Instance.OnSwapTutorial += SkipWhenOnline;
         shouldTutorialize = true;
     }
 
     private void OnDisable()
     {
         GameManager.Instance.OnSwapBegin -= handlers.Clear;
+        GameManager.Instance.OnSwapTutorial -= SkipWhenOnline;
     }
 
     private void Update()
@@ -75,5 +77,27 @@ public class TutorialManager : SingletonMonobehaviour<TutorialManager>
         handlers.Clear();
 
         OnTutorialComplete?.Invoke();
+    }
+
+    /// <summary>
+    /// Online, the tutorial is skipped until orders are shared between machines (roadmap Task 3.5). It teaches picking
+    /// up, delivering and stealing orders, which only the host has until then. And it waits for every player's handler,
+    /// which only exists on that player's machine.
+    /// Every machine's players finish it at once, and the host starts the first wave a frame later. Switching state
+    /// inside the tutorial's own switch would run its other listeners (the tutorial orders) after the first wave's
+    /// </summary>
+    private void SkipWhenOnline()
+    {
+        if (GameAuthority.IsOnline)
+            StartCoroutine(SkipOnline());
+    }
+
+    private IEnumerator SkipOnline()
+    {
+        yield return null;
+
+        OnTutorialComplete?.Invoke();
+        if (GameAuthority.IsAuthority && GameManager.Instance.MainState == GameState.Tutorial)
+            GameManager.Instance.SetGameState(GameState.Begin);
     }
 }

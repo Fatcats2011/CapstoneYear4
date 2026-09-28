@@ -92,7 +92,8 @@ public class ResultsMenu : SingletonMonobehaviour<ResultsMenu>
 
     public void ConfirmMenu()
     {
-        if (!canQuit)
+        // Online, the host takes everyone back from the results; a client waits for it
+        if (!canQuit || !GameAuthority.IsAuthority)
         {
             return;
         }

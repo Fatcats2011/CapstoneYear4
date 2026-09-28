@@ -27,6 +27,33 @@ namespace DoA.Tests
         }
 
         [Test]
+        public void OnceMachinesLeave_TheTransportsClosedPortReport_IsNotAProblem()
+        {
+            using (LogCollector collector = new LogCollector())
+            {
+                collector.MachinesLeave();
+                Debug.LogError(LogCollector.CLOSED_PORT + ", likely because socket itself has failed.");
+                Debug.LogError("something else broke");
+
+                Assert.IsTrue(LogAssert.ignoreFailingMessages, "the collector reports the problems, not the test framework");
+                Assert.AreEqual(1, collector.Problems.Count, "only the other error");
+                StringAssert.Contains("something else broke", collector.Problems[0]);
+            }
+        }
+
+        [Test]
+        public void BeforeMachinesLeave_TheTransportsClosedPortReport_IsAProblem()
+        {
+            using (LogCollector collector = new LogCollector())
+            {
+                LogAssert.Expect(LogType.Error, new Regex(LogCollector.CLOSED_PORT));
+                Debug.LogError(LogCollector.CLOSED_PORT + ", likely because socket itself has failed.");
+
+                Assert.AreEqual(1, collector.Problems.Count, "mid-session, a failed socket is a problem");
+            }
+        }
+
+        [Test]
         public void StopsListeningOnceDisposed()
         {
             LogCollector collector = new LogCollector();

@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.TestTools;
 
 namespace DoA.Tests
 {
@@ -10,7 +11,14 @@ namespace DoA.Tests
     /// </summary>
     public sealed class LogCollector : IDisposable
     {
+        /// <summary>
+        /// How Unity Transport reports a closed port: on one computer, when a machine leaves an online session, Windows tells
+        /// the machines still running that its port closed, and the transport logs that as an error (docs/online.md)
+        /// </summary>
+        public const string CLOSED_PORT = "All socket receive requests were marked as failed";
+
         readonly List<string> problems = new List<string>();
+        bool machinesLeaving;
 
         public LogCollector()
         {
@@ -27,8 +35,22 @@ namespace DoA.Tests
             Application.logMessageReceived -= OnLogMessage;
         }
 
+        /// <summary>
+        /// From now on, machines leave the online session: the transport's closed-port report (CLOSED_PORT) isn't a
+        /// problem, as the session was ending anyway. Every other problem still is, and this collector reports them, not
+        /// the test framework (which can't tell them apart)
+        /// </summary>
+        public void MachinesLeave()
+        {
+            machinesLeaving = true;
+            LogAssert.ignoreFailingMessages = true;
+        }
+
         void OnLogMessage(string message, string stackTrace, LogType type)
         {
+            if (machinesLeaving && message.StartsWith(CLOSED_PORT))
+                return;
+
             if (type == LogType.Error || type == LogType.Exception || type == LogType.Assert)
                 problems.Add(type + ": " + message + "\n" + FirstLines(stackTrace, 4));
         }

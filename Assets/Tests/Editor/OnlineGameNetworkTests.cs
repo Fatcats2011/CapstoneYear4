@@ -72,8 +72,19 @@ namespace DoA.Tests
 
         static void PressA(Gamepad pad)
         {
-            InputSystem.QueueStateEvent(pad, new GamepadState().WithButton(GamepadButton.South));
+            Press(pad, GamepadButton.South);
+        }
+
+        static void Press(Gamepad pad, GamepadButton button)
+        {
+            InputSystem.QueueStateEvent(pad, new GamepadState().WithButton(button));
             InputSystem.QueueStateEvent(pad, new GamepadState());
+        }
+
+        // The colour a local player picked in player select
+        static int Colour(int slot)
+        {
+            return Slot(slot).Input.GetComponent<PlayerUIHandler>().customizationSelector.ColourIndex;
         }
 
         [UnityTest]
@@ -87,7 +98,7 @@ namespace DoA.Tests
             while (!AtTitleScreen() && Time.realtimeSinceStartup < deadline)
                 yield return null;
             PlayerInstantiate players = PlayerInstantiate.Instance;
-            TestPlayers.Add();
+            Gamepad pad = TestPlayers.Add();
             deadline = Time.realtimeSinceStartup + 10;
             while (players.PlayerCount < 1 && Time.realtimeSinceStartup < deadline)
                 yield return null;
@@ -121,6 +132,22 @@ namespace DoA.Tests
             Assert.AreSame(customization.Colours[2].colorMaterial, scooter.Find(ScooterLook.GHOST).GetComponent<SkinnedMeshRenderer>().sharedMaterials[0], "their colour");
             Assert.AreEqual(customization.Hats[3].displayHat, scooter.Find(ScooterLook.HAT).gameObject.activeSelf, "their hat");
 
+            // This machine's controller still drives player select with them here (menus ignore buttons for a moment
+            // after they open, so keep pressing)
+            int colour = Colour(0);
+            deadline = Time.realtimeSinceStartup + WAIT;
+            float nextPress = 0;
+            while (Colour(0) == colour && Time.realtimeSinceStartup < deadline)
+            {
+                if (Time.realtimeSinceStartup >= nextPress)
+                {
+                    Press(pad, GamepadButton.DpadRight);
+                    nextPress = Time.realtimeSinceStartup + 0.5f;
+                }
+                yield return null;
+            }
+            Assert.AreNotEqual(colour, Colour(0), "this machine's d-pad changes its player's colour");
+
             StateRecorder heard = new StateRecorder(other.Match);
             GameManager.Instance.SetGameState(GameState.Menu);
             deadline = Time.realtimeSinceStartup + WAIT;
@@ -128,6 +155,7 @@ namespace DoA.Tests
                 yield return null;
             Assert.AreEqual(GameState.Menu, heard.Last, "the host's switch reached them");
 
+            log.MachinesLeave(); // Windows may report a leaving machine's closed port: see LogCollector.CLOSED_PORT
             other.Leave();
             deadline = Time.realtimeSinceStartup + WAIT;
             while (Slot(1) != null && Time.realtimeSinceStartup < deadline)
@@ -203,6 +231,7 @@ namespace DoA.Tests
                 yield return null;
             Assert.AreEqual(GameState.Menu, GameManager.Instance.MainState);
 
+            log.MachinesLeave(); // Windows may report a leaving machine's closed port: see LogCollector.CLOSED_PORT
             mine.Leave();
             deadline = Time.realtimeSinceStartup + WAIT;
             while (Slot(0) != null && Time.realtimeSinceStartup < deadline)
@@ -212,6 +241,78 @@ namespace DoA.Tests
             Assert.AreEqual(NetworkRole.Offline, GameAuthority.Role);
 
             // One side at a time: closing both ends in one frame makes Windows report the closed port as a socket error
+            deadline = Time.realtimeSinceStartup + WAIT;
+            while (host.PlayersIn > 1 && Time.realtimeSinceStartup < deadline)
+                yield return null;
+            host.Leave();
+            yield return null;
+
+            log.Dispose();
+            Assert.IsEmpty(log.Problems, "Errors:\n\n" + string.Join("\n\n", log.Problems));
+        }
+
+        [UnityTest]
+        public IEnumerator Joining_WhileTheHostIsInPlayerSelect_ThisMachinesControllerDrivesPlayerSelect()
+        {
+            EditorSceneManager.playModeStartScene = AssetDatabase.LoadAssetAtPath<SceneAsset>(MENU_SCENE);
+            yield return new EnterPlayMode();
+            LogAssert.ignoreFailingMessages = true;
+            LogCollector log = new LogCollector();
+            float deadline = Time.realtimeSinceStartup + 60;
+            while (!AtTitleScreen() && Time.realtimeSinceStartup < deadline)
+                yield return null;
+            PlayerInstantiate players = PlayerInstantiate.Instance;
+            Gamepad pad = TestPlayers.Add();
+            deadline = Time.realtimeSinceStartup + 10;
+            while (players.PlayerCount < 1 && Time.realtimeSinceStartup < deadline)
+                yield return null;
+
+            // Another machine hosting, already in player select (as Tools > Online > Host leaves it): this machine
+            // joins straight into player select, and its player moves seat there
+            OnlineSession host = OnlineSession.Create(VERSION);
+            host.HostDirect(THIS_COMPUTER, PORT);
+            host.Match.SendState(GameState.PlayerSelect);
+            OnlineSession mine = OnlineSession.Create(VERSION);
+            OnlineGame.Attach(mine);
+            mine.JoinDirect(THIS_COMPUTER, PORT);
+            deadline = Time.realtimeSinceStartup + WAIT;
+            while (!(Slot(1) != null && Slot(1).IsLocal && GameManager.Instance.MainState == GameState.PlayerSelect)
+                && Time.realtimeSinceStartup < deadline)
+                yield return null;
+            Assert.IsTrue(Slot(1) != null && Slot(1).IsLocal, "this machine's player moved to seat 2");
+            Assert.AreEqual(GameState.PlayerSelect, GameManager.Instance.MainState, "straight into player select");
+
+            // Their controller changes their colour, then readies them up (keep pressing: see above)
+            int colour = Colour(1);
+            deadline = Time.realtimeSinceStartup + WAIT;
+            float nextPress = 0;
+            while (Colour(1) == colour && Time.realtimeSinceStartup < deadline)
+            {
+                if (Time.realtimeSinceStartup >= nextPress)
+                {
+                    Press(pad, GamepadButton.DpadRight);
+                    nextPress = Time.realtimeSinceStartup + 0.5f;
+                }
+                yield return null;
+            }
+            Assert.AreNotEqual(colour, Colour(1), "the d-pad changes their colour");
+
+            OnlinePlayer onHost = PlayerInSeat(host, 1);
+            deadline = Time.realtimeSinceStartup + WAIT;
+            nextPress = 0;
+            while (!onHost.Ready && Time.realtimeSinceStartup < deadline)
+            {
+                if (Time.realtimeSinceStartup >= nextPress)
+                {
+                    PressA(pad);
+                    nextPress = Time.realtimeSinceStartup + 0.5f;
+                }
+                yield return null;
+            }
+            Assert.IsTrue(onHost.Ready, "A readies them up, and the host sees it");
+
+            log.MachinesLeave(); // Windows may report a leaving machine's closed port: see LogCollector.CLOSED_PORT
+            mine.Leave();
             deadline = Time.realtimeSinceStartup + WAIT;
             while (host.PlayersIn > 1 && Time.realtimeSinceStartup < deadline)
                 yield return null;

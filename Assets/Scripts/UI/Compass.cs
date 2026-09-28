@@ -53,9 +53,11 @@ public class Compass : MonoBehaviour
         // Updates the uv rect of the compass image, to scroll based on player rotation
         //compassImage.uvRect = new Rect((player.localEulerAngles.y + orbitalCamera.smoothXAxis) / 360f, 0f, 1f, 1f);
 
-        // Loops for all markers on player and updates their position on the compass ui
-        foreach (CompassInformationInstance instance in compassInformationObjects)
+        // Loops for all markers on player and updates their position on the compass ui (backwards: a marker whose object is
+        // gone leaves the list on the way)
+        for (int i = compassInformationObjects.Count - 1; i >= 0; i--)
         {
+            CompassInformationInstance instance = compassInformationObjects[i];
             if (instance.compassIcon != null && instance.compassMarker != null)
             {
                 CompassIconUI marker = instance.compassIcon;
@@ -80,8 +82,9 @@ public class Compass : MonoBehaviour
             }
             else
             {
-                compassInformationObjects.Remove(instance);
-                Destroy(instance.compassIcon.gameObject);
+                compassInformationObjects.RemoveAt(i);
+                if (instance.compassIcon != null)
+                    Destroy(instance.compassIcon.gameObject);
             }
 
         }

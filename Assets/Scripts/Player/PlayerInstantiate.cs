@@ -404,10 +404,12 @@ public class PlayerInstantiate : SingletonMonobehaviour<PlayerInstantiate>
 
         roster.LeaveSlot(seat);
         playerReadyUp[seat] = false;
-        PlayerSelectCanvas.Instance.TogglePressButtonTexts(seat, true);
+        // Player select's join prompts go with the menu scene: mid-match there's no free seat to show
+        if (PlayerSelectCanvas.Instance != null)
+            PlayerSelectCanvas.Instance.TogglePressButtonTexts(seat, true);
         Destroy(slot.Player);
         ScoreManager.Instance.UpdateOrderHandlers(roster);
-        CheckReadyUpCount();
+        CheckReadyUpCount(); // mid-match nobody is ready: every player unreadies as the opening cutscene starts
     }
 
     ///<summary>

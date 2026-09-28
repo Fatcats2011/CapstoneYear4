@@ -3,11 +3,13 @@ using UnityEngine;
 
 /// <summary>
 /// The game's side of an online session:
-/// - this machine's role (GameAuthority) and the scene flow;
+/// - this machine's role (GameAuthority) and the scene flow (loads with the whole session: OnlineSceneFlow);
 /// - this machine's player in the seat the host gave them;
 /// - other machines' players as scooters in their seats;
+/// - every scooter's pose and what it's doing (OnlineDriving);
 /// - everyone's colour, hat and readiness;
-/// - the host's game states.
+/// - the host's game states;
+/// - the host's match clock (MatchClock).
 /// Whatever starts a session for the game adds it: the Online menu now, the Steam lobby later (roadmap Task 3.2).
 /// See docs/online.md
 /// </summary>
@@ -33,6 +35,7 @@ public class OnlineGame : MonoBehaviour
     OnlinePlayer localPlayer;     // this machine's player
     readonly List<OnlinePlayer> waiting = new List<OnlinePlayer>(); // other machines' players, until their seat is free here
     readonly Dictionary<OnlinePlayer, RemotePlayer> remotes = new Dictionary<OnlinePlayer, RemotePlayer>();
+    readonly Queue<GameState> held = new Queue<GameState>(); // client: the host's states while this machine's new scene comes up
 
     /// <summary>
     /// Plays the game over a session (adds an OnlineGame to its object)
@@ -73,8 +76,12 @@ public class OnlineGame : MonoBehaviour
     {
         session = onlineSession;
         prefabs = OnlinePrefabs.Load();
-        sceneFlow = new OnlineSceneFlow(SceneFlow.Current);
+        sceneFlow = new OnlineSceneFlow(SceneFlow.Current, SceneFlow.Loader);
+        sceneFlow.SceneChanged += ApplyHeldStates;
         choices = prefabs.LocalPlayerPrefab.GetComponentInChildren<CustomizationSelector>(true);
+
+        // Every frame, this machine's scooter goes out and the other machines' come in
+        gameObject.AddComponent<OnlineDriving>().Begin(session);
 
         session.RoleChanged += OnRoleChanged;
         session.PlayerSpawned += OnPlayerSpawned;
@@ -103,6 +110,8 @@ public class OnlineGame : MonoBehaviour
             if (session.Match != null)
                 session.Match.StateReceived -= FollowHost;
         }
+        if (sceneFlow != null)
+            sceneFlow.Unlink();
         if (GameManager.Instance != null)
             GameManager.Instance.StateApplied -= OnStateApplied;
     }
@@ -119,6 +128,8 @@ public class OnlineGame : MonoBehaviour
         }
 
         SceneFlow.Current = null;
+        sceneFlow.Unlink();
+        held.Clear();
         PlayerInstantiate players = PlayerInstantiate.Instance;
         foreach (RemotePlayer remote in remotes.Values)
         {
@@ -146,6 +157,9 @@ public class OnlineGame : MonoBehaviour
 
     void OnPlayerDespawned(OnlinePlayer player)
     {
+        // A machine that leaves during a load isn't waited for
+        sceneFlow.MachineLeft(player.OwnerClientId);
+
         if (player == localPlayer)
             localPlayer = null;
         waiting.Remove(player);
@@ -161,6 +175,9 @@ public class OnlineGame : MonoBehaviour
 
     void OnMatchSpawned(OnlineMatch match)
     {
+        // The scene flow follows the host's loads (client) or the clients' reports (host)
+        sceneFlow.Link(match, SessionMachines, session.Network.LocalClientId, LeaveSession);
+
         if (match.IsServer)
         {
             // Players who join later start from where the host is
@@ -174,6 +191,18 @@ public class OnlineGame : MonoBehaviour
             FollowHost(match.State);
     }
 
+    // Host: the machines in the session now, the host included
+    IEnumerable<ulong> SessionMachines()
+    {
+        return session.Network.ConnectedClientsIds;
+    }
+
+    // Client: going back to the menu alone leaves the session
+    void LeaveSession()
+    {
+        session.Leave();
+    }
+
     // Host: each state the game switches to goes to the clients
     void OnStateApplied(GameState state)
     {
@@ -181,11 +210,25 @@ public class OnlineGame : MonoBehaviour
             session.Match.SendState(state);
     }
 
-    // Client: the host switched state
+    // Client: the host switched state. While this machine's new scene is still coming up, the state waits for it: its
+    // objects (the spawns, the cutscene) must hear it
     void FollowHost(GameState hostState)
     {
+        if (sceneFlow.Changing)
+        {
+            held.Enqueue(hostState);
+            return;
+        }
+
         if (GameManager.Instance != null)
             GameManager.Instance.ApplyGameState(ForClient(hostState));
+    }
+
+    // Client: the new scene is up: the states that waited go, in order
+    void ApplyHeldStates()
+    {
+        while (held.Count > 0)
+            FollowHost(held.Dequeue());
     }
 
     void Update()
@@ -197,6 +240,7 @@ public class OnlineGame : MonoBehaviour
         SeatWaitingPlayers(players);
         ShareLocalChoices(players);
         ShowRemoteChoices(players);
+        ShareOrFollowClock();
     }
 
     // Other machines' players take their seats here once they're free (this machine's player may be moving out of one)
@@ -265,5 +309,24 @@ public class OnlineGame : MonoBehaviour
                 players.SetRemoteReady(shown.Seat, player.Ready);
             }
         }
+    }
+
+    // The match clock: the host shares it as an end time in server time while its waves run; a client shows it
+    void ShareOrFollowClock()
+    {
+        OnlineMatch match = session.Match;
+        OrderManager orders = OrderManager.Instance;
+        if (match == null || orders == null || !session.IsRunning)
+            return;
+
+        double now = session.Network.ServerTime.Time;
+        if (match.IsServer)
+        {
+            bool moved = orders.GameStarted && MatchClock.NeedsRepublish(match.ClockEnd, now, orders.GameTimer);
+            if (moved || match.ClockStarted != orders.GameStarted || match.FinalOrder != orders.FinalOrderActive)
+                match.ShareClock(MatchClock.EndTime(now, orders.GameTimer), orders.GameStarted, orders.FinalOrderActive);
+        }
+        else
+            orders.FollowHostClock(MatchClock.Remaining(match.ClockEnd, now), match.ClockStarted, match.FinalOrder);
     }
 }

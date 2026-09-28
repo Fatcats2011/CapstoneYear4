@@ -325,6 +325,10 @@ public class OrderHandler : MonoBehaviour
     /// </summary>
     private void InitHandler()
     {
+        // Another machine's scooter: its own machine freezes it when the main game ends (here it never started driving)
+        if (RemoteAvatar.IsRemote(this))
+            return;
+
         OrderManager.Instance.OnMainGameFinishes += () => ball.FreezeBall(true);
     }
 
@@ -375,8 +379,8 @@ public class OrderHandler : MonoBehaviour
     /// </summary>
     public void AttemptSteal()
     {
-        // Online, only the host decides steals and clashes
-        if (!GameAuthority.IsAuthority)
+        // Online, only the host decides steals and clashes, and not yet for another machine's scooter (roadmap Task 3.6)
+        if (!GameAuthority.IsAuthority || RemoteAvatar.IsRemote(this))
             return;
 
         if (playerTouching == null)
@@ -402,8 +406,8 @@ public class OrderHandler : MonoBehaviour
     /// <param name="other">Collider player has hit. Will attempt to steal if this hitbox is another player</param>
     private void OnTriggerEnter(Collider other)
     {
-        // Online, only the host decides steals and clashes
-        if (!GameAuthority.IsAuthority)
+        // Online, only the host decides steals and clashes, and not yet for another machine's scooter (roadmap Task 3.6)
+        if (!GameAuthority.IsAuthority || RemoteAvatar.IsRemote(this))
             return;
 
         OrderHandler otherHandler;
@@ -411,7 +415,7 @@ public class OrderHandler : MonoBehaviour
         {
             otherHandler = other.gameObject.transform.parent.GetComponentInChildren<OrderHandler>();
 
-            if(otherHandler == this)
+            if(otherHandler == this || RemoteAvatar.IsRemote(otherHandler))
             {
                 return;
             }

@@ -7,7 +7,7 @@ using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
-public class SceneManager : SingletonMonobehaviour<SceneManager>, ISceneFlow
+public class SceneManager : SingletonMonobehaviour<SceneManager>, ISceneFlow, IMatchLoader
 {
     [SerializeField] PlayerInstantiate playerInstantiate;
     public event Action OnReturnToMenu;
@@ -49,6 +49,7 @@ public class SceneManager : SingletonMonobehaviour<SceneManager>, ISceneFlow
 
         OnReturnToMenu += LoadMenuScene;
         OnConfirmToLoad += SwapToSceneAfterConfirm;
+        UnityEngine.SceneManagement.SceneManager.sceneLoaded += RaiseSceneUp;
 
         GameManager.Instance.OnSwapMenu += HideLoadingScreen;
         GameManager.Instance.OnSwapStartingCutscene += HideLoadingScreen;
@@ -61,6 +62,7 @@ public class SceneManager : SingletonMonobehaviour<SceneManager>, ISceneFlow
         
         OnReturnToMenu -= LoadMenuScene;
         OnConfirmToLoad -= SwapToSceneAfterConfirm;
+        UnityEngine.SceneManagement.SceneManager.sceneLoaded -= RaiseSceneUp;
 
         GameManager.Instance.OnSwapMenu -= HideLoadingScreen;
         GameManager.Instance.OnSwapStartingCutscene -= HideLoadingScreen;
@@ -76,6 +78,28 @@ public class SceneManager : SingletonMonobehaviour<SceneManager>, ISceneFlow
     // class's own public members
     void ISceneFlow.ReturnToMenu() { InvokeMenuSceneEvent(); }
     bool ISceneFlow.WaitingForConfirm { get { return enableConfirm; } }
+
+    // Online (IMatchLoader): a match scene loads behind the loading screen and waits for the host to show it
+    public event Action HeldSceneReady;
+    public event Action SceneUp;
+
+    void IMatchLoader.LoadHeld(MatchScene scene)
+    {
+        if (scene == MatchScene.Game)
+            StartGameLoad(true);
+        else
+            StartFinalOrderLoad(true);
+    }
+
+    void IMatchLoader.ShowHeld()
+    {
+        ConfirmLoad();
+    }
+
+    void RaiseSceneUp(Scene scene, LoadSceneMode mode)
+    {
+        SceneUp?.Invoke();
+    }
 
     ///<summary>
     /// Everyone is ready in player select: the match starts through the scene flow (this loader offline; online, the
@@ -111,6 +135,12 @@ public class SceneManager : SingletonMonobehaviour<SceneManager>, ISceneFlow
     ///</summary>
     public void LoadGameScene()
     {
+        StartGameLoad(false);
+    }
+
+    // Loads the game behind the loading screen: every player presses A to show it, or online the host shows it
+    private void StartGameLoad(bool holdForHost)
+    {
         if (UnityEngine.SceneManagement.SceneManager.GetActiveScene().buildIndex != GameScene.BuildIndex && PlayerInstantiate.Instance.PlayerCount >= 1)
         {
             // Stops Corutine
@@ -123,7 +153,7 @@ public class SceneManager : SingletonMonobehaviour<SceneManager>, ISceneFlow
             HideLeaderboard();
             tutorialImage.sprite = mainTut;
             ShowLoadingScreen();
-            sceneLoadCoroutune = StartCoroutine(LoadSceneAsync(GameScene.BuildIndex, loadingScreenDelay, true, false));
+            sceneLoadCoroutune = StartCoroutine(LoadSceneAsync(GameScene.BuildIndex, loadingScreenDelay, true, false, holdForHost));
             
             if(OrderManager.Instance != null)
                 OrderManager.Instance.ResetForNextGame();
@@ -131,6 +161,12 @@ public class SceneManager : SingletonMonobehaviour<SceneManager>, ISceneFlow
     }
 
     public void LoadFinalOrderScene()
+    {
+        StartFinalOrderLoad(false);
+    }
+
+    // Loads the golden round's scene the same way as the game
+    private void StartFinalOrderLoad(bool holdForHost)
     {
         if (UnityEngine.SceneManagement.SceneManager.GetActiveScene().buildIndex != FinalOrderScene.BuildIndex)
         {
@@ -144,14 +180,14 @@ public class SceneManager : SingletonMonobehaviour<SceneManager>, ISceneFlow
             tutorialImage.sprite = finalTut;
             ShowLoadingScreen();
             ShowLeaderboard();
-            sceneLoadCoroutune = StartCoroutine(LoadSceneAsync(FinalOrderScene.BuildIndex, loadingScreenDelay, true, false));
+            sceneLoadCoroutune = StartCoroutine(LoadSceneAsync(FinalOrderScene.BuildIndex, loadingScreenDelay, true, false, holdForHost));
         }
     }
 
     ///<summary>
     /// Loads the scene async
     ///</summary>
-    private IEnumerator LoadSceneAsync(int sceneToLoad, float delayTime, bool waitForConfirm, bool spawnMenu)
+    private IEnumerator LoadSceneAsync(int sceneToLoad, float delayTime, bool waitForConfirm, bool spawnMenu, bool holdForHost = false)
     {
         // Sets gamestate to loading
         GameManager.Instance.SetGameState(GameState.Loading);
@@ -170,6 +206,13 @@ public class SceneManager : SingletonMonobehaviour<SceneManager>, ISceneFlow
             {
                 sceneLoad = asyncLoad;
                 spawnMenuBool = spawnMenu;
+
+                // Online: the host shows the scene once every machine has it loaded
+                if (holdForHost)
+                {
+                    HeldSceneReady?.Invoke();
+                    break;
+                }
 
                 // Wait for player confirm
                 if (waitForConfirm)

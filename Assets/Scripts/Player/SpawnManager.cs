@@ -52,13 +52,13 @@ public class SpawnManager : SingletonMonobehaviour<SpawnManager>
     ///</summary>
     private void SpawnPlayersStartOfGame()
     {
-        foreach (PlayerSlot player in playerInstantiate.Roster.Players)
-        {
+        // Each machine places its own players: online, another machine's scooter is where its owner puts it
+        foreach (PlayerSlot player in playerInstantiate.Roster.LocalPlayers)
             PlacePlayer(player, SpawnPoint(player.Index, gameSpawnPositions, null));
 
-            // Initalize the compass ui on each of the players
+        // Every scooter shows on this machine's compasses
+        foreach (PlayerSlot player in playerInstantiate.Roster.Players)
             player.Player.GetComponentInChildren<CompassMarker>().InitalizeCompassUIOnAllPlayers();
-        }
 
         // After players have been placed, begin main loop
         gameManager.SetGameState(GameState.MainLoop);
@@ -69,8 +69,9 @@ public class SpawnManager : SingletonMonobehaviour<SpawnManager>
     ///</summary>
     public void SpawnPlayersFinalPackage()
     {
-        // The golden round lists 3 spawn points; a 4th player starts on their normal spawn point, in line with the others
-        foreach (PlayerSlot player in playerInstantiate.Roster.Players)
+        // The golden round lists 3 spawn points; a 4th player starts on their normal spawn point, in line with the others.
+        // Each machine places its own players (online, another machine's scooter is where its owner puts it)
+        foreach (PlayerSlot player in playerInstantiate.Roster.LocalPlayers)
             PlacePlayer(player, SpawnPoint(player.Index, goldenPackageSpawnPositions, gameSpawnPositions));
     }
 

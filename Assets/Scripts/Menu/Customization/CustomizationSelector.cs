@@ -59,7 +59,12 @@ public class CustomizationSelector : MonoBehaviour
     {
         UpdateGhostColor();
         UpdateHat();
+    }
 
+    // The sliders get their icons as soon as this menu exists: their idle animation shows them from its first frame,
+    // which can come before Start (online, a player moving seat joins again late in a frame)
+    void Awake()
+    {
         // Set Ghost Color Icons
         Sprite[] colorSprites = new Sprite[playerColors.Length];
         for(int i = 0; i < playerColors.Length; i++)

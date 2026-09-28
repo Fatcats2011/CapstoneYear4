@@ -537,6 +537,16 @@ public class OrderManager : SingletonMonobehaviour<OrderManager>
     }
 
     /// <summary>
+    /// Online client: shows the host's match clock (this machine's waves don't run: the host's do)
+    /// </summary>
+    public void FollowHostClock(float timeLeft, bool started, bool finalOrder)
+    {
+        gameTimer = timeLeft;
+        gameStarted = started;
+        finalOrderActive = finalOrder;
+    }
+
+    /// <summary>
     /// Ensures next game will run smoothly.
     /// </summary>
     public void ResetForNextGame()
