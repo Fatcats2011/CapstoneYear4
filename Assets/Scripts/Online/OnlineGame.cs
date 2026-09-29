@@ -9,14 +9,19 @@ using UnityEngine;
 /// - every scooter's pose and what it's doing (OnlineDriving);
 /// - everyone's colour, hat and readiness;
 /// - the host's game states;
-/// - the host's match clock (MatchClock).
-/// Whatever starts a session for the game adds it: the Online menu now, the Steam lobby later (roadmap Task 3.2).
-/// See docs/online.md
+/// - the host's match clock (MatchClock);
+/// - why a session ended, in the controller hint bar.
+/// Whatever starts a session for the game adds it: OnlinePlay (Steam) or the editor's Online menu. See docs/online.md
 /// </summary>
 public class OnlineGame : MonoBehaviour
 {
     /// <summary>Why a machine with more than one player can't go online</summary>
     public const string ONE_PLAYER = "Online: online play is one player per machine (until roadmap Task 3.9). Let the other players leave player select first.";
+
+    /// <summary>How long a message about online play shows (ControllerPrompts)</summary>
+    public const float NOTICE_SECONDS = 5f;
+
+    static OnlineGame playing; // the game whose session this machine plays online (none offline)
 
     // What this machine shows of another machine's player
     class RemotePlayer
@@ -45,6 +50,16 @@ public class OnlineGame : MonoBehaviour
         OnlineGame game = session.gameObject.AddComponent<OnlineGame>();
         game.Begin(session);
         return game;
+    }
+
+    /// <summary>
+    /// Leaves the session this machine plays online (B in player select), whichever started it. Nothing offline. The
+    /// host leaving ends the match for everyone
+    /// </summary>
+    public static void LeaveOnline()
+    {
+        if (playing != null)
+            playing.session.Leave();
     }
 
     /// <summary>
@@ -84,6 +99,7 @@ public class OnlineGame : MonoBehaviour
         gameObject.AddComponent<OnlineDriving>().Begin(session);
 
         session.RoleChanged += OnRoleChanged;
+        session.Ended += ShowEnd;
         session.PlayerSpawned += OnPlayerSpawned;
         session.PlayerDespawned += OnPlayerDespawned;
         session.MatchSpawned += OnMatchSpawned;
@@ -104,6 +120,7 @@ public class OnlineGame : MonoBehaviour
         if (session != null)
         {
             session.RoleChanged -= OnRoleChanged;
+            session.Ended -= ShowEnd;
             session.PlayerSpawned -= OnPlayerSpawned;
             session.PlayerDespawned -= OnPlayerDespawned;
             session.MatchSpawned -= OnMatchSpawned;
@@ -114,6 +131,8 @@ public class OnlineGame : MonoBehaviour
             sceneFlow.Unlink();
         if (GameManager.Instance != null)
             GameManager.Instance.StateApplied -= OnStateApplied;
+        if (playing == this)
+            playing = null;
     }
 
     // This machine's role and scene flow follow the session's
@@ -123,10 +142,13 @@ public class OnlineGame : MonoBehaviour
 
         if (role != NetworkRole.Offline)
         {
+            playing = this;
             SceneFlow.Current = sceneFlow;
             return;
         }
 
+        if (playing == this)
+            playing = null;
         SceneFlow.Current = null;
         sceneFlow.Unlink();
         held.Clear();
@@ -145,6 +167,12 @@ public class OnlineGame : MonoBehaviour
         localPlayer = null;
         if (players != null)
             players.SetOnlineSeat(-1);
+    }
+
+    // The session ended by itself (the host left, turned this player away, or couldn't be reached): the player hears why
+    void ShowEnd(string reason)
+    {
+        ControllerPrompts.Instance.ShowHint(reason, NOTICE_SECONDS);
     }
 
     void OnPlayerSpawned(OnlinePlayer player)

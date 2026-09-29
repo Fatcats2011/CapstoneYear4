@@ -1,6 +1,6 @@
 # Online play
 
-Online multiplayer is being built in steps (roadmap Phase 3: `docs/superpowers/plans/2026-09-22-steam-split-screen-and-online.md`). Local split-screen doesn't touch any of it: nothing online runs unless a session starts.
+Online multiplayer is being built in steps (roadmap Phase 3: `docs/superpowers/plans/2026-09-22-steam-split-screen-and-online.md`). Local split-screen doesn't touch any of it: nothing online runs unless a player presses Y in player select or accepts a Steam friend's invite.
 
 ## What's there so far
 
@@ -60,6 +60,7 @@ Online multiplayer is being built in steps (roadmap Phase 3: `docs/superpowers/p
   - Online there's no tutorial yet. It teaches orders, which aren't shared between machines yet. The players start in the city instead, on the spawn manager's city start points (`TutorialManager.IsSkipped`).
 - **Back to the menu:**
   - The host takes everyone back, from the results or its pause menu. On a client, the results screen waits for the host.
+  - Online, the menu opens on player select, the lobby, not the title screen (`MainMenu.Start`). Everyone can ready up again, and Y and B work there.
   - A client picking "main menu" on its own leaves the session.
 - **A machine that leaves mid-match:** its scooter goes on every other machine, and the match goes on. One that leaves on the loading screen: the match starts without it.
 - How it works:
@@ -75,6 +76,27 @@ Online multiplayer is being built in steps (roadmap Phase 3: `docs/superpowers/p
   - **`OnlineDriving`** (added by `OnlineGame`) runs every frame: it sends this machine's scooter out, and shows the others on their `RemoteAvatar` (`ScooterPose`, `BallDriving.ShowRemote`).
   - **The match clock** is the host's end time, in Netcode's server time (`MatchClock`, on `OnlineMatch`). With no waves running (the menu, after a match) the host shares a stopped clock.
   - **Another machine's scooter doesn't act on this machine** (`RemoteAvatar.IsRemote`): no water, orders, steals, clashes or end-of-game freeze here. Its own machine does those.
+
+### Phase 3D: playing over Steam
+
+- **Y (triangle) in player select plays online** with Steam friends:
+  - It makes a friends-only Steam lobby for four, hosts the match in it, and opens Steam's invite dialog.
+  - Once online, Y opens the invite dialog again. Without Steam's overlay (the editor has none), a message says to invite from the Steam friends list.
+  - A line along the top of player select says what Y and B do.
+  - One player per machine: with two players here, Y says the others need to leave first.
+- **Friends join through Steam:** they accept the invite, or pick "Join Game" on the host in their friends list. With the game's own App ID that works whether their game is running or not (Steam starts it with `+connect_lobby`). With the test App ID, start the game first (Known limits).
+  - The game answers once its title screen is up, and lands in the host's player select.
+  - A lobby from another game or another build is left, with a message. So is one that answers after the player moved on.
+  - A player in the middle of a local match is told to finish it first.
+- **B (not ready) in player select leaves.** The host's B ends the match for everyone: the others see "The host left the match." and stay in their player select, offline.
+- **Why a session ended** shows in the controller hint bar for 5 seconds (`OnlineGame.NOTICE_SECONDS`).
+- How it works:
+  - **`OnlineLobby`** is the lobby flow, in plain C# over `ILobbyService` (Steam's lobbies: `SteamLobbyService`) and `ISessionControl` (the game's session), so it's tested with fakes.
+    - The lobby is tagged `game=doa` and `build=<version>` (`LobbyRules`).
+    - It's left whenever the session stops. The host's lobby takes friends only while the host is in the menus.
+  - **`OnlinePlay`** (made at launch) owns the lobby flow and the Steam session, which `OnlineGame` plays. It answers invites, keeps the lobby in step with the game's state, and shows the line along the top (`LobbyPrompt`).
+  - **Y** is the UI map's "North Face" action, wired in code (`PlayerUIHandler.NORTH_ACTION`).
+  - `OnlineGame.LeaveOnline` leaves whichever session this machine plays, so B works for the Steam one and the editor's.
 
 ## Two editors on one computer (ParrelSync)
 
@@ -92,9 +114,18 @@ Online multiplayer is being built in steps (roadmap Phase 3: `docs/superpowers/p
 - Ready up in both. After the countdown both show the loading screen, and the game appears in both at once: the host waits for the other editor.
   - The opening cutscene plays in each, then driving starts in the city (no tutorial online).
   - Drive in one editor and watch the other: the scooter moves there, boosting and drifting.
-- Pause in editor 1 and pick **Main Menu**: both go back to the menu, still in the session. In editor 2 (a client), **Main Menu** leaves the session.
+- Pause in editor 1 and pick **Main Menu**: both go back to player select, still in the session. In editor 2 (a client), **Main Menu** leaves the session.
 - **Leave** ends a session. When the host leaves, editor 2 shows `Online: session ended: The host left the match.`
 - Only change files in the original editor: clones share them.
+
+## Two PCs over Steam
+
+- Two PCs, each running Steam, signed in to two accounts that are friends. An account can't join itself, so one PC can't test Steam.
+- A build on each, with a copy of `steam_appid.txt` next to the `.exe`. Start the game on both before inviting (the test App ID: Known limits).
+- PC 1: Play → A → player select. The line along the top says "Y / Triangle: play online with Steam friends". Press Y, then invite the friend in Steam's overlay.
+- PC 2: accept the invite (or pick "Join Game" on PC 1's player in the friends list). It lands in PC 1's player select, in the second seat.
+- Ready up on both: the match starts. After it, both are back in player select.
+- PC 1: B. PC 2 shows "The host left the match." and stays in player select.
 
 ## Bad connection
 
@@ -103,7 +134,7 @@ Online multiplayer is being built in steps (roadmap Phase 3: `docs/superpowers/p
 
 ## Known limits
 
-- A player whose build has a different Netcode setup (tick rate, network prefabs…) is dropped by Netcode before the version check, and sees "Couldn't reach the host." The Steam lobby's build filter (roadmap Task 3.2) keeps such players apart.
+- A player whose build has a different Netcode setup (tick rate, network prefabs…) is dropped by Netcode before the version check, and sees "Couldn't reach the host." Over Steam the lobby's build tag keeps such players apart: a lobby of another build is left, with a message.
 - Hosting fails if another program uses port 7777.
 - Direct joins give up after 10 seconds.
 - On one computer, when one side closes (or both close at once), Unity Transport may log `All socket receive requests were marked as failed…` as an error in the other editor: Windows reporting the closed port. The session was ending anyway.
@@ -116,5 +147,8 @@ Online multiplayer is being built in steps (roadmap Phase 3: `docs/superpowers/p
 - When the main game ends, only the host's scooter stops; the others keep driving until the golden round loads.
 - If the host leaves mid-match, clients stay where they are, offline (roadmap Task 3.8).
 - An empty seat still says "press A to join" on every machine, though only a machine's first controller can take a seat online.
-- When the host leaves, clients stay in player select with their own player, not ready: no countdown starts, and a running one stops. They ready up again to start one. Going back to the menu with the message is roadmap Task 3.8.
-- There's no "Play Online" in the game's menus yet: the Online menu above is the way in (roadmap Task 3.2).
+- When the host leaves, clients see "The host left the match." and stay in player select with their own player, not ready: no countdown starts, and a running one stops. They ready up again to start one.
+- **Friends only:** no public lobbies or lobby list yet. Friends join through Steam's invites and "Join Game".
+- A Steam account can't join itself, so two editors on one computer play over the Online menu (by IP address), not Steam.
+- Until the game has its own App ID, it runs as Valve's test app (480): an invite accepted with the game closed starts Spacewar. Start the game first. A build also needs a copy of `steam_appid.txt` next to its `.exe`.
+- The title screen has no "Play Online" row until there's art for one: Y in player select is the way in.

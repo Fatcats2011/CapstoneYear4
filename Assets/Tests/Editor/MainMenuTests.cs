@@ -34,6 +34,25 @@ namespace DoA.Tests
         {
             Reflect.SetSingleton<GameManager>(null);
             objects.DestroyAll();
+            GameAuthority.Role = NetworkRole.Offline;
+        }
+
+        [Test]
+        public void Start_Offline_OpensOnTheTitleScreen()
+        {
+            menu.Start();
+
+            Assert.AreEqual(GameState.Menu, game.MainState);
+        }
+
+        [Test]
+        public void Start_Online_OpensOnPlayerSelect_TheLobby()
+        {
+            GameAuthority.Role = NetworkRole.Host;
+
+            menu.Start();
+
+            Assert.AreEqual(GameState.PlayerSelect, game.MainState);
         }
 
         [Test]

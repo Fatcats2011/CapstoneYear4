@@ -148,7 +148,7 @@ Checks (press Play from `SplashScreen`):
 - Keyboard: press a key on the title screen → "Connect a controller to play" appears for 3 seconds.
 - Performance: 4 players (your controller + F1 ×3 in player select) → golden-order scene → Window → Analysis → Profiler → F4 through Low / Medium / High; note the CPU and GPU frame times for each.
 - Aspect ratios: Game view at 1280×800 (Steam Deck) and 2560×1080 with 1, 2 and 4 players — check the HUD isn't cut off.
-- Test Runner → EditMode → Run All: 316 passed (the smoke test plays a match for a minute or two).
+- Test Runner → EditMode → Run All: 381 tests (the smoke test plays a match for a minute or two). 380 pass until the online prefabs' network IDs are saved (`EDITOR-TODO.md` step 1), then all 381.
 
 ---
 
@@ -202,9 +202,12 @@ Progress (2026-09-28):
   - Each machine drives its own scooter, and the others follow it (`OnlineScooter`, `OnlineDriving`), with its boost, drift and sparks (`DriveFlags`).
   - The host's match clock on every machine (`MatchClock`). No tutorial online yet: players start in the city.
   - 2026-09-28 fixes: players start on the city start points online, not at the tutorial's start; a machine leaving on the loading screen no longer starts another ready-up countdown.
+  - 2026-09-28 code review: a session ending in player select no longer starts a solo match; other machines hide a respawning scooter and are silent; the host's clock stops between matches; the online prefabs' saved network IDs (**Tools → Dead on Arrival → Online → Save Network Prefab IDs**).
+- Phase 3D (`2026-09-28-phase3d-playing-over-steam.md`) — playing over Steam:
+  - Y in player select hosts a friends-only Steam lobby and invites friends; friends join through Steam's invite or "Join Game" (`OnlinePlay`, `OnlineLobby`, `SteamLobbyService`).
+  - B leaves; the host's B ends the match for everyone, who see why. After an online match everyone is back in player select, the lobby.
 - Next:
-  - Phase 3D: the Steam lobby and a Play Online menu (Task 3.2).
-  - Then orders (Task 3.5), steals, clashes and respawns (3.6), one-shots and sounds (3.7), and disconnects (3.8).
+  - Orders (Task 3.5), then steals, clashes and respawns (3.6), one-shots and sounds (3.7), and disconnects (3.8).
 
 ### Task 3.1: Packages & transports
 
@@ -214,9 +217,9 @@ Progress (2026-09-28):
 
 ### Task 3.2: Steam lobby flow
 
-- [ ] Main menu → **Play Online** → *Host* (create a friends-only or public lobby, 4 slots, metadata `game=doa`, `build=<version>`) or *Join* (overlay invite via `GameLobbyJoinRequested_t`, or a lobby list filtered by `game` + `build`).
-- [ ] Lobby screen reuses Player Select; the host assigns slots/companies, and players pick colour/hat. *(Phase 3B: player select is the online lobby. Seats give companies; colour, hat and ready sync. The Steam lobby screen is still to do.)*
-- [ ] Host presses Start → `NetworkManager.StartHost()`; clients `StartClient()` to the host's SteamID → networked scene load. *(`OnlineSession.HostSteam` / `JoinSteam(hostSteamId)` exist, Phase 3A.)*
+- [x] Main menu → **Play Online** → *Host* (create a friends-only or public lobby, 4 slots, metadata `game=doa`, `build=<version>`) or *Join* (overlay invite via `GameLobbyJoinRequested_t`, or a lobby list filtered by `game` + `build`). *(Phase 3D: friends-only lobbies for 4, tagged `game=doa` and `build=<version>`. Friends join through Steam's invite or "Join Game" (`GameLobbyJoinRequested_t`, or `+connect_lobby` when Steam starts the game); no public lobbies or lobby list yet. "Play Online" is Y in player select, not a title-screen row, because the title's rows are hand-lettered art.)*
+- [x] Lobby screen reuses Player Select; the host assigns slots/companies, and players pick colour/hat. *(Phase 3B: player select is the online lobby. Seats give companies; colour, hat and ready sync. Phase 3D: it's the Steam lobby too, with a line along the top saying what Y and B do (`LobbyPrompt`).)*
+- [x] Host presses Start → `NetworkManager.StartHost()`; clients `StartClient()` to the host's SteamID → networked scene load. *(Phase 3D: Y hosts over Steam (`OnlineSession.HostSteam`); a joiner joins the lobby owner's Steam ID (`JoinSteam`). The match starts with Phase 3C's held loads when everyone's ready.)*
 
 ### Task 3.3: Network player
 
@@ -269,8 +272,8 @@ Progress (2026-09-28):
 ### Task 3.8: Disconnects & versions
 
 - [ ] Client leaves → the host drops/erases its orders, despawns its avatar, recomputes placements.
-- [ ] Host leaves → clients return to the menu with "Host left the match". *(The client's session ends with `OnlineSession.HOST_LEFT`; returning to the menu with the message is still to do.)*
-- [ ] Reject mismatched builds (lobby `build` metadata + NGO connection-approval payload). *(Approval half done: `JoinRules` compares `Application.version`. A build whose Netcode setup differs is dropped by Netcode before approval, with no reason, so the lobby filter matters.)*
+- [ ] Host leaves → clients return to the menu with "Host left the match". *(The client's session ends with `OnlineSession.HOST_LEFT`. Phase 3D: the message shows in the controller hint bar, and a client in player select stays there, offline. Returning to the menu from a match is still to do.)*
+- [ ] Reject mismatched builds (lobby `build` metadata + NGO connection-approval payload). *(Approval half done: `JoinRules` compares `Application.version`. A build whose Netcode setup differs is dropped by Netcode before approval, with no reason, so the lobby filter matters. Phase 3D: a Steam lobby of another build is left before joining, with a message naming both versions (`LobbyRules.Refusal`).)*
 - [ ] Tests: kill a client mid-delivery; kill the host mid-match.
 - [ ] Long loads: in the editor, the first load of the game scene took 31 s. Two test sessions in one Unity process lost their connection during it: Unity Transport's disconnect timeout is 30 s. Time a build's load on a slow PC; if it comes close, raise the timeout while loading.
 

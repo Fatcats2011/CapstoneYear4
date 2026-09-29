@@ -144,6 +144,7 @@ public class MenuInteractions : MonoBehaviour
 
         uiHandler.SouthFaceEvent.RemoveAllListeners();
         uiHandler.EastFaceEvent.RemoveAllListeners();
+        uiHandler.NorthFaceEvent.RemoveAllListeners();
 
         uiHandler.DownPadEvent.RemoveAllListeners();
         uiHandler.UpPadEvent.RemoveAllListeners();
@@ -192,6 +193,7 @@ public class MenuInteractions : MonoBehaviour
 
         uiHandler.SouthFaceEvent.AddListener(PlayerReady);
         uiHandler.EastFaceEvent.AddListener(PlayerUnreadyDespawn);
+        uiHandler.NorthFaceEvent.AddListener(PlayOnline);
 
         uiHandler.DownPadEvent.AddListener(CustomizationScrollDown);
         uiHandler.UpPadEvent.AddListener(CustomizationScrollUp);
@@ -244,6 +246,15 @@ public class MenuInteractions : MonoBehaviour
     }
 
     ///<summary>
+    /// Y in player select: plays online with Steam friends (OnlinePlay)
+    ///</summary>
+    private void PlayOnline(bool button)
+    {
+        if (OnlinePlay.Instance != null)
+            OnlinePlay.Instance.PlayOnline();
+    }
+
+    ///<summary>
     /// Calls method when player wants to unready or despawn
     ///</summary>
     private void PlayerUnreadyDespawn(bool button)
@@ -251,6 +262,14 @@ public class MenuInteractions : MonoBehaviour
         // Despawn
         if (readiedUp == false)
         {
+            // Online, B leaves the match (the host's ends it for everyone) and goes back to the title screen
+            if (GameAuthority.IsOnline)
+            {
+                OnlineGame.LeaveOnline();
+                MainMenu.Instance.SwapToMainMenu();
+                return;
+            }
+
             if(hostPlayer == false)
             {
                 PlayerInstantiate.Instance.RemovePlayerRef(GetComponentInParent<PlayerInput>());

@@ -46,8 +46,9 @@ public class MainMenu : SingletonMonobehaviour<MainMenu>
 
     public void Start()
     {
-        // Set game to begin upon loading into scene
-        gameManager.SetGameState(GameState.Menu);
+        // The menu scene opens on the title screen. Online (after a match) it opens on player select, the lobby, where Y
+        // and B work; on a client the host's state follows instead
+        gameManager.SetGameState(GameAuthority.IsOnline ? GameState.PlayerSelect : GameState.Menu);
     }
 
     public void Update()

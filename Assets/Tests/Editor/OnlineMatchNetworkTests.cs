@@ -188,9 +188,10 @@ namespace DoA.Tests
             // Back to the menu: the host takes everyone
             SceneFlow.Current.ReturnToMenu();
             deadline = Time.realtimeSinceStartup + 60;
-            while (ActiveScene() != MENU && Time.realtimeSinceStartup < deadline)
+            while ((ActiveScene() != MENU || State() != GameState.PlayerSelect) && Time.realtimeSinceStartup < deadline)
                 yield return null;
             Assert.AreEqual(MENU, ActiveScene(), "back in the menu");
+            Assert.AreEqual(GameState.PlayerSelect, State(), "back in the lobby, player select");
             Assert.AreEqual(1, theirs.Returns, "the other machine is taken back too");
 
             log.MachinesLeave(); // Windows may report a leaving machine's closed port: see LogCollector.CLOSED_PORT

@@ -3,10 +3,14 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Events;
+using UnityEngine.InputSystem;
 using static UnityEngine.InputSystem.InputAction;
 
 public class PlayerUIHandler : MonoBehaviour
 {
+    /// <summary>The UI map's Y (triangle) action, which reaches the menus through NorthFaceTrigger</summary>
+    public const string NORTH_ACTION = "UI/North Face";
+
     public GameObject MenuCanvas;
     public MenuInteractions menuInteractions;
     public CustomizationSelector customizationSelector;
@@ -55,6 +59,7 @@ public class PlayerUIHandler : MonoBehaviour
     private bool startPadValue; // A bool representing the pushed stage of the start button (true for pushed, false for loose)
 
     Coroutine disableInteraction;
+    InputAction northFace; // wired here: the player prefab's event list has no Y
 
     private void OnEnable()
     {
@@ -69,6 +74,17 @@ public class PlayerUIHandler : MonoBehaviour
     private void Start()
     {
         TriggerDisableInteraction();
+
+        // Y (triangle) reaches the menus like the other buttons. By now every player has their own copy of the actions
+        northFace = GetComponentInParent<PlayerInput>().actions.FindAction(NORTH_ACTION);
+        if (northFace != null)
+            northFace.performed += NorthFaceTrigger;
+    }
+
+    private void OnDestroy()
+    {
+        if (northFace != null)
+            northFace.performed -= NorthFaceTrigger;
     }
 
     public void TriggerDisableInteraction()
