@@ -406,6 +406,11 @@ public class PlayerInstantiate : SingletonMonobehaviour<PlayerInstantiate>
         if (slot == null || slot.IsLocal)
             return;
 
+        // Their orders go back to the pool first: they'd go with their scooter otherwise
+        OrderHandler orders = slot.Player.GetComponentInChildren<OrderHandler>(true);
+        if (orders != null)
+            orders.ReleaseOrders();
+
         roster.LeaveSlot(seat);
         playerReadyUp[seat] = false;
         // Player select's join prompts go with the menu scene: mid-match there's no free seat to show

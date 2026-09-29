@@ -2,8 +2,9 @@ using Unity.Netcode;
 using UnityEngine;
 
 /// <summary>
-/// One player in an online match, on every machine: their seat, which the host gives, and what they picked in player
-/// select (ghost colour, hat, ready), which only their own machine may change. The host spawns one per machine.
+/// One player in an online match, on every machine: their seat, which the host gives, what they picked in player
+/// select (ghost colour, hat, ready), which only their own machine may change, and their score, which only the host
+/// writes. The host spawns one per machine.
 /// OnlineGame shows another machine's player as a scooter, and keeps this machine's player's choices up to date.
 /// See docs/online.md
 /// </summary>
@@ -13,6 +14,7 @@ public class OnlinePlayer : NetworkBehaviour
     readonly NetworkVariable<int> colour = new NetworkVariable<int>(0, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Owner);
     readonly NetworkVariable<int> hat = new NetworkVariable<int>(0, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Owner);
     readonly NetworkVariable<bool> ready = new NetworkVariable<bool>(false, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Owner);
+    readonly NetworkVariable<int> score = new NetworkVariable<int>(0);
 
     OnlineSession session;
 
@@ -27,6 +29,9 @@ public class OnlinePlayer : NetworkBehaviour
 
     /// <summary>Whether they're ready in player select</summary>
     public bool Ready { get { return ready.Value; } }
+
+    /// <summary>Their score in the match, which only the host writes</summary>
+    public int Score { get { return score.Value; } }
 
     public override void OnNetworkSpawn()
     {
@@ -62,5 +67,14 @@ public class OnlinePlayer : NetworkBehaviour
             hat.Value = chosenHat;
         if (ready.Value != isReady)
             ready.Value = isReady;
+    }
+
+    /// <summary>
+    /// Host: shares this player's score (only a change goes out). Does nothing on a client
+    /// </summary>
+    public void ShareScore(int value)
+    {
+        if (IsServer && score.Value != value)
+            score.Value = value;
     }
 }

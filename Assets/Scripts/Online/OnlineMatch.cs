@@ -10,6 +10,7 @@ using UnityEngine;
 /// - The scene flow's messages (IMatchLink). The host asks every client to load a match scene, show it, or go back to
 ///   the menu, and each client says when it has a scene loaded (OnlineSceneFlow).
 /// - The host's match clock (MatchClock).
+/// - The host's order changes, clients' drop requests and the golden order's value (OnlineOrders).
 /// </summary>
 public class OnlineMatch : NetworkBehaviour, IMatchLink
 {
@@ -17,6 +18,7 @@ public class OnlineMatch : NetworkBehaviour, IMatchLink
     readonly NetworkVariable<double> clockEnd = new NetworkVariable<double>(0);
     readonly NetworkVariable<bool> clockStarted = new NetworkVariable<bool>(false);
     readonly NetworkVariable<bool> finalOrder = new NetworkVariable<bool>(false);
+    readonly NetworkVariable<int> goldenValue = new NetworkVariable<int>((int)Constants.OrderValue.Golden);
 
     OnlineSession session;
 
@@ -31,6 +33,15 @@ public class OnlineMatch : NetworkBehaviour, IMatchLink
 
     /// <summary>Whether the host is in the golden round</summary>
     public bool FinalOrder { get { return finalOrder.Value; } }
+
+    /// <summary>What the golden order is worth on the host: it grows while the golden round goes on</summary>
+    public int GoldenValue { get { return goldenValue.Value; } }
+
+    /// <summary>Clients: each change the host made to an order, in order with its states</summary>
+    public event Action<OrderChange> OrderReceived;
+
+    /// <summary>Host: a client asks it to drop what its player holds (the client's id, the player's seat, spot1, spot2, spinOut)</summary>
+    public event Action<ulong, int, Vector3, Vector3, bool> DropAsked;
 
     /// <summary>Clients: each state the host switches to, in order</summary>
     public event Action<GameState> StateReceived;
@@ -118,6 +129,30 @@ public class OnlineMatch : NetworkBehaviour, IMatchLink
             LoadedServerRpc(scene);
     }
 
+    /// <summary>Host: tells every client about a change it made to an order. Does nothing on a client</summary>
+    public void SendOrder(OrderChange change)
+    {
+        if (IsServer)
+            OrderClientRpc(change);
+    }
+
+    /// <summary>
+    /// Client: asks the host to drop what its player in a seat holds, onto these spots. Does nothing on the host, which
+    /// drops its own at once
+    /// </summary>
+    public void AskDrop(int seat, Vector3 spot1, Vector3 spot2, bool spinOut)
+    {
+        if (!IsServer)
+            DropServerRpc(seat, spot1, spot2, spinOut);
+    }
+
+    /// <summary>Host: shares what the golden order is worth (only a change goes out). Does nothing on a client</summary>
+    public void ShareGoldenValue(int value)
+    {
+        if (IsServer && goldenValue.Value != value)
+            goldenValue.Value = value;
+    }
+
     // The host is a client too: it skips its own messages below, as it acted on them already
 
     [ClientRpc]
@@ -150,9 +185,22 @@ public class OnlineMatch : NetworkBehaviour, IMatchLink
             ReturnRequested?.Invoke();
     }
 
+    [ClientRpc]
+    void OrderClientRpc(OrderChange change)
+    {
+        if (!IsServer)
+            OrderReceived?.Invoke(change);
+    }
+
     [ServerRpc(RequireOwnership = false)]
     void LoadedServerRpc(MatchScene scene, ServerRpcParams rpc = default)
     {
         MachineLoaded?.Invoke(rpc.Receive.SenderClientId, scene);
+    }
+
+    [ServerRpc(RequireOwnership = false)]
+    void DropServerRpc(int seat, Vector3 spot1, Vector3 spot2, bool spinOut, ServerRpcParams rpc = default)
+    {
+        DropAsked?.Invoke(rpc.Receive.SenderClientId, seat, spot1, spot2, spinOut);
     }
 }

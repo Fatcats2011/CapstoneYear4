@@ -108,7 +108,10 @@ public class OrderBeacon : MonoBehaviour
 
         compassMarker.RemoveCompassUIFromAllPlayers();
 
-        order.PlayerHolding.GetComponent<Compass>().AddCompassMarker(compassMarker);
+        // Another machine's scooter has no compass here
+        Compass compass = order.PlayerHolding.GetComponent<Compass>();
+        if (compass != null)
+            compass.AddCompassMarker(compassMarker);
         
         // NOTE: if camera layers change it'll fuck with beacon rendering
         beaconFX.gameObject.layer = order.PlayerHolding.transform.parent.GetComponentInChildren<SphereCollider>().gameObject.layer + 7;
@@ -240,11 +243,11 @@ public class OrderBeacon : MonoBehaviour
     }
 
     /// <summary>
-    /// Whether a collider is the ball of a scooter this machine drives. Another machine's scooter (online) doesn't pick up
-    /// or deliver here: orders stay the host's own until roadmap Task 3.5
+    /// Whether a collider is a scooter's ball. Every scooter counts, another machine's too: beacons only act on the host
+    /// (online), which decides every scooter's pickups and deliveries
     /// </summary>
     public static bool IsPlayersBall(Collider other)
     {
-        return other.name == "Ball Of Fun" && !RemoteAvatar.IsRemote(other);
+        return other.name == "Ball Of Fun";
     }
 }

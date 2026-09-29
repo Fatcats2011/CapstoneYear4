@@ -7,6 +7,7 @@ using UnityEngine;
 /// - this machine's player in the seat the host gave them;
 /// - other machines' players as scooters in their seats;
 /// - every scooter's pose and what it's doing (OnlineDriving);
+/// - every order and score (OnlineOrders);
 /// - everyone's colour, hat and readiness;
 /// - the host's game states;
 /// - the host's match clock (MatchClock);
@@ -40,7 +41,8 @@ public class OnlineGame : MonoBehaviour
     OnlinePlayer localPlayer;     // this machine's player
     readonly List<OnlinePlayer> waiting = new List<OnlinePlayer>(); // other machines' players, until their seat is free here
     readonly Dictionary<OnlinePlayer, RemotePlayer> remotes = new Dictionary<OnlinePlayer, RemotePlayer>();
-    readonly Queue<GameState> held = new Queue<GameState>(); // client: the host's states while this machine's new scene comes up
+    OnlineOrders orders;     // the host's orders and scores, on this machine
+    HostQueue hostMessages;  // client: the host's states and order changes, which wait while this machine's new scene comes up
 
     /// <summary>
     /// Plays the game over a session (adds an OnlineGame to its object)
@@ -92,11 +94,16 @@ public class OnlineGame : MonoBehaviour
         session = onlineSession;
         prefabs = OnlinePrefabs.Load();
         sceneFlow = new OnlineSceneFlow(SceneFlow.Current, SceneFlow.Loader);
-        sceneFlow.SceneChanged += ApplyHeldStates;
+        hostMessages = new HostQueue(IsChangingScene);
+        sceneFlow.SceneChanged += hostMessages.Release;
         choices = prefabs.LocalPlayerPrefab.GetComponentInChildren<CustomizationSelector>(true);
 
         // Every frame, this machine's scooter goes out and the other machines' come in
         gameObject.AddComponent<OnlineDriving>().Begin(session);
+
+        // The host's orders and scores, on every machine
+        orders = gameObject.AddComponent<OnlineOrders>();
+        orders.Begin(session);
 
         session.RoleChanged += OnRoleChanged;
         session.Ended += ShowEnd;
@@ -125,7 +132,10 @@ public class OnlineGame : MonoBehaviour
             session.PlayerDespawned -= OnPlayerDespawned;
             session.MatchSpawned -= OnMatchSpawned;
             if (session.Match != null)
+            {
                 session.Match.StateReceived -= FollowHost;
+                session.Match.OrderReceived -= FollowHostOrder;
+            }
         }
         if (sceneFlow != null)
             sceneFlow.Unlink();
@@ -151,7 +161,7 @@ public class OnlineGame : MonoBehaviour
             playing = null;
         SceneFlow.Current = null;
         sceneFlow.Unlink();
-        held.Clear();
+        hostMessages.Clear();
         PlayerInstantiate players = PlayerInstantiate.Instance;
         // Player select doesn't count down to an offline match nobody chose: this machine's players unready first, which
         // also stops a countdown that's running. Removing the others then starts none
@@ -219,6 +229,7 @@ public class OnlineGame : MonoBehaviour
         }
 
         match.StateReceived += FollowHost;
+        match.OrderReceived += FollowHostOrder;
         if (match.State != GameState.Default)
             FollowHost(match.State);
     }
@@ -243,24 +254,28 @@ public class OnlineGame : MonoBehaviour
     }
 
     // Client: the host switched state. While this machine's new scene is still coming up, the state waits for it: its
-    // objects (the spawns, the cutscene) must hear it
+    // objects (the spawns, the cutscene) must hear it. When the scene is up, what waited goes in order (HostQueue)
     void FollowHost(GameState hostState)
     {
-        if (sceneFlow.Changing)
-        {
-            held.Enqueue(hostState);
-            return;
-        }
+        hostMessages.Add(() => ApplyHostState(hostState));
+    }
 
+    void ApplyHostState(GameState hostState)
+    {
         if (GameManager.Instance != null)
             GameManager.Instance.ApplyGameState(ForClient(hostState));
     }
 
-    // Client: the new scene is up: the states that waited go, in order
-    void ApplyHeldStates()
+    // Client: the host changed an order. It shows here in the host's order with its states, so it waits with them for
+    // this machine's new scene (the golden order comes with the golden round's)
+    void FollowHostOrder(OrderChange change)
     {
-        while (held.Count > 0)
-            FollowHost(held.Dequeue());
+        hostMessages.Add(() => orders.Show(change));
+    }
+
+    bool IsChangingScene()
+    {
+        return sceneFlow.Changing;
     }
 
     void Update()

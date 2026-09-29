@@ -86,9 +86,8 @@ public class TutorialManager : SingletonMonobehaviour<TutorialManager>
     }
 
     /// <summary>
-    /// Online, the tutorial is skipped until orders are shared between machines (roadmap Task 3.5). It teaches picking
-    /// up, delivering and stealing orders, which only the host has until then. And it waits for every player's handler,
-    /// which only exists on that player's machine.
+    /// Online, the tutorial is skipped until Phase 3F. It teaches stealing too (the cardboard cutouts), which isn't shared
+    /// between machines yet. And it waits for every player's handler, which only exists on that player's machine.
     /// Every machine's players finish it at once, and the host starts the first wave a frame later. Switching state
     /// inside the tutorial's own switch would run its other listeners (the tutorial orders) after the first wave's
     /// </summary>

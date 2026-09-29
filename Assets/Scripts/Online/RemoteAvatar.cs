@@ -29,8 +29,8 @@ public class RemoteAvatar : MonoBehaviour
 
     /// <summary>
     /// Whether a part (a script, a collider) belongs to another machine's scooter. Online, such a scooter doesn't act on
-    /// this machine until orders and steals are shared (roadmap Tasks 3.5-3.6): no water, orders, steals or clashes
-    /// here. Its own machine does those, and its pose shows the result
+    /// this machine until steals are shared (roadmap Task 3.6): no water, steals or clashes here. Its own machine does
+    /// those, and its pose shows the result. Its orders are the host's, like everyone's (OnlineOrders)
     /// </summary>
     public static bool IsRemote(Component part)
     {

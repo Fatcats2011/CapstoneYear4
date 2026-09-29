@@ -12,6 +12,13 @@ public class Order : MonoBehaviour
     [SerializeField] private Constants.OrderValue value;
     public Constants.OrderValue Value { get { return value; } }
 
+    // This order's key, the same on every machine (OrderBook): online, an order change names its order by it
+    private int key;
+    public int Key { get { return key; } }
+
+    // The scene this order loaded with
+    private UnityEngine.SceneManagement.Scene homeScene;
+
     [Tooltip("Order will spawn at runtime. Use this for the tutorial orders.")]
     [SerializeField] private bool isActive = false;
     public bool IsActive { get { return isActive; } set { isActive = value; } }
@@ -33,6 +40,8 @@ public class Order : MonoBehaviour
     [Header("Order Information")]
     [SerializeField] private Transform pickup;
     [SerializeField] private Transform dropoff;
+    public Transform PickupPoint { get { return pickup; } }
+    public Transform DropoffPoint { get { return dropoff; } }
     private Transform lastGrounded;
     public Transform LastGrounded { get { return lastGrounded; } set { lastGrounded = value;} }
     private OrderHandler playerHolding = null;
@@ -101,6 +110,29 @@ public class Order : MonoBehaviour
 
         ogMeshPos = orderMeshObject.transform.position;
         ogMeshRot = orderMeshObject.transform.rotation;
+
+        homeScene = gameObject.scene;
+        key = OrderBook.KeyOf(this);
+        OrderBook.Add(this);
+    }
+
+    private void OnDestroy()
+    {
+        OrderBook.Remove(this);
+    }
+
+    /// <summary>
+    /// Takes this order off whatever carries it and back into the scene it loaded with, so it goes when that scene does.
+    /// Scooters and the order manager outlive scenes (DontDestroyOnLoad), and an order under one would go along with it.
+    /// If that scene is gone already, so is the order
+    /// </summary>
+    public void ReturnHome()
+    {
+        transform.SetParent(null);
+        if (homeScene.isLoaded)
+            UnityEngine.SceneManagement.SceneManager.MoveGameObjectToScene(gameObject, homeScene);
+        else
+            Destroy(gameObject);
     }
 
     private void Update()
@@ -126,6 +158,12 @@ public class Order : MonoBehaviour
     /// </summary>
     public void InitOrder(bool shouldAdd = true)
     {
+        // Online, the host spawns orders: a client shows the host's spawn
+        if (!OrderSync.MayChange)
+            return;
+
+        using OrderSync.Scope change = OrderSync.Change(OrderChange.Spawn(key, shouldAdd));
+
         OrderManager.Instance.OnMainGameFinishes += EraseWhenSwappingToGold;
 
         if (shouldAdd)
@@ -271,9 +309,22 @@ public class Order : MonoBehaviour
     }
 
     /// <summary>
+    /// How high a dropped order can fly before it falls back down
+    /// </summary>
+    public const float DROP_HEIGHT_MIN = 1f, DROP_HEIGHT_MAX = 10f;
+
+    /// <summary>
+    /// A random height for a dropped order to fly up to. Online the host picks it, so every machine shows the same drop
+    /// </summary>
+    public static float DropHeight()
+    {
+        return Random.Range(DROP_HEIGHT_MIN, DROP_HEIGHT_MAX);
+    }
+
+    /// <summary>
     /// This method "throws" the order in the air and then reinits it once the DOTween is complete. Meant for stealing.
     /// </summary>
-    public void Drop(Vector3 newPosition)
+    public void Drop(Vector3 newPosition, float height)
     {
         canPickup = false;
         ResetMesh();
@@ -289,7 +340,6 @@ public class Order : MonoBehaviour
         
         beacon.ToggleBeaconMesh(false);
 
-        float height = Random.Range(1f, 10f);
         transform.position = newPosition + height * transform.up;
 
         transform.DOMoveY(newPosition.y, pickupCooldown)
@@ -298,6 +348,24 @@ public class Order : MonoBehaviour
 
 
         beconIndicator.InitalizeBeconIndicator(value);
+    }
+
+    /// <summary>
+    /// Ends this order's move now, with what happens at its end: a drop's fall lands, a delivery's throw reaches the
+    /// customer. A drop's pickup cooldown ends with its fall: ending later by itself, it would take the order off whoever
+    /// has it by then. Online, a client does this before it replays the host's next change to this order
+    /// </summary>
+    public void FinishMoves()
+    {
+        DOTween.Complete(transform, true);
+
+        if (pickupCooldownCoroutine != null)
+        {
+            StopCoroutine(pickupCooldownCoroutine);
+            pickupCooldownCoroutine = null;
+            canPickup = true;
+            playerDropped = null;
+        }
     }
 
     /// <summary>
@@ -337,6 +405,12 @@ public class Order : MonoBehaviour
     /// </summary>
     public void EraseOrder()
     {
+        // Online, the host erases orders: a client shows the host's erase (its own delivery throw ends here, and waits)
+        if (!OrderSync.MayChange)
+            return;
+
+        using OrderSync.Scope change = OrderSync.Change(OrderChange.Erase(key));
+
         ResetMesh();
 
         orderMeshObject.transform.rotation = initMeshRotation;
@@ -385,6 +459,12 @@ public class Order : MonoBehaviour
     /// </summary>
     public void EraseGoldWithoutDelivering()
     {
+        // Online, the host erases orders: a client shows the host's erase
+        if (!OrderSync.MayChange)
+            return;
+
+        using OrderSync.Scope change = OrderSync.Change(OrderChange.EraseGold(key));
+
         beacon.EraseBeacon();
         OrderManager.Instance.FinalOrderValue = (int)Constants.OrderValue.Golden;
         if (value == Constants.OrderValue.Golden)
@@ -426,7 +506,10 @@ public class Order : MonoBehaviour
         {
             // Removes the ui from all players
             compassMarker.RemoveCompassUIFromAllPlayers();
-            playerHolding.GetComponent<Compass>().RemoveCompassMarker(beacon.CompassMarker);
+            // Another machine's scooter has no compass here
+            Compass compass = playerHolding.GetComponent<Compass>();
+            if (compass != null)
+                compass.RemoveCompassMarker(beacon.CompassMarker);
         }
         playerHolding = null;
     }

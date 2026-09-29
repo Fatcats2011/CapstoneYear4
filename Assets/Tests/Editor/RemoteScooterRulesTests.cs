@@ -4,10 +4,10 @@ using UnityEngine;
 namespace DoA.Tests
 {
     /// <summary>
-    /// Online, another machine's scooter (a RemoteAvatar) doesn't act on this machine until orders and steals are shared
-    /// (roadmap Tasks 3.5-3.6): it doesn't fall in water here, collect orders, steal, clash, or freeze when the main game
-    /// ends. Its own machine does all that. While its owner's rider is hidden for a respawn, it's hidden here too and
-    /// bumps nobody. EditMode: the scripts' messages are called directly on bare scooters
+    /// Online, another machine's scooter (a RemoteAvatar) doesn't act on this machine until steals are shared (roadmap
+    /// Task 3.6): it doesn't fall in water here, steal, clash, or freeze when the main game ends. Its own machine does all
+    /// that. Orders are the host's: its beacons serve every scooter. While its owner's rider is hidden for a respawn, it's
+    /// hidden here too and bumps nobody. EditMode: the scripts' messages are called directly on bare scooters
     /// </summary>
     public class RemoteScooterRulesTests
     {
@@ -51,10 +51,10 @@ namespace DoA.Tests
         }
 
         [Test]
-        public void OrderBeacons_OnlyServeTheScootersThisMachineDrives()
+        public void OrderBeacons_ServeEveryScooter_OnTheHostThatDecides()
         {
             Assert.IsTrue(OrderBeacon.IsPlayersBall(Scooter(false).GetComponentInChildren<SphereCollider>()), "a scooter driven here");
-            Assert.IsFalse(OrderBeacon.IsPlayersBall(Scooter(true).GetComponentInChildren<SphereCollider>()), "another machine's: orders are shared in roadmap Task 3.5");
+            Assert.IsTrue(OrderBeacon.IsPlayersBall(Scooter(true).GetComponentInChildren<SphereCollider>()), "another machine's: the host decides its pickups too (beacons act only on the host)");
             Assert.IsFalse(OrderBeacon.IsPlayersBall(objects.NewGameObject("Wall").AddComponent<BoxCollider>()), "not a scooter");
         }
 

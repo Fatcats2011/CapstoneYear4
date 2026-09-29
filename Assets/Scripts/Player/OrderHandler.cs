@@ -100,14 +100,21 @@ public class OrderHandler : MonoBehaviour
     /// <param name="inOrder">Order the player is trying to pick up</param>
     public void AddOrder(Order inOrder)
     {
+        // Online, the host decides pickups: a client shows the host's
+        if (!OrderSync.MayChange)
+            return;
+
         if (inOrder == order1 || inOrder == order2)
             return;
 
-        if (inOrder.CanPickup || inOrder.PlayerDropped != this)
+        // A client replaying the host's pickup takes it: the host already checked the cooldown
+        if (OrderSync.Showing || inOrder.CanPickup || inOrder.PlayerDropped != this)
         {
             // will add order if it fits, elsewise will not do anything
             if (order1 == null || order2 == null)
             {
+                using OrderSync.Scope change = OrderSync.Change(OrderChange.Pickup(inOrder.Key, OrderSync.SeatOf(this)));
+
                 soundPool.PlayOrderPickup();
                 inOrder.Pickup(this);
                 hasOrder = true;
@@ -140,19 +147,30 @@ public class OrderHandler : MonoBehaviour
     /// <param name="rightOrder">The correct order of the dropoff spot</param>
     public void DeliverOrder(Order rightOrder)
     {
+        // Online, the host decides deliveries: a client shows the host's
+        if (!OrderSync.MayChange)
+            return;
+
         string key = rightOrder.Value == Constants.OrderValue.Golden ? "final_dropoff" : "dropoff";
         if (order1 == rightOrder)
         {
+            using OrderSync.Scope change = OrderSync.Change(OrderChange.Deliver(rightOrder.Key, OrderSync.SeatOf(this)));
+
             soundPool.PlayOrderDropoff(key);
-            score += (int)order1.Value;
+            // Online, only the host changes scores: a client shows the host's
+            if (GameAuthority.IsAuthority)
+                score += (int)order1.Value;
             order1.DeliverOrder();
             order1 = null;
             ScoreManager.Instance.UpdatePlacement();
         }
         else if(order2 == rightOrder)
         {
+            using OrderSync.Scope change = OrderSync.Change(OrderChange.Deliver(rightOrder.Key, OrderSync.SeatOf(this)));
+
             soundPool.PlayOrderDropoff(key);
-            score += (int)order2.Value;
+            if (GameAuthority.IsAuthority)
+                score += (int)order2.Value;
             order2.DeliverOrder();
             order2 = null;
             ScoreManager.Instance.UpdatePlacement();
@@ -186,26 +204,70 @@ public class OrderHandler : MonoBehaviour
 
     /// <summary>
     /// This method is for when the player "spins" out. It will drop all the orders the player is currently holding.
+    /// Online, a client asks the host, which drops them for everyone
     /// </summary>
     /// <param name="basePos">The position of the order before adding the offset of the specific orderPosition.</param>
     public void DropEverything(Vector3 order1NewPos, Vector3 order2NewPos, bool shouldSpinout = true)
     {
+        if (!OrderSync.MayChange)
+        {
+            OrderSync.AskDrop(this, order1NewPos, order2NewPos, shouldSpinout);
+            return;
+        }
+
+        DropHeld(order1NewPos, Order.DropHeight(), order2NewPos, Order.DropHeight(), shouldSpinout);
+    }
+
+    /// <summary>
+    /// Drops what this player holds: each order flies up to its height, then lands on its spot. Online, the host picks
+    /// the heights, and every machine replays its drop
+    /// </summary>
+    public void DropHeld(Vector3 spot1, float height1, Vector3 spot2, float height2, bool spinOut)
+    {
+        if (!OrderSync.MayChange)
+            return;
+
+        using OrderSync.Scope change = OrderSync.Change(OrderChange.Drop(OrderSync.SeatOf(this),
+            order1 != null ? order1.Key : OrderBook.NONE, spot1, height1,
+            order2 != null ? order2.Key : OrderBook.NONE, spot2, height2, spinOut));
+
         if (order1 != null)
         {
-            order1.Drop(order1NewPos);
+            order1.Drop(spot1, height1);
             order1 = null;
         }
         if (order2 != null)
         {
-            order2.Drop(order2NewPos);
+            order2.Drop(spot2, height2);
             order2 = null;
         }
-        if(shouldSpinout) { GotHit(); }
+        // Another machine's scooter never starts driving here, so nothing listens to it
+        if (spinOut) { GotHit?.Invoke(); }
 
         SetDrivingIndicators();
 
         hasOrder = false;
         ball.SetBoostModifier(hasOrder);
+    }
+
+    /// <summary>
+    /// This player is leaving (online: their machine left): their orders go back to the pool. Each first goes back into
+    /// its own scene, so it outlives this player's scooter. Online, only the host erases them: a client waits for its erase
+    /// </summary>
+    public void ReleaseOrders()
+    {
+        Order[] held = { order1, order2 };
+        foreach (Order order in held)
+        {
+            if (order == null)
+                continue;
+
+            order.ReturnHome();
+            order.EraseOrder();
+        }
+
+        order1 = order2 = null;
+        hasOrder = false;
     }
 
     /// <summary>
@@ -348,6 +410,15 @@ public class OrderHandler : MonoBehaviour
             order2.EraseOrder();
         }
 
+        // Any order still held goes back to its own scene. On a client the erases wait for the host, and the order
+        // would otherwise ride into the menu on this player's scooter
+        if (order1 != null)
+            order1.ReturnHome();
+        if (order2 != null)
+            order2.ReturnHome();
+        order1 = order2 = null;
+        hasOrder = false;
+
         hasGoldenOrder = false;
         placement = 0;
         score = 0;
@@ -365,6 +436,15 @@ public class OrderHandler : MonoBehaviour
     {
         if (numberHandler != null)
             numberHandler.UpdatePlacement(placement);
+    }
+
+    /// <summary>
+    /// Online client: the host's score for this player (only the host changes scores), in their HUD
+    /// </summary>
+    public void ShowHostScore(int hostScore)
+    {
+        score = hostScore;
+        ShowScore();
     }
 
     // The score and placing show in this player's HUD; another machine's scooter has none here

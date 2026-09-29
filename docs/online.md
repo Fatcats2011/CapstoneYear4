@@ -57,7 +57,7 @@ Online multiplayer is being built in steps (roadmap Phase 3: `docs/superpowers/p
   - A scooter that falls in the water disappears on other machines, and bumps nobody there, until it rises from its grave where its machine shows it.
   - Until its machine sends a first position, it stays where it was (its podium).
 - **The host runs the match:** its states (cutscenes, waves, results) and its match clock reach every machine.
-  - Online there's no tutorial yet. It teaches orders, which aren't shared between machines yet. The players start in the city instead, on the spawn manager's city start points (`TutorialManager.IsSkipped`).
+  - Online there's no tutorial yet (Phase 3F). The players start in the city instead, on the spawn manager's city start points (`TutorialManager.IsSkipped`).
 - **Back to the menu:**
   - The host takes everyone back, from the results or its pause menu. On a client, the results screen waits for the host.
   - Online, the menu opens on player select, the lobby, not the title screen (`MainMenu.Start`). Everyone can ready up again, and Y and B work there.
@@ -75,7 +75,7 @@ Online multiplayer is being built in steps (roadmap Phase 3: `docs/superpowers/p
     - The proxies wait parked 10 km below the map until the first pose.
   - **`OnlineDriving`** (added by `OnlineGame`) runs every frame: it sends this machine's scooter out, and shows the others on their `RemoteAvatar` (`ScooterPose`, `BallDriving.ShowRemote`).
   - **The match clock** is the host's end time, in Netcode's server time (`MatchClock`, on `OnlineMatch`). With no waves running (the menu, after a match) the host shares a stopped clock.
-  - **Another machine's scooter doesn't act on this machine** (`RemoteAvatar.IsRemote`): no water, orders, steals, clashes or end-of-game freeze here. Its own machine does those.
+  - **Another machine's scooter doesn't act on this machine** (`RemoteAvatar.IsRemote`): no water, steals, clashes or end-of-game freeze here. Its own machine does those. (Its orders: Phase 3E.)
 
 ### Phase 3D: playing over Steam
 
@@ -98,6 +98,29 @@ Online multiplayer is being built in steps (roadmap Phase 3: `docs/superpowers/p
   - **Y** is the UI map's "North Face" action, wired in code (`PlayerUIHandler.NORTH_ACTION`).
   - `OnlineGame.LeaveOnline` leaves whichever session this machine plays, so B works for the Steam one and the editor's.
 
+### Phase 3E: orders online
+
+- **Every machine sees the same orders.** The host runs them as a local match does:
+  - Its waves spawn them.
+  - Its beacons decide every pickup and delivery, for every scooter, another machine's too: that scooter counts where the host sees it.
+- **Each change to an order reaches every machine, in order with the host's states** (spawn, pickup, delivery, drop, erase). Each client replays it through the same game code, so everything a pickup does happens everywhere:
+  - The order rides on the right scooter. Its beacon, compass marker and arrow show.
+  - Its dropoff glows for the holder's camera only, as in split-screen.
+  - The rider slows down with the golden order and their boost recharges as in a local match.
+- **Falling in the water holding orders:** the player's machine asks the host to drop them, on its respawn point's spots. The host picks how high each one flies and drops them for everyone. A machine can only drop its own player's orders.
+- **Scores are the host's.** Each delivery scores on the host, and each player's score reaches every machine, with the placings. The golden order's growing value comes from the host too. The results match everywhere.
+- **A machine that leaves mid-match:** its player's orders go back to the pool, instead of going with their scooter.
+- How it works:
+  - **Order keys** (`OrderBook`): every machine knows an order by its scene, value, pickup point and dropoff point, hashed the same way everywhere.
+    - `OrderBookSceneTests` checks that no two orders in a match scene share a key.
+    - There's no Netcode object per order: orders ride on scooters, and live in scenes Netcode doesn't manage.
+  - **`OrderChange`** is one change as it travels, on `OnlineMatch` (`SendOrder`). Scores travel on each `OnlinePlayer` (`Score`), the golden value on `OnlineMatch` (`GoldenValue`), and a client's drop request as `AskDrop`.
+  - **`OrderSync` says who may change orders:** the host, and offline as always. A client only changes them while it replays one of the host's changes, so its own spawner, beacons and respawns wait for the host. On the host only the outermost change goes out: what it does on the way (a delivery erasing the golden order) replays with it.
+  - **`OnlineOrders`** (added by `OnlineGame`) sends the host's changes, replays them on clients, sends a client's drop requests, and shares the scores and the golden value.
+  - **A client's host messages wait while its scene changes** (`HostQueue`): states and order changes stay in the host's order, and the golden order shows once the golden round's scene is up.
+  - A client ends an order's fall, throw or pickup cooldown before it replays the next change to it (`Order.FinishMoves`), so late messages don't trip over its animations.
+  - The orders a client's player holds when the host takes everyone back go back to their own scene (`Order.ReturnHome`): none rides into the menu.
+
 ## Two editors on one computer (ParrelSync)
 
 - **ParrelSync → Clones Manager → Create new clone** (once). The clone shares this project's Assets and ProjectSettings. Unity imports the project the first time the clone opens, which takes a while.
@@ -114,6 +137,7 @@ Online multiplayer is being built in steps (roadmap Phase 3: `docs/superpowers/p
 - Ready up in both. After the countdown both show the loading screen, and the game appears in both at once: the host waits for the other editor.
   - The opening cutscene plays in each, then driving starts in the city (no tutorial online).
   - Drive in one editor and watch the other: the scooter moves there, boosting and drifting.
+  - Pick up and deliver orders in either editor: both show them on the scooter that holds them, with the same scores.
 - Pause in editor 1 and pick **Main Menu**: both go back to player select, still in the session. In editor 2 (a client), **Main Menu** leaves the session.
 - **Leave** ends a session. When the host leaves, editor 2 shows `Online: session ended: The host left the match.`
 - Only change files in the original editor: clones share them.
@@ -138,11 +162,10 @@ Online multiplayer is being built in steps (roadmap Phase 3: `docs/superpowers/p
 - Hosting fails if another program uses port 7777.
 - Direct joins give up after 10 seconds.
 - On one computer, when one side closes (or both close at once), Unity Transport may log `All socket receive requests were marked as failed…` as an error in the other editor: Windows reporting the closed port. The session was ending anyway.
-- **Orders, steals and clashes are the host's alone** until roadmap Tasks 3.5–3.6:
-  - Only the host's player collects orders, and other machines don't see them.
-  - The results count only the host's deliveries.
-  - The golden round ends when the host delivers the golden order.
-- There's no tutorial online (it teaches orders): players start in the city.
+- **Steals and clashes are the host's alone** until roadmap Task 3.6: only the host's player steals, and the golden round has no stealing online yet.
+- **A pickup shows once the host has seen the scooter in the light:** on a client, about a round trip after it drove in.
+- There's no tutorial online (Phase 3F): players start in the city.
+- A player who leaves holding the golden order ends the golden round, as if they'd delivered it (roadmap Task 3.8).
 - **Other machines' scooters are silent**, and a respawn shows no wisp: the scooter is gone until it rises from its grave (roadmap Tasks 3.6–3.7).
 - When the main game ends, only the host's scooter stops; the others keep driving until the golden round loads.
 - If the host leaves mid-match, clients stay where they are, offline (roadmap Task 3.8).
