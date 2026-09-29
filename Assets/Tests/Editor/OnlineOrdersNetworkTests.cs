@@ -157,10 +157,43 @@ namespace DoA.Tests
             return false;
         }
 
-        // Where the players start online: in the city, as the tutorial is skipped
-        static GameObject[] CitySpawns()
+        // Where the players start: the start of their seat's tutorial lane
+        static GameObject[] TutorialStarts()
         {
-            return (GameObject[])Reflect.GetField(SpawnManager.Instance, "nonTutorialSpawnPositions");
+            return (GameObject[])Reflect.GetField(SpawnManager.Instance, "gameSpawnPositions");
+        }
+
+        // Where a player who finished the tutorial waits: a city respawn point far from every order's beacons
+        static Vector3 CitySpot()
+        {
+            Vector3 best = Vector3.zero;
+            float bestGap = -1f;
+            Order[] orders = Object.FindObjectsOfType<Order>(true);
+            foreach (RespawnPoint point in Object.FindObjectsOfType<RespawnPoint>())
+            {
+                float gap = float.MaxValue;
+                foreach (Order order in orders)
+                {
+                    if (order.PickupPoint != null)
+                        gap = Mathf.Min(gap, Vector3.Distance(point.transform.position, order.PickupPoint.position));
+                    if (order.DropoffPoint != null)
+                        gap = Mathf.Min(gap, Vector3.Distance(point.transform.position, order.DropoffPoint.position));
+                }
+                if (gap > bestGap)
+                {
+                    bestGap = gap;
+                    best = point.transform.position;
+                }
+            }
+            return best;
+        }
+
+        // A player on this machine finishes the tutorial and waits in the city, as a player who drove out of it does
+        // (the tutorial area goes a second into the first wave)
+        static void FinishTutorialInTheCity(int seat)
+        {
+            PutBallAt(seat, CitySpot());
+            Slot(seat).Player.GetComponentInChildren<TutorialHandler>().TeachHandler(TutorialType.Final);
         }
 
         static OnlineScooter ScooterInSeat(OnlineSession session, int seat)
@@ -256,16 +289,23 @@ namespace DoA.Tests
             ChangeRecorder heard = new ChangeRecorder(other.Match);
             List<int> taken = new List<int>(); // the orders this test has used
 
-            // The match starts on both machines, the tutorial is skipped online, and the first wave begins
+            // The match starts on both machines. Both players finish the tutorial (this machine's waits in the city), and
+            // the first wave begins
             PlayerInstantiate.Instance.ReadyUp(0);
             SceneFlow.Current.LoadGameScene();
             other.Match.ReportLoaded(MatchScene.Game);
             deadline = Time.realtimeSinceStartup + LOADING + 60;
+            while (State() != GameState.Tutorial && Time.realtimeSinceStartup < deadline)
+                yield return null;
+            Assert.AreEqual(GameState.Tutorial, State(), "the tutorial");
+            FinishTutorialInTheCity(0);
+            other.Match.ReportLearnt(1);
+            deadline = Time.realtimeSinceStartup + WAIT;
             while (State() != GameState.Begin && Time.realtimeSinceStartup < deadline)
                 yield return null;
             Assert.AreEqual(GameState.Begin, State(), "the first wave");
 
-            // The tutorial is skipped online, but its orders still come up for a frame and go: they aren't the wave's
+            // The tutorial's orders were out for both lanes until the first wave: they aren't the wave's
             foreach (Order tutorial in (Order[])Reflect.GetField(OrderManager.Instance, "tutorialOrders"))
                 taken.Add(tutorial.Key);
 
@@ -314,7 +354,7 @@ namespace DoA.Tests
                 yield return null;
             Assert.AreSame(Handler(1), second.PlayerHolding, "the second order on their scooter");
 
-            Vector3 spot = CitySpawns()[1].transform.position;
+            Vector3 spot = TutorialStarts()[1].transform.position;
             other.Match.AskDrop(1, spot, spot, false);
             deadline = Time.realtimeSinceStartup + WAIT;
             while (CountOf(heard, OrderChangeKind.Drop) == 0 && Time.realtimeSinceStartup < deadline)
@@ -396,7 +436,8 @@ namespace DoA.Tests
             ReportRecorder reports = new ReportRecorder(host.Match);
             DropRecorder asked = new DropRecorder(host.Match);
 
-            // The host's match comes up here, and its first wave begins (the tutorial is skipped online)
+            // The host's match comes up here: the tutorial (this machine's player finishes it and waits in the city), then
+            // the first wave
             host.Match.RequestLoad(MatchScene.Game);
             deadline = Time.realtimeSinceStartup + LOADING;
             while (reports.Machines.Count == 0 && Time.realtimeSinceStartup < deadline)
@@ -410,8 +451,9 @@ namespace DoA.Tests
             Assert.AreEqual(GameState.MainLoop, State(), "the host's match is up here");
             host.Match.SendState(GameState.Tutorial);
             deadline = Time.realtimeSinceStartup + WAIT;
-            while (!Slot(1).Player.GetComponentInChildren<TutorialHandler>().HasLearnt && Time.realtimeSinceStartup < deadline)
+            while (State() != GameState.Tutorial && Time.realtimeSinceStartup < deadline)
                 yield return null;
+            FinishTutorialInTheCity(1);
             host.Match.SendState(GameState.Begin);
             deadline = Time.realtimeSinceStartup + WAIT;
             while (State() != GameState.Begin && Time.realtimeSinceStartup < deadline)
@@ -483,7 +525,7 @@ namespace DoA.Tests
             deadline = Time.realtimeSinceStartup + WAIT;
             while (!Handler(1).HasOrder && Time.realtimeSinceStartup < deadline)
                 yield return null;
-            Vector3 spot = CitySpawns()[1].transform.position;
+            Vector3 spot = TutorialStarts()[1].transform.position;
             Handler(1).DropEverything(spot, spot, false); // as Respawn does
             deadline = Time.realtimeSinceStartup + WAIT;
             while (asked.Count < 1 && Time.realtimeSinceStartup < deadline)

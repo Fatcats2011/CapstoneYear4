@@ -209,8 +209,11 @@ Progress (2026-09-28):
 - Phase 3E (`2026-09-29-phase3e-orders-online.md`) — orders online:
   - Every machine shows the same orders. The host decides every scooter's pickups, deliveries and drops, and clients replay its changes (`OrderBook`, `OrderChange`, `OrderSync`, `OnlineOrders`).
   - Scores and the golden order's value are the host's, on every machine. A player who leaves mid-match puts their orders back in the pool.
+- Phase 3F (`2026-09-29-phase3f-tutorial-online.md`) — the tutorial online:
+  - Online matches start with the tutorial again, each player in their seat's lane. Each machine tells the host when its player has finished, and the host counts seats (`TutorialManager`, `TutorialSync`, `OnlineTutorial`). A player who leaves doesn't hold the others up.
+  - Cutout steals: the machine that drives the scooter opens its barrier at once and asks; the host hands out the order (`CutoutHandler`).
 - Next:
-  - Phase 3F: the tutorial online (Task 3.5's last bullet). Then steals, clashes and respawns (3.6), one-shots and sounds (3.7), and disconnects (3.8).
+  - Steals, clashes and respawns (3.6), one-shots and sounds (3.7), and disconnects (3.8).
 
 ### Task 3.1: Packages & transports
 
@@ -256,7 +259,7 @@ Progress (2026-09-28):
 - [x] NetworkObject on every scene-placed `Order`; NetworkVariables for state (Inactive / AtPickup / Held / Dropped / Delivered), holder slot and value. *(Phase 3E, done differently: one stream of order changes (`OrderChange` on `OnlineMatch`), keyed by `OrderBook`. See the Phase 3E plan's Rulings 1–4.)*
 - [x] Only the host runs `OrderBeacon.OnTriggerStay` and `OrderManager` spawning; clients drive meshes, beacons and compass markers from `OnValueChanged`. *(Phase 3E: the host's beacons decide every scooter's pickups and deliveries, another machine's too. Clients replay each change through the same game code (`OnlineOrders`, `OrderSync`).)*
 - [x] Dropped orders: the host picks the drop height (`Order.Drop`'s `Random.Range`) and clients get the landing spot. *(Phase 3E: `Order.DropHeight` on the host. A client's respawn asks the host with its respawn point's spots (`OnlineMatch.AskDrop`).)*
-- [ ] The tutorial online (it teaches orders): `TutorialManager.IsSkipped` turns it back on. Players then start at the tutorial again (`SpawnManager.PlacePlayersAtStart`), and `IncrementAlumni` must count every machine's players, not just this machine's handlers. *(→ Phase 3F: it also needs the cardboard cutouts' steals.)*
+- [x] The tutorial online (it teaches orders): `TutorialManager.IsSkipped` turns it back on. Players then start at the tutorial again (`SpawnManager.PlacePlayersAtStart`), and `IncrementAlumni` must count every machine's players, not just this machine's handlers. *(→ Phase 3F: it also needs the cardboard cutouts' steals.)* *(Phase 3F: `IsSkipped` and the city start points are gone. Each machine reports its player's finish, and the host counts seats. Cutout steals are asked for, like drops. See the Phase 3F plan's Rulings 1–4.)*
 
 ### Task 3.6: Steals, clashes, respawns
 
@@ -274,7 +277,7 @@ Progress (2026-09-28):
 
 ### Task 3.8: Disconnects & versions
 
-- [ ] Client leaves → the host drops/erases its orders, despawns its avatar, recomputes placements. *(Phase 3E: its orders go back to the pool (`OrderHandler.ReleaseOrders`). Its avatar goes and placements are redone already (Phase 3C). Still to do: a leaver holding the golden order ends the golden round as if delivered.)*
+- [ ] Client leaves → the host drops/erases its orders, despawns its avatar, recomputes placements. *(Phase 3E: its orders go back to the pool (`OrderHandler.ReleaseOrders`). Its avatar goes and placements are redone already (Phase 3C). Still to do: a leaver holding the golden order ends the golden round as if delivered.)* *(Phase 3F: a player who leaves mid-tutorial doesn't hold up the others.)*
 - [ ] Host leaves → clients return to the menu with "Host left the match". *(The client's session ends with `OnlineSession.HOST_LEFT`. Phase 3D: the message shows in the controller hint bar, and a client in player select stays there, offline. Returning to the menu from a match is still to do.)*
 - [ ] Reject mismatched builds (lobby `build` metadata + NGO connection-approval payload). *(Approval half done: `JoinRules` compares `Application.version`. A build whose Netcode setup differs is dropped by Netcode before approval, with no reason, so the lobby filter matters. Phase 3D: a Steam lobby of another build is left before joining, with a message naming both versions (`LobbyRules.Refusal`).)*
 - [ ] Tests: kill a client mid-delivery; kill the host mid-match.

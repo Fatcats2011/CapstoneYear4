@@ -57,7 +57,7 @@ Online multiplayer is being built in steps (roadmap Phase 3: `docs/superpowers/p
   - A scooter that falls in the water disappears on other machines, and bumps nobody there, until it rises from its grave where its machine shows it.
   - Until its machine sends a first position, it stays where it was (its podium).
 - **The host runs the match:** its states (cutscenes, waves, results) and its match clock reach every machine.
-  - Online there's no tutorial yet (Phase 3F). The players start in the city instead, on the spawn manager's city start points (`TutorialManager.IsSkipped`).
+  - Until Phase 3F there was no tutorial online, and players started in the city. Now they start in their tutorial lanes.
 - **Back to the menu:**
   - The host takes everyone back, from the results or its pause menu. On a client, the results screen waits for the host.
   - Online, the menu opens on player select, the lobby, not the title screen (`MainMenu.Start`). Everyone can ready up again, and Y and B work there.
@@ -121,6 +121,28 @@ Online multiplayer is being built in steps (roadmap Phase 3: `docs/superpowers/p
   - A client ends an order's fall, throw or pickup cooldown before it replays the next change to it (`Order.FinishMoves`), so late messages don't trip over its animations.
   - The orders a client's player holds when the host takes everyone back go back to their own scene (`Order.ReturnHome`): none rides into the menu.
 
+### Phase 3F: the tutorial online
+
+- **Online matches start with the tutorial, as local ones do.**
+  - Each player starts at the start of their seat's lane, with its instructions, tutorial order and cardboard cutout.
+  - The tutorial orders are the host's, like every order (Phase 3E).
+- **Stealing from the cutout:** boosting into it opens your lane's barrier at once. The host hands you the cutout's order, and every machine shows it on your scooter. Every machine shows the other lanes' steals too.
+- **The first wave begins once every player has finished the tutorial**, by driving out of it into the city.
+  - Each machine tells the host when its own player has finished.
+  - A player who leaves mid-tutorial doesn't hold the others up.
+  - If the host leaves, a client whose player had finished goes on alone, offline.
+- How it works:
+  - **`TutorialManager` counts seats:**
+    - It records each finished seat (`SeatLearnt`).
+    - It checks whether every seat still in the match has finished (`RecheckAlumni`), and checks again after a player leaves.
+    - Each match starts the count over. Only the host, or a local match, ends the tutorial.
+  - **A client's messages** leave the game code through `TutorialSync` and travel on `OnlineMatch` (`ReportLearnt`, `AskCutout`). The host only takes them for the sender's own seat.
+  - **`OnlineTutorial`** (added by `OnlineGame`) is the glue.
+  - **`CutoutHandler`** knows its seat's lane (`InSeat`):
+    - On the host, or offline, a boost into it steals (`StealFor`).
+    - On a client, its own player opens the barrier and asks the host.
+    - Every machine opens a cutout once its order is taken.
+
 ## Two editors on one computer (ParrelSync)
 
 - **ParrelSync → Clones Manager → Create new clone** (once). The clone shares this project's Assets and ProjectSettings. Unity imports the project the first time the clone opens, which takes a while.
@@ -135,7 +157,7 @@ Online multiplayer is being built in steps (roadmap Phase 3: `docs/superpowers/p
   - Editor 1 shows `Online: player 1 joined (2 in)`.
 - Change colour or hat in one editor and watch the other.
 - Ready up in both. After the countdown both show the loading screen, and the game appears in both at once: the host waits for the other editor.
-  - The opening cutscene plays in each, then driving starts in the city (no tutorial online).
+  - The opening cutscene plays in each, then each player drives their own lane of the tutorial. The first wave starts once both have driven out of it into the city.
   - Drive in one editor and watch the other: the scooter moves there, boosting and drifting.
   - Pick up and deliver orders in either editor: both show them on the scooter that holds them, with the same scores.
 - Pause in editor 1 and pick **Main Menu**: both go back to player select, still in the session. In editor 2 (a client), **Main Menu** leaves the session.
@@ -164,7 +186,7 @@ Online multiplayer is being built in steps (roadmap Phase 3: `docs/superpowers/p
 - On one computer, when one side closes (or both close at once), Unity Transport may log `All socket receive requests were marked as failed…` as an error in the other editor: Windows reporting the closed port. The session was ending anyway.
 - **Steals and clashes are the host's alone** until roadmap Task 3.6: only the host's player steals, and the golden round has no stealing online yet.
 - **A pickup shows once the host has seen the scooter in the light:** on a client, about a round trip after it drove in.
-- There's no tutorial online (Phase 3F): players start in the city.
+- A cutout's order reaches a client's scooter about a round trip after its barrier opens.
 - A player who leaves holding the golden order ends the golden round, as if they'd delivered it (roadmap Task 3.8).
 - **Other machines' scooters are silent**, and a respawn shows no wisp: the scooter is gone until it rises from its grave (roadmap Tasks 3.6–3.7).
 - When the main game ends, only the host's scooter stops; the others keep driving until the golden round loads.

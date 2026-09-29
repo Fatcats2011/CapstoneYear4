@@ -102,10 +102,52 @@ namespace DoA.Tests
             return loader != null && Reflect.GetField(loader, "sceneLoad") != null;
         }
 
-        // Where the players start online: in the city, as the tutorial is skipped
-        static GameObject[] CitySpawns()
+        // Where the players start: the start of their seat's tutorial lane
+        static GameObject[] TutorialStarts()
         {
-            return (GameObject[])Reflect.GetField(SpawnManager.Instance, "nonTutorialSpawnPositions");
+            return (GameObject[])Reflect.GetField(SpawnManager.Instance, "gameSpawnPositions");
+        }
+
+        // A player on this machine drives their ball there and stops
+        static void PutBallAt(int seat, Vector3 spot)
+        {
+            Rigidbody ball = Slot(seat).Player.GetComponentInChildren<Rigidbody>();
+            ball.velocity = Vector3.zero;
+            ball.position = spot;
+            ball.transform.position = spot;
+        }
+
+        // Where a player who finished the tutorial waits: a city respawn point far from every order's beacons
+        static Vector3 CitySpot()
+        {
+            Vector3 best = Vector3.zero;
+            float bestGap = -1f;
+            Order[] orders = Object.FindObjectsOfType<Order>(true);
+            foreach (RespawnPoint point in Object.FindObjectsOfType<RespawnPoint>())
+            {
+                float gap = float.MaxValue;
+                foreach (Order order in orders)
+                {
+                    if (order.PickupPoint != null)
+                        gap = Mathf.Min(gap, Vector3.Distance(point.transform.position, order.PickupPoint.position));
+                    if (order.DropoffPoint != null)
+                        gap = Mathf.Min(gap, Vector3.Distance(point.transform.position, order.DropoffPoint.position));
+                }
+                if (gap > bestGap)
+                {
+                    bestGap = gap;
+                    best = point.transform.position;
+                }
+            }
+            return best;
+        }
+
+        // A player on this machine finishes the tutorial and waits in the city, as a player who drove out of it does
+        // (the tutorial area goes a second into the first wave)
+        static void FinishTutorialInTheCity(int seat)
+        {
+            PutBallAt(seat, CitySpot());
+            Slot(seat).Player.GetComponentInChildren<TutorialHandler>().TeachHandler(TutorialType.Final);
         }
 
         [UnityTest]
@@ -166,13 +208,20 @@ namespace DoA.Tests
                 yield return null;
             CollectionAssert.AreEqual(new[] { MatchScene.Game }, theirs.Shows, "the other machine shows it too");
 
-            // Each machine places its own scooter: this one on seat 1's spawn point. The other machine's is where its owner
-            // puts it; it hasn't shared a pose, so it's still where it stood in the menu
-            Assert.Less(Vector3.Distance(CitySpawns()[0].transform.position, ScooterIn(0).Sphere.transform.position), 1.5f, "this machine's scooter on its city spawn point");
+            // Each machine places its own scooter: this one at the start of seat 1's tutorial lane. The other machine's is
+            // where its owner puts it; it hasn't shared a pose, so it's still where it stood in the menu
+            Assert.Less(Vector3.Distance(TutorialStarts()[0].transform.position, ScooterIn(0).Sphere.transform.position), 1.5f, "this machine's scooter at the start of its lane");
             Assert.Less(Vector3.Distance(theirSpot, ScooterIn(1).Sphere.transform.position), 0.01f, "the other machine's scooter isn't placed here");
 
-            // The first wave starts after the opening cutscene, without the tutorial: online it's skipped until orders are shared
+            // The tutorial follows the opening cutscene. The first wave starts once both players have finished it: this
+            // machine's waits in the city, and the other machine reports its own
             deadline = Time.realtimeSinceStartup + 60;
+            while (State() != GameState.Tutorial && Time.realtimeSinceStartup < deadline)
+                yield return null;
+            Assert.AreEqual(GameState.Tutorial, State(), "the tutorial");
+            FinishTutorialInTheCity(0);
+            other.Match.ReportLearnt(1);
+            deadline = Time.realtimeSinceStartup + WAIT;
             while (State() != GameState.Begin && Time.realtimeSinceStartup < deadline)
                 yield return null;
             Assert.AreEqual(GameState.Begin, State(), "the first wave");
@@ -300,13 +349,13 @@ namespace DoA.Tests
             Assert.IsNull(Slot(1), "their seat is free");
             Assert.IsNull(Reflect.GetField(PlayerInstantiate.Instance, "readyUpCountdown"), "nobody counts down to another match");
 
-            // The host stops waiting for them: the match starts here, with this machine's scooter in the city
+            // The host stops waiting for them: the match starts here, with this machine's scooter at the start of its lane
             deadline = Time.realtimeSinceStartup + LOADING;
             while (!(ActiveScene() == GAME && State() == GameState.MainLoop) && Time.realtimeSinceStartup < deadline)
                 yield return null;
             Assert.AreEqual(GAME, ActiveScene());
             Assert.AreEqual(GameState.MainLoop, State(), "the opening cutscene started, and the players are placed");
-            Assert.Less(Vector3.Distance(CitySpawns()[0].transform.position, ScooterIn(0).Sphere.transform.position), 1.5f, "this machine's scooter on its city spawn point");
+            Assert.Less(Vector3.Distance(TutorialStarts()[0].transform.position, ScooterIn(0).Sphere.transform.position), 1.5f, "this machine's scooter at the start of its lane");
 
             host.Leave();
             yield return null;
@@ -358,17 +407,19 @@ namespace DoA.Tests
                 yield return null;
             Assert.AreEqual(GAME, ActiveScene());
             Assert.AreEqual(GameState.MainLoop, State(), "the host's states arrived in order");
-            Assert.Less(Vector3.Distance(CitySpawns()[1].transform.position, ScooterIn(1).Sphere.transform.position), 1.5f,
-                "the opening cutscene put this machine's scooter on seat 2's city spawn point: the state waited for the scene");
+            Assert.Less(Vector3.Distance(TutorialStarts()[1].transform.position, ScooterIn(1).Sphere.transform.position), 1.5f,
+                "the opening cutscene put this machine's scooter at the start of seat 2's lane: the state waited for the scene");
 
             // Another machine's scooter isn't placed here: its owner places it (it hasn't shared a pose: it's where it stood)
             Assert.Less(Vector3.Distance(hostSpot, ScooterIn(0).Sphere.transform.position), 0.01f, "the host's scooter isn't placed here");
 
-            // The host skips the tutorial online: this machine's player finishes it at once, then the host starts the first wave
+            // The host starts the tutorial: this machine's player finishes it and waits in the city, then the host starts the
+            // first wave
             host.Match.SendState(GameState.Tutorial);
             deadline = Time.realtimeSinceStartup + WAIT;
-            while (!Slot(1).Player.GetComponentInChildren<TutorialHandler>().HasLearnt && Time.realtimeSinceStartup < deadline)
+            while (State() != GameState.Tutorial && Time.realtimeSinceStartup < deadline)
                 yield return null;
+            FinishTutorialInTheCity(1);
             Assert.IsTrue(Slot(1).Player.GetComponentInChildren<TutorialHandler>().HasLearnt, "this machine's player is done with the tutorial");
             host.Match.SendState(GameState.Begin);
             deadline = Time.realtimeSinceStartup + WAIT;

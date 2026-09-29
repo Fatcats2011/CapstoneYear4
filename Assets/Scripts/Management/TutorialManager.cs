@@ -17,28 +17,32 @@ public class TutorialManager : SingletonMonobehaviour<TutorialManager>
     private bool shouldTutorialize = true;
     public bool ShouldTutorialize { get { return shouldTutorialize; } set { shouldTutorialize = value; } }
 
-    /// <summary>
-    /// Whether matches skip the tutorial: online they do, until orders are shared between machines (roadmap Task 3.5).
-    /// Without it, the players start in the city instead of at the start of the tutorial (SpawnManager)
-    /// </summary>
-    public static bool IsSkipped { get { return GameAuthority.IsOnline; } }
-
     private List<TutorialHandler> handlers = new List<TutorialHandler>();
+
+    // The seats whose players have finished this match's tutorial (online, the host hears about other machines' players)
+    private readonly HashSet<int> finished = new HashSet<int>();
 
     public delegate void TutorialComplete();
     public TutorialComplete OnTutorialComplete;
 
     private void OnEnable()
     {
-        GameManager.Instance.OnSwapBegin += handlers.Clear;
-        GameManager.Instance.OnSwapTutorial += SkipWhenOnline;
+        GameManager.Instance.OnSwapStartingCutscene += StartOver;
+        GameManager.Instance.OnSwapBegin += StartOver;
         shouldTutorialize = true;
     }
 
     private void OnDisable()
     {
-        GameManager.Instance.OnSwapBegin -= handlers.Clear;
-        GameManager.Instance.OnSwapTutorial -= SkipWhenOnline;
+        GameManager.Instance.OnSwapStartingCutscene -= StartOver;
+        GameManager.Instance.OnSwapBegin -= StartOver;
+    }
+
+    // Each match's tutorial starts the count over, and the first wave ends it
+    private void StartOver()
+    {
+        handlers.Clear();
+        finished.Clear();
     }
 
     private void Update()
@@ -53,9 +57,10 @@ public class TutorialManager : SingletonMonobehaviour<TutorialManager>
         }
     }
     /// <summary>
-    /// Adds a tutorial handler to a list if it's not already there.
+    /// This machine's player finished the tutorial: their seat counts. Online, a client tells the host instead
+    /// (TutorialSync), which starts the first wave once every seat's player has finished
     /// </summary>
-    /// <param name="inHandler">Handler to to be added to the list</param>
+    /// <param name="inHandler">The player's tutorial handler</param>
     public void IncrementAlumni(TutorialHandler inHandler)
     {
         if(!handlers.Contains(inHandler))
@@ -63,13 +68,52 @@ public class TutorialManager : SingletonMonobehaviour<TutorialManager>
             handlers.Add(inHandler);
         }
 
-        if(handlers.Count >= PlayerInstantiate.Instance.PlayerCount)
+        int seat = OrderSync.SeatOf(inHandler);
+        if (!GameAuthority.IsAuthority)
         {
-            if(shouldTutorialize)
-                GameManager.Instance.SetGameState(GameState.Begin);
-            
-            OnTutorialComplete?.Invoke();
+            finished.Add(seat);
+            TutorialSync.Finish(seat);
+            return;
         }
+
+        SeatLearnt(seat);
+    }
+
+    /// <summary>
+    /// The player in a seat finished the tutorial (online, the host hears it from their machine). The tutorial ends once
+    /// every seat's player has
+    /// </summary>
+    public void SeatLearnt(int seat)
+    {
+        finished.Add(seat);
+        RecheckAlumni();
+    }
+
+    /// <summary>
+    /// Ends the tutorial if every seat still in the match has finished it: after a player left, or when this machine
+    /// went offline. Only the machine that decides the rules ends it, and only while the tutorial runs (the count of a
+    /// match left mid-tutorial lasts until the next one's opening cutscene)
+    /// </summary>
+    public void RecheckAlumni()
+    {
+        if (!GameAuthority.IsAuthority || PlayerInstantiate.Instance == null || GameManager.Instance == null
+            || GameManager.Instance.MainState != GameState.Tutorial)
+            return;
+
+        bool anyone = false;
+        foreach (PlayerSlot player in PlayerInstantiate.Instance.Roster.Players)
+        {
+            if (!finished.Contains(player.Index))
+                return;
+            anyone = true;
+        }
+        if (!anyone)
+            return;
+
+        if (shouldTutorialize)
+            GameManager.Instance.SetGameState(GameState.Begin);
+
+        OnTutorialComplete?.Invoke();
     }
 
     /// <summary>
@@ -83,26 +127,5 @@ public class TutorialManager : SingletonMonobehaviour<TutorialManager>
         handlers.Clear();
 
         OnTutorialComplete?.Invoke();
-    }
-
-    /// <summary>
-    /// Online, the tutorial is skipped until Phase 3F. It teaches stealing too (the cardboard cutouts), which isn't shared
-    /// between machines yet. And it waits for every player's handler, which only exists on that player's machine.
-    /// Every machine's players finish it at once, and the host starts the first wave a frame later. Switching state
-    /// inside the tutorial's own switch would run its other listeners (the tutorial orders) after the first wave's
-    /// </summary>
-    private void SkipWhenOnline()
-    {
-        if (IsSkipped)
-            StartCoroutine(SkipOnline());
-    }
-
-    private IEnumerator SkipOnline()
-    {
-        yield return null;
-
-        OnTutorialComplete?.Invoke();
-        if (GameAuthority.IsAuthority && GameManager.Instance.MainState == GameState.Tutorial)
-            GameManager.Instance.SetGameState(GameState.Begin);
     }
 }

@@ -170,6 +170,8 @@ public class Order : MonoBehaviour
             OrderManager.Instance.AddOrder(this);
         
         isActive = true;
+        // A cutout's order leaves its hold (online, a replayed steal too)
+        stealActive = false;
         arrow.SetActive(false);
         this.transform.position = pickup.position;
 

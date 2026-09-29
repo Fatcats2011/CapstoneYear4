@@ -5,7 +5,9 @@ using System.Collections.Generic;
 using UnityEngine;
 
 /// <summary>
-/// Used for the cardboard cutout in the tutorial.
+/// Used for the cardboard cutout in the tutorial. A player who boosts into it steals its order, and the barrier behind it
+/// opens. Online the host hands out the order: a client's own player opens its barrier at once and asks the host
+/// (TutorialSync), and every machine opens a cutout once its order is taken. See docs/online.md
 /// </summary>
 public class CutoutHandler : MonoBehaviour
 {
@@ -30,8 +32,35 @@ public class CutoutHandler : MonoBehaviour
 
     private bool hasStolen = false;
 
-    public void InitCutout()
+    // The cutout in each seat's lane this match (CutoutManager sets them up)
+    private static readonly CutoutHandler[] bySeat = new CutoutHandler[Constants.MAX_PLAYERS];
+
+    /// <summary>The seat whose lane this cutout is in (-1 until it's set up)</summary>
+    public int Seat { get; private set; } = -1;
+
+    /// <summary>Whether it's been stolen from: its barrier is down</summary>
+    public bool IsOpen { get { return hasStolen; } }
+
+    /// <summary>
+    /// The cutout in a seat's lane this match, or null when there's none
+    /// </summary>
+    public static CutoutHandler InSeat(int seat)
     {
+        if (seat < 0 || seat >= bySeat.Length || bySeat[seat] == null)
+            return null;
+
+        return bySeat[seat];
+    }
+
+    /// <summary>
+    /// Sets the cutout up for the player in a seat: it holds its order, and its barrier blocks the lane
+    /// </summary>
+    public void InitCutout(int seat)
+    {
+        Seat = seat;
+        if (seat >= 0 && seat < bySeat.Length)
+            bySeat[seat] = this;
+
         order.CardboardHold();
         order.transform.position = orderPos.position;
 
@@ -40,6 +69,41 @@ public class CutoutHandler : MonoBehaviour
         //cutoutMeshCollider = cutoutModel.GetComponent<BoxCollider>();
 
         barrierCollider.enabled = true;
+    }
+
+    private void Update()
+    {
+        // Online, the host decides who steals: once its decision reaches this machine, the cutout opens here too
+        if (Seat >= 0 && !hasStolen && order.PlayerHolding != null)
+            Open(order.PlayerHolding);
+    }
+
+    /// <summary>
+    /// The player steals the cutout's order, and the cutout opens. Nothing once it's open. Online, only the host decides
+    /// (OrderSync): a client asks it
+    /// </summary>
+    public void StealFor(OrderHandler player)
+    {
+        if (hasStolen || player == null)
+            return;
+
+        order.StealActive = false;
+        order.InitOrder(false);
+        player.AddOrder(order);
+        Open(player);
+    }
+
+    // The steal shows: the barrier dissolves, the cutout spins, and the thief hears it
+    private void Open(OrderHandler player)
+    {
+        hasStolen = true;
+        barrierCollider.enabled = false;
+        barrierDissolver.DissolveOut(dissolveTime);
+        SpinCutout(1f);
+
+        SoundPool sounds = player != null ? player.GetComponent<SoundPool>() : null;
+        if (sounds != null)
+            sounds.PlayOrderTheft();
     }
 
     /// <summary>
@@ -58,24 +122,25 @@ public class CutoutHandler : MonoBehaviour
         if (hasStolen)
             return;
 
-        OrderHandler player;
-        BallDriving playerBall;
-
         try
         {
-            player = other.gameObject.transform.parent.GetComponentInChildren<OrderHandler>();
-            playerBall = other.gameObject.transform.parent.GetComponentInChildren<BallDriving>();
-            SoundPool sp = player.GetComponent<SoundPool>();
-            if (playerBall.Boosting)
+            OrderHandler player = other.gameObject.transform.parent.GetComponentInChildren<OrderHandler>();
+            BallDriving playerBall = other.gameObject.transform.parent.GetComponentInChildren<BallDriving>();
+
+            // Another machine's scooter: its own machine sees its boost and asks the host
+            if (RemoteAvatar.IsRemote(player) || !playerBall.Boosting)
+                return;
+
+            if (OrderSync.MayChange)
             {
-                order.StealActive = false;
-                order.InitOrder(false);
-                player.AddOrder(order);
-                hasStolen = true;
-                barrierCollider.enabled = false;
-                barrierDissolver.DissolveOut(dissolveTime);
-                SpinCutout(1f);
-                sp.PlayOrderTheft();
+                StealFor(player);
+            }
+            else
+            {
+                // Online client: the barrier opens here at once (no bumping into it while the host answers), and the
+                // host hands out the order
+                Open(player);
+                TutorialSync.AskCutout(Seat);
             }
         }
         catch

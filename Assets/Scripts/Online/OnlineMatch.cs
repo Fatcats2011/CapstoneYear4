@@ -11,6 +11,7 @@ using UnityEngine;
 ///   the menu, and each client says when it has a scene loaded (OnlineSceneFlow).
 /// - The host's match clock (MatchClock).
 /// - The host's order changes, clients' drop requests and the golden order's value (OnlineOrders).
+/// - Clients' tutorial reports and cutout requests (OnlineTutorial).
 /// </summary>
 public class OnlineMatch : NetworkBehaviour, IMatchLink
 {
@@ -42,6 +43,12 @@ public class OnlineMatch : NetworkBehaviour, IMatchLink
 
     /// <summary>Host: a client asks it to drop what its player holds (the client's id, the player's seat, spot1, spot2, spinOut)</summary>
     public event Action<ulong, int, Vector3, Vector3, bool> DropAsked;
+
+    /// <summary>Host: a client's player finished the tutorial (the client's id, the player's seat)</summary>
+    public event Action<ulong, int> MachineLearnt;
+
+    /// <summary>Host: a client's player boosted into a cutout (the client's id, the seat of the cutout's lane)</summary>
+    public event Action<ulong, int> CutoutAsked;
 
     /// <summary>Clients: each state the host switches to, in order</summary>
     public event Action<GameState> StateReceived;
@@ -146,6 +153,23 @@ public class OnlineMatch : NetworkBehaviour, IMatchLink
             DropServerRpc(seat, spot1, spot2, spinOut);
     }
 
+    /// <summary>Client: tells the host its player in a seat finished the tutorial. Does nothing on the host, which counts its own</summary>
+    public void ReportLearnt(int seat)
+    {
+        if (!IsServer)
+            LearntServerRpc(seat);
+    }
+
+    /// <summary>
+    /// Client: asks the host for the order of the cutout its player boosted into (the seat of the cutout's lane). Does
+    /// nothing on the host, whose player steals at once
+    /// </summary>
+    public void AskCutout(int seat)
+    {
+        if (!IsServer)
+            CutoutServerRpc(seat);
+    }
+
     /// <summary>Host: shares what the golden order is worth (only a change goes out). Does nothing on a client</summary>
     public void ShareGoldenValue(int value)
     {
@@ -202,5 +226,17 @@ public class OnlineMatch : NetworkBehaviour, IMatchLink
     void DropServerRpc(int seat, Vector3 spot1, Vector3 spot2, bool spinOut, ServerRpcParams rpc = default)
     {
         DropAsked?.Invoke(rpc.Receive.SenderClientId, seat, spot1, spot2, spinOut);
+    }
+
+    [ServerRpc(RequireOwnership = false)]
+    void LearntServerRpc(int seat, ServerRpcParams rpc = default)
+    {
+        MachineLearnt?.Invoke(rpc.Receive.SenderClientId, seat);
+    }
+
+    [ServerRpc(RequireOwnership = false)]
+    void CutoutServerRpc(int seat, ServerRpcParams rpc = default)
+    {
+        CutoutAsked?.Invoke(rpc.Receive.SenderClientId, seat);
     }
 }

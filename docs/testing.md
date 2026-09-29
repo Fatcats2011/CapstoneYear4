@@ -16,10 +16,12 @@
   - `OnlineMatchNetworkTests` (port 7796): a whole online start, hosting and joining, and a machine leaving on the loading screen or mid-match. They load the game scene, so about a minute each.
   - `OnlinePlayNetworkTests` (port 7797, menu scene): Y hosting a lobby, a friend joining and B ending it; and joining a friend's lobby from the title screen. Steam is a fake (`OnlineFakes`), and sessions go by IP address.
   - `OrderMessagesNetworkTests` (port 7798, empty scene): the host's order changes reaching clients in order, a client's drop request reaching the host, and the host's scores and golden-order value.
+  - `TutorialMessagesNetworkTests` (port 7800, empty scene): a client's tutorial report and cutout request, each reaching the host with who sent it.
+  - `OnlineTutorialNetworkTests` (port 7801): the tutorial online. Hosting, the first wave waits for every machine's player (or for one who leaves), and the host hands out the cutouts' orders. Joining, this machine's player does the tutorial and steals from their cutout, and the host hears when they finish. They load the game scene: a minute or two each.
   - `OnlineOrdersNetworkTests` (port 7799): a match's orders, hosting and joining. Hosting, the host decides another machine's pickups, deliveries and drops, and shares the scores. Joining, the host's orders show on whichever scooter holds them, and nothing changes here by itself. They load the game scene: a minute or two each.
   - When a machine leaves, Windows often reports its closed port to the others, and Unity Transport logs that as an error (`docs/online.md`, Known limits). Tests where machines leave call `LogCollector.MachinesLeave()` first: that one message is let through, and any other error still fails the test.
 - The Steam lobby flow (`OnlineLobbyTests`, `LobbyRulesTests`) runs over fakes of Steam and the session (`OnlineFakes`), without Play Mode. `SteamLobbyServiceTests` checks Steam's lobbies without Steam: with Steam they're checked on two PCs (`docs/online.md`).
-- `GameSceneSpawnTests` opens the game scene in the editor, without Play Mode. It checks the city start points, where players start online: one per seat, in the open, over ground that isn't water or the tutorial area.
+- `GameSceneSpawnTests` opens the game scene in the editor, without Play Mode. It checks the start points, at the start of each seat's tutorial lane: one per seat, in the open, over ground that isn't water.
   - `OrderBookSceneTests` opens both match scenes the same way: every order in them has its own key, so online an order change always names one order.
 - The rules for orders online run without Play Mode:
   - `OrderBookTests`: order keys.
@@ -27,6 +29,7 @@
   - `OrderSyncTests`: who may change orders, and which changes go out.
   - `OrderRulesTests`: a client's orders wait for the host.
   - `HostQueueTests`: a client's messages from the host wait while its scene changes.
+  - `TutorialManagerTests`: the tutorial ends when every seat's player has finished it (online, only the host ends it).
 - Leave the editor alone while it plays. Controllers you touch count as input.
 - Run a single test: select it in the Test Runner → **Run Selected**.
 

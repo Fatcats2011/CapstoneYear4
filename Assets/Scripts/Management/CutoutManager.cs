@@ -25,7 +25,7 @@ public class CutoutManager : MonoBehaviour
         foreach (PlayerSlot player in PlayerInstantiate.Instance.Roster.Players)
         {
             cutouts[player.Index].gameObject.SetActive(true);
-            cutouts[player.Index].InitCutout();
+            cutouts[player.Index].InitCutout(player.Index);
         }
     }
 }

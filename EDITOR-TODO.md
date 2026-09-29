@@ -1,6 +1,6 @@
 # Editor to-do (master list)
 
-Things only you can do in the Unity editor (and on two PCs), top to bottom. Updated 2026-09-29 (Phase 3E: orders online).
+Things only you can do in the Unity editor (and on two PCs), top to bottom. Updated 2026-09-29 (Phase 3F: the tutorial online).
 
 ## 1. Save the online prefabs' network IDs (1 minute, main editor only)
 
@@ -9,33 +9,44 @@ Things only you can do in the Unity editor (and on two PCs), top to bottom. Upda
 - `git status` then shows 3 changed prefabs in `Assets/Prefabs/Online/`, each with one changed line (`GlobalObjectIdHash`).
 - Until then `OnlinePrefabsTests.SavedPrefabIds_AreUnique_AndMatchTheIdNetcodeComputes` fails on purpose. It's the only red test.
 
-## 2. Let both editors import Phase 3E (1 minute)
+## 2. Let both editors import Phase 3F (1 minute)
 
 - Click into the **main editor**, then into the **ParrelSync clone**. No scene or prefab changes:
-  - New scripts: `OrderBook`, `OrderChange`, `OrderSync`, `OnlineOrders`, `HostQueue`.
-  - Changed: `Order`, `OrderHandler`, `OrderBeacon`, `OnlineMatch`, `OnlinePlayer`, `OnlineGame`, `PlayerInstantiate`, and comments in `RemoteAvatar` and `TutorialManager`.
-  - New tests: `OrderBookTests`, `OrderBookSceneTests`, `OrderChangeTests`, `OrderSyncTests`, `OrderRulesTests`, `HostQueueTests`, `OrderMessagesNetworkTests`, `OnlineOrdersNetworkTests`.
+  - New scripts: `TutorialSync`, `OnlineTutorial`.
+  - Changed: `TutorialManager`, `SpawnManager`, `CutoutHandler`, `CutoutManager`, `Order`, `OnlineMatch`, `OnlineGame`.
+  - New tests: `TutorialManagerTests`, `TutorialMessagesNetworkTests`, `OnlineTutorialNetworkTests`.
 - The Console should end with no red errors.
 
-## 3. Orders in two editors (10 minutes)
+## 3. The tutorial and orders in two editors (15 minutes)
 
 - Play in both editors. Editor 1: **Tools → Dead on Arrival → Online → Host**. The clone: **Join This Computer** (`docs/online.md`, Two editors).
-- Ready up in both: the match starts in the city.
-- Both editors show the same orders appearing.
-- Drive the clone's scooter into an order's light: the order rides on it in both editors (a moment later in the clone).
-- Deliver it: the same score in both HUDs, and the same placings.
-- In the clone, fall in the water holding an order: it drops at the respawn point in both.
-- Play on to the golden round: its value climbs the same in both. Deliver it: the results match.
-- Then again with **Tools → Dead on Arrival → Online → Bad Connection (150 ms, 1% Loss)** ticked in the clone before **Join**: pickups show a little later there, and everything else still matches.
+- Ready up in both. After the opening cutscene, each player is at the start of their own tutorial lane.
+- In the clone: pick up the tutorial order, then boost into the cardboard cutout.
+  - Its barrier drops at once.
+  - The order rides on the clone's scooter in both editors.
+- In editor 1 only, finish the tutorial and drive out into the city: the first wave waits.
+- Drive out in the clone: the waves start in both.
+- Orders, if you haven't checked them since Phase 3E:
+  - Both editors show the same orders.
+  - Deliver one in the clone: the same score in both HUDs.
+  - Fall in the water holding one: it drops at the respawn point in both.
+  - The golden round's value climbs in both, and the results match.
+- Then again with **Tools → Dead on Arrival → Online → Bad Connection (150 ms, 1% Loss)** ticked in the clone before **Join**.
 - Anything odd? Note it, plus each editor's Console lines starting `Online:`.
 
-## 4. From Phase 3D, if not done yet: Steam (20 minutes)
+## 4. Optional: tidy the game scene (2 minutes, main editor only)
+
+- The spawn manager no longer uses the city start points: players start in their tutorial lanes again.
+- In the main editor, not in Play Mode: open `Design Scene(Main)`, delete **Spawning Manager → Normal Positions** (the four city `Spawn 1-4` objects), and save the scene.
+- Nothing else refers to them.
+
+## 5. From Phase 3D, if not done yet: Steam (20 minutes)
 
 - One PC, Steam running: **Play**, A, **Play** → player select. **Y** hosts (the line along the top changes). **B** goes back offline.
-- Two PCs, two Steam accounts that are friends: follow `docs/online.md`, Two PCs over Steam. Orders now show on both PCs too.
+- Two PCs, two Steam accounts that are friends: follow `docs/online.md`, Two PCs over Steam. The tutorial and orders now play on both PCs too.
 
-## 5. Review and commit (your call)
+## 6. Review and commit (your call)
 
-- Not committed: Phase 3E on `steam-phase1a`, on top of your "Phase 3E" commit (Phase 3D and this phase's plan).
-- How it works: `docs/online.md` (Phase 3E: orders online).
-- Suggested commit title: "Phase 3E: orders online".
+- Not committed: Phase 3F on `steam-phase1a`, on top of "Phase 3E: orders online".
+- How it works: `docs/online.md` (Phase 3F: the tutorial online).
+- Suggested commit title: "Phase 3F: the tutorial online".

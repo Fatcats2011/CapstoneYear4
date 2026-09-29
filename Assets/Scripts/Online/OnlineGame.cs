@@ -8,6 +8,7 @@ using UnityEngine;
 /// - other machines' players as scooters in their seats;
 /// - every scooter's pose and what it's doing (OnlineDriving);
 /// - every order and score (OnlineOrders);
+/// - every machine's player finishing the tutorial (OnlineTutorial);
 /// - everyone's colour, hat and readiness;
 /// - the host's game states;
 /// - the host's match clock (MatchClock);
@@ -105,6 +106,9 @@ public class OnlineGame : MonoBehaviour
         orders = gameObject.AddComponent<OnlineOrders>();
         orders.Begin(session);
 
+        // The tutorial ends once every machine's player has finished it
+        gameObject.AddComponent<OnlineTutorial>().Begin(session);
+
         session.RoleChanged += OnRoleChanged;
         session.Ended += ShowEnd;
         session.PlayerSpawned += OnPlayerSpawned;
@@ -173,6 +177,7 @@ public class OnlineGame : MonoBehaviour
                 players.RemoveRemotePlayer(remote.Seat);
         }
         remotes.Clear();
+        RecheckTutorial();
         waiting.Clear();
         localPlayer = null;
         if (players != null)
@@ -212,7 +217,15 @@ public class OnlineGame : MonoBehaviour
             remotes.Remove(player);
             if (PlayerInstantiate.Instance != null)
                 PlayerInstantiate.Instance.RemoveRemotePlayer(remote.Seat);
+            RecheckTutorial();
         }
+    }
+
+    // A player left (or this machine went offline): everyone left may have finished the tutorial
+    static void RecheckTutorial()
+    {
+        if (TutorialManager.Instance != null)
+            TutorialManager.Instance.RecheckAlumni();
     }
 
     void OnMatchSpawned(OnlineMatch match)
