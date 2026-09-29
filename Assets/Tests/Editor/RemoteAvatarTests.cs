@@ -110,6 +110,35 @@ namespace DoA.Tests
         }
 
         [UnityTest]
+        public IEnumerator RemoteScooter_MakesNoEngineSound_WhenTheGameSwitchesToTheGoldenRound()
+        {
+            EditorSceneManager.playModeStartScene = AssetDatabase.LoadAssetAtPath<SceneAsset>(MENU_SCENE);
+            yield return new EnterPlayMode();
+            LogAssert.ignoreFailingMessages = true; // other scripts may complain about the jump; only the sound is checked here
+            float deadline = Time.realtimeSinceStartup + 60;
+            while (!AtTitleScreen() && Time.realtimeSinceStartup < deadline)
+                yield return null;
+            PlayerInstantiate players = PlayerInstantiate.Instance;
+            OnlinePrefabs prefabs = OnlinePrefabs.Load();
+            RemoteAvatar remote = RemoteAvatar.Create(prefabs.RemoteAvatarPrefab, null);
+            players.AddRemotePlayer(remote.gameObject, 1, 5);
+            yield return null;
+
+            GameManager.Instance.ApplyGameState(GameState.Tutorial);
+            GameManager.Instance.ApplyGameState(GameState.FinalPackage);
+
+            Assert.IsNotNull(remote.GetComponentInChildren<SoundPool>(true), "the scooter has a sound pool");
+            foreach (SoundPool sounds in remote.GetComponentsInChildren<SoundPool>(true))
+                Assert.IsFalse(sounds.enabled, "no sound pool listening to the game here");
+            foreach (AudioSource source in remote.GetComponentsInChildren<AudioSource>(true))
+                Assert.IsFalse(source.gameObject.activeInHierarchy, "no engine hum on another machine's scooter");
+
+            players.RemoveRemotePlayer(1);
+            GameManager.Instance.ApplyGameState(GameState.Menu);
+            yield return null;
+        }
+
+        [UnityTest]
         public IEnumerator RemotePlayersReadiness_CountsTowardsTheCountdown()
         {
             EditorSceneManager.playModeStartScene = AssetDatabase.LoadAssetAtPath<SceneAsset>(MENU_SCENE);

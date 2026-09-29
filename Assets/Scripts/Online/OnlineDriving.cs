@@ -4,7 +4,8 @@ using UnityEngine;
 /// Online, every frame:
 /// - This machine's scooter goes into its OnlineScooter.
 /// - Every other machine's OnlineScooter moves that player's RemoteAvatar: its pose, plus its boost trail, skid marks,
-///   drift sparks and rider (BallDriving.ShowRemote). It waits where it is until its owner has shared a pose.
+///   drift sparks and rider, hidden while its owner's rider is (BallDriving.ShowRemote). It waits where it is until its
+///   owner has shared a pose.
 /// It runs after everything else. So it sends this machine's scooter as the frame left it, and shows the others after
 /// Netcode moved their proxies. OnlineGame adds it. See docs/online.md
 /// </summary>

@@ -127,5 +127,33 @@ namespace DoA.Tests
             Assert.IsTrue(menus.hostPlayer, "runs this machine's menus");
             Assert.AreEqual(MenuType.MainMenu, menus.curentMenuType, "on the title screen");
         }
+
+        [UnityTest]
+        public IEnumerator MovingToTheSeat_LeavesNoReadyPlayerInTheOldSeat()
+        {
+            EditorSceneManager.playModeStartScene = AssetDatabase.LoadAssetAtPath<SceneAsset>(MENU_SCENE);
+            yield return new EnterPlayMode();
+            float deadline = Time.realtimeSinceStartup + 60;
+            while (!AtTitleScreen() && Time.realtimeSinceStartup < deadline)
+                yield return null;
+            PlayerInstantiate players = PlayerInstantiate.Instance;
+            TestPlayers.Add();
+            deadline = Time.realtimeSinceStartup + 10;
+            while (!LocalIn(0) && Time.realtimeSinceStartup < deadline)
+                yield return null;
+            GameManager.Instance.SetGameState(GameState.PlayerSelect);
+            players.ReadyUp(0);
+            Assert.IsTrue(players.IsReady(0), "ready in seat 1");
+
+            players.SetOnlineSeat(2);
+            deadline = Time.realtimeSinceStartup + 10;
+            while (!LocalIn(2) && Time.realtimeSinceStartup < deadline)
+                yield return null;
+
+            Assert.IsTrue(LocalIn(2), "in seat 3");
+            Assert.IsNull(players.Roster[0], "seat 1 is free");
+            Assert.IsFalse(players.IsReady(0), "a seat with nobody in it isn't ready");
+            Assert.IsFalse(players.IsReady(2), "and the player joining starts unready");
+        }
     }
 }

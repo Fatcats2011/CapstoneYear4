@@ -58,6 +58,31 @@ namespace DoA.Tests
         }
 
         [Test]
+        public void SavedPrefabIds_AreUnique_AndMatchTheIdNetcodeComputes()
+        {
+            // The id saved in the file is what a build uses. The editor recomputes it in memory when the prefab loads,
+            // so play mode hides a stale one; read the file itself.
+            var savedBy = new System.Collections.Generic.Dictionary<uint, string>();
+            foreach (string file in System.IO.Directory.GetFiles(NetworkPrefabIds.FOLDER, "*.prefab"))
+            {
+                string path = file.Replace('\\', '/');
+                var match = System.Text.RegularExpressions.Regex.Match(System.IO.File.ReadAllText(path),
+                    @"^\s*GlobalObjectIdHash: (\d+)\s*$", System.Text.RegularExpressions.RegexOptions.Multiline);
+                Assert.IsTrue(match.Success, path + " has a saved GlobalObjectIdHash");
+                uint saved = uint.Parse(match.Groups[1].Value);
+
+                string other;
+                Assert.IsFalse(savedBy.TryGetValue(saved, out other),
+                    path + " and " + other + " both save prefab id " + saved + ": use Tools > Dead on Arrival > Online > Save Network Prefab IDs");
+                savedBy[saved] = path;
+
+                uint computed = AssetDatabase.LoadAssetAtPath<GameObject>(path).GetComponent<NetworkObject>().PrefabIdHash;
+                Assert.AreEqual(computed, saved,
+                    path + " saves a stale prefab id: use Tools > Dead on Arrival > Online > Save Network Prefab IDs");
+            }
+        }
+
+        [Test]
         public void Scooters_AreThePlayerPrefabs()
         {
             OnlinePrefabs prefabs = OnlinePrefabs.Load();

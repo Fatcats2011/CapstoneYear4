@@ -9,8 +9,9 @@ namespace DoA.Tests
 {
     /// <summary>
     /// Another machine's scooter shows what its owner's is doing (BallDriving.ShowRemote): the boost trail starts once per
-    /// boost, skid marks while it drifts on the ground, its drift tier's sparks, and the rider's speed. In the real menu
-    /// scene (a scooter's scripts need its managers). Enters Play Mode (about 10 s)
+    /// boost, skid marks while it drifts on the ground, its drift tier's sparks, and the rider's speed. While its owner's
+    /// rider is hidden for a respawn, it's hidden too and its ball bumps nobody. In the real menu scene (a scooter's
+    /// scripts need its managers). Enters Play Mode (about 10 s)
     /// </summary>
     public class RemoteDrivingTests
     {
@@ -52,7 +53,7 @@ namespace DoA.Tests
         }
 
         [UnityTest]
-        public IEnumerator AnotherMachinesScooter_ShowsItsOwnersBoostDriftAndSpeed()
+        public IEnumerator AnotherMachinesScooter_ShowsItsOwnersBoostDriftSpeedAndRespawn()
         {
             EditorSceneManager.playModeStartScene = AssetDatabase.LoadAssetAtPath<SceneAsset>(MENU_SCENE);
             yield return new EnterPlayMode();
@@ -93,6 +94,19 @@ namespace DoA.Tests
             yield return null;
             Assert.IsFalse(SparkOn(sparks, 0), "sparks off");
             Assert.IsFalse(skid.emitting, "skid marks stop");
+
+            // Its owner fell in the water: while its rider is hidden, so is it here, and its ball bumps nobody
+            GameObject model = (GameObject)Reflect.GetField(driving.Sphere.GetComponent<Respawn>(), "modelParent");
+            SphereCollider ball = driving.Sphere.GetComponent<SphereCollider>();
+            Assert.IsTrue(model.activeInHierarchy && ball.enabled, "shown and solid before");
+            driving.ShowRemote(new DriveFlags(false, false, false, 0, false, false, true), 0f);
+            Assert.IsFalse(model.activeInHierarchy, "hidden");
+            Assert.IsFalse(ball.enabled, "no ball to bump into");
+
+            // It rises from its grave
+            driving.ShowRemote(new DriveFlags(0), 0f);
+            Assert.IsTrue(model.activeInHierarchy, "shown again");
+            Assert.IsTrue(ball.enabled, "solid again");
 
             log.Dispose();
             Assert.IsEmpty(log.Problems, "Errors:\n\n" + string.Join("\n\n", log.Problems));

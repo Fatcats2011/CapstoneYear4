@@ -1,10 +1,11 @@
 using NUnit.Framework;
+using UnityEngine;
 
 namespace DoA.Tests
 {
     /// <summary>
     /// What a scooter is doing, in one byte: each flag and the drift tier come back out as they went in, and a scooter
-    /// driven here reports its own state. EditMode
+    /// driven here reports its own state, including a rider hidden for a respawn. EditMode
     /// </summary>
     public class DriveFlagsTests
     {
@@ -24,6 +25,7 @@ namespace DoA.Tests
             Assert.IsTrue(new DriveFlags(false, false, true, 0, false, false).DriftRight, "drifting right");
             Assert.IsTrue(new DriveFlags(false, false, false, 0, true, false).Grounded, "on the ground");
             Assert.IsTrue(new DriveFlags(false, false, false, 0, false, true).Phasing, "phasing");
+            Assert.IsTrue(new DriveFlags(false, false, false, 0, false, false, true).Hidden, "hidden");
             Assert.AreEqual(0, new DriveFlags(false, false, false, 0, false, false).Value, "nothing set");
         }
 
@@ -33,21 +35,21 @@ namespace DoA.Tests
         [TestCase(3)]
         public void TheDriftTier_ComesBackOut_BesideTheOtherFlags(int tier)
         {
-            DriveFlags flags = new DriveFlags(true, true, true, tier, true, true);
+            DriveFlags flags = new DriveFlags(true, true, true, tier, true, true, true);
 
             Assert.AreEqual(tier, flags.DriftTier);
-            Assert.IsTrue(flags.Boosting && flags.Drifting && flags.DriftRight && flags.Grounded && flags.Phasing);
+            Assert.IsTrue(flags.Boosting && flags.Drifting && flags.DriftRight && flags.Grounded && flags.Phasing && flags.Hidden);
         }
 
         [Test]
         public void TheByte_ComesBackTheSame_OnAnotherMachine()
         {
-            DriveFlags sent = new DriveFlags(false, true, true, 2, true, false);
+            DriveFlags sent = new DriveFlags(false, true, true, 2, true, false, true);
             DriveFlags received = new DriveFlags(sent.Value);
 
             Assert.AreEqual(sent.Value, received.Value);
             Assert.AreEqual(2, received.DriftTier);
-            Assert.IsTrue(received.Drifting && received.DriftRight && received.Grounded);
+            Assert.IsTrue(received.Drifting && received.DriftRight && received.Grounded && received.Hidden);
             Assert.IsFalse(received.Boosting || received.Phasing);
         }
 
@@ -71,7 +73,25 @@ namespace DoA.Tests
 
             Assert.IsTrue(flags.Drifting && flags.DriftRight && flags.Grounded, "a tier-2 drift to the right, on the ground");
             Assert.AreEqual(2, flags.DriftTier);
-            Assert.IsFalse(flags.Boosting || flags.Phasing);
+            Assert.IsFalse(flags.Boosting || flags.Phasing || flags.Hidden);
+        }
+
+        [Test]
+        public void AScooterRespawningHere_ReportsItsRiderHidden_UntilItShowsAgain()
+        {
+            BallDriving driving = objects.Add<BallDriving>();
+            Respawn respawn = objects.Add<Respawn>();
+            GameObject rider = objects.NewGameObject("SubBasket");
+            Reflect.SetField(respawn, "modelParent", rider);
+            Reflect.SetField(driving, "respawn", respawn);
+
+            Assert.IsFalse(driving.Flags.Hidden, "its rider shows");
+
+            rider.SetActive(false); // fell in the water: only its wisp shows while it flies to the casket
+            Assert.IsTrue(driving.Flags.Hidden, "hidden");
+
+            rider.SetActive(true); // it rises from its grave
+            Assert.IsFalse(driving.Flags.Hidden, "shown again");
         }
     }
 }

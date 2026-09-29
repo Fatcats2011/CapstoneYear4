@@ -332,7 +332,11 @@ public class PlayerInstantiate : SingletonMonobehaviour<PlayerInstantiate>
 
         //Enabled text for fillslot text based on player's removed position
         if (position >= 0)
+        {
             PlayerSelectCanvas.Instance.TogglePressButtonTexts(position, true);
+            // A slot that empties isn't ready
+            playerReadyUp[position] = false;
+        }
 
         ScoreManager.Instance.UpdateOrderHandlers(roster);
         
@@ -454,6 +458,16 @@ public class PlayerInstantiate : SingletonMonobehaviour<PlayerInstantiate>
         playerReadyUp[playerIndexToReadyUp] = false;
         roster[playerIndexToReadyUp].Input.GetComponent<PlayerUIHandler>().customizationSelector.SetDisableOptionsCustomization(false);
         StopReadyUpCountdown();
+    }
+
+    ///<summary>
+    /// Online: the session ended. This machine's players stop being ready (their menus show it), so no countdown runs
+    /// and they ready up again to start one
+    ///</summary>
+    public void UnreadyLocalPlayers()
+    {
+        foreach (PlayerSlot slot in roster.LocalPlayers)
+            slot.Input.GetComponent<PlayerUIHandler>().menuInteractions.PlayerUnready();
     }
 
     ///<summary>

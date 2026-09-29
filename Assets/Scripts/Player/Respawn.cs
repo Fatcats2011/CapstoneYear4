@@ -80,6 +80,9 @@ public class Respawn : MonoBehaviour
     private bool isRespawning;
     public bool IsRespawning { get { return isRespawning; } }
 
+    /// <summary>Whether the rider is hidden: from falling in the water until it rises from its grave (its wisp shows)</summary>
+    public bool RiderHidden { get { return modelParent != null && !modelParent.activeSelf; } }
+
     private Rigidbody rb;
     private SphereCollider sc;
 
@@ -210,6 +213,19 @@ public class Respawn : MonoBehaviour
         rsp.InitPoint();
 
         StopRespawnCoroutine();
+    }
+
+    /// <summary>
+    /// Another machine's scooter (this script is off there): hidden while its owner's rider is, with its ball's collider
+    /// off so it bumps nobody. It shows again when its owner's does
+    /// </summary>
+    public void ShowRemote(bool hidden)
+    {
+        if (modelParent.activeSelf != hidden)
+            return;
+
+        modelParent.SetActive(!hidden);
+        GetComponent<SphereCollider>().enabled = !hidden;
     }
 
     private void OnTriggerEnter(Collider other)

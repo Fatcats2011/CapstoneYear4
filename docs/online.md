@@ -36,6 +36,7 @@ Online multiplayer is being built in steps (roadmap Phase 3: `docs/superpowers/p
   - **Network objects.** The host spawns two kinds of small network objects: `OnlineMatch` (its game state, sent one state at a time and in order) and an `OnlinePlayer` per machine (seat, colour, hat, ready).
     - The prefabs are in `Assets/Prefabs/Online/`, listed in `Assets/Resources/Online/OnlinePrefabs.asset`.
     - Netcode also lists them in `Assets/DefaultNetworkPrefabs.asset`.
+    - Each prefab file saves its Netcode id, and a build uses the saved one. After a script builds or changes an online prefab, use **Tools → Dead on Arrival → Online → Save Network Prefab IDs** (`NetworkPrefabIds`). `OnlinePrefabsTests` checks the saved ids.
   - **`OnlineGame`** is the game's side of a session:
     - It sets `GameAuthority.Role` and the scene flow (`OnlineSceneFlow`).
     - It seats this machine's player, and shows other machines' players.
@@ -52,7 +53,8 @@ Online multiplayer is being built in steps (roadmap Phase 3: `docs/superpowers/p
   - Once every machine has it (or has left), the host shows it everywhere, and the match starts together.
   - The golden round's scene loads the same way.
 - **Each machine drives its own scooter.** Every other machine shows it where its owner has it, with its boost trail, skid marks, drift sparks and rider.
-  - A scooter that spawns or respawns far away appears there at once. It doesn't slide across the map.
+  - A scooter that spawns far away appears there at once. It doesn't slide across the map.
+  - A scooter that falls in the water disappears on other machines, and bumps nobody there, until it rises from its grave where its machine shows it.
   - Until its machine sends a first position, it stays where it was (its podium).
 - **The host runs the match:** its states (cutscenes, waves, results) and its match clock reach every machine.
   - Online there's no tutorial yet. It teaches orders, which aren't shared between machines yet. The players start in the city instead, on the spawn manager's city start points (`TutorialManager.IsSkipped`).
@@ -68,10 +70,10 @@ Online multiplayer is being built in steps (roadmap Phase 3: `docs/superpowers/p
     - Netcode's own scene management stays off.
   - **`OnlineScooter`:** one per machine, beside its `OnlinePlayer`.
     - Two proxies carry its pose, each moved by its owner through an `OwnerNetworkTransform`: the ball, and the model's world pose (slope, lean, drift, hop and wheelie).
-    - `DriveFlags` say what it's doing.
+    - `DriveFlags` say what it's doing, including a rider hidden for a respawn (`Respawn.RiderHidden`). While it's hidden, every move jumps.
     - The proxies wait parked 10 km below the map until the first pose.
   - **`OnlineDriving`** (added by `OnlineGame`) runs every frame: it sends this machine's scooter out, and shows the others on their `RemoteAvatar` (`ScooterPose`, `BallDriving.ShowRemote`).
-  - **The match clock** is the host's end time, in Netcode's server time (`MatchClock`, on `OnlineMatch`).
+  - **The match clock** is the host's end time, in Netcode's server time (`MatchClock`, on `OnlineMatch`). With no waves running (the menu, after a match) the host shares a stopped clock.
   - **Another machine's scooter doesn't act on this machine** (`RemoteAvatar.IsRemote`): no water, orders, steals, clashes or end-of-game freeze here. Its own machine does those.
 
 ## Two editors on one computer (ParrelSync)
@@ -110,9 +112,9 @@ Online multiplayer is being built in steps (roadmap Phase 3: `docs/superpowers/p
   - The results count only the host's deliveries.
   - The golden round ends when the host delivers the golden order.
 - There's no tutorial online (it teaches orders): players start in the city.
-- **Other machines' scooters are silent**, and a respawn shows as a jump without the ghost animation (roadmap Tasks 3.6–3.7).
+- **Other machines' scooters are silent**, and a respawn shows no wisp: the scooter is gone until it rises from its grave (roadmap Tasks 3.6–3.7).
 - When the main game ends, only the host's scooter stops; the others keep driving until the golden round loads.
 - If the host leaves mid-match, clients stay where they are, offline (roadmap Task 3.8).
 - An empty seat still says "press A to join" on every machine, though only a machine's first controller can take a seat online.
-- When the host leaves, clients stay in player select with their own player. Going back to the menu with the message is roadmap Task 3.8.
+- When the host leaves, clients stay in player select with their own player, not ready: no countdown starts, and a running one stops. They ready up again to start one. Going back to the menu with the message is roadmap Task 3.8.
 - There's no "Play Online" in the game's menus yet: the Online menu above is the way in (roadmap Task 3.2).

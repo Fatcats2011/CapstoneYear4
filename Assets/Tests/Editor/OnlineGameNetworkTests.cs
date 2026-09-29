@@ -172,6 +172,40 @@ namespace DoA.Tests
         }
 
         [UnityTest]
+        public IEnumerator Hosting_WithNoWaves_SharesAStoppedClock()
+        {
+            EditorSceneManager.playModeStartScene = AssetDatabase.LoadAssetAtPath<SceneAsset>(MENU_SCENE);
+            yield return new EnterPlayMode();
+            LogAssert.ignoreFailingMessages = true;
+            LogCollector log = new LogCollector();
+            float deadline = Time.realtimeSinceStartup + 60;
+            while (!AtTitleScreen() && Time.realtimeSinceStartup < deadline)
+                yield return null;
+
+            OnlineSession host = OnlineSession.Create(VERSION);
+            OnlineGame.Attach(host);
+            Assert.IsTrue(host.HostDirect(THIS_COMPUTER, PORT), "hosting");
+            deadline = Time.realtimeSinceStartup + WAIT;
+            while (host.Match == null && Time.realtimeSinceStartup < deadline)
+                yield return null;
+            Assert.IsNotNull(host.Match);
+            Assert.IsNull(OrderManager.Instance, "no waves in the menu");
+
+            // A match ended by pause -> Main Menu leaves the old clock running on the host
+            host.Match.ShareClock(host.Network.ServerTime.Time + 100, true, true);
+            deadline = Time.realtimeSinceStartup + WAIT;
+            while ((host.Match.ClockStarted || host.Match.FinalOrder) && Time.realtimeSinceStartup < deadline)
+                yield return null;
+            Assert.IsFalse(host.Match.ClockStarted, "the host shares a stopped clock");
+            Assert.IsFalse(host.Match.FinalOrder, "and no final order");
+
+            host.Leave();
+            yield return null;
+            log.Dispose();
+            Assert.IsEmpty(log.Problems, "Errors:\n\n" + string.Join("\n\n", log.Problems));
+        }
+
+        [UnityTest]
         public IEnumerator Joining_ThisMachinesPlayer_MovesToItsSeat_AndFollowsTheHost()
         {
             EditorSceneManager.playModeStartScene = AssetDatabase.LoadAssetAtPath<SceneAsset>(MENU_SCENE);
@@ -318,6 +352,155 @@ namespace DoA.Tests
                 yield return null;
             host.Leave();
             yield return null;
+
+            log.Dispose();
+            Assert.IsEmpty(log.Problems, "Errors:\n\n" + string.Join("\n\n", log.Problems));
+        }
+
+        // Set by JoinPlayerSelectReady
+        static OnlineSession sessionHost;
+        static OnlineSession sessionMine;
+        static Gamepad sessionPad;
+
+        static bool CountingDown()
+        {
+            return Reflect.GetField(PlayerInstantiate.Instance, "readyUpCountdown") != null;
+        }
+
+        // The host (another machine) is in player select and this machine has joined and readied up. With hostReady the host
+        // is ready too, so this machine's ready starts the countdown
+        static IEnumerator JoinPlayerSelectReady(bool hostReady)
+        {
+            float deadline = Time.realtimeSinceStartup + 60;
+            while (!AtTitleScreen() && Time.realtimeSinceStartup < deadline)
+                yield return null;
+            PlayerInstantiate players = PlayerInstantiate.Instance;
+            sessionPad = TestPlayers.Add();
+            deadline = Time.realtimeSinceStartup + 10;
+            while (players.PlayerCount < 1 && Time.realtimeSinceStartup < deadline)
+                yield return null;
+
+            sessionHost = OnlineSession.Create(VERSION);
+            sessionHost.HostDirect(THIS_COMPUTER, PORT);
+            sessionHost.Match.SendState(GameState.PlayerSelect);
+            sessionMine = OnlineSession.Create(VERSION);
+            OnlineGame.Attach(sessionMine);
+            sessionMine.JoinDirect(THIS_COMPUTER, PORT);
+            deadline = Time.realtimeSinceStartup + WAIT;
+            while (!(Slot(1) != null && Slot(1).IsLocal && Slot(0) != null && GameManager.Instance.MainState == GameState.PlayerSelect)
+                && Time.realtimeSinceStartup < deadline)
+                yield return null;
+            Assert.IsTrue(Slot(1) != null && Slot(1).IsLocal && Slot(0) != null, "this machine's player and the host's are seated");
+            Assert.AreEqual(GameState.PlayerSelect, GameManager.Instance.MainState);
+
+            if (hostReady)
+            {
+                PlayerInSeat(sessionHost, 0).Share(0, 0, true);
+                deadline = Time.realtimeSinceStartup + WAIT;
+                while (!players.IsReady(0) && Time.realtimeSinceStartup < deadline)
+                    yield return null;
+                Assert.IsTrue(players.IsReady(0), "the host's ready counts here");
+            }
+
+            OnlinePlayer onHost = PlayerInSeat(sessionHost, 1);
+            deadline = Time.realtimeSinceStartup + WAIT;
+            float nextPress = 0;
+            while (!onHost.Ready && Time.realtimeSinceStartup < deadline)
+            {
+                if (Time.realtimeSinceStartup >= nextPress)
+                {
+                    PressA(sessionPad);
+                    nextPress = Time.realtimeSinceStartup + 0.5f;
+                }
+                yield return null;
+            }
+            Assert.IsTrue(onHost.Ready, "A readies this machine's player up");
+        }
+
+        // The session ends on this machine, then the other end closes (one side at a time: see above)
+        static IEnumerator LeaveSession(LogCollector log)
+        {
+            log.MachinesLeave();
+            sessionMine.Leave();
+            yield return null;
+            float deadline = Time.realtimeSinceStartup + WAIT;
+            while (sessionHost.PlayersIn > 1 && Time.realtimeSinceStartup < deadline)
+                yield return null;
+            sessionHost.Leave();
+        }
+
+        static IEnumerator WaitSeconds(float seconds)
+        {
+            for (float until = Time.realtimeSinceStartup + seconds; Time.realtimeSinceStartup < until;)
+                yield return null;
+        }
+
+        // Ready up again with the controller (menus ignore buttons for a moment, so keep pressing) until the countdown runs
+        static IEnumerator ReadyUpAgain()
+        {
+            float deadline = Time.realtimeSinceStartup + WAIT;
+            float nextPress = 0;
+            while (!CountingDown() && Time.realtimeSinceStartup < deadline)
+            {
+                if (Time.realtimeSinceStartup >= nextPress)
+                {
+                    PressA(sessionPad);
+                    nextPress = Time.realtimeSinceStartup + 0.5f;
+                }
+                yield return null;
+            }
+        }
+
+        [UnityTest]
+        public IEnumerator TheSessionEnding_InPlayerSelect_StartsNoCountdown_ForAReadyPlayer()
+        {
+            EditorSceneManager.playModeStartScene = AssetDatabase.LoadAssetAtPath<SceneAsset>(MENU_SCENE);
+            yield return new EnterPlayMode();
+            LogAssert.ignoreFailingMessages = true;
+            LogCollector log = new LogCollector();
+            yield return JoinPlayerSelectReady(false);
+            PlayerInstantiate players = PlayerInstantiate.Instance;
+            Assert.IsFalse(CountingDown(), "the host isn't ready yet");
+
+            // The host leaves: their scooter goes, and this machine's ready player is alone
+            yield return LeaveSession(log);
+            Assert.IsNull(Slot(0), "the host's scooter went with the session");
+            yield return WaitSeconds(3.6f);
+
+            Assert.IsFalse(CountingDown(), "no countdown");
+            Assert.AreEqual(GameState.PlayerSelect, GameManager.Instance.MainState, "still in player select, no offline match");
+            Assert.IsTrue(Slot(1) != null && Slot(1).IsLocal, "this machine's player stays");
+            Assert.IsFalse(players.IsReady(1), "and isn't ready any more");
+            Assert.IsFalse(((GameObject)Reflect.GetField(Slot(1).Input.GetComponent<PlayerUIHandler>().menuInteractions, "readyUpText")).activeSelf,
+                "the ready text is off too");
+
+            // Ready up again: the countdown starts as usual
+            yield return ReadyUpAgain();
+            Assert.IsTrue(CountingDown(), "readying up again starts the countdown");
+            Assert.IsTrue(players.IsReady(1));
+
+            log.Dispose();
+            Assert.IsEmpty(log.Problems, "Errors:\n\n" + string.Join("\n\n", log.Problems));
+        }
+
+        [UnityTest]
+        public IEnumerator TheSessionEnding_DuringTheCountdown_StopsIt()
+        {
+            EditorSceneManager.playModeStartScene = AssetDatabase.LoadAssetAtPath<SceneAsset>(MENU_SCENE);
+            yield return new EnterPlayMode();
+            LogAssert.ignoreFailingMessages = true;
+            LogCollector log = new LogCollector();
+            yield return JoinPlayerSelectReady(true);
+            PlayerInstantiate players = PlayerInstantiate.Instance;
+            Assert.IsTrue(CountingDown(), "everyone's ready: counting down");
+
+            yield return LeaveSession(log);
+            yield return WaitSeconds(3.6f);
+
+            Assert.IsFalse(CountingDown(), "the countdown stopped");
+            Assert.AreEqual(GameState.PlayerSelect, GameManager.Instance.MainState, "still in player select, no offline match");
+            Assert.IsTrue(Slot(1) != null && Slot(1).IsLocal, "this machine's player stays");
+            Assert.IsFalse(players.IsReady(1), "and isn't ready any more");
 
             log.Dispose();
             Assert.IsEmpty(log.Problems, "Errors:\n\n" + string.Join("\n\n", log.Problems));

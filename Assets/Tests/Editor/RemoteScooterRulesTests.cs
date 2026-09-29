@@ -6,7 +6,8 @@ namespace DoA.Tests
     /// <summary>
     /// Online, another machine's scooter (a RemoteAvatar) doesn't act on this machine until orders and steals are shared
     /// (roadmap Tasks 3.5-3.6): it doesn't fall in water here, collect orders, steal, clash, or freeze when the main game
-    /// ends. Its own machine does all that. EditMode: the scripts' messages are called directly on bare scooters
+    /// ends. Its own machine does all that. While its owner's rider is hidden for a respawn, it's hidden here too and
+    /// bumps nobody. EditMode: the scripts' messages are called directly on bare scooters
     /// </summary>
     public class RemoteScooterRulesTests
     {
@@ -68,6 +69,25 @@ namespace DoA.Tests
             Reflect.Invoke(respawn, "OnTriggerEnter", waterCollider);
 
             Assert.IsFalse(respawn.IsRespawning, "its own machine respawns it");
+        }
+
+        [Test]
+        public void AnotherMachinesScooter_HiddenForARespawn_ShowsNoRiderAndBumpsNobody()
+        {
+            GameObject remote = Scooter(true);
+            Respawn respawn = remote.GetComponentInChildren<Respawn>();
+            SphereCollider ball = remote.GetComponentInChildren<SphereCollider>();
+            GameObject rider = new GameObject("SubBasket");
+            rider.transform.SetParent(remote.transform);
+            Reflect.SetField(respawn, "modelParent", rider);
+
+            respawn.ShowRemote(true);
+            Assert.IsFalse(rider.activeSelf, "no rider while its owner's is hidden");
+            Assert.IsFalse(ball.enabled, "its ball bumps nobody");
+
+            respawn.ShowRemote(false);
+            Assert.IsTrue(rider.activeSelf, "its rider shows again");
+            Assert.IsTrue(ball.enabled, "and its ball is solid again");
         }
 
         [Test]

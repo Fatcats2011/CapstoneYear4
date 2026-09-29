@@ -9,7 +9,8 @@ namespace DoA.Tests
     /// <summary>
     /// Every machine's scooter on every machine (OnlineScooter), with hosts and clients on this computer (127.0.0.1) in one
     /// empty Play Mode scene. The host spawns one per machine in its seat, parked until its owner shares a pose. A pose
-    /// and the flags reach the other machines, only from the owner. A long move jumps. A scooter goes with its machine.
+    /// and the flags reach the other machines, only from the owner. A long move jumps, and so does any move while the
+    /// scooter is hidden (a respawn). A scooter goes with its machine.
     /// A few seconds each. Each test enters Play Mode itself (never from a helper: the domain reloads there). No lambda
     /// here captures a local: after EnterPlayMode even assigning a captured local throws
     /// </summary>
@@ -181,6 +182,62 @@ namespace DoA.Tests
 
             Assert.Less(Vector3.Distance(there, onHost.Pose.Ball), 0.05f, "it got there");
             Assert.Less(worst, 1f, "a jump: never shown in between");
+
+            LogCollector log = new LogCollector();
+            log.MachinesLeave(); // Windows may report a leaving machine's closed port: see LogCollector.CLOSED_PORT
+            client.Leave();
+            deadline = Time.realtimeSinceStartup + WAIT;
+            while (host.PlayersIn > 1 && Time.realtimeSinceStartup < deadline)
+                yield return null;
+            host.Leave();
+            yield return null;
+            log.Dispose();
+            Assert.IsEmpty(log.Problems, "Errors while machines left:\n\n" + string.Join("\n\n", log.Problems));
+        }
+
+        [UnityTest]
+        public IEnumerator AHiddenScootersMoves_Jump_EvenShortOnes()
+        {
+            EditorSceneManager.playModeStartScene = null;
+            EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
+            yield return new EnterPlayMode();
+            OnlineSession host = OnlineSession.Create("1.0.0");
+            host.HostDirect(THIS_COMPUTER, PORT);
+            OnlineSession client = OnlineSession.Create("1.0.0");
+            client.JoinDirect(THIS_COMPUTER, PORT);
+            float deadline = Time.realtimeSinceStartup + WAIT;
+            while (!BothSeeBothScooters(host, client) && Time.realtimeSinceStartup < deadline)
+                yield return null;
+            OnlineScooter mine = ScooterInSeat(client, 1);
+            OnlineScooter onHost = ScooterInSeat(host, 1);
+            DriveFlags hidden = new DriveFlags(false, false, false, 0, false, false, true);
+            Vector3 here = new Vector3(0, 2, 0);
+            Vector3 there = new Vector3(5, 2, 0);
+
+            deadline = Time.realtimeSinceStartup + WAIT;
+            while (!(onHost.HasPose && Vector3.Distance(here, onHost.Pose.Ball) < 0.05f && onHost.Flags.Hidden)
+                && Time.realtimeSinceStartup < deadline)
+            {
+                mine.Share(PoseAt(here, 0f), hidden);
+                yield return null;
+            }
+            Assert.Less(Vector3.Distance(here, onHost.Pose.Ball), 0.05f, "at the first spot");
+            Assert.IsTrue(onHost.Flags.Hidden, "hidden, as its rider is while its wisp flies");
+
+            // 5 m, under the teleport distance: while it's hidden it still jumps, so it's where its owner has it when it
+            // shows again
+            float worst = 0f;
+            deadline = Time.realtimeSinceStartup + WAIT;
+            while (Vector3.Distance(there, onHost.Pose.Ball) > 0.05f && Time.realtimeSinceStartup < deadline)
+            {
+                mine.Share(PoseAt(there, 0f), hidden);
+                yield return null;
+                Vector3 shown = onHost.Pose.Ball;
+                worst = Mathf.Max(worst, Mathf.Min(Vector3.Distance(shown, here), Vector3.Distance(shown, there)));
+            }
+
+            Assert.Less(Vector3.Distance(there, onHost.Pose.Ball), 0.05f, "it got there");
+            Assert.Less(worst, 0.5f, "a jump: never shown in between");
 
             LogCollector log = new LogCollector();
             log.MachinesLeave(); // Windows may report a leaving machine's closed port: see LogCollector.CLOSED_PORT

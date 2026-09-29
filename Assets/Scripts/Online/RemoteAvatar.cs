@@ -3,8 +3,8 @@ using UnityEngine;
 /// <summary>
 /// Another machine's player on this machine: their scooter (PlayerAvatar.prefab) with no view: no cameras, menus or
 /// controller. What only the player's own machine runs is off: controls and physics (BallDriving; the ball is
-/// kinematic), falling in water (Respawn) and the horn gauge (PhaseIndicator, whose sliders live in a view). It stays
-/// where the online game puts it, dressed as the player. See docs/online.md
+/// kinematic), falling in water (Respawn), the horn gauge (PhaseIndicator, whose sliders live in a view) and its sounds
+/// (SoundPool). It stays where the online game puts it, dressed as the player. See docs/online.md
 /// </summary>
 public class RemoteAvatar : MonoBehaviour
 {
@@ -45,6 +45,9 @@ public class RemoteAvatar : MonoBehaviour
             respawn.enabled = false;
         foreach (PhaseIndicator horns in GetComponentsInChildren<PhaseIndicator>(true))
             horns.enabled = false;
+        // Off before it's ever active, so it never listens to the game's states and starts an engine hum
+        foreach (SoundPool sounds in GetComponentsInChildren<SoundPool>(true))
+            sounds.enabled = false;
 
         Rigidbody ball = Driving.Sphere.GetComponent<Rigidbody>();
         ball.isKinematic = true;

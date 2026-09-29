@@ -337,12 +337,13 @@ public class BallDriving : MonoBehaviour
     /// </summary>
     public DriveFlags Flags
     {
-        get { return new DriveFlags(boosting, drifting, driftDirection > 0, driftTier, grounded, phasing); }
+        get { return new DriveFlags(boosting, drifting, driftDirection > 0, driftTier, grounded, phasing, respawn != null && respawn.RiderHidden); }
     }
 
     /// <summary>
     /// Another machine's scooter (this script is off there, and drives nothing): shows what its owner's scooter is doing,
-    /// so its boost trail, skid marks, drift sparks and rider behave as for a scooter driven here
+    /// so its boost trail, skid marks, drift sparks and rider behave as for a scooter driven here. It's hidden while its
+    /// owner's rider is (a respawn)
     /// </summary>
     /// <param name="flags">What the owner's scooter is doing</param>
     /// <param name="speed">How fast it's going, in m/s</param>
@@ -368,7 +369,13 @@ public class BallDriving : MonoBehaviour
         if (boostStarts)
             OnBoostStart?.Invoke();
 
-        playerAnimator.SetFloat(HashReference._speedFloat, RangeMutations.Map_Linear(speed, 0, 30, 0, 10));
+        // Hidden while its owner's rider is (a respawn), and not in anyone's way
+        if (respawn == null)
+            respawn = sphere.GetComponent<Respawn>();
+        respawn.ShowRemote(flags.Hidden);
+
+        if (playerAnimator.isActiveAndEnabled)
+            playerAnimator.SetFloat(HashReference._speedFloat, RangeMutations.Map_Linear(speed, 0, 30, 0, 10));
     }
 
     /// <summary>

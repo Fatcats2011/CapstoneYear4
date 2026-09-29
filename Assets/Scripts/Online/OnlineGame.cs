@@ -131,6 +131,10 @@ public class OnlineGame : MonoBehaviour
         sceneFlow.Unlink();
         held.Clear();
         PlayerInstantiate players = PlayerInstantiate.Instance;
+        // Player select doesn't count down to an offline match nobody chose: this machine's players unready first, which
+        // also stops a countdown that's running. Removing the others then starts none
+        if (players != null && GameManager.Instance != null && GameManager.Instance.MainState == GameState.PlayerSelect)
+            players.UnreadyLocalPlayers();
         foreach (RemotePlayer remote in remotes.Values)
         {
             if (players != null)
@@ -316,8 +320,16 @@ public class OnlineGame : MonoBehaviour
     {
         OnlineMatch match = session.Match;
         OrderManager orders = OrderManager.Instance;
-        if (match == null || orders == null || !session.IsRunning)
+        if (match == null || !session.IsRunning)
             return;
+
+        // No waves (in the menu, after a match): the host shares a stopped clock, so a client never follows an old one
+        if (orders == null)
+        {
+            if (match.IsServer && (match.ClockStarted || match.FinalOrder))
+                match.ShareClock(0, false, false);
+            return;
+        }
 
         double now = session.Network.ServerTime.Time;
         if (match.IsServer)

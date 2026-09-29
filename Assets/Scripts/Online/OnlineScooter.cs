@@ -82,8 +82,9 @@ public class OnlineScooter : NetworkBehaviour
     }
 
     /// <summary>
-    /// This machine's scooter: shares its pose and what it's doing with every machine. The first pose, and a long move (a
-    /// spawn point, a respawn), jump. Does nothing for another machine's scooter
+    /// This machine's scooter: shares its pose and what it's doing with every machine. The first pose, a long move (a
+    /// spawn point, a respawn) and any move while it's hidden (its wisp flying to its grave) jump, so it shows again
+    /// where its owner has it. Does nothing for another machine's scooter
     /// </summary>
     public void Share(ScooterPose pose, DriveFlags driveFlags)
     {
@@ -91,7 +92,7 @@ public class OnlineScooter : NetworkBehaviour
             return;
 
         Quaternion heading = Quaternion.Euler(0, pose.Heading, 0);
-        if (!HasPose || Vector3.Distance(ball.position, pose.Ball) > TELEPORT_DISTANCE)
+        if (!HasPose || driveFlags.Hidden || Vector3.Distance(ball.position, pose.Ball) > TELEPORT_DISTANCE)
         {
             ballSync.Teleport(pose.Ball, heading, Vector3.one);
             modelSync.Teleport(pose.ModelPosition, pose.ModelRotation, Vector3.one);

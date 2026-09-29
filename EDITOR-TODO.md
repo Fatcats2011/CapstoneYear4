@@ -1,24 +1,37 @@
 # Editor to-do (master list)
 
-Things only you can do in the Unity editor, top to bottom. Updated 2026-09-28 (online start fixes).
+Things only you can do in the Unity editor, top to bottom. Updated 2026-09-28 (code review fixes).
 
 ## 1. Let both editors import the fixes (1 minute)
 
 - Click into the **main editor**, then into the **ParrelSync clone**. Scripts only, no scene or prefab changes:
-  - `SpawnManager`, `TutorialManager`, `PlayerInstantiate`.
-  - Tests: `SpawnManagerTests`, `OnlineMatchNetworkTests`, and the new `GameSceneSpawnTests`.
+  - `OnlineGame`, `PlayerInstantiate`, `RemoteAvatar`, `Respawn`, `BallDriving`, `DriveFlags`, `OnlineScooter`, `OnlineDriving`.
+  - New editor command: `NetworkPrefabIds` (step 2).
+  - Tests: `OnlinePrefabsTests`, `RemoteAvatarTests`, `OnlineGameNetworkTests`, `OnlineSeatTests`, `DriveFlagsTests`, `RemoteDrivingTests`, `RemoteScooterRulesTests`, `OnlineScootersNetworkTests`.
 - The Console should end with no red errors.
 
-## 2. Check the start of an online match (5 minutes)
+## 2. Save the online prefabs' network IDs (1 minute, main editor only)
 
-- Start a two-editor match as before: **Play** in both, **Host** in editor 1, **Join This Computer** in editor 2, ready up in both.
-- After the opening cutscene, both players start **in the city**, side by side (the four *Normal Positions* under *Spawning Manager*), not on the tutorial road.
-  - Each editor shows the other's scooter beside its own.
-- Optional: go back to the menu, ready up again, and pick **Online → Leave** in editor 2 while the loading screen shows. Editor 1's match still starts, with its player in the city.
-- Offline split screen is unchanged: the tutorial still plays, from the tutorial road.
+- In the **main editor**, not in Play Mode: **Tools → Dead on Arrival → Online → Save Network Prefab IDs**.
+- `git status` then shows 3 changed prefabs in `Assets/Prefabs/Online/`: `OnlineMatch`, `OnlinePlayer`, `OnlineScooter`.
+  - Each has one changed line, `GlobalObjectIdHash`.
+- Why: `OnlineMatch` and `OnlinePlayer` saved the same placeholder ID, which could break online play in a build. The editor hid it.
+- Until you do this, `OnlinePrefabsTests.SavedPrefabIds_AreUnique_AndMatchTheIdNetcodeComputes` fails on purpose. It's the only red test.
+
+## 3. Check the fixes in two editors (10 minutes)
+
+- **Host leaves in player select:**
+  - **Play** in both, **Host** in editor 1, **Join This Computer** in editor 2.
+  - Ready up in editor 2 only, then **Online → Leave** in editor 1.
+  - Editor 2 stays in player select, **not ready**, and no countdown starts. Before the fix it started a solo match.
+- **Respawn:**
+  - Host and join again, ready up in both, start the match.
+  - In editor 2, drive into the water (or press **R**).
+  - In editor 1, editor 2's scooter vanishes at once: no ghost sitting in the water, no sliding across the map. It reappears rising from its grave.
+- Offline split screen is unchanged: water respawns and the ready countdown work as before.
 - Anything odd? Note it, plus both editors' Console lines starting `Online:`.
 
-## 3. Review and commit (your call)
+## 4. Review and commit (your call)
 
-- Not committed: working-tree changes on `steam-phase1a`, on top of your Phase 3C commit.
+- Not committed: the code review fixes on `steam-phase1a`, on top of your "Online Support" commit.
 - How it works: `docs/online.md`.
