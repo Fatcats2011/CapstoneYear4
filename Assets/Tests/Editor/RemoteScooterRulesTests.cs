@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using NUnit.Framework;
 using UnityEngine;
+using UnityEngine.VFX;
 
 namespace DoA.Tests
 {
@@ -107,14 +108,47 @@ namespace DoA.Tests
             GameObject rider = new GameObject("SubBasket");
             rider.transform.SetParent(remote.transform);
             Reflect.SetField(respawn, "modelParent", rider);
+            // Its wisp, off with no trail, as Respawn.Awake leaves it (Awake doesn't run in EditMode)
+            GameObject wispObject = new GameObject("DeathWisp");
+            wispObject.transform.SetParent(respawn.transform);
+            VisualEffect wisp = wispObject.AddComponent<VisualEffect>();
+            TrailRenderer trail = new GameObject("Trail").AddComponent<TrailRenderer>();
+            trail.transform.SetParent(wispObject.transform);
+            wisp.enabled = false;
+            trail.time = 0f;
+            Reflect.SetField(respawn, "deathWisp", wisp);
+            Reflect.SetField(respawn, "wispTrail", trail);
 
             respawn.ShowRemote(true);
             Assert.IsFalse(rider.activeSelf, "no rider while its owner's is hidden");
             Assert.IsFalse(ball.enabled, "its ball bumps nobody");
+            Assert.IsTrue(wisp.enabled, "its wisp shows while its owner's does");
+            Assert.Greater(trail.time, 0f, "with its trail");
 
             respawn.ShowRemote(false);
             Assert.IsTrue(rider.activeSelf, "its rider shows again");
             Assert.IsTrue(ball.enabled, "and its ball is solid again");
+            Assert.IsFalse(wisp.enabled, "its wisp is gone when the rider shows");
+            Assert.AreEqual(0f, trail.time, "and so is its trail");
+        }
+
+        [Test]
+        public void AnotherMachinesScooter_BumpingSomethingHere_KeepsItsOwnersDrift()
+        {
+            GameObject remote = Scooter(true);
+            BallDriving driving = remote.GetComponentInChildren<BallDriving>();
+            Respawn respawn = remote.GetComponentInChildren<Respawn>();
+            Reflect.SetField(driving, "currentVelocity", 20f);
+            Reflect.SetField(driving, "drifting", true);
+            Reflect.SetField(driving, "respawn", respawn);
+            BallCollision bump = respawn.gameObject.AddComponent<BallCollision>();
+            Reflect.SetField(bump, "control", driving);
+            BoxCollider post = objects.NewGameObject("Lamp post").AddComponent<BoxCollider>();
+            post.isTrigger = true;
+
+            Reflect.Invoke(bump, "OnTriggerEnter", post);
+
+            Assert.IsTrue(driving.Drifting, "its own machine drops its drift");
         }
 
         [Test]

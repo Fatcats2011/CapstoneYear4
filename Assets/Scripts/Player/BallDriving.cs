@@ -343,13 +343,16 @@ public class BallDriving : MonoBehaviour
     /// <summary>
     /// Another machine's scooter (this script is off there, and drives nothing): shows what its owner's scooter is doing,
     /// so its boost trail, skid marks, drift sparks and rider behave as for a scooter driven here. It's hidden while its
-    /// owner's rider is (a respawn)
+    /// owner's rider is (a respawn). This machine's pedestrians, cans and slipstream feel it at its speed
     /// </summary>
     /// <param name="flags">What the owner's scooter is doing</param>
     /// <param name="speed">How fast it's going, in m/s</param>
     public void ShowRemote(DriveFlags flags, float speed)
     {
         FindSparks();
+
+        // BallCollision (pedestrians), CanKicker (cans) and a slipstream behind it read it
+        currentVelocity = speed;
 
         bool boostStarts = flags.Boosting && !boosting;
         boosting = flags.Boosting;

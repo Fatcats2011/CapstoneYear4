@@ -86,6 +86,10 @@ public class Respawn : MonoBehaviour
     private RespawnPoint risePoint; // online client: the host's point for the respawn waiting for one
     private bool awaitingPoint;     // online client: this respawn waits for the host's point
 
+    /// <summary>Another machine's scooter: how long its reborn sparkle's last particles get after the lift, in seconds</summary>
+    private const float SPARKLE_FADE = 1f;
+    private Coroutine riseShow; // another machine's scooter: the reborn sparkle waiting for its owner's lift
+
     /// <summary>How long a respawn takes, from the wisp rising to the end of the lift (online, the host holds the point that long)</summary>
     public float Duration { get { return wispRiseTime + wispToCasketTime + liftDuration; } }
 
@@ -177,13 +181,19 @@ public class Respawn : MonoBehaviour
         float elapsedTime = 0;
         Vector3 wispRise = wispStart + Vector3.up * wispHeight; // position of the wisp risen above water
 
-        // rotate the control around the wisp while it's rising
+        // rotate the control around the wisp while it's rising, to face the way the tombstone faces
+        Pose grave = GraveAt(rsp, tombstoneOffset);
         Quaternion controlStart = control.transform.rotation;
-        Quaternion controlEnd = Quaternion.LookRotation(rsp.PlayerFacingDirection - rsp.PlayerSpawn, Vector3.up);
+        Quaternion controlEnd = grave.rotation;
 
-        // create the tombstone
-        Vector3 graveForward = controlEnd * Vector3.forward;
-        Instantiate(respawnGravestone, rsp.PlayerSpawn - graveForward * tombstoneOffset, controlEnd);
+        // create the tombstone. Online, the other machines put it up too, and show this player rising from it
+        Instantiate(respawnGravestone, grave.position, grave.rotation);
+        if (GameAuthority.IsOnline)
+        {
+            int point = RespawnManager.Instance.IndexOf(rsp);
+            if (point >= 0)
+                CueSync.Play(OrderSync.SeatOf(this), ScooterCue.Rise(point));
+        }
 
         // raise the wisp above the water
         while (elapsedTime < wispRiseTime)
@@ -255,7 +265,7 @@ public class Respawn : MonoBehaviour
 
     /// <summary>
     /// Another machine's scooter (this script is off there): hidden while its owner's rider is, with its ball's collider
-    /// off so it bumps nobody. It shows again when its owner's does
+    /// off so it bumps nobody, and its wisp showing. It shows again when its owner's does
     /// </summary>
     public void ShowRemote(bool hidden)
     {
@@ -264,6 +274,54 @@ public class Respawn : MonoBehaviour
 
         modelParent.SetActive(!hidden);
         GetComponent<SphereCollider>().enabled = !hidden;
+
+        // The wisp sits on the ball, which follows its owner's wisp to the grave
+        deathWisp.enabled = hidden;
+        if (hidden)
+            deathWisp.Reinit();
+        wispTrail.time = hidden ? wispTrailTime : 0f;
+    }
+
+    /// <summary>
+    /// Where a respawn's gravestone stands: offset behind its point, facing where the risen player will face (the middle
+    /// of the point's order spots)
+    /// </summary>
+    public static Pose GraveAt(RespawnPoint point, float offset)
+    {
+        Quaternion facing = Quaternion.LookRotation(point.PlayerFacingDirection - point.PlayerSpawn, Vector3.up);
+        return new Pose(point.PlayerSpawn - facing * Vector3.forward * offset, facing);
+    }
+
+    /// <summary>
+    /// Another machine's scooter (this script is off there): its owner's player rises at that point. Their gravestone
+    /// stands there now, and the reborn sparkle plays there while they lift out of it, as on their own machine. A copy of
+    /// the sparkle plays: this scooter's own stays where it is
+    /// </summary>
+    public void ShowRise(RespawnPoint point)
+    {
+        Pose grave = GraveAt(point, tombstoneOffset);
+        Instantiate(respawnGravestone, grave.position, grave.rotation);
+
+        // A new rise replaces one whose sparkle is still waiting
+        if (riseShow != null)
+            StopCoroutine(riseShow);
+        riseShow = StartCoroutine(SparkleAt(point));
+    }
+
+    // Another machine's scooter: the reborn sparkle where its owner's player rises, when they lift out of the grave
+    private IEnumerator SparkleAt(RespawnPoint point)
+    {
+        yield return new WaitForSeconds(wispRiseTime + wispToCasketTime);
+        riseShow = null;
+        if (point == null)
+            yield break; // the scene changed
+
+        ParticleSystem sparkle = Instantiate(rebornParticles, point.PlayerSpawn, Quaternion.identity);
+        sparkle.Play();
+        Destroy(sparkle.gameObject, liftDuration + SPARKLE_FADE);
+        yield return new WaitForSeconds(liftDuration);
+        if (sparkle != null)
+            sparkle.Stop();
     }
 
     private void OnTriggerEnter(Collider other)

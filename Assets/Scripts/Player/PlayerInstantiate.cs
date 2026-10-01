@@ -83,6 +83,9 @@ public class PlayerInstantiate : SingletonMonobehaviour<PlayerInstantiate>
 
         gameManager.OnSwapMenu += SwapForMainMenu;
 
+        // Online the match goes on while paused: a state that takes players out of driving closes the pause menu
+        gameManager.StateApplied += ClosePauseForState;
+
         // When players confirm load, disable all confirm bools
         sceneManager.OnConfirmToLoad += DisableLoadingConfirmCount;
     }
@@ -113,6 +116,8 @@ public class PlayerInstantiate : SingletonMonobehaviour<PlayerInstantiate>
         //gameManager.OnSwapResults -= SetAllPlayerSpawn;
 
         gameManager.OnSwapMenu -= SwapForMainMenu;
+
+        gameManager.StateApplied -= ClosePauseForState;
 
         // When players confirm load, disable all confirm bools
         sceneManager.OnConfirmToLoad -= DisableLoadingConfirmCount;
@@ -738,13 +743,24 @@ public class PlayerInstantiate : SingletonMonobehaviour<PlayerInstantiate>
     }
 
     ///<summary>
-    /// Pause was triggered, must pause for all players
+    /// Whether this machine's players have the pause menu open (online the match goes on meanwhile)
+    ///</summary>
+    public bool IsPaused { get; private set; }
+
+    ///<summary>
+    /// Pause was triggered, must pause for all players. Online it's this machine's menu only: the match goes on, and a
+    /// hint says what Main Menu does
     ///</summary>
     public void PlayerPause(PlayerInput playerInput)
     {
         SwapPlayerInputControlSchemeToUI();
 
         GameAuthority.SetTimeScale(0f);
+        IsPaused = true;
+
+        string hint = PausePolicy.HintFor(GameAuthority.Role);
+        if (hint != null)
+            ControllerPrompts.Instance.ShowHint(hint, OnlineGame.NOTICE_SECONDS);
 
         foreach (PlayerSlot slot in roster.LocalPlayers)
         {
@@ -785,7 +801,8 @@ public class PlayerInstantiate : SingletonMonobehaviour<PlayerInstantiate>
         UpdateControllerPrompts();
 
         MenuInteractions lostPlayerMenu = lostPlayer.gameObject.GetComponent<PlayerUIHandler>().menuInteractions;
-        if (!ControllerDisconnectPolicy.ShouldPause(lostPlayerMenu.curentMenuType == MenuType.PauseMenu, Time.timeScale == 0f))
+        // Paused or not by the pause menu, not by time: online the match goes on while paused
+        if (!ControllerDisconnectPolicy.ShouldPause(lostPlayerMenu.curentMenuType == MenuType.PauseMenu, IsPaused))
             return;
 
         bool[] slotHasController = new bool[Constants.MAX_PLAYERS];
@@ -921,6 +938,26 @@ public class PlayerInstantiate : SingletonMonobehaviour<PlayerInstantiate>
         SwapPlayerInputControlSchemeToDrive();
 
         GameAuthority.SetTimeScale(1f);
+
+        ClosePause();
+    }
+
+    ///<summary>
+    /// Online the match goes on while paused: a state that takes players out of driving (a cutscene, the results, loading,
+    /// the menus) closes the pause menu. That state's own handlers, which run next, set the controls
+    ///</summary>
+    private void ClosePauseForState(GameState state)
+    {
+        if (IsPaused && !PausePolicy.KeepsPause(state))
+            ClosePause();
+    }
+
+    ///<summary>
+    /// Closes every local player's pause menu
+    ///</summary>
+    private void ClosePause()
+    {
+        IsPaused = false;
 
         foreach (PlayerSlot slot in roster.LocalPlayers)
             slot.Input.GetComponent<PlayerUIHandler>().MenuCanvas.GetComponent<MenuInteractions>().pauseMenu.OnPlay();

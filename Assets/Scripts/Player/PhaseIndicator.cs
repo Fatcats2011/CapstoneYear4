@@ -104,8 +104,7 @@ public class PhaseIndicator : MonoBehaviour
             if (!dirtyBoostReady)
             {
                 soundPool.PlayBoostReady();
-                CreateFlash(leftHorn.transform.position);
-                CreateFlash(rightHorn.transform.position);
+                FlashHorns();
                 dirtyBoostReady = true;
             }
 
@@ -121,6 +120,16 @@ public class PhaseIndicator : MonoBehaviour
             hornGlow.SetColor(HashReference._emissionColorProperty, color);
             hornGlow.SetColor(HashReference._baseColorProperty, currentColor);
         }
+    }
+
+    /// <summary>
+    /// Flashes both horns: the boost gauge is full. Online, another machine's scooter flashes when its owner's gauge fills
+    /// (OnlineCues)
+    /// </summary>
+    public void FlashHorns()
+    {
+        CreateFlash(leftHorn.transform.position);
+        CreateFlash(rightHorn.transform.position);
     }
 
     private void CreateFlash(UnityEngine.Vector3 location)

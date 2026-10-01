@@ -81,6 +81,20 @@ namespace DoA.Tests
         }
 
         [Test]
+        public void AGrave_StandsBehindItsPoint_FacingWhereTheRisenPlayerWillFace()
+        {
+            // the point at (50, 0, 0) faces the middle of its order spots, 10 m ahead along +z
+            points[1].transform.Find("Order 1").localPosition = new Vector3(-1, 0, 10);
+            points[1].transform.Find("Order 2").localPosition = new Vector3(1, 0, 10);
+            points[1].InitPoint();
+
+            Pose grave = Respawn.GraveAt(points[1], 2f);
+
+            Assert.Less(Vector3.Distance(new Vector3(50, 0, -2), grave.position), 0.001f, "2 m behind the point");
+            Assert.Less(Quaternion.Angle(Quaternion.identity, grave.rotation), 0.01f, "facing along +z, as the risen player will");
+        }
+
+        [Test]
         public void PointsGoByTheirPlace_TheSameOnEveryMachine()
         {
             Assert.AreEqual(2, manager.IndexOf(points[2]));

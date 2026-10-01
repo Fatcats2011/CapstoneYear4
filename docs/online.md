@@ -167,6 +167,28 @@ Online multiplayer is being built in steps (roadmap Phase 3: `docs/superpowers/p
     - **`OnlineRespawns`** is the glue.
   - On a client, hits and respawn points wait with the host's other messages (`HostQueue`).
 
+### Phase 3H: one-shots, cutscenes and pause
+
+- **Other players' scooters are heard here:** a boost, a drift boost, a full horn (their horns flash too), phasing through a building, falling in the water, pickups, deliveries and a steal's whoosh. They fade with distance from this machine's player: full within 10 m, silent from 60 m.
+- **A player who falls in the water shows their wisp on every machine,** then their gravestone where they rise, and the reborn sparkle as they lift out of it.
+- **The host's cutscenes end everywhere when the host's do.** Only the host's skip counts (the developer key L).
+- **The wave bells and the whistle sound everywhere,** and at the whistle every scooter stops, not just the host's.
+- **Pausing online doesn't stop the match.** The pause menu is this machine's own:
+  - It closes when a cutscene, the results, loading or the lobby comes up.
+  - A hint says what "Main Menu" does: the host's ends the match for everyone, a client's leaves it.
+  - A controller lost while paused doesn't pause again.
+- **Pedestrians, cans and slipstream react to other players' scooters too,** at the speed they're going. Each machine has its own pedestrians and cans.
+- How it works:
+  - **One-shots travel as cues** (`ScooterCue`). The calls that play a scooter's one-shots on its own machine also send a cue, through `CueSync`: `SoundPool` for the sounds, `Respawn` for a rise. A client reports its cues to the host (`ReportCue`). The host takes a cue only for the sender's own seat, shows it, and sends it to every client (`SendCue`). The host's own player's go straight to every client.
+  - **Order sounds aren't cues:** every machine replays the host's order changes on every scooter (Phases 3E and 3G), so another player's scooter plays its pickups, deliveries and whoosh here too.
+  - **Another machine's scooter plays one-shots only,** through its sound pool, which stays off (no engine hum): `SoundPool.PlayRemote`. `RemoteSound` sets the volume by distance, because the game's sounds are all 2D.
+  - **Respawns:** the wisp shows while the rider is hidden (the flags byte). The owner sends `ScooterCue.Rise` with its point, whoever picked it, and other machines put up the gravestone and play the sparkle there (`Respawn.ShowRise`).
+  - **The clock:** the host's `OrderManager` rings its bells and time up (`ClockCue`), and every client plays them (`RingClock`, `OrderManager.FollowHostClockCue`). At time up a client stops its own player, as the host does.
+  - **`OnlineCues`** (added by `OnlineGame`) is the glue. One-shots don't wait with the host's states (`HostQueue`): a one-shot is about the moment it happens.
+  - **Cutscenes:** a client's cutscene ends when the state it hands over to arrives from the host (the tutorial after the opening, the golden round after its cutscene). `CutsceneManager.Skip` works only where states are decided.
+  - **Pause:** `PausePolicy` says when the pause menu closes and what it says online. `PlayerInstantiate.IsPaused` says whether it's open; `ControllerDisconnectPolicy` uses that, not `Time.timeScale`.
+  - **Another machine's scooter's speed:** `BallDriving.ShowRemote` sets its `CurrentVelocity`, which pedestrians (`BallCollision`), cans (`CanKicker`) and slipstream read. Bumping something here doesn't drop its drift: its own machine does that.
+
 ## Two editors on one computer (ParrelSync)
 
 - **ParrelSync → Clones Manager → Create new clone** (once). The clone shares this project's Assets and ProjectSettings. Unity imports the project the first time the clone opens, which takes a while.
@@ -185,6 +207,8 @@ Online multiplayer is being built in steps (roadmap Phase 3: `docs/superpowers/p
   - Drive in one editor and watch the other: the scooter moves there, boosting and drifting.
   - Pick up and deliver orders in either editor: both show them on the scooter that holds them, with the same scores.
   - Boost into the other editor's scooter: steals and clashes show in both. Drive both into the water at one spot: they rise on different points.
+  - Boost next to the other editor's scooter: it hears you. Drive one scooter into the water: the other editor sees its wisp, then its gravestone, and it rises from it.
+  - Pause in one editor: the other drives on, and the paused one shows a hint about Main Menu.
 - Pause in editor 1 and pick **Main Menu**: both go back to player select, still in the session. In editor 2 (a client), **Main Menu** leaves the session.
 - **Leave** ends a session. When the host leaves, editor 2 shows `Online: session ended: The host left the match.`
 - Only change files in the original editor: clones share them.
@@ -215,8 +239,9 @@ Online multiplayer is being built in steps (roadmap Phase 3: `docs/superpowers/p
 - **A pickup shows once the host has seen the scooter in the light:** on a client, about a round trip after it drove in.
 - A cutout's order reaches a client's scooter about a round trip after its barrier opens.
 - A player who leaves holding the golden order ends the golden round, as if they'd delivered it (roadmap Task 3.8).
-- **Other machines' scooters are silent** (no whoosh when they steal), and their respawn shows no wisp or gravestone: the scooter is gone until it rises from its grave (roadmap Task 3.7).
-- When the main game ends, only the host's scooter stops; the others keep driving until the golden round loads.
+- **Other machines' scooters play one-shots only:** no engine, brake or drift-spark sounds. Their horns don't glow with their boost gauge; they flash when it's full.
+- Another player's one-shot plays here about a round trip after it played there: it goes through the host.
+- The pause menu has no "End match" row (its rows are hand-lettered art). The host's "Main Menu" ends the match for everyone.
 - If the host leaves mid-match, clients stay where they are, offline (roadmap Task 3.8).
 - An empty seat still says "press A to join" on every machine, though only a machine's first controller can take a seat online.
 - When the host leaves, clients see "The host left the match." and stay in player select with their own player, not ready: no countdown starts, and a running one stops. They ready up again to start one.

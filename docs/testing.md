@@ -23,6 +23,10 @@
   - `RespawnMessagesNetworkTests` (port 7803, empty scene): a client's respawn request reaching the host with who sent it and where, and the host's respawn point reaching clients.
   - `OnlineStealsNetworkTests` (port 7804): steals and clashes, hosting and joining. Hosting, two other machines over a 150 ms connection try to steal from each other at once: one steal wins, the same everywhere. Joining, this machine's player's hit goes to the host, and the host's steals and clashes show here. They load the game scene: a minute or two each.
   - `OnlineRespawnsNetworkTests` (port 7805): respawn points, hosting and joining. Hosting, no two players rise on one point. Joining, this machine's player rises where the host says, or on its own point without an answer. They load the game scene: a minute or two each.
+  - `CueMessagesNetworkTests` (port 7806, empty scene): a client's one-shot reaching the host with who sent it, and the host's one-shots and clock reaching clients in order.
+  - `OnlineCuesNetworkTests` (port 7807): one-shots, hosting and joining. Hosting, this machine's player's one-shots reach every client, another machine's play on its scooter here (silent far away), and the host's clock rings out. Joining, this machine's player's fall and rise reach the host, and the host's player's gravestone and sparkle show here. They load the game scene: a minute or two each.
+  - `OnlineMatchFlowNetworkTests` (port 7808): on a client, the host's opening cutscene ending (and only the host skipping), the wave bells, and time up stopping this machine's player. It loads the game scene: a minute or two.
+  - `OnlinePauseTests` (menu scene, no network): pausing online lets the match go on, says what Main Menu does, closes with the host's state, and a controller lost while paused doesn't pause again.
   - The first load of the game scene in a run can take over 40 s when it's cold (the first run after assets changed: it once took 41 s), and the other machines in that test were dropped during it (Unity Transport drops a machine after 30 s without a word). Run the test again, or after `LocalMatchSmokeTest`, which loads the scene first.
   - When a machine leaves, Windows often reports its closed port to the others, and Unity Transport logs that as an error (`docs/online.md`, Known limits). Tests where machines leave call `LogCollector.MachinesLeave()` first: that one message is let through, and any other error still fails the test.
 - The Steam lobby flow (`OnlineLobbyTests`, `LobbyRulesTests`) runs over fakes of Steam and the session (`OnlineFakes`), without Play Mode. `SteamLobbyServiceTests` checks Steam's lobbies without Steam: with Steam they're checked on two PCs (`docs/online.md`).
@@ -36,7 +40,9 @@
   - `HostQueueTests`: a client's messages from the host wait while its scene changes.
   - `TutorialManagerTests`: the tutorial ends when every seat's player has finished it (online, only the host ends it).
   - `StealRulesTests`: the host's judge of a steal or clash. `PlayerHitTests`: a hit as it travels.
-  - `RespawnPointsTests`: the nearest free respawn point, and the host's holds.
+  - `RespawnPointsTests`: the nearest free respawn point, the host's holds, and where a gravestone stands.
+  - `ScooterCueTests`: a one-shot as it travels. `RemoteSoundTests`: how loud another machine's scooter is here.
+  - `PausePolicyTests`: when the pause menu closes online, and what pausing says.
 - Leave the editor alone while it plays. Controllers you touch count as input.
 - Run a single test: select it in the Test Runner → **Run Selected**.
 

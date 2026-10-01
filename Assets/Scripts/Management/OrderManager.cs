@@ -326,6 +326,7 @@ public class OrderManager : SingletonMonobehaviour<OrderManager>
                 // sounds
                 SoundManager.Instance.PlaySFX("timeout", clockSource);
                 SoundManager.Instance.ChangeSnapshot("paused");
+                CueSync.Ring(ClockCue.TimeUp); // online, time is up on every client too
             }
         }
 
@@ -335,6 +336,7 @@ public class OrderManager : SingletonMonobehaviour<OrderManager>
             if (wave > 0)
             {
                 SoundManager.Instance.PlaySFX("bells", clockSource);
+                CueSync.Ring(ClockCue.WaveBells); // online, every client's bells ring too
             }
         }
     }
@@ -544,6 +546,26 @@ public class OrderManager : SingletonMonobehaviour<OrderManager>
         gameTimer = timeLeft;
         gameStarted = started;
         finalOrderActive = finalOrder;
+    }
+
+    /// <summary>
+    /// Online client: the host's match clock rang (this machine's waves don't run: the host's do). A new wave's bells ring
+    /// here. At time up this machine's players stop (their orders wait for the host's erases), the whistle blows and the
+    /// sound dips, as on the host
+    /// </summary>
+    public void FollowHostClockCue(ClockCue cue)
+    {
+        switch (cue)
+        {
+            case ClockCue.WaveBells:
+                SoundManager.Instance.PlaySFX("bells", clockSource);
+                break;
+            case ClockCue.TimeUp:
+                OnMainGameFinishes?.Invoke();
+                SoundManager.Instance.PlaySFX("timeout", clockSource);
+                SoundManager.Instance.ChangeSnapshot("paused");
+                break;
+        }
     }
 
     /// <summary>

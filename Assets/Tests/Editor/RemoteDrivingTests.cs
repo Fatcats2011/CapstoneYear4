@@ -4,6 +4,7 @@ using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
 using UnityEngine.TestTools;
+using UnityEngine.VFX;
 
 namespace DoA.Tests
 {
@@ -88,6 +89,7 @@ namespace DoA.Tests
             Assert.IsTrue(SparkOn(sparks, 0) && SparkOn(sparks, 1) && SparkOn(sparks, 2) && SparkOn(sparks, 3) && SparkOn(sparks, 5), "tier-2 sparks");
             Assert.IsFalse(SparkOn(sparks, 4), "no tier-3 flare");
             Assert.AreEqual(5f, rider.GetFloat(HashReference._speedFloat), 0.01f, "15 m/s: the rider's speed is 5 of 10");
+            Assert.AreEqual(15f, driving.CurrentVelocity, 0.001f, "pedestrians, cans and slipstream feel its speed here");
 
             // Nothing going on: the sparks and skid marks stop
             driving.ShowRemote(new DriveFlags(0), 0f);
@@ -102,11 +104,14 @@ namespace DoA.Tests
             driving.ShowRemote(new DriveFlags(false, false, false, 0, false, false, true), 0f);
             Assert.IsFalse(model.activeInHierarchy, "hidden");
             Assert.IsFalse(ball.enabled, "no ball to bump into");
+            VisualEffect wisp = (VisualEffect)Reflect.GetField(driving.Sphere.GetComponent<Respawn>(), "deathWisp");
+            Assert.IsTrue(wisp.enabled, "its wisp shows");
 
             // It rises from its grave
             driving.ShowRemote(new DriveFlags(0), 0f);
             Assert.IsTrue(model.activeInHierarchy, "shown again");
             Assert.IsTrue(ball.enabled, "solid again");
+            Assert.IsFalse(wisp.enabled, "no wisp");
 
             log.Dispose();
             Assert.IsEmpty(log.Problems, "Errors:\n\n" + string.Join("\n\n", log.Problems));

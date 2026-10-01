@@ -13,6 +13,8 @@ using UnityEngine;
 /// - The host's order changes, clients' drop requests and the golden order's value (OnlineOrders).
 /// - Clients' tutorial reports and cutout requests (OnlineTutorial).
 /// - Steals, clashes and respawn points: clients' requests and the host's answers (OnlineSteals, OnlineRespawns).
+/// - One-shots: players' (clients report theirs, and the host sends every one to every client) and the host's clock's
+///   (OnlineCues).
 /// </summary>
 public class OnlineMatch : NetworkBehaviour, IMatchLink
 {
@@ -62,6 +64,15 @@ public class OnlineMatch : NetworkBehaviour, IMatchLink
 
     /// <summary>Clients: where the host says a player rises (their seat, the respawn point's index)</summary>
     public event Action<int, int> RespawnReceived;
+
+    /// <summary>Host: a client's player made a one-shot (the client's id, the player's seat, the cue)</summary>
+    public event Action<ulong, int, ScooterCue> CueReported;
+
+    /// <summary>Clients: a player's one-shot, from the host (their seat, the cue)</summary>
+    public event Action<int, ScooterCue> CueReceived;
+
+    /// <summary>Clients: the host's match clock rang</summary>
+    public event Action<ClockCue> ClockRang;
 
     /// <summary>Clients: each state the host switches to, in order</summary>
     public event Action<GameState> StateReceived;
@@ -217,6 +228,30 @@ public class OnlineMatch : NetworkBehaviour, IMatchLink
             RespawnClientRpc(seat, point);
     }
 
+    /// <summary>
+    /// Client: tells the host its player in a seat made a one-shot. Does nothing on the host, which sends its own player's
+    /// at once
+    /// </summary>
+    public void ReportCue(int seat, ScooterCue cue)
+    {
+        if (!IsServer)
+            CueServerRpc(seat, cue);
+    }
+
+    /// <summary>Host: tells every client the player in a seat made a one-shot. Does nothing on a client</summary>
+    public void SendCue(int seat, ScooterCue cue)
+    {
+        if (IsServer)
+            CueClientRpc(seat, cue);
+    }
+
+    /// <summary>Host: tells every client its match clock rang. Does nothing on a client</summary>
+    public void RingClock(ClockCue cue)
+    {
+        if (IsServer)
+            ClockClientRpc(cue);
+    }
+
     /// <summary>Host: shares what the golden order is worth (only a change goes out). Does nothing on a client</summary>
     public void ShareGoldenValue(int value)
     {
@@ -277,6 +312,20 @@ public class OnlineMatch : NetworkBehaviour, IMatchLink
             RespawnReceived?.Invoke(seat, point);
     }
 
+    [ClientRpc]
+    void CueClientRpc(int seat, ScooterCue cue)
+    {
+        if (!IsServer)
+            CueReceived?.Invoke(seat, cue);
+    }
+
+    [ClientRpc]
+    void ClockClientRpc(ClockCue cue)
+    {
+        if (!IsServer)
+            ClockRang?.Invoke(cue);
+    }
+
     [ServerRpc(RequireOwnership = false)]
     void LoadedServerRpc(MatchScene scene, ServerRpcParams rpc = default)
     {
@@ -311,5 +360,11 @@ public class OnlineMatch : NetworkBehaviour, IMatchLink
     void RespawnServerRpc(int seat, Vector3 lastGrounded, ServerRpcParams rpc = default)
     {
         RespawnAsked?.Invoke(rpc.Receive.SenderClientId, seat, lastGrounded);
+    }
+
+    [ServerRpc(RequireOwnership = false)]
+    void CueServerRpc(int seat, ScooterCue cue, ServerRpcParams rpc = default)
+    {
+        CueReported?.Invoke(rpc.Receive.SenderClientId, seat, cue);
     }
 }

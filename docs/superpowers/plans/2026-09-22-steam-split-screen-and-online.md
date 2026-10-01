@@ -216,8 +216,13 @@ Progress (2026-09-28):
   - Boosting into another machine's scooter steals or clashes as in a local match. The machine that drives the boosting scooter asks, and the host decides for everyone (`StealRules`, `OnlineSteals`). Two machines asking at once make one steal.
   - The host picks every respawn point, so no two players rise on one (`OnlineRespawns`).
   - Two 2024 bugs fixed, in local play too: a player robbed of the golden order stayed slowed, and the first respawn point could be handed out while in use.
+- Phase 3H (`2026-10-01-phase3h-one-shots-and-local-systems.md`) — one-shots, cutscenes and pause online:
+  - Other players' scooters are heard here, quieter with distance: boosts, drift boosts, full horns (which flash), phasing, falls in the water, and the order sounds. Their respawn shows its wisp, gravestone and sparkle (`ScooterCue` through the host, `OnlineCues`).
+  - The host's wave bells and whistle sound everywhere, and the whistle stops every scooter (`ClockCue`). A client's cutscene ends when the host's does; only the host skips.
+  - Pausing online is this machine's own menu: the match goes on, the menu closes when players stop driving, and a hint says what Main Menu does (`PausePolicy`).
+  - Pedestrians, cans and slipstream react to other players' scooters too.
 - Next:
-  - One-shots and sounds (3.7), and disconnects (3.8).
+  - Disconnects (3.8).
 
 ### Task 3.1: Packages & transports
 
@@ -236,7 +241,7 @@ Progress (2026-09-28):
 - [ ] `NetworkPlayer` (NetworkObject on PlayerAvatar): NetworkVariables for slot, company, colour, hat, score, ready, and a flags byte (boosting / phasing / drifting / drift tier). *(Phase 3B: `OnlinePlayer` has seat (company follows), colour, hat and ready. It's named `OnlinePlayer` because Unity still declares an obsolete `UnityEngine.NetworkPlayer`. It's its own network prefab, not on `PlayerAvatar`: see the Phase 3B plan's Ruling 1. Score and the flags byte come with driving.)* *(Phase 3C: the flags byte is on `OnlineScooter` (`DriveFlags`). Phase 3E: the score is on `OnlinePlayer`, written by the host.)*
 - [x] Owner-authoritative movement: the owner runs `BallDriving` physics; owner-authoritative `NetworkTransform` (the `ClientNetworkTransform` pattern) with interpolation on sphere + control; non-owners make the sphere kinematic and skip `BallDriving` Update/FixedUpdate. *(Phase 3C: through two proxies on a per-player `OnlineScooter`, each an `OwnerNetworkTransform`: the ball, and the model's world pose. `OnlineDriving` copies them every frame. The proxies start parked below the map; long moves teleport.)*
 - [x] Spawns: each owner puts its own scooter on its slot's spawn point (`SpawnManager.SpawnPoint`); the host doesn't place other machines' scooters. *(Phase 3C: `SpawnManager` places `LocalPlayers` only. Online, without the tutorial, they start on the city start points, `nonTutorialSpawnPositions` (`SpawnManager.PlacePlayersAtStart`).)*
-- [x] Remote players' boost/phase/drift visuals and sounds come from the flags byte. *(Phase 3C: `DriveFlags` on `OnlineScooter`. `BallDriving.ShowRemote` drives the trail, skid marks, sparks and rider. Sounds come with Task 3.7.)*
+- [x] Remote players' boost/phase/drift visuals and sounds come from the flags byte. *(Phase 3C: `DriveFlags` on `OnlineScooter`. `BallDriving.ShowRemote` drives the trail, skid marks, sparks and rider. Sounds come with Task 3.7.)* *(Phase 3H: one-shots, as `ScooterCue`s. Another machine's scooter has no engine or drift sounds.)*
 - [ ] A remote avatar (`PlayerAvatar.prefab` alone) has no view:
   - Its view fields are empty: `BallDriving.inp` / `cameraResizer` / `orbitalCamera`, `OrderHandler.numberHandler`, `PhaseIndicator.hornSliderLeft` / `hornSliderRight`, `DrivingIndicators.iconCamera` / `thisPlayer`.
   - Its `Control` has no `Compass`, `TutorialHandler` or `Rumbler`, which `OrderHandler`, `Order.EraseOrder`, `OrderBeacon` and `BallDriving` fetch with `GetComponent`.
@@ -274,10 +279,10 @@ Progress (2026-09-28):
 
 ### Task 3.7: Local-only and one-shot systems
 
-- [ ] Not networked: pedestrians (`CivilianAgent`), kickables, DOTween animations, particles, cameras, compass UI, speed lines.
-- [ ] One-shots via `ClientRpc`: boost start, drift boost, emotes (`EmoteHandler` — not on the live player prefab yet, only in `NewDrive Test.unity`), horn/phase sounds. *(Phase 3G: other machines don't yet hear a thief's whoosh or see a respawn's gravestone.)*
-- [ ] Cutscenes: host sets the state; each client plays the Timeline locally; only the host can skip.
-- [ ] Online pause = local overlay only (no `Time.timeScale`); the host's menu adds **End match**. *(`GameAuthority.SetTimeScale` already ignores pauses online. `ControllerDisconnectPolicy.ShouldPause` still reads `Time.timeScale == 0` to tell whether the game is paused — change that here.)* *(Phase 3C: the host's "Main Menu" takes everyone back; a client's leaves the session.)*
+- [x] Not networked: pedestrians (`CivilianAgent`), kickables, DOTween animations, particles, cameras, compass UI, speed lines. *(Phase 3H: each machine keeps its own. They now feel other machines' scooters at their speed, as slipstream does: `BallDriving.ShowRemote` sets `CurrentVelocity`. See the Phase 3H plan's Ruling 7.)*
+- [x] One-shots via `ClientRpc`: boost start, drift boost, emotes (`EmoteHandler` — not on the live player prefab yet, only in `NewDrive Test.unity`), horn/phase sounds. *(Phase 3G: other machines don't yet hear a thief's whoosh or see a respawn's gravestone.)* *(Phase 3H: the machine that plays a one-shot sends a `ScooterCue`; the host passes it on, for the sender's own seat, in a `ClientRpc`. Other machines play it on that scooter, quieter with distance (`OnlineCues`, `RemoteSound`). Order sounds, the whoosh among them, come from the order replays. A respawn's gravestone and sparkle come from a `Rise` cue. Emotes are left out: see the Phase 3H plan's Rulings 1–3 and 8.)*
+- [x] Cutscenes: host sets the state; each client plays the Timeline locally; only the host can skip. *(Phase 3H: a client's cutscene also ends when the host's does: when the state it hands over to (the tutorial, or the golden round) arrives from the host. Other states don't end it: the opening plays on while the game switches to MainLoop under it. The developer skip (L) works only on the host: see the Phase 3H plan's Ruling 5.)*
+- [x] Online pause = local overlay only (no `Time.timeScale`); the host's menu adds **End match**. *(`GameAuthority.SetTimeScale` already ignores pauses online. `ControllerDisconnectPolicy.ShouldPause` still reads `Time.timeScale == 0` to tell whether the game is paused — change that here.)* *(Phase 3C: the host's "Main Menu" takes everyone back; a client's leaves the session.)* *(Phase 3H: `ShouldPause` reads `PlayerInstantiate.IsPaused`. The pause menu closes when players stop driving. No "End match" row, because the rows are hand-lettered art: the host's "Main Menu" is it, and a hint says so. See the Phase 3H plan's Ruling 6.)*
 
 ### Task 3.8: Disconnects & versions
 

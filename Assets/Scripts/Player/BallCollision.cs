@@ -27,6 +27,10 @@ public class BallCollision : MonoBehaviour
             return;
         }
 
+        // Another machine's scooter (online) knocks this machine's pedestrians down, but its own machine drops its drift
+        if (RemoteAvatar.IsRemote(this))
+            return;
+
         control.DriftDrop(true);
 
         PeterSparker.Instance.CreateImpactFromCollider(other, control.transform.position);

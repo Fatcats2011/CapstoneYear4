@@ -11,6 +11,7 @@ using UnityEngine;
 /// - every machine's player finishing the tutorial (OnlineTutorial);
 /// - steals and clashes between players (OnlineSteals);
 /// - where players who fall in the water rise (OnlineRespawns);
+/// - every player's one-shots, and the host's clock's (OnlineCues);
 /// - everyone's colour, hat and readiness;
 /// - the host's game states;
 /// - the host's match clock (MatchClock);
@@ -120,6 +121,9 @@ public class OnlineGame : MonoBehaviour
         // Where players who fall in the water rise: the host picks for everyone
         respawns = gameObject.AddComponent<OnlineRespawns>();
         respawns.Begin(session);
+
+        // What a scooter does in a moment (a boost, a full horn…) plays on every machine
+        gameObject.AddComponent<OnlineCues>().Begin(session);
 
         session.RoleChanged += OnRoleChanged;
         session.Ended += ShowEnd;

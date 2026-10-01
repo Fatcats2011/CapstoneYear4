@@ -26,24 +26,59 @@ public class CutsceneManager : SingletonMonobehaviour<CutsceneManager>
     {
         GameManager.Instance.OnSwapStartingCutscene += StartingCutscene;
         GameManager.Instance.OnSwapGoldenCutscene += GoldenCutscene;
+        GameManager.Instance.StateApplied += EndForState;
     }
 
     private void OnDisable()
     {
         GameManager.Instance.OnSwapStartingCutscene -= StartingCutscene;
         GameManager.Instance.OnSwapGoldenCutscene -= GoldenCutscene;
+        GameManager.Instance.StateApplied -= EndForState;
     }
 
     private void Update()
     {
         // Skips cutscene
         if (DevTools.GetKeyDown(KeyCode.L))
-        {
-            if (cutsceneCoroutine != null)
-                StopCoroutine(cutsceneCoroutine);
+            Skip();
+    }
 
-            EndCutscene();
-        }
+    ///<summary>
+    /// Ends the cutscene now (the developer skip, L). Only where game states are decided: offline, or on an online host,
+    /// whose next state then ends the cutscene on every client. A client's skip does nothing
+    ///</summary>
+    public void Skip()
+    {
+        if (!GameAuthority.IsAuthority)
+            return;
+
+        if (cutsceneCoroutine != null)
+            StopCoroutine(cutsceneCoroutine);
+
+        EndCutscene();
+    }
+
+    ///<summary>
+    /// The state the playing cutscene hands over to ends it at once, without asking for it again. Online that's the
+    /// host's: the host skipped, or its cutscene ended first. Other states don't: the opening plays on while the game
+    /// switches to MainLoop under it (SpawnManager)
+    ///</summary>
+    void EndForState(GameState state)
+    {
+        if (cutsceneCoroutine == null || state != NextStateOf(cutsceneBeingPlayed))
+            return;
+
+        StopCoroutine(cutsceneCoroutine);
+        cutsceneCoroutine = null;
+        CloseView();
+    }
+
+    ///<summary>
+    /// The state a cutscene hands over to: the tutorial after the opening, the golden round after its cutscene
+    ///</summary>
+    static GameState NextStateOf(int cutscene)
+    {
+        return cutscene == 0 ? GameState.Tutorial : GameState.FinalPackage;
     }
 
     ///<summary>
@@ -111,13 +146,8 @@ public class CutsceneManager : SingletonMonobehaviour<CutsceneManager>
     ///</summary>
     void EndCutscene()
     {
-        cutsceneCanvas.enabled = false;
-        cutsceneCamera.enabled = false;
-
-        foreach (GameObject camPositions in currentCutscene.cameraTransformPositions)
-        {
-            camPositions.SetActive(false);
-        }
+        CloseView();
+        cutsceneCoroutine = null; // the state asked for next doesn't end it again
 
         switch (cutsceneBeingPlayed)
         {
@@ -133,6 +163,20 @@ public class CutsceneManager : SingletonMonobehaviour<CutsceneManager>
                 break;
         }
     }   
+
+    ///<summary>
+    /// Turns the cutscene's camera, canvas and camera positions off
+    ///</summary>
+    void CloseView()
+    {
+        cutsceneCanvas.enabled = false;
+        cutsceneCamera.enabled = false;
+
+        foreach (GameObject camPositions in currentCutscene.cameraTransformPositions)
+        {
+            camPositions.SetActive(false);
+        }
+    }
 
     public void BeginCountdownAnimation()
     {
