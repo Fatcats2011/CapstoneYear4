@@ -12,6 +12,7 @@ using UnityEngine;
 /// - The host's match clock (MatchClock).
 /// - The host's order changes, clients' drop requests and the golden order's value (OnlineOrders).
 /// - Clients' tutorial reports and cutout requests (OnlineTutorial).
+/// - Steals, clashes and respawn points: clients' requests and the host's answers (OnlineSteals, OnlineRespawns).
 /// </summary>
 public class OnlineMatch : NetworkBehaviour, IMatchLink
 {
@@ -49,6 +50,18 @@ public class OnlineMatch : NetworkBehaviour, IMatchLink
 
     /// <summary>Host: a client's player boosted into a cutout (the client's id, the seat of the cutout's lane)</summary>
     public event Action<ulong, int> CutoutAsked;
+
+    /// <summary>Host: a client's player, boosting, hit another (the client's id, the attacker's seat, the victim's seat)</summary>
+    public event Action<ulong, int, int> StealAsked;
+
+    /// <summary>Clients: a steal or clash the host decided</summary>
+    public event Action<PlayerHit> HitReceived;
+
+    /// <summary>Host: a client's player fell in the water (the client's id, their seat, where they were last on the ground)</summary>
+    public event Action<ulong, int, Vector3> RespawnAsked;
+
+    /// <summary>Clients: where the host says a player rises (their seat, the respawn point's index)</summary>
+    public event Action<int, int> RespawnReceived;
 
     /// <summary>Clients: each state the host switches to, in order</summary>
     public event Action<GameState> StateReceived;
@@ -170,6 +183,40 @@ public class OnlineMatch : NetworkBehaviour, IMatchLink
             CutoutServerRpc(seat);
     }
 
+    /// <summary>
+    /// Client: asks the host about its player (the attacker's seat) boosting into another (the victim's seat). Does
+    /// nothing on the host, which judges its own player's at once
+    /// </summary>
+    public void AskSteal(int attacker, int victim)
+    {
+        if (!IsServer)
+            StealServerRpc(attacker, victim);
+    }
+
+    /// <summary>Host: tells every client about a steal or clash it decided. Does nothing on a client</summary>
+    public void SendHit(PlayerHit hit)
+    {
+        if (IsServer)
+            HitClientRpc(hit);
+    }
+
+    /// <summary>
+    /// Client: asks the host where its player in a seat rises (they fell in the water, last on the ground there). Does
+    /// nothing on the host, which picks its own player's point at once
+    /// </summary>
+    public void AskRespawn(int seat, Vector3 lastGrounded)
+    {
+        if (!IsServer)
+            RespawnServerRpc(seat, lastGrounded);
+    }
+
+    /// <summary>Host: tells every client where the player in a seat rises (a respawn point's index). Does nothing on a client</summary>
+    public void SendRespawn(int seat, int point)
+    {
+        if (IsServer)
+            RespawnClientRpc(seat, point);
+    }
+
     /// <summary>Host: shares what the golden order is worth (only a change goes out). Does nothing on a client</summary>
     public void ShareGoldenValue(int value)
     {
@@ -216,6 +263,20 @@ public class OnlineMatch : NetworkBehaviour, IMatchLink
             OrderReceived?.Invoke(change);
     }
 
+    [ClientRpc]
+    void HitClientRpc(PlayerHit hit)
+    {
+        if (!IsServer)
+            HitReceived?.Invoke(hit);
+    }
+
+    [ClientRpc]
+    void RespawnClientRpc(int seat, int point)
+    {
+        if (!IsServer)
+            RespawnReceived?.Invoke(seat, point);
+    }
+
     [ServerRpc(RequireOwnership = false)]
     void LoadedServerRpc(MatchScene scene, ServerRpcParams rpc = default)
     {
@@ -238,5 +299,17 @@ public class OnlineMatch : NetworkBehaviour, IMatchLink
     void CutoutServerRpc(int seat, ServerRpcParams rpc = default)
     {
         CutoutAsked?.Invoke(rpc.Receive.SenderClientId, seat);
+    }
+
+    [ServerRpc(RequireOwnership = false)]
+    void StealServerRpc(int attacker, int victim, ServerRpcParams rpc = default)
+    {
+        StealAsked?.Invoke(rpc.Receive.SenderClientId, attacker, victim);
+    }
+
+    [ServerRpc(RequireOwnership = false)]
+    void RespawnServerRpc(int seat, Vector3 lastGrounded, ServerRpcParams rpc = default)
+    {
+        RespawnAsked?.Invoke(rpc.Receive.SenderClientId, seat, lastGrounded);
     }
 }

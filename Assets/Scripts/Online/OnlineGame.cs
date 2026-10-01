@@ -9,6 +9,8 @@ using UnityEngine;
 /// - every scooter's pose and what it's doing (OnlineDriving);
 /// - every order and score (OnlineOrders);
 /// - every machine's player finishing the tutorial (OnlineTutorial);
+/// - steals and clashes between players (OnlineSteals);
+/// - where players who fall in the water rise (OnlineRespawns);
 /// - everyone's colour, hat and readiness;
 /// - the host's game states;
 /// - the host's match clock (MatchClock);
@@ -43,7 +45,9 @@ public class OnlineGame : MonoBehaviour
     readonly List<OnlinePlayer> waiting = new List<OnlinePlayer>(); // other machines' players, until their seat is free here
     readonly Dictionary<OnlinePlayer, RemotePlayer> remotes = new Dictionary<OnlinePlayer, RemotePlayer>();
     OnlineOrders orders;     // the host's orders and scores, on this machine
-    HostQueue hostMessages;  // client: the host's states and order changes, which wait while this machine's new scene comes up
+    OnlineSteals steals;     // the host's steals and clashes, on this machine
+    OnlineRespawns respawns; // the host's respawn points, on this machine
+    HostQueue hostMessages;  // client: the host's states, order changes, hits and respawn points, which wait while this machine's new scene comes up
 
     /// <summary>
     /// Plays the game over a session (adds an OnlineGame to its object)
@@ -109,6 +113,14 @@ public class OnlineGame : MonoBehaviour
         // The tutorial ends once every machine's player has finished it
         gameObject.AddComponent<OnlineTutorial>().Begin(session);
 
+        // Steals and clashes between machines' players: the host decides each one
+        steals = gameObject.AddComponent<OnlineSteals>();
+        steals.Begin(session);
+
+        // Where players who fall in the water rise: the host picks for everyone
+        respawns = gameObject.AddComponent<OnlineRespawns>();
+        respawns.Begin(session);
+
         session.RoleChanged += OnRoleChanged;
         session.Ended += ShowEnd;
         session.PlayerSpawned += OnPlayerSpawned;
@@ -139,6 +151,8 @@ public class OnlineGame : MonoBehaviour
             {
                 session.Match.StateReceived -= FollowHost;
                 session.Match.OrderReceived -= FollowHostOrder;
+                session.Match.HitReceived -= FollowHostHit;
+                session.Match.RespawnReceived -= FollowHostRespawn;
             }
         }
         if (sceneFlow != null)
@@ -243,6 +257,8 @@ public class OnlineGame : MonoBehaviour
 
         match.StateReceived += FollowHost;
         match.OrderReceived += FollowHostOrder;
+        match.HitReceived += FollowHostHit;
+        match.RespawnReceived += FollowHostRespawn;
         if (match.State != GameState.Default)
             FollowHost(match.State);
     }
@@ -284,6 +300,19 @@ public class OnlineGame : MonoBehaviour
     void FollowHostOrder(OrderChange change)
     {
         hostMessages.Add(() => orders.Show(change));
+    }
+
+    // Client: the host decided a steal or clash. This machine's player bounces in the host's order, after the steal's
+    // order changes
+    void FollowHostHit(PlayerHit hit)
+    {
+        hostMessages.Add(() => steals.Show(hit));
+    }
+
+    // Client: the host picked where a player rises. It goes in the host's order, after that player's orders drop
+    void FollowHostRespawn(int seat, int point)
+    {
+        hostMessages.Add(() => respawns.Show(seat, point));
     }
 
     bool IsChangingScene()

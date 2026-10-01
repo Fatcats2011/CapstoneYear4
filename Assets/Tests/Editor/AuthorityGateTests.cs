@@ -17,6 +17,7 @@ namespace DoA.Tests
             GameAuthority.Role = NetworkRole.Offline;
             Reflect.SetSingleton<TutorialManager>(null);
             Reflect.SetSingleton<PlayerInstantiate>(null);
+            StealSync.Reset();
             objects.DestroyAll();
         }
 
@@ -126,10 +127,11 @@ namespace DoA.Tests
             Assert.IsFalse(player.HasOrder);
         }
 
-        [TestCase(NetworkRole.Offline, true)]
-        [TestCase(NetworkRole.Host, true)]
-        [TestCase(NetworkRole.Client, false)]
-        public void OrderHandler_TouchingAnotherPlayer_IsNoted_OnlyWhereTheRulesAreDecided(NetworkRole role, bool decides)
+        // Every machine notes a touch: what it leads to is the host's to decide (a machine asks it: StealSync)
+        [TestCase(NetworkRole.Offline)]
+        [TestCase(NetworkRole.Host)]
+        [TestCase(NetworkRole.Client)]
+        public void OrderHandler_TouchingAnotherPlayer_IsNoted_OnEveryMachine(NetworkRole role)
         {
             GameAuthority.Role = role;
             OrderHandler me = NewPlayer("Player 1", out _);
@@ -137,13 +139,13 @@ namespace DoA.Tests
 
             Reflect.Invoke(me, "OnTriggerEnter", otherBall);
 
-            Assert.AreEqual(decides ? me : null, other.PlayerTouching);
+            Assert.AreSame(me, other.PlayerTouching);
         }
 
-        [TestCase(NetworkRole.Offline, 2)]
-        [TestCase(NetworkRole.Host, 2)]
-        [TestCase(NetworkRole.Client, 0)]
-        public void OrderHandler_BoostingIntoABoostingPlayer_Clashes_OnlyWhereTheRulesAreDecided(NetworkRole role, int expectedClashes)
+        [TestCase(NetworkRole.Offline, 2, 0)]
+        [TestCase(NetworkRole.Host, 0, 1)]
+        [TestCase(NetworkRole.Client, 0, 1)]
+        public void OrderHandler_BoostingIntoABoostingPlayer_ClashesAtOnceOffline_OnlineAsksTheHost(NetworkRole role, int expectedClashes, int expectedAsks)
         {
             GameAuthority.Role = role;
             OrderHandler me = NewPlayer("Player 1", out _);
@@ -153,10 +155,13 @@ namespace DoA.Tests
             int clashes = 0;
             me.Clash += _ => clashes++;
             other.Clash += _ => clashes++;
+            int asks = 0;
+            StealSync.Asked += (attacker, victim) => asks++;
 
             me.AttemptSteal();
 
             Assert.AreEqual(expectedClashes, clashes);
+            Assert.AreEqual(expectedAsks, asks);
         }
 
         [TestCase(NetworkRole.Offline, true)]

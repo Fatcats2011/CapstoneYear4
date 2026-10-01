@@ -1,29 +1,46 @@
+using System.Collections.Generic;
 using NUnit.Framework;
 using UnityEngine;
 
 namespace DoA.Tests
 {
     /// <summary>
-    /// Online, another machine's scooter (a RemoteAvatar) doesn't act on this machine until steals are shared (roadmap
-    /// Task 3.6): it doesn't fall in water here, steal, clash, or freeze when the main game ends. Its own machine does all
-    /// that. Orders are the host's: its beacons serve every scooter. While its owner's rider is hidden for a respawn, it's
-    /// hidden here too and bumps nobody. EditMode: the scripts' messages are called directly on bare scooters
+    /// Online, another machine's scooter (a RemoteAvatar) doesn't act on this machine: it doesn't fall in water here,
+    /// steal, clash, or freeze when the main game ends. Its own machine does all that, and asks the host about its hits.
+    /// A scooter driven here that boosts into it asks the host too (StealSync): the host decides every hit. Orders are the
+    /// host's: its beacons serve every scooter. While its owner's rider is hidden for a respawn, it's hidden here too and
+    /// bumps nobody. EditMode: the scripts' messages are called directly on bare scooters
     /// </summary>
     public class RemoteScooterRulesTests
     {
         readonly TestObjects objects = new TestObjects();
+        PlayerInstantiate players;
+        List<Vector2Int> asks; // the hits this machine asked the host about (attacker's seat, victim's seat)
+
+        [SetUp]
+        public void SetUp()
+        {
+            players = objects.Add<PlayerInstantiate>();
+            Reflect.SetSingleton(players); // seats, for OrderSync.SeatOf
+            asks = new List<Vector2Int>();
+            StealSync.Asked += (attacker, victim) => asks.Add(new Vector2Int(attacker, victim));
+        }
 
         [TearDown]
         public void TearDown()
         {
             objects.DestroyAll();
             Reflect.SetSingleton<OrderManager>(null);
+            Reflect.SetSingleton<PlayerInstantiate>(null);
+            GameAuthority.Role = NetworkRole.Offline;
+            StealSync.Reset();
         }
 
-        // A bare scooter: the avatar root (with a RemoteAvatar when it's another machine's), its ball and its Control
+        // A bare scooter: the avatar root (with a RemoteAvatar when it's another machine's), its ball and its Control, in
+        // a seat as a client sees them: another machine's in seat 0, this machine's in seat 1
         GameObject Scooter(bool remote)
         {
-            GameObject root = objects.NewGameObject(remote ? "P2" : "P1");
+            GameObject root = objects.NewGameObject(remote ? "P1" : "P2");
             if (remote)
                 root.AddComponent<RemoteAvatar>();
 
@@ -34,8 +51,18 @@ namespace DoA.Tests
 
             GameObject control = new GameObject("Control");
             control.transform.SetParent(root.transform);
-            control.AddComponent<OrderHandler>();
+            OrderHandler handler = control.AddComponent<OrderHandler>();
+            Reflect.SetField(handler, "ball", control.AddComponent<BallDriving>());
+
+            int seat = remote ? 0 : 1;
+            players.Roster.JoinRemoteAt(root, (ulong)seat, seat);
             return root;
+        }
+
+        // The scooter is boosting (another machine's: its owner is, and ShowRemote shows it)
+        static void Boost(GameObject scooter)
+        {
+            Reflect.SetField(scooter.GetComponentInChildren<BallDriving>(), "boosting", true);
         }
 
         [Test]
@@ -91,18 +118,53 @@ namespace DoA.Tests
         }
 
         [Test]
-        public void AnotherMachinesScooter_AndALocalOne_DontTouchEachOtherHere()
+        public void AnotherMachinesScooter_TouchingThisMachinesOne_IsNotedHere_ForThisOnesBoost()
         {
-            GameObject remote = Scooter(true);
-            GameObject local = Scooter(false);
+            GameObject remote = Scooter(true), local = Scooter(false);
             OrderHandler remoteHandler = remote.GetComponentInChildren<OrderHandler>();
-            OrderHandler localHandler = local.GetComponentInChildren<OrderHandler>();
 
             Reflect.Invoke(remoteHandler, "OnTriggerEnter", local.GetComponentInChildren<SphereCollider>());
-            Reflect.Invoke(localHandler, "OnTriggerEnter", remote.GetComponentInChildren<SphereCollider>());
 
-            Assert.IsNull(localHandler.PlayerTouching, "another machine's scooter can't steal from or clash with it here");
-            Assert.IsNull(remoteHandler.PlayerTouching, "nor be stolen from here");
+            Assert.AreSame(remoteHandler, local.GetComponentInChildren<OrderHandler>().PlayerTouching,
+                "its own machine never tells this one: this machine notes it");
+        }
+
+        [TestCase(NetworkRole.Host)]
+        [TestCase(NetworkRole.Client)]
+        public void ThisMachinesScooter_BoostingIntoAnotherMachines_AsksTheHost_WithBothSeats(NetworkRole role)
+        {
+            GameAuthority.Role = role;
+            GameObject remote = Scooter(true), local = Scooter(false);
+            Boost(local);
+
+            Reflect.Invoke(local.GetComponentInChildren<OrderHandler>(), "OnTriggerEnter", remote.GetComponentInChildren<SphereCollider>());
+
+            CollectionAssert.AreEqual(new[] { new Vector2Int(1, 0) }, asks, "this machine's player hit seat 0's: the host decides");
+        }
+
+        [Test]
+        public void ThisMachinesScooter_StartingABoostWhileTouched_AsksTheHost()
+        {
+            GameAuthority.Role = NetworkRole.Client;
+            GameObject remote = Scooter(true), local = Scooter(false);
+            OrderHandler localHandler = local.GetComponentInChildren<OrderHandler>();
+            localHandler.PlayerTouching = remote.GetComponentInChildren<OrderHandler>();
+
+            localHandler.AttemptSteal();
+
+            CollectionAssert.AreEqual(new[] { new Vector2Int(1, 0) }, asks);
+        }
+
+        [Test]
+        public void AnotherMachinesScooter_BoostingIntoThisMachinesOne_AsksNothingHere()
+        {
+            GameAuthority.Role = NetworkRole.Client;
+            GameObject remote = Scooter(true), local = Scooter(false);
+            Boost(remote); // its owner boosts (ShowRemote)
+
+            Reflect.Invoke(remote.GetComponentInChildren<OrderHandler>(), "OnTriggerEnter", local.GetComponentInChildren<SphereCollider>());
+
+            Assert.IsEmpty(asks, "its own machine asks");
         }
 
         [Test]

@@ -526,7 +526,7 @@ namespace DoA.Tests
             while (!Handler(1).HasOrder && Time.realtimeSinceStartup < deadline)
                 yield return null;
             Vector3 spot = TutorialStarts()[1].transform.position;
-            Handler(1).DropEverything(spot, spot, false); // as Respawn does
+            Handler(1).DropEverything(spot, spot, false); // as Respawn does without the host's answer
             deadline = Time.realtimeSinceStartup + WAIT;
             while (asked.Count < 1 && Time.realtimeSinceStartup < deadline)
                 yield return null;

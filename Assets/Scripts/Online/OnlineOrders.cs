@@ -59,7 +59,8 @@ public class OnlineOrders : MonoBehaviour
     {
         Order order = OrderBook.Find(change.Order);
         OrderHandler handler = OrderSync.HandlerIn(change.Seat);
-        if (!CanShow(change.Kind, order, handler))
+        OrderHandler victim = OrderSync.HandlerIn(change.Seat2); // a steal's
+        if (!CanShow(change.Kind, order, handler, victim))
             return;
 
         // A fall still landing or a throw still flying ends first (the throw's own erase waits for the host's)
@@ -69,16 +70,18 @@ public class OnlineOrders : MonoBehaviour
         if (second != null)
             second.FinishMoves();
 
-        OrderSync.Show(() => Replay(change, order, handler));
+        OrderSync.Show(() => Replay(change, order, handler, victim));
     }
 
-    static bool CanShow(OrderChangeKind kind, Order order, OrderHandler handler)
+    static bool CanShow(OrderChangeKind kind, Order order, OrderHandler handler, OrderHandler victim)
     {
         switch (kind)
         {
             case OrderChangeKind.Pickup:
             case OrderChangeKind.Deliver:
                 return order != null && handler != null;
+            case OrderChangeKind.Steal:
+                return order != null && handler != null && victim != null;
             case OrderChangeKind.Drop:
                 return handler != null;
             default:
@@ -86,7 +89,7 @@ public class OnlineOrders : MonoBehaviour
         }
     }
 
-    static void Replay(OrderChange change, Order order, OrderHandler handler)
+    static void Replay(OrderChange change, Order order, OrderHandler handler, OrderHandler victim)
     {
         switch (change.Kind)
         {
@@ -95,6 +98,9 @@ public class OnlineOrders : MonoBehaviour
                 break;
             case OrderChangeKind.Pickup:
                 handler.AddOrder(order);
+                break;
+            case OrderChangeKind.Steal:
+                handler.TakeOrderFrom(victim, order);
                 break;
             case OrderChangeKind.Deliver:
                 handler.DeliverOrder(order);

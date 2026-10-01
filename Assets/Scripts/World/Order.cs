@@ -506,6 +506,10 @@ public class Order : MonoBehaviour
 
         if (playerHolding != null)
         {
+            // The golden order slows whoever holds it: no longer, once it leaves them (a steal takes it)
+            if (value == Constants.OrderValue.Golden)
+                playerHolding.HasGoldenOrder = false;
+
             // Removes the ui from all players
             compassMarker.RemoveCompassUIFromAllPlayers();
             // Another machine's scooter has no compass here

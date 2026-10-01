@@ -212,8 +212,12 @@ Progress (2026-09-28):
 - Phase 3F (`2026-09-29-phase3f-tutorial-online.md`) — the tutorial online:
   - Online matches start with the tutorial again, each player in their seat's lane. Each machine tells the host when its player has finished, and the host counts seats (`TutorialManager`, `TutorialSync`, `OnlineTutorial`). A player who leaves doesn't hold the others up.
   - Cutout steals: the machine that drives the scooter opens its barrier at once and asks; the host hands out the order (`CutoutHandler`).
+- Phase 3G (`2026-09-29-phase3g-steals-and-respawns.md`) — steals, clashes and respawns online:
+  - Boosting into another machine's scooter steals or clashes as in a local match. The machine that drives the boosting scooter asks, and the host decides for everyone (`StealRules`, `OnlineSteals`). Two machines asking at once make one steal.
+  - The host picks every respawn point, so no two players rise on one (`OnlineRespawns`).
+  - Two 2024 bugs fixed, in local play too: a player robbed of the golden order stayed slowed, and the first respawn point could be handed out while in use.
 - Next:
-  - Steals, clashes and respawns (3.6), one-shots and sounds (3.7), and disconnects (3.8).
+  - One-shots and sounds (3.7), and disconnects (3.8).
 
 ### Task 3.1: Packages & transports
 
@@ -263,15 +267,15 @@ Progress (2026-09-28):
 
 ### Task 3.6: Steals, clashes, respawns
 
-- [ ] Steal: the attacker's client detects the overlap while boosting → `RequestStealServerRpc(victimSlot)`; the host checks distance ≤ trigger radius + lag tolerance, attacker boosting, victim not boosting, per-pair cooldown → first valid request wins → result replicates.
-- [ ] Clash: host → `ClientRpc` to both owners → each calls `BounceOff` locally.
-- [ ] Respawn: the owner detects water → `ServerRpc`; the host drops that player's orders and picks a `RespawnPoint` → `ClientRpc` to the owner runs the respawn animation. *(Moves `RespawnManager.GetRespawnPoint` and `RespawnPoint.InUse` to the host.)* *(Phase 3E: the host drops the orders, on the spots of the respawn point the owner picked (`OnlineMatch.AskDrop`). Picking the point stays here.)*
-- [ ] Tests: EditMode tests for the steal arbitration rules (pure C# class); 2 clients stealing simultaneously at 150 ms → one steal, same holder everywhere.
+- [x] Steal: the attacker's client detects the overlap while boosting → `RequestStealServerRpc(victimSlot)`; the host checks distance ≤ trigger radius + lag tolerance, attacker boosting, victim not boosting, per-pair cooldown → first valid request wins → result replicates. *(Phase 3G: `StealSync` → `OnlineMatch.AskSteal`; the host's own player's bumps are judged at once. `StealRules`: the sender's own seat, neither player respawning, balls within 50 m on the host, one hit per pair per 2 s either way round. The asker's own boost is trusted: its flags can arrive after its request. See the Phase 3G plan's Rulings 1–4. The stolen order moves as `OrderChange.Steal`; the victim's drop is Phase 3E's.)*
+- [x] Clash: host → `ClientRpc` to both owners → each calls `BounceOff` locally. *(Phase 3G: `PlayerHit` reaches every machine, and each bounces only its own player: a robbed player too (`OnlineSteals.Show`).)*
+- [x] Respawn: the owner detects water → `ServerRpc`; the host drops that player's orders and picks a `RespawnPoint` → `ClientRpc` to the owner runs the respawn animation. *(Moves `RespawnManager.GetRespawnPoint` and `RespawnPoint.InUse` to the host.)* *(Phase 3E: the host drops the orders, on the spots of the respawn point the owner picked (`OnlineMatch.AskDrop`). Picking the point stays here.)* *(Phase 3G: a client asks (`AskRespawn`) and waits, hidden, up to 2 s, then picks its own. The host picks the point, holds it (`RespawnPoint.HoldFor`), drops the orders there and answers (`OnlineRespawns`). Its own player picks as before, among the points nobody holds.)*
+- [x] Tests: EditMode tests for the steal arbitration rules (pure C# class); 2 clients stealing simultaneously at 150 ms → one steal, same holder everywhere. *(Phase 3G: `StealRulesTests`; `OnlineStealsNetworkTests.Hosting_…`: two other machines at 150 ms ask at once, and one steal wins, the same everywhere.)*
 
 ### Task 3.7: Local-only and one-shot systems
 
 - [ ] Not networked: pedestrians (`CivilianAgent`), kickables, DOTween animations, particles, cameras, compass UI, speed lines.
-- [ ] One-shots via `ClientRpc`: boost start, drift boost, emotes (`EmoteHandler` — not on the live player prefab yet, only in `NewDrive Test.unity`), horn/phase sounds.
+- [ ] One-shots via `ClientRpc`: boost start, drift boost, emotes (`EmoteHandler` — not on the live player prefab yet, only in `NewDrive Test.unity`), horn/phase sounds. *(Phase 3G: other machines don't yet hear a thief's whoosh or see a respawn's gravestone.)*
 - [ ] Cutscenes: host sets the state; each client plays the Timeline locally; only the host can skip.
 - [ ] Online pause = local overlay only (no `Time.timeScale`); the host's menu adds **End match**. *(`GameAuthority.SetTimeScale` already ignores pauses online. `ControllerDisconnectPolicy.ShouldPause` still reads `Time.timeScale == 0` to tell whether the game is paused — change that here.)* *(Phase 3C: the host's "Main Menu" takes everyone back; a client's leaves the session.)*
 

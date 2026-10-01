@@ -362,24 +362,70 @@ public class OrderHandler : MonoBehaviour
     }
 
     /// <summary>
-    /// This method steals the best order from a victim player. It will then make the victim drop their other order if they have one.
+    /// This method steals the best order from a victim player. It will then make the victim drop their other order if they have one,
+    /// and bounce them away. A local match does this at once; online the host decides it (StealSync)
     /// </summary>
     /// <param name="victimPlayer">Player being stolen from</param>
     private void StealOrder(OrderHandler victimPlayer)
     {
-        Order newOrder = victimPlayer.GetBestOrder();
+        StealFrom(victimPlayer);
+        victimPlayer.BounceFrom(this);
+    }
+
+    /// <summary>
+    /// This player steals from a victim: the victim's best order when this player has room, then the victim drops the rest
+    /// and spins out. Offline and on the host only: online every client replays both order changes, and the victim's own
+    /// machine bounces them (OnlineSteals)
+    /// </summary>
+    /// <param name="victim">Player being stolen from</param>
+    public void StealFrom(OrderHandler victim)
+    {
+        if (!GameAuthority.IsAuthority)
+            return;
+
+        Order newOrder = victim.GetBestOrder();
         if (newOrder != null && (order1 == null || order2 == null))
-        {
-            playerAnimator.SetTrigger(HashReference._stealLeftTrigger);
-            soundPool.PlayOrderTheft();
-            victimPlayer.LoseOrder(newOrder);
-            AddOrder(newOrder);
-        }
-        victimPlayer.DropEverything(victimPlayer.order1Position.position, victimPlayer.order2Position.position);
-        BallDriving victimControl = victimPlayer.gameObject.GetComponent<BallDriving>();
-        if (victimControl != null) victimControl.BounceOff(transform.position, victimControl.ClashForce * 0.5f);
+            TakeOrderFrom(victim, newOrder);
+        victim.DropEverything(victim.order1Position.position, victim.order2Position.position);
 
         SetDrivingIndicators();
+    }
+
+    /// <summary>
+    /// This player takes an order off a victim's scooter (a steal), with the grab and its whoosh. Online the host sends it
+    /// as one change, and every client replays it
+    /// </summary>
+    public void TakeOrderFrom(OrderHandler victim, Order order)
+    {
+        // Online, the host decides steals: a client shows the host's
+        if (!OrderSync.MayChange)
+            return;
+
+        using OrderSync.Scope change = OrderSync.Change(OrderChange.Steal(order.Key, OrderSync.SeatOf(this), OrderSync.SeatOf(victim)));
+
+        playerAnimator.SetTrigger(HashReference._stealLeftTrigger);
+        soundPool.PlayOrderTheft();
+        victim.LoseOrder(order);
+        AddOrder(order);
+    }
+
+    /// <summary>
+    /// This player was stolen from: they bounce away from the thief. Only the machine that drives them does this (online,
+    /// when the host says so)
+    /// </summary>
+    public void BounceFrom(OrderHandler thief)
+    {
+        BallDriving control = GetComponent<BallDriving>();
+        if (control != null) control.BounceOff(thief.transform.position, control.ClashForce * 0.5f);
+    }
+
+    /// <summary>
+    /// This player clashed with another (both were boosting): they bounce off each other, unless phasing. Only the machine
+    /// that drives them does this (online, when the host says so)
+    /// </summary>
+    public void ClashWith(OrderHandler other)
+    {
+        Clash?.Invoke(other);
     }
 
     /// <summary>
@@ -459,8 +505,8 @@ public class OrderHandler : MonoBehaviour
     /// </summary>
     public void AttemptSteal()
     {
-        // Online, only the host decides steals and clashes, and not yet for another machine's scooter (roadmap Task 3.6)
-        if (!GameAuthority.IsAuthority || RemoteAvatar.IsRemote(this))
+        // Another machine's scooter: its own machine sees its hits (online)
+        if (RemoteAvatar.IsRemote(this))
             return;
 
         if (playerTouching == null)
@@ -468,16 +514,31 @@ public class OrderHandler : MonoBehaviour
             return;
         }
 
-        if (!playerTouching.IsBoosting)
+        Hit(playerTouching);
+    }
+
+    /// <summary>
+    /// This machine's player, boosting, hit another: a steal, or a clash when they're boosting too. A local match does it
+    /// at once; online the host decides, for everyone (StealSync)
+    /// </summary>
+    /// <param name="other">The player hit</param>
+    private void Hit(OrderHandler other)
+    {
+        if (GameAuthority.IsOnline)
         {
-            StealOrder(playerTouching);
+            StealSync.Ask(OrderSync.SeatOf(this), OrderSync.SeatOf(other));
+            return;
+        }
+
+        if (!other.IsBoosting)
+        {
+            StealOrder(other);
         }
         else
         {
-            Clash(playerTouching);
-            playerTouching.Clash(this);
+            ClashWith(other);
+            other.ClashWith(this);
         }
-        ;
     }
 
     /// <summary>
@@ -486,16 +547,12 @@ public class OrderHandler : MonoBehaviour
     /// <param name="other">Collider player has hit. Will attempt to steal if this hitbox is another player</param>
     private void OnTriggerEnter(Collider other)
     {
-        // Online, only the host decides steals and clashes, and not yet for another machine's scooter (roadmap Task 3.6)
-        if (!GameAuthority.IsAuthority || RemoteAvatar.IsRemote(this))
-            return;
-
         OrderHandler otherHandler;
         try
         {
             otherHandler = other.gameObject.transform.parent.GetComponentInChildren<OrderHandler>();
 
-            if(otherHandler == this || RemoteAvatar.IsRemote(otherHandler))
+            if(otherHandler == this)
             {
                 return;
             }
@@ -508,19 +565,17 @@ public class OrderHandler : MonoBehaviour
         {
             return;
         }
+
+        // Another machine's scooter: its own machine sees its hits (online). The touch is noted above all the same: its own
+        // machine never tells this one, and this machine's player's boost needs it
+        if (RemoteAvatar.IsRemote(this))
+            return;
+
         if (ball.Boosting)
         {
             if (otherHandler != null) // I don't know why I have to do this but apparently I do
             {
-                if (!otherHandler.IsBoosting)
-                {
-                    StealOrder(otherHandler);
-                }
-                else
-                {
-                    Clash(otherHandler);
-                    otherHandler.Clash(this);
-                }
+                Hit(otherHandler);
                 playerTouching = null;
                 otherHandler.playerTouching = null;
             }

@@ -19,6 +19,11 @@
   - `TutorialMessagesNetworkTests` (port 7800, empty scene): a client's tutorial report and cutout request, each reaching the host with who sent it.
   - `OnlineTutorialNetworkTests` (port 7801): the tutorial online. Hosting, the first wave waits for every machine's player (or for one who leaves), and the host hands out the cutouts' orders. Joining, this machine's player does the tutorial and steals from their cutout, and the host hears when they finish. They load the game scene: a minute or two each.
   - `OnlineOrdersNetworkTests` (port 7799): a match's orders, hosting and joining. Hosting, the host decides another machine's pickups, deliveries and drops, and shares the scores. Joining, the host's orders show on whichever scooter holds them, and nothing changes here by itself. They load the game scene: a minute or two each.
+  - `StealMessagesNetworkTests` (port 7802, empty scene): a client's steal request reaching the host with who sent it, and the host's hits reaching clients in order.
+  - `RespawnMessagesNetworkTests` (port 7803, empty scene): a client's respawn request reaching the host with who sent it and where, and the host's respawn point reaching clients.
+  - `OnlineStealsNetworkTests` (port 7804): steals and clashes, hosting and joining. Hosting, two other machines over a 150 ms connection try to steal from each other at once: one steal wins, the same everywhere. Joining, this machine's player's hit goes to the host, and the host's steals and clashes show here. They load the game scene: a minute or two each.
+  - `OnlineRespawnsNetworkTests` (port 7805): respawn points, hosting and joining. Hosting, no two players rise on one point. Joining, this machine's player rises where the host says, or on its own point without an answer. They load the game scene: a minute or two each.
+  - The first load of the game scene in a run can take over 40 s when it's cold (the first run after assets changed: it once took 41 s), and the other machines in that test were dropped during it (Unity Transport drops a machine after 30 s without a word). Run the test again, or after `LocalMatchSmokeTest`, which loads the scene first.
   - When a machine leaves, Windows often reports its closed port to the others, and Unity Transport logs that as an error (`docs/online.md`, Known limits). Tests where machines leave call `LogCollector.MachinesLeave()` first: that one message is let through, and any other error still fails the test.
 - The Steam lobby flow (`OnlineLobbyTests`, `LobbyRulesTests`) runs over fakes of Steam and the session (`OnlineFakes`), without Play Mode. `SteamLobbyServiceTests` checks Steam's lobbies without Steam: with Steam they're checked on two PCs (`docs/online.md`).
 - `GameSceneSpawnTests` opens the game scene in the editor, without Play Mode. It checks the start points, at the start of each seat's tutorial lane: one per seat, in the open, over ground that isn't water.
@@ -30,6 +35,8 @@
   - `OrderRulesTests`: a client's orders wait for the host.
   - `HostQueueTests`: a client's messages from the host wait while its scene changes.
   - `TutorialManagerTests`: the tutorial ends when every seat's player has finished it (online, only the host ends it).
+  - `StealRulesTests`: the host's judge of a steal or clash. `PlayerHitTests`: a hit as it travels.
+  - `RespawnPointsTests`: the nearest free respawn point, and the host's holds.
 - Leave the editor alone while it plays. Controllers you touch count as input.
 - Run a single test: select it in the Test Runner → **Run Selected**.
 

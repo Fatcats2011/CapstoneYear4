@@ -45,6 +45,28 @@ public class RespawnManager : SingletonMonobehaviour<RespawnManager>
         }
     }
 
+    /// <summary>
+    /// A respawn point's place among this scene's points: the same on every machine (online the host names a point by
+    /// it). -1 when it isn't one of them
+    /// </summary>
+    public int IndexOf(RespawnPoint point)
+    {
+        return point == null || respawnPoints == null ? -1 : System.Array.IndexOf(respawnPoints, point);
+    }
+
+    /// <summary>
+    /// The respawn point in a place among this scene's points, or null outside the range
+    /// </summary>
+    public RespawnPoint PointAt(int index)
+    {
+        return respawnPoints != null && index >= 0 && index < respawnPoints.Length ? respawnPoints[index] : null;
+    }
+
+    /// <summary>
+    /// Where a player who was last on the ground here rises: the nearest respawn point nobody is rising from (a free one
+    /// closer than closeEnough will do). With every point in use, the nearest anyway. Null when the scene has none.
+    /// Online the host picks for every player (OnlineRespawns)
+    /// </summary>
     public RespawnPoint GetRespawnPoint(Vector3 lastGrounded)
     {
         if(respawnPoints.Length == 0)
@@ -52,19 +74,24 @@ public class RespawnManager : SingletonMonobehaviour<RespawnManager>
             return null;
         }
 
-        float minDist = Vector3.Distance(lastGrounded, respawnPoints[0].PlayerSpawn);
-        int rspIndex = 0;
-        for(int i=1;i<respawnPoints.Length;i++)
+        // The nearest point of all, and the nearest free one (2024: the first point was handed out even while in use)
+        RespawnPoint nearest = null, nearestFree = null;
+        float nearestDist = float.MaxValue, freeDist = float.MaxValue;
+        foreach (RespawnPoint point in respawnPoints)
         {
-            if (respawnPoints[i].InUse) { continue; }
-            float newDist = Vector3.Distance(lastGrounded, respawnPoints[i].PlayerSpawn);
-            if (newDist < minDist)
+            float dist = Vector3.Distance(lastGrounded, point.PlayerSpawn);
+            if (dist < nearestDist)
             {
-                if(newDist < closeEnough) { return respawnPoints[i]; }
-                rspIndex = i;
-                minDist = newDist;
+                nearest = point;
+                nearestDist = dist;
             }
+            if (point.InUse || dist >= freeDist)
+                continue;
+            if (dist < closeEnough)
+                return point;
+            nearestFree = point;
+            freeDist = dist;
         }
-        return respawnPoints[rspIndex];
+        return nearestFree != null ? nearestFree : nearest;
     }
 }

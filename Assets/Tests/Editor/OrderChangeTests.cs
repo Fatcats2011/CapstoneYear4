@@ -19,6 +19,7 @@ namespace DoA.Tests
             yield return OrderChange.Drop(2, 11, new Vector3(1, 2, 3), 4.5f, 12, new Vector3(-1, 0, 7), 9f, true);
             yield return OrderChange.Erase(11);
             yield return OrderChange.EraseGold(13);
+            yield return OrderChange.Steal(11, 0, 2);
         }
 
         [TestCaseSource(nameof(EveryKind))]
@@ -48,6 +49,17 @@ namespace DoA.Tests
             Assert.AreEqual(new Vector3(-1, 0, 7), drop.Spot2);
             Assert.AreEqual(9f, drop.Height2);
             Assert.IsTrue(drop.Flag, "spins out");
+        }
+
+        [Test]
+        public void Steal_CarriesTheOrder_TheThief_AndTheVictim()
+        {
+            OrderChange steal = OrderChange.Steal(11, 0, 2);
+            Assert.AreEqual(OrderChangeKind.Steal, steal.Kind);
+            Assert.AreEqual(11, steal.Order);
+            Assert.AreEqual(0, steal.Seat, "the thief");
+            Assert.AreEqual(2, steal.Seat2, "the victim");
+            Assert.AreEqual(-1, OrderChange.Pickup(11, 0).Seat2, "only a steal has a second seat");
         }
 
         [Test]

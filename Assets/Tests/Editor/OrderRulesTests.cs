@@ -22,6 +22,7 @@ namespace DoA.Tests
         {
             GameAuthority.Role = NetworkRole.Offline;
             OrderSync.Reset();
+            Reflect.SetSingleton<PlayerInstantiate>(null);
             objects.DestroyAll();
         }
 
@@ -134,6 +135,47 @@ namespace DoA.Tests
             {
                 EditorSceneManager.CloseScene(home, true);
             }
+        }
+
+        [Test]
+        public void TakeOrderFrom_OnAClient_WaitsForTheHost()
+        {
+            GameAuthority.Role = NetworkRole.Client;
+            OrderHandler thief = NewPlayer("Player 1"), victim = NewPlayer("Player 2");
+            Order order = objects.Add<Order>();
+            Reflect.SetField(victim, "order1", order);
+
+            thief.TakeOrderFrom(victim, order);
+
+            Assert.AreSame(order, Reflect.GetField(victim, "order1"), "the host's Steal moves it");
+            Assert.IsFalse(thief.HasOrder);
+        }
+
+        [Test]
+        public void RemovePlayerHolding_TheGoldenOrder_NoLongerSlowsItsLastHolder()
+        {
+            // A steal takes it (2024: the robbed player stayed slowed for the rest of the golden round)
+            Reflect.SetSingleton(objects.Add<PlayerInstantiate>()); // the compass markers look for this machine's players
+            OrderHandler robbed = NewPlayer("Player 1");
+            robbed.HasGoldenOrder = true;
+            Order golden = GoldenOrderHeldBy(robbed);
+
+            golden.RemovePlayerHolding();
+
+            Assert.IsFalse(robbed.HasGoldenOrder);
+        }
+
+        // The golden order, held by a player, with the parts letting go of it touches (Awake sets these in a real order)
+        Order GoldenOrderHeldBy(OrderHandler player)
+        {
+            Order golden = objects.Add<Order>();
+            Reflect.SetField(golden, "value", Constants.OrderValue.Golden);
+            Reflect.SetField(golden, "arrow", objects.NewGameObject("Arrow"));
+            Reflect.SetField(golden, "orderMeshObject", objects.NewGameObject("Mesh"));
+            Reflect.SetField(golden, "ogMeshRot", Quaternion.identity);
+            golden.compassMarker = objects.Add<CompassMarker>();
+            Reflect.SetField(golden, "playerHolding", player);
+            return golden;
         }
     }
 }

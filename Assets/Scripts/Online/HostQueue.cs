@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 
 /// <summary>
-/// Client: the host's messages (its states and order changes), in the order they came. While this machine's scene
+/// Client: the host's messages (its states, order changes, hits and respawn points), in the order they came. While this machine's scene
 /// changes they wait, so the new scene's objects hear them, then go in order. A message that comes while others still
 /// wait goes behind them. One that throws is logged and doesn't hold up the rest
 /// </summary>

@@ -80,6 +80,15 @@ public class Respawn : MonoBehaviour
     private bool isRespawning;
     public bool IsRespawning { get { return isRespawning; } }
 
+    /// <summary>Online client: how long its player waits for the host's respawn point before picking their own, in seconds</summary>
+    public const float HOST_ANSWER_WAIT = 2f;
+
+    private RespawnPoint risePoint; // online client: the host's point for the respawn waiting for one
+    private bool awaitingPoint;     // online client: this respawn waits for the host's point
+
+    /// <summary>How long a respawn takes, from the wisp rising to the end of the lift (online, the host holds the point that long)</summary>
+    public float Duration { get { return wispRiseTime + wispToCasketTime + liftDuration; } }
+
     /// <summary>Whether the rider is hidden: from falling in the water until it rises from its grave (its wisp shows)</summary>
     public bool RiderHidden { get { return modelParent != null && !modelParent.activeSelf; } }
 
@@ -135,16 +144,35 @@ public class Respawn : MonoBehaviour
     /// <returns></returns>
     private IEnumerator RespawnPlayer()
     {
-        RespawnPoint rsp = RespawnManager.Instance.GetRespawnPoint(lastGroundedPos); // get the RSP
-        rsp.InUse = true;
+        // Where to rise. Online a client asks the host, which picks where every player rises (never two on one point) and
+        // drops the orders there. It waits, hidden, a little at most
+        RespawnPoint rsp = null;
+        if (GameAuthority.IsOnline && !GameAuthority.IsAuthority)
+        {
+            risePoint = null;
+            awaitingPoint = true;
+            RespawnSync.Ask(OrderSync.SeatOf(this), lastGroundedPos);
+            float giveUp = Time.time + HOST_ANSWER_WAIT;
+            while (risePoint == null && !GameAuthority.IsAuthority && Time.time < giveUp) // offline again: the host left
+                yield return null;
+            awaitingPoint = false;
+            rsp = risePoint;
+        }
+        if (rsp == null)
+        {
+            // Offline, on the host, or with no answer: this machine picks. A client with no answer asks the host to drop
+            // the orders there
+            rsp = RespawnManager.Instance.GetRespawnPoint(lastGroundedPos); // get the RSP
+            rsp.InUse = true;
+            orderHandler.DropEverything(rsp.Order1Spawn, rsp.Order2Spawn, false);
+        }
+
         // init the wisp
         Vector3 wispStart = deathWisp.transform.position;
         deathWisp.transform.position -= Vector3.up * wispSpawnOffset;
         deathWisp.enabled = (true);
         deathWisp.Reinit();
         wispTrail.time = wispTrailTime;
-
-        orderHandler.DropEverything(rsp.Order1Spawn, rsp.Order2Spawn, false);
 
         float elapsedTime = 0;
         Vector3 wispRise = wispStart + Vector3.up * wispHeight; // position of the wisp risen above water
@@ -216,6 +244,16 @@ public class Respawn : MonoBehaviour
     }
 
     /// <summary>
+    /// Online client: where the host says this player rises, for the respawn waiting for it. Ignored when none waits: an
+    /// answer that came too late finds the player already rising on their own point
+    /// </summary>
+    public void RiseAt(RespawnPoint point)
+    {
+        if (awaitingPoint)
+            risePoint = point;
+    }
+
+    /// <summary>
     /// Another machine's scooter (this script is off there): hidden while its owner's rider is, with its ball's collider
     /// off so it bumps nobody. It shows again when its owner's does
     /// </summary>
@@ -274,6 +312,7 @@ public class Respawn : MonoBehaviour
         }
 
         isRespawning = false;
+        awaitingPoint = false;
 
         wispTrail.time = 0f;
         modelParent.SetActive(true);

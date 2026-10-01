@@ -107,7 +107,7 @@ Online multiplayer is being built in steps (roadmap Phase 3: `docs/superpowers/p
   - The order rides on the right scooter. Its beacon, compass marker and arrow show.
   - Its dropoff glows for the holder's camera only, as in split-screen.
   - The rider slows down with the golden order and their boost recharges as in a local match.
-- **Falling in the water holding orders:** the player's machine asks the host to drop them, on its respawn point's spots. The host picks how high each one flies and drops them for everyone. A machine can only drop its own player's orders.
+- **Falling in the water holding orders:** the host drops them on the spots of the player's respawn point (since Phase 3G the host picks that point too). It picks how high each one flies and drops them for everyone. A machine can only drop its own player's orders.
 - **Scores are the host's.** Each delivery scores on the host, and each player's score reaches every machine, with the placings. The golden order's growing value comes from the host too. The results match everywhere.
 - **A machine that leaves mid-match:** its player's orders go back to the pool, instead of going with their scooter.
 - How it works:
@@ -143,6 +143,30 @@ Online multiplayer is being built in steps (roadmap Phase 3: `docs/superpowers/p
     - On a client, its own player opens the barrier and asks the host.
     - Every machine opens a cutout once its order is taken.
 
+### Phase 3G: steals, clashes and respawns
+
+- **Steals and clashes work between machines, as in a local match.** Boosting into another player's scooter steals their best order if they aren't boosting, and clashes if they are. Every machine sees the same result:
+  - A steal: the order moves to the thief's scooter, and the robbed player drops the rest, spins out and bounces away from the thief.
+  - A clash: both players bounce off each other.
+- **Two players trying to steal from each other at the same moment make one steal**, the same on every machine.
+- **The golden order can be stolen online.** A player robbed of it isn't slowed any more (a 2024 bug, fixed in local play too).
+- **Two players who fall in the water never rise on the same point**, and each one's orders land on their own point.
+- How it works:
+  - **The machine that drives the boosting scooter sees the bump and asks the host.** Its request leaves the game code through `StealSync` and travels on `OnlineMatch` (`AskSteal`). The host judges its own player's bumps at once, and takes a request only for the sender's own seat.
+  - **`StealRules` is the host's judge.** It checks its own view of the two players:
+    - Both are there, and neither is respawning.
+    - Their balls are within 50 m (a request takes a moment to arrive).
+    - That pair hasn't been hit in the last 2 s, either way round: when both machines ask about one bump, the first request wins.
+    - It's a steal if the host sees the victim not boosting, a clash if it sees them boosting. The asker's own boost isn't checked: its flags can arrive after its request.
+  - **A steal's effect on orders** travels as Phase 3E order changes: the stolen order moving (`OrderChange.Steal`), then the victim's drop.
+  - **Bounces:** `PlayerHit` tells every machine about a steal or clash (`SendHit`), and each machine bounces only its own player.
+  - **`OnlineSteals`** (added by `OnlineGame`) is the glue for steals and clashes.
+  - **Respawns:**
+    - A client whose player falls in the water asks the host where they rise (`RespawnSync`, `AskRespawn`), and waits, hidden, for up to 2 s. With no answer, it picks its own point as before.
+    - The host picks the nearest point nobody is rising from, and holds it for the respawn (`RespawnPoint.HoldFor`). It drops the player's orders there, then answers (`SendRespawn`).
+    - **`OnlineRespawns`** is the glue.
+  - On a client, hits and respawn points wait with the host's other messages (`HostQueue`).
+
 ## Two editors on one computer (ParrelSync)
 
 - **ParrelSync → Clones Manager → Create new clone** (once). The clone shares this project's Assets and ProjectSettings. Unity imports the project the first time the clone opens, which takes a while.
@@ -160,6 +184,7 @@ Online multiplayer is being built in steps (roadmap Phase 3: `docs/superpowers/p
   - The opening cutscene plays in each, then each player drives their own lane of the tutorial. The first wave starts once both have driven out of it into the city.
   - Drive in one editor and watch the other: the scooter moves there, boosting and drifting.
   - Pick up and deliver orders in either editor: both show them on the scooter that holds them, with the same scores.
+  - Boost into the other editor's scooter: steals and clashes show in both. Drive both into the water at one spot: they rise on different points.
 - Pause in editor 1 and pick **Main Menu**: both go back to player select, still in the session. In editor 2 (a client), **Main Menu** leaves the session.
 - **Leave** ends a session. When the host leaves, editor 2 shows `Online: session ended: The host left the match.`
 - Only change files in the original editor: clones share them.
@@ -184,11 +209,13 @@ Online multiplayer is being built in steps (roadmap Phase 3: `docs/superpowers/p
 - Hosting fails if another program uses port 7777.
 - Direct joins give up after 10 seconds.
 - On one computer, when one side closes (or both close at once), Unity Transport may log `All socket receive requests were marked as failed…` as an error in the other editor: Windows reporting the closed port. The session was ending anyway.
-- **Steals and clashes are the host's alone** until roadmap Task 3.6: only the host's player steals, and the golden round has no stealing online yet.
+- **On a client, a steal or clash takes effect a round trip after the bump**, because the host decides it. If the victim started boosting less than a round trip before the bump, the host may call it a steal where a local match would call a clash.
+- A client whose player falls in the water rises a round trip later than offline: it waits, for at most 2 s, for the host's respawn point.
+- Another machine's scooter can be bumped during the last 0.7 s of its rise from its grave: its collider comes back when its rider shows.
 - **A pickup shows once the host has seen the scooter in the light:** on a client, about a round trip after it drove in.
 - A cutout's order reaches a client's scooter about a round trip after its barrier opens.
 - A player who leaves holding the golden order ends the golden round, as if they'd delivered it (roadmap Task 3.8).
-- **Other machines' scooters are silent**, and a respawn shows no wisp: the scooter is gone until it rises from its grave (roadmap Tasks 3.6–3.7).
+- **Other machines' scooters are silent** (no whoosh when they steal), and their respawn shows no wisp or gravestone: the scooter is gone until it rises from its grave (roadmap Task 3.7).
 - When the main game ends, only the host's scooter stops; the others keep driving until the golden round loads.
 - If the host leaves mid-match, clients stay where they are, offline (roadmap Task 3.8).
 - An empty seat still says "press A to join" on every machine, though only a machine's first controller can take a seat online.
