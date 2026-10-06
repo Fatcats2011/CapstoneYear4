@@ -13,7 +13,7 @@ namespace DoA.Tests
     /// Orders in an online match on this computer (127.0.0.1):
     /// - Hosting: this machine hosts with the game. It decides every scooter's pickups, deliveries and drops, another
     ///   machine's too, and shares them with the scores. The other machine is a session without the game, driven
-    ///   through its match and its scooter.
+    ///   through its match and its scooter. It leaves mid-delivery, or holding the golden order (the golden round).
     /// - Joining: this machine joins with the game. The host is a session without the game, whose order changes the
     ///   test sends: they show here on whichever scooter holds the order, and this machine changes none by itself.
     /// Loads the game scene: a minute or two. No lambda captures a local: after EnterPlayMode even assigning one throws
@@ -89,6 +89,32 @@ namespace DoA.Tests
                 if (scene == MatchScene.Game)
                     Machines.Add(machine);
             }
+        }
+
+        // A machine without the game that has every scene the host asks for at once
+        class LoadAnswerer
+        {
+            readonly OnlineMatch match;
+
+            public LoadAnswerer(OnlineMatch match)
+            {
+                this.match = match;
+                match.LoadRequested += OnLoadRequested;
+            }
+
+            void OnLoadRequested(MatchScene scene)
+            {
+                match.ReportLoaded(scene);
+            }
+        }
+
+        // What the Hosting_ tests' opening (HostAMatch) leaves them
+        class HostedMatch
+        {
+            public OnlineSession Host;
+            public OnlineSession Other;  // another machine: a session without the game
+            public ChangeRecorder Heard; // the order changes the other machine heard
+            public readonly List<int> Taken = new List<int>(); // the orders the test has used
         }
 
         [UnityTearDown]
@@ -261,13 +287,11 @@ namespace DoA.Tests
             return last;
         }
 
-        [UnityTest]
-        public IEnumerator Hosting_TheHostDecidesEveryScootersOrders_AndSharesThemWithTheScores()
+        // The Hosting_ tests' opening, once the menu scene is up: this machine hosts with the game, and another machine (a
+        // session without the game) takes seat 2. The match starts on both machines, both players finish the tutorial
+        // (this machine's waits in the city), and the first wave begins
+        static IEnumerator HostAMatch(HostedMatch match)
         {
-            EditorSceneManager.playModeStartScene = AssetDatabase.LoadAssetAtPath<SceneAsset>(MENU_SCENE);
-            yield return new EnterPlayMode();
-            LogAssert.ignoreFailingMessages = true;
-            LogCollector log = new LogCollector();
             float deadline = Time.realtimeSinceStartup + 60;
             while (State() != GameState.Menu && Time.realtimeSinceStartup < deadline)
                 yield return null;
@@ -276,30 +300,27 @@ namespace DoA.Tests
             while (PlayerInstantiate.Instance.PlayerCount < 1 && Time.realtimeSinceStartup < deadline)
                 yield return null;
 
-            OnlineSession host = OnlineSession.Create(VERSION);
-            OnlineGame.Attach(host);
-            Assert.IsTrue(host.HostDirect(THIS_COMPUTER, PORT), "hosting");
+            match.Host = OnlineSession.Create(VERSION);
+            OnlineGame.Attach(match.Host);
+            Assert.IsTrue(match.Host.HostDirect(THIS_COMPUTER, PORT), "hosting");
             GameManager.Instance.SetGameState(GameState.PlayerSelect);
-            OnlineSession other = OnlineSession.Create(VERSION); // another machine: a session without the game
-            other.JoinDirect(THIS_COMPUTER, PORT);
+            match.Other = OnlineSession.Create(VERSION);
+            match.Other.JoinDirect(THIS_COMPUTER, PORT);
             deadline = Time.realtimeSinceStartup + WAIT;
-            while (!(Slot(1) != null && other.Match != null && ScooterInSeat(other, 1) != null) && Time.realtimeSinceStartup < deadline)
+            while (!(Slot(1) != null && match.Other.Match != null && ScooterInSeat(match.Other, 1) != null) && Time.realtimeSinceStartup < deadline)
                 yield return null;
             Assert.IsNotNull(Slot(1), "their scooter is in seat 2");
-            ChangeRecorder heard = new ChangeRecorder(other.Match);
-            List<int> taken = new List<int>(); // the orders this test has used
+            match.Heard = new ChangeRecorder(match.Other.Match);
 
-            // The match starts on both machines. Both players finish the tutorial (this machine's waits in the city), and
-            // the first wave begins
             PlayerInstantiate.Instance.ReadyUp(0);
             SceneFlow.Current.LoadGameScene();
-            other.Match.ReportLoaded(MatchScene.Game);
+            match.Other.Match.ReportLoaded(MatchScene.Game);
             deadline = Time.realtimeSinceStartup + LOADING + 60;
             while (State() != GameState.Tutorial && Time.realtimeSinceStartup < deadline)
                 yield return null;
             Assert.AreEqual(GameState.Tutorial, State(), "the tutorial");
             FinishTutorialInTheCity(0);
-            other.Match.ReportLearnt(1);
+            match.Other.Match.ReportLearnt(1);
             deadline = Time.realtimeSinceStartup + WAIT;
             while (State() != GameState.Begin && Time.realtimeSinceStartup < deadline)
                 yield return null;
@@ -307,11 +328,25 @@ namespace DoA.Tests
 
             // The tutorial's orders were out for both lanes until the first wave: they aren't the wave's
             foreach (Order tutorial in (Order[])Reflect.GetField(OrderManager.Instance, "tutorialOrders"))
-                taken.Add(tutorial.Key);
+                match.Taken.Add(tutorial.Key);
+        }
+
+        [UnityTest]
+        public IEnumerator Hosting_TheHostDecidesEveryScootersOrders_AndSharesThemWithTheScores()
+        {
+            EditorSceneManager.playModeStartScene = AssetDatabase.LoadAssetAtPath<SceneAsset>(MENU_SCENE);
+            yield return new EnterPlayMode();
+            LogAssert.ignoreFailingMessages = true;
+            LogCollector log = new LogCollector();
+            HostedMatch match = new HostedMatch();
+            yield return HostAMatch(match);
+            OnlineSession host = match.Host, other = match.Other;
+            ChangeRecorder heard = match.Heard;
+            List<int> taken = match.Taken;
 
             // The first wave's first order: spawned here, and the other machine hears it
             OrderChange? spawn = null;
-            deadline = Time.realtimeSinceStartup + WAIT;
+            float deadline = Time.realtimeSinceStartup + WAIT;
             while ((spawn = FirstNewSpawn(heard, taken)) == null && Time.realtimeSinceStartup < deadline)
                 yield return null;
             Assert.IsTrue(spawn.HasValue, "the other machine hears an order spawn");
@@ -402,6 +437,130 @@ namespace DoA.Tests
             yield return null;
             Assert.IsTrue(third != null, "still here");
             Assert.IsFalse(third.IsActive, "back in the pool");
+
+            host.Leave();
+            yield return null;
+            log.Dispose();
+            Assert.IsEmpty(log.Problems, "Errors:\n\n" + string.Join("\n\n", log.Problems));
+        }
+
+        [UnityTest]
+        public IEnumerator Hosting_AMachineLeavesMidDelivery_ItsOrderIsStillErasedAfterItsThrow()
+        {
+            EditorSceneManager.playModeStartScene = AssetDatabase.LoadAssetAtPath<SceneAsset>(MENU_SCENE);
+            yield return new EnterPlayMode();
+            LogAssert.ignoreFailingMessages = true;
+            LogCollector log = new LogCollector();
+            HostedMatch match = new HostedMatch();
+            yield return HostAMatch(match);
+            OnlineSession host = match.Host, other = match.Other;
+
+            // The first wave's first order
+            OrderChange? spawn = null;
+            float deadline = Time.realtimeSinceStartup + WAIT;
+            while ((spawn = FirstNewSpawn(match.Heard, match.Taken)) == null && Time.realtimeSinceStartup < deadline)
+                yield return null;
+            Assert.IsTrue(spawn.HasValue, "the other machine hears an order spawn");
+            Order first = OrderBook.Find(spawn.Value.Order);
+
+            // Their scooter picks it up, then reaches its dropoff: the host decides the delivery
+            ShareAt(ScooterInSeat(other, 1), first.transform.position);
+            deadline = Time.realtimeSinceStartup + WAIT;
+            while (!match.Heard.Changes.Contains(OrderChange.Pickup(first.Key, 1)) && Time.realtimeSinceStartup < deadline)
+                yield return null;
+            Assert.AreSame(Handler(1), first.PlayerHolding, "on the other machine's scooter");
+            ShareAt(ScooterInSeat(other, 1), first.DropoffPoint.position);
+            deadline = Time.realtimeSinceStartup + WAIT;
+            while (!match.Heard.Changes.Contains(OrderChange.Deliver(first.Key, 1)) && Time.realtimeSinceStartup < deadline)
+                yield return null;
+            Assert.IsTrue(match.Heard.Changes.Contains(OrderChange.Deliver(first.Key, 1)), "delivered");
+
+            // They leave at once, while the order flies to its customer
+            log.MachinesLeave(); // Windows may report a leaving machine's closed port: see LogCollector.CLOSED_PORT
+            other.Leave();
+            deadline = Time.realtimeSinceStartup + WAIT;
+            while (host.PlayersIn > 1 && Time.realtimeSinceStartup < deadline)
+                yield return null;
+            for (float until = Time.realtimeSinceStartup + 1f; Time.realtimeSinceStartup < until;) // the throw takes 0.25 s
+                yield return null;
+
+            Assert.IsFalse(first.IsActive, "erased after its throw: back in the pool");
+            Assert.IsNull(first.PlayerHolding);
+            Assert.AreEqual(1, PlayerInstantiate.Instance.PlayerCount, "their scooter went");
+            Assert.IsTrue(OrderManager.Instance.GameStarted, "the waves go on");
+
+            host.Leave();
+            yield return null;
+            log.Dispose();
+            Assert.IsEmpty(log.Problems, "Errors:\n\n" + string.Join("\n\n", log.Problems));
+        }
+
+        [UnityTest]
+        public IEnumerator Hosting_AMachineLeavesHoldingTheGoldenOrder_ItGoesBackToItsStart_AndTheRoundGoesOn()
+        {
+            EditorSceneManager.playModeStartScene = AssetDatabase.LoadAssetAtPath<SceneAsset>(MENU_SCENE);
+            yield return new EnterPlayMode();
+            LogAssert.ignoreFailingMessages = true;
+            LogCollector log = new LogCollector();
+            HostedMatch match = new HostedMatch();
+            yield return HostAMatch(match);
+            OnlineSession host = match.Host, other = match.Other;
+
+            // Time up: the host's golden round loads on both machines (the other machine has it at once), and its
+            // cutscene is skipped
+            new LoadAnswerer(other.Match);
+            Reflect.SetField(OrderManager.Instance, "wave", 99);
+            OrderManager.Instance.InitWave();
+            float deadline = Time.realtimeSinceStartup + LOADING;
+            while (State() != GameState.GoldenCutscene && Time.realtimeSinceStartup < deadline)
+                yield return null;
+            Assert.AreEqual(GameState.GoldenCutscene, State(), "the golden round");
+            CutsceneManager.Instance.Skip();
+            deadline = Time.realtimeSinceStartup + WAIT;
+            while (State() != GameState.FinalPackage && Time.realtimeSinceStartup < deadline)
+                yield return null;
+            Assert.AreEqual(GameState.FinalPackage, State());
+
+            // The other machine's player takes the golden order
+            Order golden = (Order)Reflect.GetField(OrderManager.Instance, "finalOrder");
+            Vector3 start = golden.PickupPoint.position;
+            ShareAt(ScooterInSeat(other, 1), start);
+            deadline = Time.realtimeSinceStartup + WAIT;
+            while (!match.Heard.Changes.Contains(OrderChange.Pickup(golden.Key, 1)) && Time.realtimeSinceStartup < deadline)
+                yield return null;
+            Assert.AreSame(Handler(1), golden.PlayerHolding, "the other machine's player holds the golden order");
+            OrderManager.Instance.FinalOrderValue = 90; // it grew while they held it
+
+            // They leave holding it
+            log.MachinesLeave(); // Windows may report a leaving machine's closed port: see LogCollector.CLOSED_PORT
+            other.Leave();
+            deadline = Time.realtimeSinceStartup + WAIT;
+            while (host.PlayersIn > 1 && Time.realtimeSinceStartup < deadline)
+                yield return null;
+            yield return null;
+
+            Assert.AreEqual(GameState.FinalPackage, State(), "the golden round goes on");
+            Assert.IsTrue(golden.IsActive, "out again");
+            Assert.IsNull(golden.PlayerHolding);
+            Assert.Less(Vector3.Distance(start, golden.transform.position), 0.01f, "back at its start");
+            Assert.AreEqual((int)Constants.OrderValue.Golden, OrderManager.Instance.FinalOrderValue, "at its starting value");
+            Assert.IsTrue(OrderManager.Instance.FinalOrderActive, "its clock and every HUD stay on the golden round");
+
+            // A delivery ends the round a moment later (the order manager's post-game linger): this was none
+            for (float until = Time.realtimeSinceStartup + 3f; Time.realtimeSinceStartup < until;)
+                yield return null;
+            Assert.AreEqual(GameState.FinalPackage, State(), "still on a moment later: the leaver didn't deliver it");
+
+            // This machine's player can take it now, and it grows again while they hold it
+            PutBallAt(0, start);
+            deadline = Time.realtimeSinceStartup + WAIT;
+            while (golden.PlayerHolding != Handler(0) && Time.realtimeSinceStartup < deadline)
+                yield return null;
+            Assert.AreSame(Handler(0), golden.PlayerHolding, "the round goes on for the players still here");
+            deadline = Time.realtimeSinceStartup + WAIT;
+            while (OrderManager.Instance.FinalOrderValue == (int)Constants.OrderValue.Golden && Time.realtimeSinceStartup < deadline)
+                yield return null;
+            Assert.Greater(OrderManager.Instance.FinalOrderValue, (int)Constants.OrderValue.Golden, "its value grows again");
 
             host.Leave();
             yield return null;

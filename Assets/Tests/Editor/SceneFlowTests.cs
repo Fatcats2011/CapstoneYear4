@@ -18,6 +18,7 @@ namespace DoA.Tests
 
         public event Action OnReturnToMenu;
         public bool WaitingForConfirm { get; set; }
+        public bool LeavingForMenu { get; set; }
 
         public void LoadGameScene() { GameLoads++; }
         public void LoadFinalOrderScene() { FinalOrderLoads++; }

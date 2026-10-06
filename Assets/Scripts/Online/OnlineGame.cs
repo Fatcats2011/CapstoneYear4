@@ -3,7 +3,8 @@ using UnityEngine;
 
 /// <summary>
 /// The game's side of an online session:
-/// - this machine's role (GameAuthority) and the scene flow (loads with the whole session: OnlineSceneFlow);
+/// - this machine's role (GameAuthority) and the scene flow (loads with the whole session: OnlineSceneFlow), with how
+///   long each match load took here, in the log;
 /// - this machine's player in the seat the host gave them;
 /// - other machines' players as scooters in their seats;
 /// - every scooter's pose and what it's doing (OnlineDriving);
@@ -15,7 +16,8 @@ using UnityEngine;
 /// - everyone's colour, hat and readiness;
 /// - the host's game states;
 /// - the host's match clock (MatchClock);
-/// - why a session ended, in the controller hint bar.
+/// - why a session ended, in the controller hint bar. A match can't go on without its host: a machine in one goes back to
+///   the menu.
 /// Whatever starts a session for the game adds it: OnlinePlay (Steam) or the editor's Online menu. See docs/online.md
 /// </summary>
 public class OnlineGame : MonoBehaviour
@@ -49,6 +51,7 @@ public class OnlineGame : MonoBehaviour
     OnlineSteals steals;     // the host's steals and clashes, on this machine
     OnlineRespawns respawns; // the host's respawn points, on this machine
     HostQueue hostMessages;  // client: the host's states, order changes, hits and respawn points, which wait while this machine's new scene comes up
+    string pendingNotice;    // why the session ended, to say again once the menus are up
 
     /// <summary>
     /// Plays the game over a session (adds an OnlineGame to its object)
@@ -99,7 +102,8 @@ public class OnlineGame : MonoBehaviour
     {
         session = onlineSession;
         prefabs = OnlinePrefabs.Load();
-        sceneFlow = new OnlineSceneFlow(SceneFlow.Current, SceneFlow.Loader);
+        sceneFlow = new OnlineSceneFlow(SceneFlow.Current, SceneFlow.Loader, RealTime);
+        sceneFlow.LoadTimed += LogLoad;
         hostMessages = new HostQueue(IsChangingScene);
         sceneFlow.SceneChanged += hostMessages.Release;
         choices = prefabs.LocalPlayerPrefab.GetComponentInChildren<CustomizationSelector>(true);
@@ -202,10 +206,21 @@ public class OnlineGame : MonoBehaviour
             players.SetOnlineSeat(-1);
     }
 
-    // The session ended by itself (the host left, turned this player away, or couldn't be reached): the player hears why
+    // The session ended by itself (the host left, turned this player away, or couldn't be reached; on the host, its own
+    // connection failed): the player hears why. A match can't go on without its host: a machine in one, or on its way
+    // into one, goes back to the menu (the local loader's way, by now), where it hears why again
     void ShowEnd(string reason)
     {
         ControllerPrompts.Instance.ShowHint(reason, NOTICE_SECONDS);
+
+        GameManager game = GameManager.Instance;
+        if (game == null || LobbyRules.InTheMenus(game.MainState))
+            return;
+
+        pendingNotice = reason;
+        ISceneFlow flow = SceneFlow.Current;
+        if (flow != null)
+            flow.ReturnToMenu();
     }
 
     void OnPlayerSpawned(OnlinePlayer player)
@@ -279,9 +294,16 @@ public class OnlineGame : MonoBehaviour
         session.Leave();
     }
 
-    // Host: each state the game switches to goes to the clients
+    // Host: each state the game switches to goes to the clients. Once the menus are up after a session that ended by
+    // itself, the player hears why again
     void OnStateApplied(GameState state)
     {
+        if (pendingNotice != null && LobbyRules.InTheMenus(state))
+        {
+            ControllerPrompts.Instance.ShowHint(pendingNotice, NOTICE_SECONDS);
+            pendingNotice = null;
+        }
+
         if (session.Match != null && session.Match.IsServer)
             session.Match.SendState(state);
     }
@@ -324,8 +346,22 @@ public class OnlineGame : MonoBehaviour
         return sceneFlow.Changing;
     }
 
+    // Match loads are timed in real time, which no pause or slow motion stretches
+    static float RealTime()
+    {
+        return Time.realtimeSinceStartup;
+    }
+
+    // How long a match load took here: the log line to read on a slow PC (Player.log in a build)
+    static void LogLoad(string report)
+    {
+        Debug.Log(report);
+    }
+
     void Update()
     {
+        sceneFlow.Tick(); // every frame of a load counts, so before anything here can return
+
         PlayerInstantiate players = PlayerInstantiate.Instance;
         if (players == null)
             return;

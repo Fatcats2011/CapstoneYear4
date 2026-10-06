@@ -134,7 +134,8 @@ namespace DoA.Tests
 
             Assert.AreEqual(NetworkRole.Host, GameAuthority.Role, "Y hosts");
             Assert.AreEqual("doa", lobbies.Data[42]["game"]);
-            Assert.AreEqual(Application.version, lobbies.Data[42]["build"]);
+            Assert.AreEqual(OnlinePlay.BuildTag(), lobbies.GetData(OnlinePlay.Instance.Lobby.Current, LobbyRules.BUILD_KEY),
+                "tagged with this build's version and Netcode setup");
             CollectionAssert.AreEqual(new[] { 42UL }, lobbies.Invites, "and opens the invite dialog");
             deadline = Time.realtimeSinceStartup + 2;
             while ((!LobbyPrompt.Exists || LobbyPrompt.Instance.Text != OnlinePlay.HINT_IN_LOBBY) && Time.realtimeSinceStartup < deadline)
@@ -182,7 +183,7 @@ namespace DoA.Tests
 
             // A friend hosts, and their invite arrives as the game starts: it waits for the title screen
             FakeLobbyService lobbies = new FakeLobbyService { AutoAnswer = true };
-            lobbies.AddLobby(42, "doa", Application.version, 99);
+            lobbies.AddLobby(42, "doa", OnlinePlay.BuildTag(), 99); // the friend is on this build
             OnlinePlay.Instance.UseDirect(lobbies, THIS_COMPUTER, PORT);
             OnlineSession host = OnlineSession.Create(Application.version);
             Assert.IsTrue(host.HostDirect(THIS_COMPUTER, PORT), "the friend hosts");

@@ -24,6 +24,11 @@ public interface ISceneFlow
 
     /// <summary>Everyone pressed A: shows the loaded scene</summary>
     void ConfirmLoad();
+
+    /// <summary>
+    /// Whether the game is on its way back to the menu: a match scene shown only to get there starts nothing
+    /// </summary>
+    bool LeavingForMenu { get; }
 }
 
 /// <summary>The scenes an online match loads on every machine</summary>

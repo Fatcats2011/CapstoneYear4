@@ -221,8 +221,11 @@ Progress (2026-09-28):
   - The host's wave bells and whistle sound everywhere, and the whistle stops every scooter (`ClockCue`). A client's cutscene ends when the host's does; only the host skips.
   - Pausing online is this machine's own menu: the match goes on, the menu closes when players stop driving, and a hint says what Main Menu does (`PausePolicy`).
   - Pedestrians, cans and slipstream react to other players' scooters too.
-- Next:
-  - Disconnects (3.8).
+- Phase 3I (`2026-10-01-phase3i-disconnects-and-versions.md`) — disconnects and versions:
+  - When the host leaves or stops answering, everyone goes back to the title screen and hears why, from anywhere in a match, a load included. A player who leaves holding the golden order puts it back at its start, and the golden round goes on.
+  - Friends on another build are told before joining (the lobby's build tag carries the Netcode setup). Direct sessions wait 90 s for a silent machine, and every machine logs how long each match load took.
+  - Fixed on the way: a delivery's throw went with a scooter that left mid-throw, and erasing the golden order "without delivering" delivered it.
+- Next: everything after Phase 3, in order, is in `2026-10-01-remaining-work-handoff.md`.
 
 ### Task 3.1: Packages & transports
 
@@ -238,11 +241,11 @@ Progress (2026-09-28):
 
 ### Task 3.3: Network player
 
-- [ ] `NetworkPlayer` (NetworkObject on PlayerAvatar): NetworkVariables for slot, company, colour, hat, score, ready, and a flags byte (boosting / phasing / drifting / drift tier). *(Phase 3B: `OnlinePlayer` has seat (company follows), colour, hat and ready. It's named `OnlinePlayer` because Unity still declares an obsolete `UnityEngine.NetworkPlayer`. It's its own network prefab, not on `PlayerAvatar`: see the Phase 3B plan's Ruling 1. Score and the flags byte come with driving.)* *(Phase 3C: the flags byte is on `OnlineScooter` (`DriveFlags`). Phase 3E: the score is on `OnlinePlayer`, written by the host.)*
+- [x] `NetworkPlayer` (NetworkObject on PlayerAvatar): NetworkVariables for slot, company, colour, hat, score, ready, and a flags byte (boosting / phasing / drifting / drift tier). *(Phase 3B: `OnlinePlayer` has seat (company follows), colour, hat and ready. It's named `OnlinePlayer` because Unity still declares an obsolete `UnityEngine.NetworkPlayer`. It's its own network prefab, not on `PlayerAvatar`: see the Phase 3B plan's Ruling 1. Score and the flags byte come with driving.)* *(Phase 3C: the flags byte is on `OnlineScooter` (`DriveFlags`). Phase 3E: the score is on `OnlinePlayer`, written by the host.)* *(Done: `OnlinePlayer` and `OnlineScooter` carry everything listed, Phases 3B, 3C and 3E.)*
 - [x] Owner-authoritative movement: the owner runs `BallDriving` physics; owner-authoritative `NetworkTransform` (the `ClientNetworkTransform` pattern) with interpolation on sphere + control; non-owners make the sphere kinematic and skip `BallDriving` Update/FixedUpdate. *(Phase 3C: through two proxies on a per-player `OnlineScooter`, each an `OwnerNetworkTransform`: the ball, and the model's world pose. `OnlineDriving` copies them every frame. The proxies start parked below the map; long moves teleport.)*
 - [x] Spawns: each owner puts its own scooter on its slot's spawn point (`SpawnManager.SpawnPoint`); the host doesn't place other machines' scooters. *(Phase 3C: `SpawnManager` places `LocalPlayers` only. Online, without the tutorial, they start on the city start points, `nonTutorialSpawnPositions` (`SpawnManager.PlacePlayersAtStart`).)*
 - [x] Remote players' boost/phase/drift visuals and sounds come from the flags byte. *(Phase 3C: `DriveFlags` on `OnlineScooter`. `BallDriving.ShowRemote` drives the trail, skid marks, sparks and rider. Sounds come with Task 3.7.)* *(Phase 3H: one-shots, as `ScooterCue`s. Another machine's scooter has no engine or drift sounds.)*
-- [ ] A remote avatar (`PlayerAvatar.prefab` alone) has no view:
+- [x] A remote avatar (`PlayerAvatar.prefab` alone) has no view:
   - Its view fields are empty: `BallDriving.inp` / `cameraResizer` / `orbitalCamera`, `OrderHandler.numberHandler`, `PhaseIndicator.hornSliderLeft` / `hornSliderRight`, `DrivingIndicators.iconCamera` / `thisPlayer`.
   - Its `Control` has no `Compass`, `TutorialHandler` or `Rumbler`, which `OrderHandler`, `Order.EraseOrder`, `OrderBeacon` and `BallDriving` fetch with `GetComponent`.
   - Guard those uses, or keep those scripts off on remote avatars.
@@ -253,6 +256,7 @@ Progress (2026-09-28):
     - *`OrderHandler` and `PlayerCameraResizer.UpdatePlayerObjectLayer` are guarded. `DrivingIndicators` finds `PlayerInstantiate` itself, and `SkideeSkidoo` unsubscribes.*
     - *The local player keeps its view; `OnlinePlayer` is separate.*
     - *Phase 3C: another machine's scooter doesn't respawn, collect orders, steal, clash or freeze on this machine (`RemoteAvatar.IsRemote`), so `Compass` lookups never reach it.)*
+  - *(Done: `RemoteAvatar` and `ScooterLook` cover a remote avatar with no view, Phases 3B and 3C.)*
 
 ### Task 3.4: Game state, timers, scenes
 
@@ -286,11 +290,11 @@ Progress (2026-09-28):
 
 ### Task 3.8: Disconnects & versions
 
-- [ ] Client leaves → the host drops/erases its orders, despawns its avatar, recomputes placements. *(Phase 3E: its orders go back to the pool (`OrderHandler.ReleaseOrders`). Its avatar goes and placements are redone already (Phase 3C). Still to do: a leaver holding the golden order ends the golden round as if delivered.)* *(Phase 3F: a player who leaves mid-tutorial doesn't hold up the others.)*
-- [ ] Host leaves → clients return to the menu with "Host left the match". *(The client's session ends with `OnlineSession.HOST_LEFT`. Phase 3D: the message shows in the controller hint bar, and a client in player select stays there, offline. Returning to the menu from a match is still to do.)*
-- [ ] Reject mismatched builds (lobby `build` metadata + NGO connection-approval payload). *(Approval half done: `JoinRules` compares `Application.version`. A build whose Netcode setup differs is dropped by Netcode before approval, with no reason, so the lobby filter matters. Phase 3D: a Steam lobby of another build is left before joining, with a message naming both versions (`LobbyRules.Refusal`).)*
-- [ ] Tests: kill a client mid-delivery; kill the host mid-match.
-- [ ] Long loads: in the editor, the first load of the game scene took 31 s. Two test sessions in one Unity process lost their connection during it: Unity Transport's disconnect timeout is 30 s. Time a build's load on a slow PC; if it comes close, raise the timeout while loading.
+- [x] Client leaves → the host drops/erases its orders, despawns its avatar, recomputes placements. *(Phase 3E: its orders go back to the pool (`OrderHandler.ReleaseOrders`). Its avatar goes and placements are redone already (Phase 3C). Still to do: a leaver holding the golden order ends the golden round as if delivered.)* *(Phase 3F: a player who leaves mid-tutorial doesn't hold up the others.)* *(Phase 3I: a leaver's golden order goes back to its start, at its starting value, and the golden round goes on (Ruling 3). A delivery in the air when its player leaves lands as usual.)*
+- [x] Host leaves → clients return to the menu with "Host left the match". *(The client's session ends with `OnlineSession.HOST_LEFT`. Phase 3D: the message shows in the controller hint bar, and a client in player select stays there, offline. Returning to the menu from a match is still to do.)* *(Phase 3I: from anywhere in a match, a cutscene, a pause or a load included, every other machine goes back to the title screen and says why, at once and again there (Rulings 1, 2 and 7). There's no host migration.)*
+- [x] Reject mismatched builds (lobby `build` metadata + NGO connection-approval payload). *(Approval half done: `JoinRules` compares `Application.version`. A build whose Netcode setup differs is dropped by Netcode before approval, with no reason, so the lobby filter matters. Phase 3D: a Steam lobby of another build is left before joining, with a message naming both versions (`LobbyRules.Refusal`).)* *(Phase 3I: the lobby's build tag is the version plus the Netcode setup (`LobbyRules.BuildTag`, `OnlineSession.NetcodeSetup`), so another build of the same version is told apart too (Ruling 4).)*
+- [x] Tests: kill a client mid-delivery; kill the host mid-match. *(Phase 3I: `DisconnectsNetworkTests` silence a machine by switching off its Unity Transport (Ruling 6); `OnlineOrdersNetworkTests` has a client leaving mid-delivery and holding the golden order.)*
+- [x] Long loads: in the editor, the first load of the game scene took 31 s. Two test sessions in one Unity process lost their connection during it: Unity Transport's disconnect timeout is 30 s. Time a build's load on a slow PC; if it comes close, raise the timeout while loading. *(Phase 3I: direct sessions wait 90 s; Unity Transport reads its timeout once, so it's the whole session's. Steam keeps its own timeouts. Every machine logs each load's time and longest frame, for the slow-PC check (Ruling 5, `EDITOR-TODO.md`).)*
 
 ### Task 3.9 (optional, post-launch): Online + couch
 

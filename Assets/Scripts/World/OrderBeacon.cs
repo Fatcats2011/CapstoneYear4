@@ -193,16 +193,26 @@ public class OrderBeacon : MonoBehaviour
     /// </summary>
     public void EraseBeacon()
     {
-        gameObject.GetComponent<CompassMarker>().RemoveCompassUIFromAllPlayers();
-
-        customer.ThankYouComeAgain();
-        ToggleBeaconMesh(false);
-        gameObject.layer = 0;
+        PutOut();
 
         if (order != null)
         {
             order.EraseOrder();
         }
+    }
+
+    /// <summary>
+    /// The beacon goes out, ready to mark a pickup again, and its customer goes home. Its order isn't touched: EraseBeacon
+    /// erases it too
+    /// </summary>
+    public void PutOut()
+    {
+        gameObject.GetComponent<CompassMarker>().RemoveCompassUIFromAllPlayers();
+
+        customer.transform.parent = OrderManager.Instance.transform; // the beacon moves on without them
+        customer.ThankYouComeAgain();
+        ToggleBeaconMesh(false);
+        gameObject.layer = 0;
         isPickup = true;
     }
 

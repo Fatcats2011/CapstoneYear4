@@ -65,6 +65,8 @@ namespace DoA.Tests
         OnlineSceneFlow flow;
         int leaves;
         int sceneChanges;
+        float now;            // the clock the flow times loads by
+        List<string> reports; // the load times it reported
 
         [SetUp]
         public void SetUp()
@@ -72,11 +74,16 @@ namespace DoA.Tests
             local = new FakeSceneFlow();
             loader = new FakeMatchLoader();
             link = new FakeMatchLink();
-            flow = new OnlineSceneFlow(local, loader);
+            now = 0f;
+            flow = new OnlineSceneFlow(local, loader, Now);
             leaves = 0;
             sceneChanges = 0;
+            reports = new List<string>();
             flow.SceneChanged += CountSceneChange;
+            flow.LoadTimed += reports.Add;
         }
+
+        float Now() { return now; }
 
         void CountSceneChange() { sceneChanges++; }
 
@@ -276,11 +283,67 @@ namespace DoA.Tests
         public void TheLoadingScreen_NeverWaitsForA()
         {
             FakeSceneFlow waiting = new FakeSceneFlow { WaitingForConfirm = true };
-            OnlineSceneFlow online = new OnlineSceneFlow(waiting, loader);
+            OnlineSceneFlow online = new OnlineSceneFlow(waiting, loader, Now);
 
             Assert.IsFalse(online.WaitingForConfirm);
             online.ConfirmLoad();
             Assert.AreEqual(0, waiting.Confirms);
+        }
+
+        [Test]
+        public void LeavingForMenu_IsTheLocalLoaders()
+        {
+            Assert.IsFalse(flow.LeavingForMenu);
+
+            local.LeavingForMenu = true; // a match scene shown only on the way back to the menu
+
+            Assert.IsTrue(flow.LeavingForMenu, "online too, it starts nothing");
+        }
+
+        [Test]
+        public void Client_TimesItsLoad_AndReportsItOnceTheSceneIsUp()
+        {
+            LinkAsClient();
+            now = 10f; link.RaiseLoadRequested(MatchScene.Game);
+            now = 13f; flow.Tick();                         // a 3 s frame
+            now = 14f; loader.RaiseHeldSceneReady();        // ready after 4 s
+            link.RaiseShowRequested(MatchScene.Game);
+            loader.RaiseSceneUp();
+            now = 16.5f; flow.Tick();                       // the activation: 3.5 s
+            now = 16.6f; flow.Tick();
+
+            CollectionAssert.AreEqual(new[] { LoadWatch.Report(MatchScene.Game, 4f, 3.5f) }, reports);
+        }
+
+        [Test]
+        public void Host_ReportsHowLongItsOwnLoadTook_NotTheWaitForOthers()
+        {
+            LinkAsHost();
+            now = 10f; flow.LoadGameScene();
+            now = 11f; flow.Tick();
+            now = 12f; loader.RaiseHeldSceneReady();        // ready here after 2 s
+            for (now = 12f; now <= 30f; now += 1f)
+                flow.Tick();                                // the other machine takes its time
+            link.RaiseMachineLoaded(CLIENT, MatchScene.Game);
+            loader.RaiseSceneUp();
+            now = 31.5f; flow.Tick();
+            now = 32f; flow.Tick();
+
+            CollectionAssert.AreEqual(new[] { LoadWatch.Report(MatchScene.Game, 2f, 1.5f) }, reports);
+        }
+
+        [Test]
+        public void Client_SessionEndsMidLoad_ReportsNothing()
+        {
+            LinkAsClient();
+            now = 10f; link.RaiseLoadRequested(MatchScene.Game);
+            flow.Unlink();
+            now = 20f; loader.RaiseHeldSceneReady();
+            loader.RaiseSceneUp();
+            now = 21f; flow.Tick();
+            now = 22f; flow.Tick();
+
+            CollectionAssert.IsEmpty(reports);
         }
     }
 }

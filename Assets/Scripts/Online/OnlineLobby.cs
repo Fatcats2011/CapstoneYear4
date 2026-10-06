@@ -19,7 +19,7 @@ public class OnlineLobby
 
     readonly ILobbyService lobbies;
     readonly ISessionControl session;
-    readonly string version;
+    readonly string build;
 
     bool creating;   // a lobby is being made to host in
     ulong joining;   // the lobby being entered (0 = none)
@@ -32,11 +32,12 @@ public class OnlineLobby
     /// <summary>A message for the player. Session ends aren't told here: the online game shows those</summary>
     public event Action<string> Notice;
 
-    public OnlineLobby(ILobbyService lobbies, ISessionControl session, string version)
+    /// <param name="build">This build's tag (LobbyRules.BuildTag): the host's lobby carries it, and a friend's lobby must match it</param>
+    public OnlineLobby(ILobbyService lobbies, ISessionControl session, string build)
     {
         this.lobbies = lobbies;
         this.session = session;
-        this.version = version;
+        this.build = build;
 
         lobbies.Created += OnCreated;
         lobbies.Entered += OnEntered;
@@ -132,7 +133,7 @@ public class OnlineLobby
         }
 
         lobbies.SetData(lobby, LobbyRules.GAME_KEY, LobbyRules.GAME);
-        lobbies.SetData(lobby, LobbyRules.BUILD_KEY, version);
+        lobbies.SetData(lobby, LobbyRules.BUILD_KEY, build);
         Current = lobby;
         IsHost = true;
 
@@ -167,7 +168,7 @@ public class OnlineLobby
         }
 
         string refusal = LobbyRules.Refusal(lobbies.GetData(lobby, LobbyRules.GAME_KEY),
-            lobbies.GetData(lobby, LobbyRules.BUILD_KEY), version);
+            lobbies.GetData(lobby, LobbyRules.BUILD_KEY), build);
         if (refusal != null)
         {
             lobbies.Leave(lobby);

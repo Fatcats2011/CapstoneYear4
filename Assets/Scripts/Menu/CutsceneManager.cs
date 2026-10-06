@@ -60,12 +60,15 @@ public class CutsceneManager : SingletonMonobehaviour<CutsceneManager>
 
     ///<summary>
     /// The state the playing cutscene hands over to ends it at once, without asking for it again. Online that's the
-    /// host's: the host skipped, or its cutscene ended first. Other states don't: the opening plays on while the game
-    /// switches to MainLoop under it (SpawnManager)
+    /// host's: the host skipped, or its cutscene ended first. A load ends it too: the game is leaving this scene (online,
+    /// a session that ended mid-match takes this machine back to the menu). Other states don't: the opening plays on while
+    /// the game switches to MainLoop under it (SpawnManager)
     ///</summary>
     void EndForState(GameState state)
     {
-        if (cutsceneCoroutine == null || state != NextStateOf(cutsceneBeingPlayed))
+        if (cutsceneCoroutine == null)
+            return;
+        if (state != GameState.Loading && state != NextStateOf(cutsceneBeingPlayed))
             return;
 
         StopCoroutine(cutsceneCoroutine);

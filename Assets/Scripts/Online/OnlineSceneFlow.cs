@@ -42,12 +42,15 @@ public interface IMatchLink
 /// - The host takes everyone back to the menu. A client going back on its own leaves the session first: it can't come
 ///   back into the host's match.
 /// - While a client's new scene comes up (Changing), OnlineGame holds the host's states until SceneChanged.
+/// - Each machine times its own match loads (LoadWatch), for the log.
 /// - Netcode's scene management stays off.
 /// </summary>
 public class OnlineSceneFlow : ISceneFlow
 {
     readonly ISceneFlow local;
     readonly IMatchLoader loader;
+    readonly Func<float> realTime;
+    readonly LoadWatch watch = new LoadWatch(); // this machine's match load in progress
     IMatchLink link;
     Func<IEnumerable<ulong>> machines; // host: the machines in the session now, the host included
     ulong self;                       // this machine's Netcode client id
@@ -57,10 +60,12 @@ public class OnlineSceneFlow : ISceneFlow
 
     /// <param name="localFlow">The local loader: it takes this machine back to the menu</param>
     /// <param name="matchLoader">The local loader's held loads (null loads nothing, as in tests without the menu scene)</param>
-    public OnlineSceneFlow(ISceneFlow localFlow, IMatchLoader matchLoader)
+    /// <param name="clock">Real time in seconds, which loads are timed by</param>
+    public OnlineSceneFlow(ISceneFlow localFlow, IMatchLoader matchLoader, Func<float> clock)
     {
         local = localFlow;
         loader = matchLoader;
+        realTime = clock;
     }
 
     /// <summary>Client: the host showed a scene or took everyone back, and that scene isn't up here yet</summary>
@@ -68,6 +73,19 @@ public class OnlineSceneFlow : ISceneFlow
 
     /// <summary>Client: the scene the host showed (or the menu) is up here</summary>
     public event Action SceneChanged;
+
+    /// <summary>A match load was timed here: its log line (LoadWatch.Report), a moment after its scene showed</summary>
+    public event Action<string> LoadTimed;
+
+    /// <summary>
+    /// Called every frame: times the match load in progress, and reports it once its scene has been up for a moment
+    /// </summary>
+    public void Tick()
+    {
+        string report = watch.Tick(realTime());
+        if (report != null)
+            LoadTimed?.Invoke(report);
+    }
 
     /// <summary>
     /// Follows a session's match: the host's requests on a client, clients' reports on the host
@@ -112,6 +130,7 @@ public class OnlineSceneFlow : ISceneFlow
         link = null;
         round = null;
         Changing = false;
+        watch.Stop();
     }
 
     bool IsHost { get { return link != null && link.IsHost; } }
@@ -154,6 +173,9 @@ public class OnlineSceneFlow : ISceneFlow
     /// <summary>Online there's no "press A" on the loading screen</summary>
     public bool WaitingForConfirm { get { return false; } }
 
+    /// <summary>The local loader's: whether the game is on its way back to the menu</summary>
+    public bool LeavingForMenu { get { return local != null && local.LeavingForMenu; } }
+
     public void ConfirmLoad()
     {
     }
@@ -174,6 +196,7 @@ public class OnlineSceneFlow : ISceneFlow
         if (!IsHost || loader == null)
             return;
 
+        watch.Start(scene, realTime());
         round = new LoadRound(scene, machines());
         link.RequestLoad(scene);
         loader.LoadHeld(scene);
@@ -182,6 +205,9 @@ public class OnlineSceneFlow : ISceneFlow
     // This machine has the scene loaded: the host counts itself, a client tells the host
     void HeldSceneReady()
     {
+        if (watch.Running)
+            watch.Ready(realTime());
+
         if (IsHost)
         {
             if (round == null)
@@ -221,6 +247,7 @@ public class OnlineSceneFlow : ISceneFlow
             return;
 
         loading = scene;
+        watch.Start(scene, realTime());
         loader.LoadHeld(scene);
     }
 
@@ -244,6 +271,9 @@ public class OnlineSceneFlow : ISceneFlow
 
     void SceneUp()
     {
+        if (watch.Running)
+            watch.Up();
+
         if (!Changing)
             return;
 

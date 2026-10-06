@@ -394,6 +394,8 @@ public class Order : MonoBehaviour
         if (value != Constants.OrderValue.Golden)
         {
             RemovePlayerHolding();
+            // Off the scooter: the throw outlives it, so a player who leaves mid-throw doesn't take the order with them
+            ReturnHome();
             beacon.ThrowOrder(0.25f); // hard coded value for throwing the order to a customer
         }
         else
@@ -457,7 +459,8 @@ public class Order : MonoBehaviour
     }
 
     /// <summary>
-    /// This method erases the golden order without it being "delivered". Used for hotkey functionality.
+    /// This method erases the golden order without it being "delivered": nobody gets its bonus, and the golden round
+    /// doesn't end. Used when the game leaves the golden round, and when a player holding it leaves (online)
     /// </summary>
     public void EraseGoldWithoutDelivering()
     {
@@ -467,7 +470,10 @@ public class Order : MonoBehaviour
 
         using OrderSync.Scope change = OrderSync.Change(OrderChange.EraseGold(key));
 
-        beacon.EraseBeacon();
+        beacon.PutOut(); // not EraseBeacon: erasing the order there delivers it, which ends the golden round
+        DOTween.Kill(transform); // a fall still landing stops: its landing would make it a pickup again
+        arrow.SetActive(false);
+        beconIndicator.RemoveBeconIndicator();
         OrderManager.Instance.FinalOrderValue = (int)Constants.OrderValue.Golden;
         if (value == Constants.OrderValue.Golden)
         {

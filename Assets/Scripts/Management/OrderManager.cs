@@ -371,7 +371,8 @@ public class OrderManager : SingletonMonobehaviour<OrderManager>
     }
 
     /// <summary>
-    /// This method adds and order to the list of existing orders if that order isn't already on the list.
+    /// This method adds and order to the list of existing orders if that order isn't already on the list. The golden
+    /// order out means the golden round is on (RemoveOrder turns it off): it's out again after a player who held it left
     /// </summary>
     /// <param name="order">Order to be added to the list</param>
     public void AddOrder(Order order)
@@ -379,6 +380,7 @@ public class OrderManager : SingletonMonobehaviour<OrderManager>
         if(order.Value == Constants.OrderValue.Golden)
         {
             finalOrder = order;
+            finalOrderActive = true;
         }
 
         if(!activeOrders.Contains(order))

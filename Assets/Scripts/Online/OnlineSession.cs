@@ -26,6 +26,12 @@ public class OnlineSession : MonoBehaviour
     /// <summary>A direct join tries to reach the host once a second, this many times</summary>
     public const int DIRECT_CONNECT_ATTEMPTS = 10;
 
+    /// <summary>
+    /// A direct session (the editor's and tests') drops a machine it hasn't heard from in 90 s. A cold editor load can
+    /// stall longer than Unity Transport's own 30 s. Steam sessions keep Steam's timeouts
+    /// </summary>
+    public const int DIRECT_DISCONNECT_MS = 90000;
+
     /// <summary>Why a session ended, when the host gave no reason of its own</summary>
     public const string HOST_LEFT = "The host left the match.";
     public const string HOST_UNREACHABLE = "Couldn't reach the host.";
@@ -100,14 +106,10 @@ public class OnlineSession : MonoBehaviour
         session.Version = version;
         session.Direct = holder.AddComponent<UnityTransport>();
         session.Direct.MaxConnectAttempts = DIRECT_CONNECT_ATTEMPTS;
+        session.Direct.DisconnectTimeoutMS = DIRECT_DISCONNECT_MS; // read when a session starts
 
         NetworkManager network = holder.AddComponent<NetworkManager>();
-        network.NetworkConfig = new NetworkConfig // a NetworkManager added from code has no config
-        {
-            NetworkTransport = session.Direct,
-            ConnectionApproval = true,
-            EnableSceneManagement = false, // scene loads stay local until the networked scene flow (roadmap Task 3.4)
-        };
+        network.NetworkConfig = NewConfig(session.Direct); // a NetworkManager added from code has no config
         network.ConnectionApprovalCallback = session.Approve;
         network.OnClientConnectedCallback += session.OnConnected;
         network.OnClientDisconnectCallback += session.OnDisconnected;
@@ -116,11 +118,40 @@ public class OnlineSession : MonoBehaviour
 
         // Every build lists the same network prefabs, or Netcode drops a joiner before the host hears of them
         session.prefabs = OnlinePrefabs.Load();
-        network.AddNetworkPrefab(session.prefabs.PlayerPrefab);
-        network.AddNetworkPrefab(session.prefabs.MatchPrefab);
-        network.AddNetworkPrefab(session.prefabs.ScooterPrefab);
+        foreach (GameObject prefab in NetworkPrefabsOf(session.prefabs))
+            network.AddNetworkPrefab(prefab);
         session.Network = network;
         return session;
+    }
+
+    /// <summary>
+    /// This build's Netcode setup: the hash Netcode compares when a player joins (its protocol, the network prefabs' ids
+    /// and the session's settings). A joiner whose setup differs is dropped before the host hears of them, with no
+    /// reason, so the Steam lobby carries it (LobbyRules.BuildTag)
+    /// </summary>
+    public static ulong NetcodeSetup(OnlinePrefabs prefabs)
+    {
+        NetworkConfig config = NewConfig(null);
+        foreach (GameObject prefab in NetworkPrefabsOf(prefabs))
+            config.Prefabs.Add(new NetworkPrefab { Prefab = prefab });
+        return config.GetConfig(false);
+    }
+
+    // Every session's Netcode settings
+    static NetworkConfig NewConfig(NetworkTransport transport)
+    {
+        return new NetworkConfig
+        {
+            NetworkTransport = transport,
+            ConnectionApproval = true,
+            EnableSceneManagement = false, // scene loads stay local until the networked scene flow (roadmap Task 3.4)
+        };
+    }
+
+    // What every session registers with Netcode
+    static GameObject[] NetworkPrefabsOf(OnlinePrefabs prefabs)
+    {
+        return new[] { prefabs.PlayerPrefab, prefabs.MatchPrefab, prefabs.ScooterPrefab };
     }
 
     /// <summary>

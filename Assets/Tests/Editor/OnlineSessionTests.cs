@@ -73,6 +73,21 @@ namespace DoA.Tests
         }
 
         [Test]
+        public void Create_DirectSessionsWaitOutALongLoad()
+        {
+            Assert.AreEqual(OnlineSession.DIRECT_DISCONNECT_MS, NewSession().Direct.DisconnectTimeoutMS);
+            Assert.GreaterOrEqual(OnlineSession.DIRECT_DISCONNECT_MS, 60000, "well past a cold editor load's 31-41 s");
+        }
+
+        [Test]
+        public void NetcodeSetup_IsWhatASessionsNetcodeCompares()
+        {
+            OnlineSession session = NewSession();
+
+            Assert.AreEqual(session.Network.NetworkConfig.GetConfig(false), OnlineSession.NetcodeSetup(OnlinePrefabs.Load()));
+        }
+
+        [Test]
         public void Approve_TheHostItself_IsLetInWhateverItSends()
         {
             OnlineSession session = NewSession();

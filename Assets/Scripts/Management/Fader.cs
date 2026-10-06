@@ -22,14 +22,9 @@ public class Fader : MonoBehaviour
     {
         mat = render.material;
 
-        try
-        {
+        // Some materials have no colour (the golden round's dissolving kickables): reading it logs an error, not an exception
+        if (mat.HasProperty("_Color"))
             originalColor = mat.color;
-        }
-        catch
-        {
-
-        }
     }
 
     /// <summary>

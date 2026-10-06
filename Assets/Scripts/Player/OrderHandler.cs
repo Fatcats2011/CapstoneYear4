@@ -252,7 +252,8 @@ public class OrderHandler : MonoBehaviour
 
     /// <summary>
     /// This player is leaving (online: their machine left): their orders go back to the pool. Each first goes back into
-    /// its own scene, so it outlives this player's scooter. Online, only the host erases them: a client waits for its erase
+    /// its own scene, so it outlives this player's scooter. The golden order goes back to its start, at its starting value:
+    /// a player leaving doesn't deliver it. Online, only the host changes them: a client waits for the host's changes
     /// </summary>
     public void ReleaseOrders()
     {
@@ -263,7 +264,13 @@ public class OrderHandler : MonoBehaviour
                 continue;
 
             order.ReturnHome();
-            order.EraseOrder();
+            if (order.Value == Constants.OrderValue.Golden)
+            {
+                order.EraseGoldWithoutDelivering();
+                order.InitOrder();
+            }
+            else
+                order.EraseOrder();
         }
 
         order1 = order2 = null;
@@ -445,7 +452,9 @@ public class OrderHandler : MonoBehaviour
     /// </summary>
     private void ResetHandler()
     {
-        OrderManager.Instance.OnMainGameFinishes -= () => ball.FreezeBall(false);
+        // Online, a session that ends in the menus or mid-load comes back here before any match scene's order manager
+        if (OrderManager.Instance != null)
+            OrderManager.Instance.OnMainGameFinishes -= () => ball.FreezeBall(false);
 
         if(order1 != null)
         {

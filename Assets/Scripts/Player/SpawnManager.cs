@@ -34,6 +34,11 @@ public class SpawnManager : SingletonMonobehaviour<SpawnManager>
 
     private void Start()
     {
+        // A scene shown only on the way back to the menu (the session ended during its load) starts nothing
+        ISceneFlow flow = SceneFlow.Current;
+        if (flow != null && flow.LeavingForMenu)
+            return;
+
         //gameManager.SetGameState(GameState.StartingCutscene);
         // Set game to begin upon loading into scene
         if (TutorialManager.Instance.ShouldTutorialize)

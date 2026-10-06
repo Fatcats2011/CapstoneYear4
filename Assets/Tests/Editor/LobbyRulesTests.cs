@@ -27,6 +27,35 @@ namespace DoA.Tests
         }
 
         [Test]
+        public void BuildTag_IsTheVersion_ThenTheNetcodeSetupInHex()
+        {
+            Assert.AreEqual("1.2/00000000000000ff", LobbyRules.BuildTag("1.2", 255));
+            Assert.AreEqual("1.2", LobbyRules.VersionOf("1.2/00000000000000ff"));
+        }
+
+        [Test]
+        public void VersionOf_ATagWithoutASetup_IsTheWholeTag()
+        {
+            Assert.AreEqual("1.2", LobbyRules.VersionOf("1.2"));
+        }
+
+        [Test]
+        public void Refusal_SameVersion_AnotherNetcodeSetup_SaysAnotherBuild()
+        {
+            string refusal = LobbyRules.Refusal("doa", LobbyRules.BuildTag("1.2", 1), LobbyRules.BuildTag("1.2", 2));
+
+            Assert.AreEqual(LobbyRules.OtherBuild("1.2"), refusal);
+        }
+
+        [Test]
+        public void Refusal_AnotherVersion_NamesBothVersions_WithoutTheirSetups()
+        {
+            string refusal = LobbyRules.Refusal("doa", LobbyRules.BuildTag("1.1", 1), LobbyRules.BuildTag("1.2", 1));
+
+            Assert.AreEqual(JoinRules.Refusal("1.1", "1.2", 0, GameState.Menu), refusal);
+        }
+
+        [Test]
         public void LobbyToJoin_SteamsConnectArgument_GivesTheLobby()
         {
             Assert.AreEqual(109775241021923456UL, LobbyRules.LobbyToJoin(new[] { "DoA.exe", "+connect_lobby", "109775241021923456" }));

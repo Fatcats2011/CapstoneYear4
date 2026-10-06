@@ -15,18 +15,52 @@ public static class LobbyRules
     public const string ONE_PLAYER = "Online play is one player per machine: the other players here need to leave first.";
 
     /// <summary>
+    /// A build's tag: its version, then its Netcode setup (OnlineSession.NetcodeSetup), the hash Netcode compares when a
+    /// player joins. Two builds of one version can differ there, and Netcode then drops the joiner without a reason
+    /// </summary>
+    public static string BuildTag(string version, ulong netcodeSetup)
+    {
+        return version + "/" + netcodeSetup.ToString("x16");
+    }
+
+    /// <summary>
+    /// The version in a build tag: the part before the last "/", or the whole tag when it has no setup
+    /// </summary>
+    public static string VersionOf(string buildTag)
+    {
+        int slash = buildTag.LastIndexOf('/');
+        return slash < 0 ? buildTag : buildTag.Substring(0, slash);
+    }
+
+    /// <summary>
+    /// Why this machine won't join a lobby on its own version but another build
+    /// </summary>
+    public static string OtherBuild(string version)
+    {
+        return "That match is on another build of version " + version + ". You both need the same build.";
+    }
+
+    /// <summary>
     /// Why this machine won't join a lobby, or null to join it
     /// </summary>
     /// <param name="lobbyGame">The lobby's game tag (Steam's test app is shared by every game made with it)</param>
-    /// <param name="lobbyBuild">The lobby's build tag: its host's version</param>
-    /// <param name="myBuild">This machine's version</param>
+    /// <param name="lobbyBuild">The lobby's build tag (BuildTag): its host's version and Netcode setup</param>
+    /// <param name="myBuild">This machine's build tag</param>
     public static string Refusal(string lobbyGame, string lobbyBuild, string myBuild)
     {
         if (lobbyGame != GAME)
             return NOT_THIS_GAME;
 
-        // Worded as the host turns a direct join away
-        return JoinRules.Refusal(lobbyBuild, myBuild, 0, GameState.Menu);
+        if (lobbyBuild == myBuild)
+            return null;
+
+        // Another version is worded as the host turns a direct join away
+        string lobbyVersion = VersionOf(lobbyBuild);
+        string myVersion = VersionOf(myBuild);
+        if (lobbyVersion != myVersion)
+            return JoinRules.Refusal(lobbyVersion, myVersion, 0, GameState.Menu);
+
+        return OtherBuild(myVersion);
     }
 
     /// <summary>

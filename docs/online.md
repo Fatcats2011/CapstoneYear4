@@ -130,7 +130,7 @@ Online multiplayer is being built in steps (roadmap Phase 3: `docs/superpowers/p
 - **The first wave begins once every player has finished the tutorial**, by driving out of it into the city.
   - Each machine tells the host when its own player has finished.
   - A player who leaves mid-tutorial doesn't hold the others up.
-  - If the host leaves, a client whose player had finished goes on alone, offline.
+  - If the host leaves, everyone goes back to the title screen (Phase 3I).
 - How it works:
   - **`TutorialManager` counts seats:**
     - It records each finished seat (`SeatLearnt`).
@@ -189,6 +189,29 @@ Online multiplayer is being built in steps (roadmap Phase 3: `docs/superpowers/p
   - **Pause:** `PausePolicy` says when the pause menu closes and what it says online. `PlayerInstantiate.IsPaused` says whether it's open; `ControllerDisconnectPolicy` uses that, not `Time.timeScale`.
   - **Another machine's scooter's speed:** `BallDriving.ShowRemote` sets its `CurrentVelocity`, which pedestrians (`BallCollision`), cans (`CanKicker`) and slipstream read. Bumping something here doesn't drop its drift: its own machine does that.
 
+### Phase 3I: disconnects and versions
+
+- **When the host leaves, or its game stops answering, everyone else goes back to the title screen** and sees "The host left the match.", from anywhere in a match: a cutscene, a paused game, or a loading screen.
+  - A load that's under way finishes behind the loading screen first, and nothing in it starts.
+  - The message shows at once, and again when the title screen is up.
+  - A host whose own connection fails goes back too, with "The connection was lost."
+- **A player who leaves holding the golden order** puts it back at its start, at its starting value, and the golden round goes on for everyone else.
+- **A player who leaves while their delivery is in the air:** it lands as usual, and the order goes back to the pool.
+- **A friend whose game is another build is told before joining**, even with the same version number: "That match is on another build of version …". The lobby's build tag carries the build's Netcode setup.
+- **In the editor, a machine that stops answering is dropped after 90 s**: a cold load of the game scene can stall for over 30 s. Over Steam, Steam's own timeouts apply.
+- **Every machine logs each match load:** "Online: the Game scene was ready here after … s; its longest frame took … s". In a build it's in `Player.log`.
+- How it works:
+  - **`OnlineGame.ShowEnd`:** a session that ends by itself away from the menus takes the game back through the local loader (`SceneFlow.Current.ReturnToMenu()`), and says why again once the menus are up.
+  - **A held load can't be called off:** Unity keeps every later load waiting behind it. So `SceneManager.LoadMenuScene` shows the held scene as soon as it's loaded, and loads the menu as soon as that scene is up, before its scripts start. `ISceneFlow.LeavingForMenu` tells the scene's `SpawnManager` to start nothing. A second trip to the menu while one is on its way does nothing.
+  - **A cutscene stops when a load starts** (`CutsceneManager`). Offline by then, it would otherwise ask for the tutorial during the trip to the menu.
+  - **The golden order** goes back through `EraseGoldWithoutDelivering`, then `InitOrder` (`OrderHandler.ReleaseOrders`): two order changes clients already replay (`EraseGold`, `Spawn`).
+    - `EraseGoldWithoutDelivering` puts its beacon out without erasing the order through it (`OrderBeacon.PutOut`). Erasing it there would deliver it, which ends the golden round.
+    - Putting the golden order out turns the golden round back on (`OrderManager.AddOrder`), so its value grows again for the next holder.
+  - **A delivery's throw leaves the scooter** (`Order.DeliverOrder`, `ReturnHome`): a scooter that goes mid-throw doesn't take the order with it.
+  - **Builds:** `LobbyRules.BuildTag` is the version plus `OnlineSession.NetcodeSetup`: the hash Netcode compares when a player joins (its protocol, the network prefabs' ids and the session's settings). `LobbyRules.Refusal` names both versions when they differ, and says "another build" when only the setups do.
+  - **Timeouts:** direct sessions wait `OnlineSession.DIRECT_DISCONNECT_MS` (90 s). Unity Transport reads it when a session starts.
+  - **`LoadWatch`** times each match load on every machine: `OnlineSceneFlow.Tick`, from `OnlineGame.Update`.
+
 ## Two editors on one computer (ParrelSync)
 
 - **ParrelSync → Clones Manager → Create new clone** (once). The clone shares this project's Assets and ProjectSettings. Unity imports the project the first time the clone opens, which takes a while.
@@ -210,7 +233,9 @@ Online multiplayer is being built in steps (roadmap Phase 3: `docs/superpowers/p
   - Boost next to the other editor's scooter: it hears you. Drive one scooter into the water: the other editor sees its wisp, then its gravestone, and it rises from it.
   - Pause in one editor: the other drives on, and the paused one shows a hint about Main Menu.
 - Pause in editor 1 and pick **Main Menu**: both go back to player select, still in the session. In editor 2 (a client), **Main Menu** leaves the session.
+- Mid-match, stop Play in editor 1: editor 2 goes back to the title screen and says "The host left the match.". It does the same from the opening cutscene (paused or not) and from the loading screen.
 - **Leave** ends a session. When the host leaves, editor 2 shows `Online: session ended: The host left the match.`
+- Each editor's Console has an `Online: the Game scene was ready here after …` line for each match load.
 - Only change files in the original editor: clones share them.
 
 ## Two PCs over Steam
@@ -229,7 +254,7 @@ Online multiplayer is being built in steps (roadmap Phase 3: `docs/superpowers/p
 
 ## Known limits
 
-- A player whose build has a different Netcode setup (tick rate, network prefabs…) is dropped by Netcode before the version check, and sees "Couldn't reach the host." Over Steam the lobby's build tag keeps such players apart: a lobby of another build is left, with a message.
+- **Direct joins only** (the editor and LAN tests): a player whose build has a different Netcode setup (tick rate, network prefabs…) is dropped by Netcode before the version check, and sees "Couldn't reach the host." Over Steam the lobby's build tag tells builds apart first: a lobby of another build is left, with a message.
 - Hosting fails if another program uses port 7777.
 - Direct joins give up after 10 seconds.
 - On one computer, when one side closes (or both close at once), Unity Transport may log `All socket receive requests were marked as failed…` as an error in the other editor: Windows reporting the closed port. The session was ending anyway.
@@ -238,11 +263,11 @@ Online multiplayer is being built in steps (roadmap Phase 3: `docs/superpowers/p
 - Another machine's scooter can be bumped during the last 0.7 s of its rise from its grave: its collider comes back when its rider shows.
 - **A pickup shows once the host has seen the scooter in the light:** on a client, about a round trip after it drove in.
 - A cutout's order reaches a client's scooter about a round trip after its barrier opens.
-- A player who leaves holding the golden order ends the golden round, as if they'd delivered it (roadmap Task 3.8).
 - **Other machines' scooters play one-shots only:** no engine, brake or drift-spark sounds. Their horns don't glow with their boost gauge; they flash when it's full.
 - Another player's one-shot plays here about a round trip after it played there: it goes through the host.
 - The pause menu has no "End match" row (its rows are hand-lettered art). The host's "Main Menu" ends the match for everyone.
-- If the host leaves mid-match, clients stay where they are, offline (roadmap Task 3.8).
+- A client whose own connection drops is told "The host left the match." too: Netcode gives no reason either way.
+- A machine that crashes or loses its connection is noticed after the timeout: 90 s in the editor (direct sessions), Steam's own over Steam.
 - An empty seat still says "press A to join" on every machine, though only a machine's first controller can take a seat online.
 - When the host leaves, clients see "The host left the match." and stay in player select with their own player, not ready: no countdown starts, and a running one stops. They ready up again to start one.
 - **Friends only:** no public lobbies or lobby list yet. Friends join through Steam's invites and "Join Game".

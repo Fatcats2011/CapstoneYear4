@@ -102,9 +102,17 @@ public class OnlinePlay : MonoBehaviour, ISessionControl
 
         lobbies = lobbyService;
         lobbies.JoinRequested += RequestJoin;
-        Lobby = new OnlineLobby(lobbies, this, Application.version);
+        Lobby = new OnlineLobby(lobbies, this, BuildTag());
         Lobby.Notice += Tell;
         stateShown = false;
+    }
+
+    /// <summary>
+    /// This build's lobby tag: its version and Netcode setup. Friends on another build are told before they join
+    /// </summary>
+    public static string BuildTag()
+    {
+        return LobbyRules.BuildTag(Application.version, OnlineSession.NetcodeSetup(OnlinePrefabs.Load()));
     }
 
     /// <summary>

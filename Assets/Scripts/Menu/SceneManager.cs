@@ -41,6 +41,9 @@ public class SceneManager : SingletonMonobehaviour<SceneManager>, ISceneFlow, IM
     AsyncOperation sceneLoad;
     Coroutine sceneLoadCoroutune;
     bool spawnMenuBool;
+    int loadingIndex = -1; // the scene the load in progress goes to (-1: none)
+    bool holding;          // a held load, from its start until its scene is up
+    bool menuAfterLoad;    // the game left for the menu during a held load: the menu follows as soon as its scene is up
 
     private void Start()
     {
@@ -79,6 +82,11 @@ public class SceneManager : SingletonMonobehaviour<SceneManager>, ISceneFlow, IM
     void ISceneFlow.ReturnToMenu() { InvokeMenuSceneEvent(); }
     bool ISceneFlow.WaitingForConfirm { get { return enableConfirm; } }
 
+    /// <summary>
+    /// Whether the game is on its way back to the menu: a match scene shown only to get there starts nothing
+    /// </summary>
+    public bool LeavingForMenu { get { return menuAfterLoad || loadingIndex == PlayerSelectScene.BuildIndex; } }
+
     // Online (IMatchLoader): a match scene loads behind the loading screen and waits for the host to show it
     public event Action HeldSceneReady;
     public event Action SceneUp;
@@ -98,6 +106,20 @@ public class SceneManager : SingletonMonobehaviour<SceneManager>, ISceneFlow, IM
 
     void RaiseSceneUp(Scene scene, LoadSceneMode mode)
     {
+        if (scene.buildIndex == loadingIndex)
+        {
+            loadingIndex = -1;
+            holding = false;
+        }
+
+        // The game left for the menu while this scene loaded: the menu follows at once, before this scene's Start
+        if (menuAfterLoad)
+        {
+            menuAfterLoad = false;
+            if (scene.buildIndex != PlayerSelectScene.BuildIndex)
+                LoadMenuScene();
+        }
+
         SceneUp?.Invoke();
     }
 
@@ -115,6 +137,20 @@ public class SceneManager : SingletonMonobehaviour<SceneManager>, ISceneFlow, IM
     ///</summary>
     private void LoadMenuScene()
     {
+        // On its way already (the host took everyone back, then left): a second load would wait behind the first for good
+        if (loadingIndex == PlayerSelectScene.BuildIndex)
+            return;
+
+        // A held load can't be called off: Unity keeps every later load waiting behind it. So its scene shows as soon as
+        // it's loaded, starts nothing (LeavingForMenu), and the menu follows (RaiseSceneUp)
+        if (holding)
+        {
+            menuAfterLoad = true;
+            if (sceneLoad != null && !sceneLoad.allowSceneActivation)
+                ConfirmLoad();
+            return;
+        }
+
         if (UnityEngine.SceneManagement.SceneManager.GetActiveScene().buildIndex != PlayerSelectScene.BuildIndex)
         {
             // Stops Corutine
@@ -189,6 +225,10 @@ public class SceneManager : SingletonMonobehaviour<SceneManager>, ISceneFlow, IM
     ///</summary>
     private IEnumerator LoadSceneAsync(int sceneToLoad, float delayTime, bool waitForConfirm, bool spawnMenu, bool holdForHost = false)
     {
+        loadingIndex = sceneToLoad;
+        holding = holdForHost;
+        sceneLoad = null;
+
         // Sets gamestate to loading
         GameManager.Instance.SetGameState(GameState.Loading);
 
@@ -207,10 +247,14 @@ public class SceneManager : SingletonMonobehaviour<SceneManager>, ISceneFlow, IM
                 sceneLoad = asyncLoad;
                 spawnMenuBool = spawnMenu;
 
-                // Online: the host shows the scene once every machine has it loaded
+                // Online: the host shows the scene once every machine has it loaded. Unless the game is leaving for the
+                // menu: then it shows at once, and the menu follows
                 if (holdForHost)
                 {
-                    HeldSceneReady?.Invoke();
+                    if (menuAfterLoad)
+                        ConfirmLoad();
+                    else
+                        HeldSceneReady?.Invoke();
                     break;
                 }
 
