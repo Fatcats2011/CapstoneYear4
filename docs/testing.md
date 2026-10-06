@@ -51,6 +51,10 @@
   - `PresenceRulesTests`: what friends see for each game state, and Steam's presence without Steam.
   - `SessionLogTests`: the opt-in session logs' rules and files (in a temp folder).
   - `SteamFeaturesTests` (empty Play Mode scene, fake stores): a local delivery unlocks, a client's replay counts for nothing, an online host leaves unlocking to `OnlineAchievements`, and each state sets the presence.
+- Display settings and the keyboard (Phase 1C, `docs/controls.md`):
+  - `GameSettingsTests` also cover the display keys in `settings.cfg`; `DisplayRulesTests`: fullscreen mode, a size the screen can show, VSync and the frame cap.
+  - `KeyboardControlsTests` (EditMode, on a copy of the input actions): the keyboard-only scheme, a key for every action, installing twice, uninstalling.
+  - `KeyboardPlayerTests` (menu scene, a test keyboard): joining on Space only, readying up, and the online seat move. In batch mode the editor has no focus, so these tests let keyboard input through (`editorInputBehaviorInPlayMode`, `backgroundBehavior`) and put the settings back after.
 - Leave the editor alone while it plays. Controllers you touch count as input.
 - Run a single test: select it in the Test Runner → **Run Selected**.
 

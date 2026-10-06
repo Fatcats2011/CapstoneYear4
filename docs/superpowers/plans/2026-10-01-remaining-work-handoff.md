@@ -1,4 +1,4 @@
-# Dead on Arrival — Handoff: What's Left After Phase 4A
+# Dead on Arrival — Handoff: What's Left After Phase 1C
 
 > **For the next session:** read this, then the roadmap (`docs/superpowers/plans/2026-09-22-steam-split-screen-and-online.md`). Work one phase at a time:
 > 1. Plan it with superpowers:writing-plans, in the format of the Phase 3G–3I plans.
@@ -8,10 +8,10 @@
 
 ## Where things stand (2026-10-06)
 
-- **Branch `steam-phase1a`** is at `693799f0` "Phase 3I", with **Phase 4A done on top, uncommitted** (`docs/superpowers/plans/2026-10-06-phase4a-steam-features.md`): all 551 tests pass. See "1. Commit Phase 4A" below.
+- **Branch `steam-phase1a`** is at `03818e1c` "Phase 4A: Steam features in the game", with **Phase 1C done on top, uncommitted** (`docs/superpowers/plans/2026-10-06-phase1c-display-and-keyboard.md`): all 575 tests pass. See "1. Commit Phase 1C" below.
 - **`main` holds the Steam API only** (the branch policy, below).
 - **Done:**
-  - Phase 1's code (1A, 1B), Phase 2 (2A–2C), Phase 3 (3A–3I) apart from the optional Task 3.9, and Phase 4A.
+  - Phase 1's code (1A, 1B, 1C), Phase 2 (2A–2C), Phase 3 (3A–3I) apart from the optional Task 3.9, and Phase 4A.
   - Each has a plan in `docs/superpowers/plans/`.
   - `docs/online.md` explains the online code, phase by phase.
 
@@ -51,30 +51,22 @@
 
 ## What's left, in order
 
-### 1. Commit Phase 4A (the user)
+### 1. Commit Phase 1C (the user)
 
-- Phase 4A (roadmap Task 1.5's optional line, and Phase 4's achievements and logs) is implemented and tested, uncommitted (`docs/steam/in-game-features.md`):
-  - Two achievements, `FIRST_DELIVERY` and `GOLDEN_WIN`. The rules' machine decides (`MatchFeats`, `SteamFeatures`); online the host unlocks its own player's and sends the others' to their machines (`OnlineAchievements`).
-  - Rich Presence: a token per game state (`PresenceRules`); the texts are `docs/steam/rich-presence-english.vdf`.
-  - Opt-in session logs: the `-sessionlog` launch option (`SessionLog`, `SessionLogWriter`).
-  - No stats yet: they need a design and dashboard entries.
-- The user: `EDITOR-TODO.md` sections 1–2, then commit ("Phase 4A: Steam features in the game").
+- Phase 1C (roadmap Tasks 1.3's keyboard line and 1.4's display options, code only) is implemented and tested, uncommitted (`docs/controls.md`):
+  - Display settings in `settings.cfg`: `exclusive`, `width`, `height`, `vsync`, `framecap`, applied at launch (`DisplayRules`, `DisplaySettings`). Not applied in the editor.
+  - One keyboard player: a keyboard-only scheme and keys added in memory at launch (`KeyboardControls`); it joins on Space or Enter only, so dev keys don't bring it in.
+- The user: `EDITOR-TODO.md` sections 1–2, then commit ("Phase 1C: display settings and keyboard play").
 
-### 2. (Done) Phase 4A: Steam features in the game
+### 2. (Done) Phase 4A and Phase 1C's code
 
-- See section 1. The dashboard half is in 4B below.
+- Phase 4A is committed (`03818e1c`). Its dashboard half is in 4B below.
+- **Phase 1C's art, still to come** (`EDITOR-TODO.md` section 11):
+  - Options rows for the display settings and Quality: the code reads and saves them already.
+  - Keyboard button prompts.
+  - PlayStation and Nintendo button prompts (roadmap Task 1.3): they need those button sprites drawn first, then a small code task to pick the sprites by device.
 
-### 3. Phase 1C: settings and controls (code first, art after)
-
-From roadmap Tasks 1.3 and 1.4:
-- **Display options:** resolution, window mode, VSync and frame cap, saved in `settings.cfg` (`GameSettings`) and applied at launch. The Options screen's rows are hand-lettered art, so the code can land first and the rows follow when there's art. The Quality row is in the same state: its code is done, and its row needs art.
-- **Keyboard as a player** (recommended, not required):
-  - It needs a Keyboard&Mouse scheme in `Assets/Resources/CapstoneYear4.inputactions`. That's an asset edit, so it's an editor chore, or done while the editors are closed.
-  - `AddPlayerReference` must allow the scheme, and the prompts need keyboard glyphs.
-  - Today, keyboard presses make Unity spawn and destroy a whole player prefab (a Phase 1B minor).
-- **Button glyphs per controller** (PlayStation and Nintendo): needs those button sprites drawn first.
-
-### 4. Phase 4B: launch operations (mostly the user)
+### 3. Phase 4B: launch operations (mostly the user)
 
 - **When the App ID arrives,** on `main` and after asking: `SteamStartup.APP_ID`, `steam_appid.txt`, and `docs/steam/steampipe/app_build.vdf` (`APP_ID`, `WINDOWS_DEPOT_ID`).
 - **The Steamworks dashboard:**
@@ -92,7 +84,7 @@ From roadmap Tasks 1.3 and 1.4:
   - `LICENSES.md` still has 13 ⚠️/❌ items. The urgent ones are the two fonts in use (Sobiscuit, jcandlestick), DOTween, Udar SceneField, OToon, which audio is original, and unused files to delete.
 - **Valve's review** of the store page and the build (a few business days each).
 
-### 5. Optional, after launch: Task 3.9, online plus couch
+### 4. Optional, after launch: Task 3.9, online plus couch
 
 Several local players per machine online. Each local `PlayerInput` gets its own online player, and each machine split-screens only its own players.
 
@@ -118,6 +110,9 @@ Several local players per machine online. Each local `PlayerInput` gets its own 
 ## Deferred minors still open
 
 Collected from the plan ledgers. None blocks a release.
+- **Phase 1C:**
+  - The display settings are applied again on every return to the menu, so exclusive fullscreen may flicker once each time.
+  - A keyboard tap's join relies on `KeyboardControls` hearing the press before the scene's `PlayerInputManager` (it subscribes before the first scene loads); that order isn't enforced.
 - **Phase 4A:**
   - Two launches within one second share a session log name, so the second overwrites the first.
   - The opening cutscene shows "Delivering" even when the tutorial follows it.

@@ -51,11 +51,12 @@ public class PlayerInstantiate : SingletonMonobehaviour<PlayerInstantiate>
     public Gamepad[] PlayerGamepads => playerGamepads;
     ReplacementControllerListener replacementListener;
     ReplacementControllerListener ReplacementListener =>
-        replacementListener ??= new ReplacementControllerListener(GiveControllerToMissingPlayer, ShowUnsupportedDeviceHint);
+        replacementListener ??= new ReplacementControllerListener(GiveControllerToMissingPlayer, ShowReplacementHint);
     CutsceneManager cutsceneManager;
 
     // Online: the seat the host gave this machine's one player (-1 offline)
     int onlineSeat = -1;
+    InputDevice rejoining; // online: the device of the player moving seats, while it joins again (MoveToOnlineSeat)
        
     ///<summary>
     /// OnEnable, where i set event methods
@@ -131,9 +132,14 @@ public class PlayerInstantiate : SingletonMonobehaviour<PlayerInstantiate>
     ///</summary>
     public void AddPlayerReference(PlayerInput playerInput)
     {
-        if(playerInput.currentControlScheme != "Gamepad")
+        // Controllers join on any button. The keyboard joins only on Space or Enter, so a dev hotkey (F1 adds a test pad)
+        // never brings it in as a player too
+        Keyboard keyboard = playerInput.GetDevice<Keyboard>();
+        bool keyboardJoin = playerInput.currentControlScheme == KeyboardControls.SCHEME
+            && (KeyboardJoinPressed(keyboard) || (keyboard != null && keyboard == rejoining));
+        if(playerInput.currentControlScheme != "Gamepad" && !keyboardJoin)
         {
-            // Only controllers can play: outside a match, tell whoever pressed a key or an unsupported controller why nothing happened
+            // Outside a match, tell whoever pressed another key or an unsupported controller why nothing happened
             if (allowPlayerSpawn || PlayerCount == 0)
                 ShowUnsupportedDeviceHint(playerInput.devices.Count > 0 ? playerInput.devices[0] : null);
 
@@ -788,6 +794,12 @@ public class PlayerInstantiate : SingletonMonobehaviour<PlayerInstantiate>
         ControllerPrompts.Instance.ShowHint(ControllerPrompts.HintForDevice(device), ControllerPrompts.HINT_SECONDS);
     }
 
+    // A device that can't take over a player whose controller is lost was pressed
+    private void ShowReplacementHint(InputDevice device)
+    {
+        ControllerPrompts.Instance.ShowHint(ControllerPrompts.ReplacementHintForDevice(device), ControllerPrompts.HINT_SECONDS);
+    }
+
     ///<summary>
     /// Pauses for everyone when a player's controller disconnects mid-race, with a player who still has a controller running the pause menu
     ///</summary>
@@ -880,14 +892,39 @@ public class PlayerInstantiate : SingletonMonobehaviour<PlayerInstantiate>
 
     private IEnumerator MoveToOnlineSeat(PlayerInput player)
     {
-        Gamepad pad = player.GetDevice<Gamepad>();
+        // The same controller, or the keyboard, with its own scheme
+        string scheme = player.currentControlScheme;
+        InputDevice device = player.devices.Count > 0 ? player.devices[0] : null;
         LeaveLocal(player);
 
-        // The old player lets go of the controller when it's destroyed, at the end of this frame
+        // The old player lets go of the device when it's destroyed, at the end of this frame
         yield return null;
 
-        if (pad != null && pad.added)
-            PlayerInputManager.instance.JoinPlayer(-1, -1, "Gamepad", pad);
+        if (device != null && device.added)
+        {
+            rejoining = device; // the keyboard's join keys aren't down now: this join is the move's
+            try
+            {
+                PlayerInputManager.instance.JoinPlayer(-1, -1, scheme, device);
+            }
+            finally
+            {
+                rejoining = null;
+            }
+        }
+    }
+
+    ///<summary>
+    /// Whether a keyboard's join keys (Space, Enter) are down, or were pressed this frame (a tap can be up again by the
+    /// time the join runs): the keyboard joins as a player only with these
+    ///</summary>
+    public static bool KeyboardJoinPressed(Keyboard keyboard)
+    {
+        if (keyboard == null)
+            return false;
+
+        return keyboard.spaceKey.isPressed || keyboard.enterKey.isPressed || keyboard.numpadEnterKey.isPressed
+            || KeyboardControls.JoinKeyUsedThisFrame(keyboard);
     }
 
     ///<summary>

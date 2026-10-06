@@ -11,6 +11,7 @@ using UnityEngine.UI;
 public class ControllerPrompts : MonoBehaviour
 {
     public const string CONNECT_CONTROLLER_HINT = "Connect a controller to play";
+    public const string KEYBOARD_JOIN_HINT = "Press Space to play with the keyboard, or connect a controller";
     public const string UNSUPPORTED_CONTROLLER_HINT = "That controller isn't supported - try an Xbox, PlayStation or Switch Pro controller";
     public const float HINT_SECONDS = 3f;
 
@@ -52,11 +53,23 @@ public class ControllerPrompts : MonoBehaviour
     }
 
     ///<summary>
-    /// What to tell someone who pressed a device that can't play: keyboards and mice need a controller, anything else isn't supported
+    /// What to tell someone who pressed a device that didn't join: a keyboard joins with Space or Enter, a mouse needs a
+    /// controller, anything else isn't supported
     ///</summary>
     public static string HintForDevice(InputDevice device)
     {
-        return device == null || device is Keyboard || device is Mouse ? CONNECT_CONTROLLER_HINT : UNSUPPORTED_CONTROLLER_HINT;
+        if (device is Keyboard)
+            return KEYBOARD_JOIN_HINT; // it pressed a key other than Space or Enter (KeyboardControls)
+        return device == null || device is Mouse ? CONNECT_CONTROLLER_HINT : UNSUPPORTED_CONTROLLER_HINT;
+    }
+
+    ///<summary>
+    /// What to tell someone who pressed a device while a player's controller is lost: only a controller can take that
+    /// player over, so a keyboard needs a controller too
+    ///</summary>
+    public static string ReplacementHintForDevice(InputDevice device)
+    {
+        return device is Keyboard ? CONNECT_CONTROLLER_HINT : HintForDevice(device);
     }
 
     ///<summary>

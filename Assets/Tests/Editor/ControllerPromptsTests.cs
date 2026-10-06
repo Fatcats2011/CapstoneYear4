@@ -69,16 +69,45 @@ namespace DoA.Tests
         }
 
         [Test]
-        public void HintForDevice_KeyboardAsksForAController()
+        public void HintForDevice_KeyboardSaysHowToJoin()
         {
             Keyboard keyboard = InputSystem.AddDevice<Keyboard>();
             try
             {
-                Assert.AreEqual(ControllerPrompts.CONNECT_CONTROLLER_HINT, ControllerPrompts.HintForDevice(keyboard));
+                Assert.AreEqual(ControllerPrompts.KEYBOARD_JOIN_HINT, ControllerPrompts.HintForDevice(keyboard));
             }
             finally
             {
                 InputSystem.RemoveDevice(keyboard);
+            }
+        }
+
+        [Test]
+        public void ReplacementHintForDevice_KeyboardAsksForAController()
+        {
+            // While a player's controller is lost, only a controller can take their place: Space wouldn't
+            Keyboard keyboard = InputSystem.AddDevice<Keyboard>();
+            try
+            {
+                Assert.AreEqual(ControllerPrompts.CONNECT_CONTROLLER_HINT, ControllerPrompts.ReplacementHintForDevice(keyboard));
+            }
+            finally
+            {
+                InputSystem.RemoveDevice(keyboard);
+            }
+        }
+
+        [Test]
+        public void HintForDevice_MouseAsksForAController()
+        {
+            Mouse mouse = InputSystem.AddDevice<Mouse>();
+            try
+            {
+                Assert.AreEqual(ControllerPrompts.CONNECT_CONTROLLER_HINT, ControllerPrompts.HintForDevice(mouse));
+            }
+            finally
+            {
+                InputSystem.RemoveDevice(mouse);
             }
         }
 

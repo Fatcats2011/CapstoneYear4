@@ -15,7 +15,7 @@ Test controllers are removed when Play Mode ends. They don't move: steer with yo
 
 The title screen only lets player 1 join: join with your controller (or F1), pick Play, then press F1 in player select for each extra player.
 
-Any key press, F-keys included, also counts as a keyboard trying to join, so on the title screen and in the lobby the "Connect a controller to play" hint appears for a few seconds. That's expected.
+The keyboard joins as a player only on Space or Enter (`docs/controls.md`). Any other key, F-keys included, shows the "Press Space to play with the keyboard, or connect a controller" hint on the title screen and in the lobby for a few seconds. That's expected. Some dev letters are also keyboard driving keys (S, B, R, T): drive with the arrows when testing the keyboard player.
 
 ## Match and flow shortcuts (from the original team)
 

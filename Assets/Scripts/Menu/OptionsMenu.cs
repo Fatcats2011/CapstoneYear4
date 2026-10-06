@@ -52,6 +52,7 @@ public class OptionsMenu : SingletonMonobehaviour<OptionsMenu>
     [SerializeField] MainMenu menu;
 
     SoundManager soundManager;
+    GameSettings current; // the settings loaded or saved last, display keys included
 
     private void Start()
     {
@@ -66,11 +67,13 @@ public class OptionsMenu : SingletonMonobehaviour<OptionsMenu>
     ///</summary>
     public void SaveOptions()
     {
-        GameSettings settings = new GameSettings(bgmPosition, sfxPosition, fullscreenPosition, qualityPosition);
+        // Keeps the display keys this menu has no rows for yet (DisplaySettings)
+        current = (current ?? new GameSettings(bgmPosition, sfxPosition, fullscreenPosition, qualityPosition))
+            .WithMenuPositions(bgmPosition, sfxPosition, fullscreenPosition, qualityPosition);
 
         try
         {
-            File.WriteAllText(SettingsFilePath, settings.ToText());
+            File.WriteAllText(SettingsFilePath, current.ToText());
         }
         catch (Exception e) // a full disk or read-only folder shouldn't break the menu
         {
@@ -96,6 +99,7 @@ public class OptionsMenu : SingletonMonobehaviour<OptionsMenu>
             Debug.LogWarning($"Could not load settings from {SettingsFilePath}: {e.Message}");
         }
 
+        current = settings;
         bgmPosition = settings.bgmPosition;
         sfxPosition = settings.sfxPosition;
         fullscreenPosition = settings.fullscreenPosition;
@@ -303,18 +307,15 @@ public class OptionsMenu : SingletonMonobehaviour<OptionsMenu>
     }
 
     /// <summary>
-    /// Updates fullscreen based on input bool
+    /// Switches windowed (0) or fullscreen (1), applying the rest of the display settings with it: size, exclusive or
+    /// borderless, VSync and the frame cap (DisplaySettings)
     /// </summary>
-    /// <param name="fullscreenValue"></param>
     public void UpdateFullscreen(int fullscreenValue)
     {
-        if (fullscreenValue == 0)
-        {
-            Screen.fullScreen = false;
-        }
-        else
-        {
-            Screen.fullScreen = true;
-        }
+        if (current == null)
+            current = new GameSettings(bgmPosition, sfxPosition, fullscreenValue, qualityPosition);
+        current.fullscreenPosition = fullscreenValue;
+
+        DisplaySettings.Apply(current);
     }
 }
