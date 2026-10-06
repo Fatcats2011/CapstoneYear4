@@ -15,6 +15,7 @@ using UnityEngine;
 /// - Steals, clashes and respawn points: clients' requests and the host's answers (OnlineSteals, OnlineRespawns).
 /// - One-shots: players' (clients report theirs, and the host sends every one to every client) and the host's clock's
 ///   (OnlineCues).
+/// - Achievements: the host sends each one another player earned to every client (OnlineAchievements).
 /// </summary>
 public class OnlineMatch : NetworkBehaviour, IMatchLink
 {
@@ -73,6 +74,9 @@ public class OnlineMatch : NetworkBehaviour, IMatchLink
 
     /// <summary>Clients: the host's match clock rang</summary>
     public event Action<ClockCue> ClockRang;
+
+    /// <summary>Clients: the player in a seat earned an achievement, as the host decided (their seat, the achievement)</summary>
+    public event Action<int, Achievement> AchievementReceived;
 
     /// <summary>Clients: each state the host switches to, in order</summary>
     public event Action<GameState> StateReceived;
@@ -252,6 +256,13 @@ public class OnlineMatch : NetworkBehaviour, IMatchLink
             ClockClientRpc(cue);
     }
 
+    /// <summary>Host: tells every client the player in a seat earned an achievement. Does nothing on a client</summary>
+    public void SendAchievement(int seat, Achievement achievement)
+    {
+        if (IsServer)
+            AchievementClientRpc(seat, achievement);
+    }
+
     /// <summary>Host: shares what the golden order is worth (only a change goes out). Does nothing on a client</summary>
     public void ShareGoldenValue(int value)
     {
@@ -324,6 +335,13 @@ public class OnlineMatch : NetworkBehaviour, IMatchLink
     {
         if (!IsServer)
             ClockRang?.Invoke(cue);
+    }
+
+    [ClientRpc]
+    void AchievementClientRpc(int seat, Achievement achievement)
+    {
+        if (!IsServer)
+            AchievementReceived?.Invoke(seat, achievement);
     }
 
     [ServerRpc(RequireOwnership = false)]

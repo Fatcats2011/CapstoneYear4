@@ -129,6 +129,10 @@ public class OnlineGame : MonoBehaviour
         // What a scooter does in a moment (a boost, a full horn…) plays on every machine
         gameObject.AddComponent<OnlineCues>().Begin(session);
 
+        // The host decides achievements; each machine unlocks its own player's
+        IAchievementStore achievements = SteamFeatures.Instance != null ? SteamFeatures.Instance.Achievements : new SteamAchievementStore();
+        gameObject.AddComponent<OnlineAchievements>().Begin(session, achievements);
+
         session.RoleChanged += OnRoleChanged;
         session.Ended += ShowEnd;
         session.PlayerSpawned += OnPlayerSpawned;

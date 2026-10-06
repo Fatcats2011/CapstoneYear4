@@ -27,6 +27,7 @@
   - `OnlineCuesNetworkTests` (port 7807): one-shots, hosting and joining. Hosting, this machine's player's one-shots reach every client, another machine's play on its scooter here (silent far away), and the host's clock rings out. Joining, this machine's player's fall and rise reach the host, and the host's player's gravestone and sparkle show here. They load the game scene: a minute or two each.
   - `OnlineMatchFlowNetworkTests` (port 7808): on a client, the host's opening cutscene ending (and only the host skipping), the wave bells, and time up stopping this machine's player. It loads the game scene: a minute or two.
   - `DisconnectsNetworkTests` (port 7809): a machine going silent (another machine while this one hosts, and the host while this one joins), the host's own connection failing, and the host leaving during the opening cutscene (paused) and during both halves of a load. "Silent" means its `UnityTransport` is switched off, with 2 s timeouts. Three of them load the game scene.
+  - `AchievementMessagesNetworkTests` (port 7810, empty scene): the host's achievements reaching every client with their seat, a client never sending, and each machine unlocking only its own player's (`OnlineAchievements`, with fake stores). The next free port is 7811.
   - `OnlinePauseTests` (menu scene, no network): pausing online lets the match go on, says what Main Menu does, closes with the host's state, and a controller lost while paused doesn't pause again.
   - The first load of the game scene in a run can take over 40 s when it's cold (the first run after assets changed: it once took 41 s). Direct sessions wait 90 s for a silent machine (Phase 3I), so the other machines stay. Each load's time is in the log: `Online: the Game scene was ready here after …`.
   - When a machine leaves, Windows often reports its closed port to the others, and Unity Transport logs that as an error (`docs/online.md`, Known limits). Tests where machines leave call `LogCollector.MachinesLeave()` first: that one message is let through, and any other error still fails the test.
@@ -45,6 +46,11 @@
   - `ScooterCueTests`: a one-shot as it travels. `RemoteSoundTests`: how loud another machine's scooter is here.
   - `PausePolicyTests`: when the pause menu closes online, and what pausing says.
   - `LoadWatchTests`: timing a match load for the log.
+- The Steam features in the game (Phase 4A, `docs/steam/in-game-features.md`) run without Steam:
+  - `AchievementsTests`: who earns which achievement (`MatchFeats`), and Steam's store without Steam.
+  - `PresenceRulesTests`: what friends see for each game state, and Steam's presence without Steam.
+  - `SessionLogTests`: the opt-in session logs' rules and files (in a temp folder).
+  - `SteamFeaturesTests` (empty Play Mode scene, fake stores): a local delivery unlocks, a client's replay counts for nothing, an online host leaves unlocking to `OnlineAchievements`, and each state sets the presence.
 - Leave the editor alone while it plays. Controllers you touch count as input.
 - Run a single test: select it in the Test Runner → **Run Selected**.
 

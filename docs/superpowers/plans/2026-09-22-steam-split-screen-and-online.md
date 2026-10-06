@@ -119,7 +119,7 @@ Progress (2026-09-23): code done in Phase 1A (`2026-09-22-phase1a-release-harden
 - [ ] **Remote Play Together**: enable it in Steamworks settings and tag *Shared/Split Screen*. Friends then join your couch game over the internet with zero netcode (Steam streams the host's screen; guests' pads appear as local gamepads). This is online play on day one.
 - [ ] Steam Input: set the default config to Gamepad. Test that one PlayStation pad doesn't join as **two** players (physical HID + Steam's virtual Xbox pad); if it does, opt PlayStation controllers out of Steam Input.
 - [ ] Steam Cloud (Auto-Cloud): root `WinAppDataLocalLow`, path `The Boo Crew/Dead on Arrival`, pattern `settings.cfg`.
-- [ ] Optional: achievements (first delivery, win holding the golden order), Rich Presence ("Delivering — 3 players").
+- [x] Optional: achievements (first delivery, win holding the golden order), Rich Presence ("Delivering — 3 players"). *(Phase 4A (`2026-10-06-phase4a-steam-features.md`): `FIRST_DELIVERY` and `GOLDEN_WIN`, and a presence token per game state (`docs/steam/in-game-features.md`). The dashboard entries and the `.vdf` upload wait for the App ID.)*
 - [ ] Builds via SteamPipe: `steamcmd +login <user> +run_app_build <path>\app_build_<appid>.vdf +quit`; use a `beta` branch for testers; request Steam Deck compatibility review. *(Template and steps ready in `docs/steam/steampipe/`.)*
 - [ ] Tests: launch from the Steam client, overlay (Shift+Tab) works, a Remote Play Together session with one remote friend works.
 
@@ -305,8 +305,8 @@ Progress (2026-09-28):
 ## Phase 4 — Online launch
 
 - [ ] Steam Playtest for open testing.
-- [ ] Achievements/stats unlocked by the host (authoritative).
-- [ ] Opt-in crash/disconnect logs in `Application.persistentDataPath` (never `StreamingAssets`).
+- [x] Achievements/stats unlocked by the host (authoritative). *(Phase 4A: the host decides, unlocks its own player's, and sends the others' to their machines (`OnlineAchievements`). No stats yet: they need a design and dashboard entries.)*
+- [x] Opt-in crash/disconnect logs in `Application.persistentDataPath` (never `StreamingAssets`). *(Phase 4A: the `-sessionlog` launch option writes `persistentDataPath/logs/session-….log`, keeping the newest 10.)*
 - [ ] Store page: add Online PvP tags, update screenshots/trailer.
 
 ## Rough effort (one developer, full-time)

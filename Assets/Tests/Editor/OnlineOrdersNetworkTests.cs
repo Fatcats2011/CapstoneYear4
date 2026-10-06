@@ -30,6 +30,22 @@ namespace DoA.Tests
         const float LOADING = 180f; // loading the game scene in batch mode
 
         /// <summary>
+        /// Remembers the deliveries the rules' machine counted for achievements (FeatSync): each one's seat and whether it
+        /// was golden
+        /// </summary>
+        class FeatRecorder
+        {
+            public readonly List<int> Seats = new List<int>();
+            public readonly List<bool> Golden = new List<bool>();
+
+            public void Heard(int seat, bool golden)
+            {
+                Seats.Add(seat);
+                Golden.Add(golden);
+            }
+        }
+
+        /// <summary>
         /// Remembers the order changes a machine heard from the host
         /// </summary>
         class ChangeRecorder
@@ -343,6 +359,8 @@ namespace DoA.Tests
             OnlineSession host = match.Host, other = match.Other;
             ChangeRecorder heard = match.Heard;
             List<int> taken = match.Taken;
+            FeatRecorder feats = new FeatRecorder();
+            FeatSync.Delivered += feats.Heard;
 
             // The first wave's first order: spawned here, and the other machine hears it
             OrderChange? spawn = null;
@@ -375,6 +393,9 @@ namespace DoA.Tests
             while (PlayerInSeat(other, 1).Score != (int)first.Value && Time.realtimeSinceStartup < deadline)
                 yield return null;
             Assert.AreEqual((int)first.Value, PlayerInSeat(other, 1).Score, "their score, from the host");
+            FeatSync.Delivered -= feats.Heard;
+            Assert.IsTrue(feats.Seats.Contains(1), "the host counts the other machine's delivery for its achievements");
+            Assert.IsFalse(feats.Golden[feats.Seats.IndexOf(1)], "an ordinary order");
 
             // Another order: its player falls in the water holding it. The other machine asks, and the host drops it where asked
             deadline = Time.realtimeSinceStartup + WAIT;

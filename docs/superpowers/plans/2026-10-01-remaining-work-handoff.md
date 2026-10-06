@@ -1,4 +1,4 @@
-# Dead on Arrival — Handoff: What's Left After Phase 3I
+# Dead on Arrival — Handoff: What's Left After Phase 4A
 
 > **For the next session:** read this, then the roadmap (`docs/superpowers/plans/2026-09-22-steam-split-screen-and-online.md`). Work one phase at a time:
 > 1. Plan it with superpowers:writing-plans, in the format of the Phase 3G–3I plans.
@@ -6,12 +6,12 @@
 > 3. Run it inline (superpowers:executing-plans), then self-review.
 > 4. Leave it uncommitted: the user commits.
 
-## Where things stand (2026-10-02)
+## Where things stand (2026-10-06)
 
-- **Branch `steam-phase1a`** is at `651311e9` "Phase 3H: one-shots, cutscenes and pause online", with **Phase 3I done on top, uncommitted** (`docs/superpowers/plans/2026-10-01-phase3i-disconnects-and-versions.md`): all 514 tests pass. See "1. Commit Phase 3I" below.
+- **Branch `steam-phase1a`** is at `693799f0` "Phase 3I", with **Phase 4A done on top, uncommitted** (`docs/superpowers/plans/2026-10-06-phase4a-steam-features.md`): all 551 tests pass. See "1. Commit Phase 4A" below.
 - **`main` holds the Steam API only** (the branch policy, below).
 - **Done:**
-  - Phase 1's code (1A, 1B), Phase 2 (2A–2C) and Phase 3 (3A–3I), apart from the optional Task 3.9.
+  - Phase 1's code (1A, 1B), Phase 2 (2A–2C), Phase 3 (3A–3I) apart from the optional Task 3.9, and Phase 4A.
   - Each has a plan in `docs/superpowers/plans/`.
   - `docs/online.md` explains the online code, phase by phase.
 
@@ -19,7 +19,7 @@
 
 - **The user's rules:**
   - The user commits and pushes. Never commit, push or merge without being asked.
-  - Branch policy, in the user's words: "for right now I just want the steam Api to go in main branch all other changes are to go into phase1a branch". Never check out `main` in the real project folder.
+  - Branch policy, in the user's words: "for right now I just want the steam Api to go in main branch all other changes are to go into phase1a branch". Never check out `main` in the real project folder. Phase 4A's Steam calls went on `steam-phase1a` too (the user, 2026-10-06).
   - No subagents unless the user asks. Final reviews are self-reviews. Offer the 4-Sonnet review (memory: `code-review-agents`).
   - Editor chores go in `EDITOR-TODO.md` at the project root, as short, clean bullet points.
 - **The editor is usually open,** with a ParrelSync clone at `../CapstoneYear4_clone_0` that shares `Assets/`:
@@ -43,7 +43,7 @@
   - No lambda captures a test's local: after `EnterPlayMode`, even assigning one throws. Use recorder classes subscribed as method groups.
   - Wait by real time. Only `yield return null`.
   - Call `log.MachinesLeave()` before a machine leaves.
-  - Network test ports in use: 7791–7809. The next free port is 7810.
+  - Network test ports in use: 7791–7810. The next free port is 7811.
   - A test that loads the golden round: `OnlineOrdersNetworkTests.Hosting_AMachineLeavesHoldingTheGoldenOrder_…` (a `LoadAnswerer` on the other machine's match, then time up).
   - Fake "mid-match" in the menu scene with `GameState.MainLoop`: `StartingCutscene`'s listeners need the match scene.
 - **The game's own global `SceneManager` class** shadows Unity's: write `UnityEngine.SceneManagement.SceneManager` for Unity's.
@@ -51,29 +51,18 @@
 
 ## What's left, in order
 
-### 1. Commit Phase 3I (the user)
+### 1. Commit Phase 4A (the user)
 
-- Phase 3I (roadmap Task 3.8) is implemented and tested, uncommitted:
-  - When the host goes, everyone goes back to the menu, from any point of a match, loads included.
-  - A leaver's golden order goes back to its start, and the golden round goes on.
-  - The lobby's build tag carries the Netcode setup.
-  - Direct sessions wait 90 s for a silent machine, and every load logs its time and longest frame.
-- Fixed on the way: a delivery's throw went with a scooter that left mid-throw; erasing the golden order "without delivering" delivered it; `Fader` logged an error in the golden round; a return to the menu from the menus (or mid-load) threw in `OrderHandler.ResetHandler`.
-- The user: `EDITOR-TODO.md` sections 1–3 (two editors, then a slow PC's load time), then commit ("Phase 3I: disconnects and versions").
-- Phase 3 is then done, apart from the optional Task 3.9.
+- Phase 4A (roadmap Task 1.5's optional line, and Phase 4's achievements and logs) is implemented and tested, uncommitted (`docs/steam/in-game-features.md`):
+  - Two achievements, `FIRST_DELIVERY` and `GOLDEN_WIN`. The rules' machine decides (`MatchFeats`, `SteamFeatures`); online the host unlocks its own player's and sends the others' to their machines (`OnlineAchievements`).
+  - Rich Presence: a token per game state (`PresenceRules`); the texts are `docs/steam/rich-presence-english.vdf`.
+  - Opt-in session logs: the `-sessionlog` launch option (`SessionLog`, `SessionLogWriter`).
+  - No stats yet: they need a design and dashboard entries.
+- The user: `EDITOR-TODO.md` sections 1–2, then commit ("Phase 4A: Steam features in the game").
 
-### 2. Phase 4A: Steam features in the game (code)
+### 2. (Done) Phase 4A: Steam features in the game
 
-From roadmap Task 1.5 (its optional achievements and Rich Presence) and Phase 4:
-- **Achievements and stats:**
-  - Examples from the roadmap: first delivery; win holding the golden order.
-  - Steam unlocks an achievement for the user on that PC (`SteamUserStats.SetAchievement`, then `StoreStats`). So "unlocked by the host" means: the host decides, then tells each machine to unlock for its own player.
-  - Offline, each local match unlocks for the PC's Steam user.
-  - Put them behind a small seam with a fake for tests, as `ILobbyService` does.
-  - Real ones need the game's own App ID: achievements are defined per app in the Steamworks dashboard, and app 480's are Spacewar's.
-- **Rich Presence:** for example "Delivering — 3 players" (`SteamFriends.SetRichPresence`, plus a localization file uploaded in Steamworks).
-- **Opt-in crash and disconnect logs** in `Application.persistentDataPath` (never `StreamingAssets`): session ends with their reasons, errors, and the Phase 3I load lines. "Opt-in" needs a switch: a menu row (art), or a launch option.
-- **Ask first:** these call the Steam API. Does the branch policy put them on `main`, or on `steam-phase1a` with the gameplay hooks they need?
+- See section 1. The dashboard half is in 4B below.
 
 ### 3. Phase 1C: settings and controls (code first, art after)
 
@@ -92,7 +81,7 @@ From roadmap Tasks 1.3 and 1.4:
   - Remote Play Together, and the Shared/Split Screen tags.
   - Steam Input: Gamepad as the default config. Then test that one PlayStation pad doesn't join as two players.
   - Steam Cloud (Auto-Cloud: `WinAppDataLocalLow`, `The Boo Crew/Dead on Arrival`, `settings.cfg`).
-  - The achievement definitions, and the Rich Presence strings.
+  - The achievements (`FIRST_DELIVERY`, `GOLDEN_WIN`: names, texts and icons in `docs/steam/in-game-features.md`), and the Rich Presence file (`docs/steam/rich-presence-english.vdf`). `EDITOR-TODO.md` section 9.
 - **Builds:** SteamPipe (`docs/steam/steampipe/README.md`), a `beta` branch for testers, the Steam Deck review, and Steam Playtest for open testing.
 - **The store page:**
   - The art sizes are in roadmap Task 1.6, plus screenshots and a trailer.
@@ -129,6 +118,10 @@ Several local players per machine online. Each local `PlayerInput` gets its own 
 ## Deferred minors still open
 
 Collected from the plan ledgers. None blocks a release.
+- **Phase 4A:**
+  - Two launches within one second share a session log name, so the second overwrites the first.
+  - The opening cutscene shows "Delivering" even when the tutorial follows it.
+  - The `.vdf` uses em dashes: check that Steam's upload takes them (UTF-8).
 - **Phase 3I:**
   - The host picking Main Menu while a slow client is still activating the game scene: the client follows to the menu, but first shows the match starting for the ~8 s trip (the host's queued states release when its scene comes up).
   - `OnlineGame.ShowEnd` returns to the menu inside `OnlineSession.Ended`: anything that throws on the way would skip later listeners (the Steam lobby's leave). The known thrower is fixed.

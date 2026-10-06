@@ -1,0 +1,18 @@
+// Rich Presence strings for Dead on Arrival, uploaded in Steamworks (Community -> Rich Presence).
+// Every token PresenceRules.For returns (Assets/Scripts/Steam/PresenceRules.cs) must be here: keep the two in step.
+// %players% is the "players" key the game sets with each token.
+"lang"
+{
+	"Language"	"english"
+	"Tokens"
+	{
+		"#Menus"	"In the menus"
+		"#GettingReady"	"Getting ready"
+		"#Tutorial"	"Learning the ropes"
+		"#Delivering"	"Delivering — %players% players"
+		"#DeliveringSolo"	"Delivering solo"
+		"#Golden"	"Chasing the golden order — %players% players"
+		"#GoldenSolo"	"Chasing the golden order solo"
+		"#Results"	"Counting the takings"
+	}
+}

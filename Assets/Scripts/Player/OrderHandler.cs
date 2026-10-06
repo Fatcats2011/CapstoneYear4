@@ -157,9 +157,12 @@ public class OrderHandler : MonoBehaviour
             using OrderSync.Scope change = OrderSync.Change(OrderChange.Deliver(rightOrder.Key, OrderSync.SeatOf(this)));
 
             soundPool.PlayOrderDropoff(key);
-            // Online, only the host changes scores: a client shows the host's
+            // Online, only the host changes scores, and counts deliveries for achievements: a client shows the host's
             if (GameAuthority.IsAuthority)
+            {
                 score += (int)order1.Value;
+                FeatSync.Deliver(OrderSync.SeatOf(this), rightOrder.Value == Constants.OrderValue.Golden);
+            }
             order1.DeliverOrder();
             order1 = null;
             ScoreManager.Instance.UpdatePlacement();
@@ -170,7 +173,10 @@ public class OrderHandler : MonoBehaviour
 
             soundPool.PlayOrderDropoff(key);
             if (GameAuthority.IsAuthority)
+            {
                 score += (int)order2.Value;
+                FeatSync.Deliver(OrderSync.SeatOf(this), rightOrder.Value == Constants.OrderValue.Golden);
+            }
             order2.DeliverOrder();
             order2 = null;
             ScoreManager.Instance.UpdatePlacement();
