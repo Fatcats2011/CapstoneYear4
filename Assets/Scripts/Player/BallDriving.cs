@@ -491,14 +491,16 @@ public class BallDriving : MonoBehaviour
 
         transform.position = sphere.transform.position - new Vector3(0, SCOOTER_BELOW_BALL, 0); //makes the scooter follow the sphere
 
-        //Assigns drag
-        sphereBody.drag = startingDrag;
+        //Assigns drag (written to the physics body only when it changes)
+        float drag = startingDrag;
         if (forwardGear)
-            sphereBody.drag = startingDrag * (1 + Mathf.Clamp(RangeMutations.Map_Linear(currentVelocity, 0, 20, 1, 0), 0, 1));
+            drag = startingDrag * (1 + Mathf.Clamp(RangeMutations.Map_Linear(currentVelocity, 0, 20, 1, 0), 0, 1));
         if (!grounded)
-            sphereBody.drag = fallingDrag;
+            drag = fallingDrag;
         if (boosting && grounded)
-            sphereBody.drag = boostingDrag;
+            drag = boostingDrag;
+        if (sphereBody.drag != drag)
+            sphereBody.drag = drag;
 
         if (!canDrive)
             return;
@@ -825,7 +827,11 @@ public class BallDriving : MonoBehaviour
             scooterNormal.up = Vector3.Lerp(scooterNormal.up, hit.normal, Time.fixedDeltaTime * 10.0f);
             scooterNormal.Rotate(0, transform.eulerAngles.y, 0);
 
-            switch (hit.collider.tag)
+            // CompareTag: reading .tag makes a new string every physics step
+            Collider ground = hit.collider;
+            string groundTag = ground.CompareTag("Speed") ? "Speed" : ground.CompareTag("TouchGrass") ? "TouchGrass"
+                : ground.CompareTag("MovingPlatform") ? "MovingPlatform" : null;
+            switch (groundTag)
             {
                 case "Speed":
                     groundBoostFlag = true;
@@ -876,7 +882,7 @@ public class BallDriving : MonoBehaviour
         {
             if (Physics.Raycast(scooterNormal.transform.position, Vector3.down, out waterHit, WATERCHECK_DISTANCE))
             {
-                if (waterHit.collider.tag == "Water")
+                if (waterHit.collider.CompareTag("Water"))
                 {
                     respawn.StartRespawnCoroutine();
                     dirtyTerrainRespawn = true;
@@ -1397,9 +1403,9 @@ public class BallDriving : MonoBehaviour
         if (boosting)
         {
             speedLineValue = 0.8f;
-            speedLinesMain.SetFloat("_SpeedLinesRemap", speedLineValue);
+            SetSpeedLines(speedLineValue);
 
-            StartCoroutine(orbitalCamera.SetFOVAfterTime(orbitalCamera.maxFOV, 0.3f));
+            orbitalCamera.BoostFOV(orbitalCamera.maxFOV);
         }
         else
         {
@@ -1412,8 +1418,21 @@ public class BallDriving : MonoBehaviour
             orbitalCamera.passInFOV = clampedFOVValue;
 
             speedLineValue = clampedSpeedLineValue;
-            speedLinesMain.SetFloat("_SpeedLinesRemap", speedLineValue);
+            SetSpeedLines(speedLineValue);
         }
+    }
+
+    static readonly int SpeedLinesRemap = Shader.PropertyToID("_SpeedLinesRemap");
+    float shownSpeedLines = float.NaN;
+
+    // The speed lines' strength, written to their material only when it changes (every frame otherwise)
+    void SetSpeedLines(float value)
+    {
+        if (value == shownSpeedLines)
+            return;
+
+        shownSpeedLines = value;
+        speedLinesMain.SetFloat(SpeedLinesRemap, value);
     }
 
     /// <summary>
@@ -1480,7 +1499,8 @@ public class BallDriving : MonoBehaviour
     public void SetSpeedLinesMaterial(int playerIndex)
     {
         speedLinesMain = potentialPlayerSpeedLineMaterials[playerIndex - 1];
-        speedLinesMain.SetFloat("_SpeedLinesRemap", speedLineValue);
+        speedLinesMain.SetFloat(SpeedLinesRemap, speedLineValue);
+        shownSpeedLines = speedLineValue; // a new material: SetSpeedLines writes changes from here
     }
 
     /// <summary>

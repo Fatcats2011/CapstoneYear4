@@ -37,7 +37,31 @@ public static class LobbyRules
     /// </summary>
     public static string OtherBuild(string version)
     {
-        return "That match is on another build of version " + version + ". You both need the same build.";
+        return "That match is on another build of version " + Shown(version) + ". You both need the same build.";
+    }
+
+    /// <summary>The most of another machine's version string ever shown or logged</summary>
+    public const int SHOWN_VERSION = 32;
+
+    /// <summary>
+    /// Another machine's version as shown in a hint or the log: no control characters (a new line could forge a log
+    /// line), and at most SHOWN_VERSION characters
+    /// </summary>
+    public static string Shown(string version)
+    {
+        if (string.IsNullOrEmpty(version))
+            return "";
+
+        System.Text.StringBuilder shown = new System.Text.StringBuilder(SHOWN_VERSION);
+        foreach (char c in version)
+        {
+            if (char.IsControl(c))
+                continue;
+            if (shown.Length == SHOWN_VERSION)
+                break;
+            shown.Append(c);
+        }
+        return shown.ToString();
     }
 
     /// <summary>

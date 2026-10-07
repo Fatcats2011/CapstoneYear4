@@ -45,6 +45,21 @@ namespace DoA.Tests
         }
 
         [Test]
+        public void Hosting_ASteamLobby_LetsOnlyItsMembersConnect()
+        {
+            lobbies.Members[42] = new List<ulong> { 7, 8 };
+            Assert.IsFalse(lobby.LetsIn(7), "no lobby yet");
+
+            Hosting();
+
+            Assert.IsTrue(lobby.LetsIn(8), "a member");
+            Assert.IsFalse(lobby.LetsIn(9), "a stranger");
+
+            session.Stop(null);
+            Assert.IsFalse(lobby.LetsIn(8), "the lobby is gone");
+        }
+
+        [Test]
         public void Host_MakesAFriendsOnlyLobbyForFour_TagsItWithTheGameAndBuild_AndHostsInIt()
         {
             Hosting();

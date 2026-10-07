@@ -15,6 +15,15 @@ namespace DoA.Tests
         }
 
         [Test]
+        public void Remaining_NonsenseEnds_AreZeroOrCapped()
+        {
+            Assert.AreEqual(0f, MatchClock.Remaining(double.NaN, 10), "not a number");
+            Assert.AreEqual(MatchClock.MAX_REMAINING, MatchClock.Remaining(double.PositiveInfinity, 10), "forever");
+            Assert.AreEqual(MatchClock.MAX_REMAINING, MatchClock.Remaining(1e30, 10), "far away");
+            Assert.AreEqual(0f, MatchClock.Remaining(5, 10), "past");
+        }
+
+        [Test]
         public void TheTimeLeft_CountsDownToTheEnd_AndStopsAtZero()
         {
             Assert.AreEqual(20f, MatchClock.Remaining(130, 110), 1e-4f);

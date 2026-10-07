@@ -52,10 +52,24 @@ public class CompassIconUI : MonoBehaviour
     ///</summary>
     public void SetDistanceText()
     {
-        distanceText.text = distance.ToString() + "ft";
-        distanceTextChildLeft.text = distance.ToString() + "ft";
-        distanceTextChildRight.text = distance.ToString() + "ft";
+        // Called every frame: the texts change (and their canvas rebuilds) only when the whole distance does
+        if (distance == shownDistance)
+            return;
+
+        shownDistance = distance;
+        string text = DistanceText(distance);
+        distanceText.text = text;
+        distanceTextChildLeft.text = text;
+        distanceTextChildRight.text = text;
     }
+
+    /// <summary>A distance as the icon shows it, in whole feet</summary>
+    public static string DistanceText(int distance)
+    {
+        return distance + "ft";
+    }
+
+    int shownDistance = int.MinValue; // the distance the texts show
 
 
 }

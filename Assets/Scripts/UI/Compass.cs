@@ -89,15 +89,38 @@ public class Compass : MonoBehaviour
 
         }
 
-        var sortedListDescending = compassInformationObjects.OrderByDescending(instance => instance.compassIcon.distance).ToList();
-
-        // Loop through the sorted list and organize the children
-        for (int i = 0; i < sortedListDescending.Count; i++)
+        // The nearest icons draw last (on top): sorted in place, and a child moved only when its place changes, so the
+        // canvas isn't rebuilt every frame
+        SortByDistanceDescending(compassInformationObjects, IconDistance);
+        for (int i = 0; i < compassInformationObjects.Count; i++)
         {
-            // Assuming each CompassIconUI has a transform property
-            sortedListDescending[i].compassIcon.transform.SetSiblingIndex(i);
+            Transform icon = compassInformationObjects[i].compassIcon.transform;
+            if (icon.GetSiblingIndex() != i)
+                icon.SetSiblingIndex(i);
         }
 
+    }
+
+    static readonly System.Func<CompassInformationInstance, float> IconDistance = instance => instance.compassIcon.distance;
+
+    ///<summary>
+    /// Sorts a list farthest first, in place and stable (ties keep their order), as OrderByDescending did, without its
+    /// allocations every frame
+    ///</summary>
+    public static void SortByDistanceDescending<T>(List<T> items, System.Func<T, float> distance)
+    {
+        for (int i = 1; i < items.Count; i++)
+        {
+            T item = items[i];
+            float key = distance(item);
+            int j = i - 1;
+            while (j >= 0 && distance(items[j]) < key)
+            {
+                items[j + 1] = items[j];
+                j--;
+            }
+            items[j + 1] = item;
+        }
     }
 
     ///<summary>

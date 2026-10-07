@@ -46,5 +46,9 @@ public class HotKeys : SingletonMonobehaviour<HotKeys>
             GraphicsQuality.Apply((GraphicsQuality.CurrentLevel + 1) % GraphicsQuality.LEVEL_COUNT);
             Debug.Log("Graphics quality: " + GraphicsQuality.LevelNames[GraphicsQuality.CurrentLevel]);
         }
+
+        // F6 shows or hides the frame rate (PerfOverlay)
+        if (DevTools.GetKeyDown(KeyCode.F6) && PerfOverlay.Instance != null)
+            PerfOverlay.Instance.Toggle();
     }
 }

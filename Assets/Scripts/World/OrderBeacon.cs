@@ -229,10 +229,9 @@ public class OrderBeacon : MonoBehaviour
         if (!canInteract || !order.CanPickup)
             return;
 
-        if (IsPlayersBall(other))
+        OrderHandler orderHandler = BallHandler(other);
+        if (orderHandler != null)
         {
-            Transform parent = other.transform.parent;
-            OrderHandler orderHandler = parent.GetComponentInChildren<OrderHandler>();
             if (isPickup)
             {
                 if (orderHandler.CanTakeOrder)
@@ -258,6 +257,53 @@ public class OrderBeacon : MonoBehaviour
     /// </summary>
     public static bool IsPlayersBall(Collider other)
     {
-        return other.name == "Ball Of Fun";
+        return IsBall(other);
+    }
+
+    // What each collider that has touched a beacon is: a scooter's ball (with its order handler), or not. Its name is
+    // read once, not every physics step
+    private static readonly Dictionary<Collider, OrderHandler> ballHandlers = new Dictionary<Collider, OrderHandler>();
+    private static readonly HashSet<Collider> notBalls = new HashSet<Collider>();
+
+    private static bool IsBall(Collider other)
+    {
+        if (notBalls.Contains(other))
+            return false;
+        if (ballHandlers.ContainsKey(other))
+            return true;
+
+        // Scenes come and go: don't hold on to the colliders of old ones
+        if (notBalls.Count > 256)
+            notBalls.Clear();
+
+        if (other.name != "Ball Of Fun")
+        {
+            notBalls.Add(other);
+            return false;
+        }
+
+        ballHandlers[other] = null;
+        return true;
+    }
+
+    /// <summary>
+    /// The order handler of the scooter whose ball a collider is, or null when it isn't a scooter's ball
+    /// </summary>
+    private static OrderHandler BallHandler(Collider other)
+    {
+        if (!IsBall(other))
+            return null;
+
+        ballHandlers.TryGetValue(other, out OrderHandler handler);
+        if (handler == null)
+        {
+            if (ballHandlers.Count > 64)
+                ballHandlers.Clear();
+
+            handler = other.transform.parent.GetComponentInChildren<OrderHandler>();
+            ballHandlers[other] = handler;
+        }
+
+        return handler;
     }
 }

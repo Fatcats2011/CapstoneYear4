@@ -123,6 +123,19 @@ namespace DoA.Tests
         }
 
         [Test]
+        public void Keeps_PerfLines()
+        {
+            Assert.IsTrue(SessionLog.Keeps(LogType.Log, "Perf: 4 players, 118 fps average, 92 fps 1% low, 12 cameras"));
+        }
+
+        [Test]
+        public void Full_At5MB()
+        {
+            Assert.IsFalse(SessionLog.Full(SessionLog.MAX_BYTES - 1));
+            Assert.IsTrue(SessionLog.Full(SessionLog.MAX_BYTES));
+        }
+
+        [Test]
         public void Header_NamesTheBuild()
         {
             Assert.AreEqual("Dead on Arrival 1.0.0 on Windows 11, started 2026-10-06 09:05:03\n",

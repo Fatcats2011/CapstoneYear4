@@ -17,10 +17,20 @@ public static class MatchClock
         return now + timeLeft;
     }
 
-    /// <summary>The time left until the end, never below zero</summary>
+    /// <summary>The most time a clock can have left: an hour (no match is that long)</summary>
+    public const float MAX_REMAINING = 3600f;
+
+    /// <summary>
+    /// The time left until the end, from 0 to MAX_REMAINING. An end that isn't a number (another machine could send
+    /// anything) has no time left
+    /// </summary>
     public static float Remaining(double end, double now)
     {
-        return Mathf.Max(0f, (float)(end - now));
+        double left = end - now;
+        if (double.IsNaN(left))
+            return 0f;
+
+        return (float)Math.Min(MAX_REMAINING, Math.Max(0d, left));
     }
 
     /// <summary>Host: whether its clock moved from the end it sent</summary>

@@ -208,6 +208,15 @@ public class OnlineLobby
         IsHost = false;
     }
 
+    /// <summary>
+    /// Whether a Steam user may connect to this machine's session: only while it hosts a lobby, and only that lobby's
+    /// members (SteamPeerRules). A stranger who knows the host's Steam ID is closed before Netcode sees them
+    /// </summary>
+    public bool LetsIn(ulong steamId)
+    {
+        return IsHost && SteamPeerRules.Accepts(steamId, Current, lobbies);
+    }
+
     void Tell(string message)
     {
         Notice?.Invoke(message);

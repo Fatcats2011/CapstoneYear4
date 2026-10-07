@@ -1,6 +1,5 @@
 {
   "dependencies": {
-    "com.community.netcode.transport.steamnetworkingsockets": "https://github.com/Unity-Technologies/multiplayer-community-contributions.git?path=/Transports/com.community.netcode.transport.steamnetworkingsockets#d862504b148f6c3a31763797900eb5a54d4625a5",
     "com.jimmycushnie.noisynodes": "https://github.com/JimmyCushnie/Noisy-Nodes.git",
     "com.rlabrecque.steamworks.net": "https://github.com/rlabrecque/Steamworks.NET.git?path=/com.rlabrecque.steamworks.net#2025.164.1",
     "com.unity.2d.sprite": "1.0.0",

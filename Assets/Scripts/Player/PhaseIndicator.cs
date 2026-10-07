@@ -43,6 +43,9 @@ public class PhaseIndicator : MonoBehaviour
 
     Coroutine hornStatus;
 
+    private const float RATIO_EPSILON = 0.0001f;
+    private float lastRatio = float.NaN; // the gauge ratio last drawn on the sliders and horns
+
     private float currentBoostMaxTime;
     private float currentBoostRechargeAmount;
 
@@ -83,7 +86,23 @@ public class PhaseIndicator : MonoBehaviour
 
         ghostRenderer.materials = ghostMaterials;
 
+        lastRatio = float.NaN; // the new horn material needs drawing again
+
         initalized = true;
+    }
+
+    /// <summary>
+    /// Whether the horn needs drawing for a new gauge ratio: not for a change too small to see, but always when it reaches
+    /// or leaves full (the boost-ready cue and colour) or empty, and the first time
+    /// </summary>
+    public static bool NeedsRedraw(float ratio, float lastRatio)
+    {
+        if (float.IsNaN(lastRatio))
+            return true;
+        if ((ratio >= 1f) != (lastRatio >= 1f) || (ratio <= 0f) != (lastRatio <= 0f))
+            return true;
+
+        return Mathf.Abs(ratio - lastRatio) >= RATIO_EPSILON;
     }
 
     /// <summary>
@@ -92,6 +111,12 @@ public class PhaseIndicator : MonoBehaviour
     public void SetHornColor(float passInCurrent, float passInMax)
     {
         float ratio = passInCurrent / passInMax;
+
+        // Nothing to redraw while the gauge hasn't moved
+        if (!NeedsRedraw(ratio, lastRatio))
+            return;
+        lastRatio = ratio;
+
         hornSliderLeft.value = ratio;
         hornSliderRight.value = ratio;
         hornGlowValue = ratio * hornValueMax;

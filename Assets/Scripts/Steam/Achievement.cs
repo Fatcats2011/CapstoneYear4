@@ -25,7 +25,7 @@ public static class AchievementNames
             case Achievement.GoldenWin:
                 return "GOLDEN_WIN";
             default:
-                return achievement.ToString();
+                return null; // not one of the game's (another machine could send any number)
         }
     }
 }

@@ -27,6 +27,8 @@ public class SteamAchievementStore : IAchievementStore
 
 #if !DISABLESTEAMWORKS
         string name = AchievementNames.ApiName(achievement);
+        if (name == null)
+            return;
         if (SteamUserStats.GetAchievement(name, out bool achieved) && achieved)
             return;
 

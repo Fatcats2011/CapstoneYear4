@@ -104,6 +104,24 @@ public class SteamLobbyService : ILobbyService
         return 0;
     }
 
+    /// <summary>Whether a Steam user is in a lobby now (false without Steam)</summary>
+    public bool IsMember(ulong lobby, ulong steamId)
+    {
+#if !DISABLESTEAMWORKS
+        if (Available && lobby != 0)
+        {
+            CSteamID id = new CSteamID(lobby);
+            int count = SteamMatchmaking.GetNumLobbyMembers(id);
+            for (int i = 0; i < count; i++)
+            {
+                if (SteamMatchmaking.GetLobbyMemberByIndex(id, i).m_SteamID == steamId)
+                    return true;
+            }
+        }
+#endif
+        return false;
+    }
+
     public void SetJoinable(ulong lobby, bool joinable)
     {
 #if !DISABLESTEAMWORKS

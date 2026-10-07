@@ -6,6 +6,7 @@ public static class JoinRules
 {
     public const string FULL = "That match is full.";
     public const string STARTED = "That match has already started.";
+    public const string NOT_THIS_GAME = "That game isn't Dead on Arrival.";
 
     /// <summary>
     /// Why the host turns a joining player away, or null to let them in
@@ -16,9 +17,10 @@ public static class JoinRules
     /// <param name="hostState">What the host's game is doing</param>
     public static string Refusal(string hostVersion, string joinerVersion, int seatsTaken, GameState hostState)
     {
+        // Both versions come from another machine: what's shown (and logged) is cleaned and cut (LobbyRules.Shown)
         if (joinerVersion != hostVersion)
-            return "That match is on version " + hostVersion + " and you have "
-                + (string.IsNullOrEmpty(joinerVersion) ? "an unknown version" : joinerVersion) + ". You both need the same version.";
+            return "That match is on version " + LobbyRules.Shown(hostVersion) + " and you have "
+                + (string.IsNullOrEmpty(joinerVersion) ? "an unknown version" : LobbyRules.Shown(joinerVersion)) + ". You both need the same version.";
 
         if (seatsTaken >= Constants.MAX_PLAYERS)
             return FULL;

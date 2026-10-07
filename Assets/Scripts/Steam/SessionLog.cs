@@ -19,7 +19,22 @@ public static class SessionLog
     /// <summary>How many session files stay in the folder, this launch's included</summary>
     public const int KEEP = 10;
 
+    /// <summary>A session's file stops growing here (a flood of errors mustn't fill the disk)</summary>
+    public const long MAX_BYTES = 5 * 1024 * 1024;
+
+    /// <summary>The line written when a file is full; nothing follows it</summary>
+    public const string FULL_LINE = "Session log: 5 MB reached, logging stopped.\n";
+
+    /// <summary>
+    /// Whether a session's file has reached MAX_BYTES
+    /// </summary>
+    public static bool Full(long written)
+    {
+        return written >= MAX_BYTES;
+    }
+
     const string ONLINE = "Online:";
+    const string PERF = "Perf:"; // the frame rate, every 30 s (PerfOverlay)
     const string PREFIX = "session-";
     const string EXTENSION = ".log";
 
@@ -39,7 +54,7 @@ public static class SessionLog
         if (type == LogType.Error || type == LogType.Exception || type == LogType.Assert)
             return true;
 
-        return message != null && message.StartsWith(ONLINE, StringComparison.Ordinal);
+        return message != null && (message.StartsWith(ONLINE, StringComparison.Ordinal) || message.StartsWith(PERF, StringComparison.Ordinal));
     }
 
     /// <summary>

@@ -34,6 +34,7 @@ public class CivilianAgent : MonoBehaviour
     private int currentIntendedPoint = 0;
 
     private float slowUpdateTickSpeed = 0.1f; //How frequently, in seconds, SlowUpdate runs
+    private static readonly WaitForSeconds SlowUpdateWait = new WaitForSeconds(0.1f); // matches slowUpdateTickSpeed
     private IEnumerator slowUpdateCoroutine;
 
     private IEnumerator deathCoroutine;
@@ -51,6 +52,10 @@ public class CivilianAgent : MonoBehaviour
         agent = GetComponent<NavMeshAgent>();
         model = transform.GetChild(0);
         fuckBody = fuckDoll.GetComponent<Rigidbody>();
+
+        // Animators off screen don't need their transforms updated
+        foreach (Animator animator in GetComponentsInChildren<Animator>(true))
+            animator.cullingMode = AnimatorCullingMode.CullUpdateTransforms;
     }
 
     /// <summary>
@@ -86,7 +91,7 @@ public class CivilianAgent : MonoBehaviour
                 CyclePoints();
             }
 
-            yield return new WaitForSeconds(slowUpdateTickSpeed);
+            yield return SlowUpdateWait;
         }
     }
 

@@ -252,6 +252,10 @@ Online multiplayer is being built in steps (roadmap Phase 3: `docs/superpowers/p
 - **Tools → Dead on Arrival → Online → Bad Connection (150 ms, 1% Loss)**: while ticked, the next Host or Join in that editor adds 150 ms of delay and 1% packet loss (Unity Transport's own simulator; editor only). The tick lasts until the editor closes.
 - For builds, use a tool like *clumsy* (Windows).
 
+## Safety
+
+What stops a modified game from harming other players (strangers connecting, IP addresses, floods, nonsense values) is in `docs/online-safety.md` (Phase 4C).
+
 ## Known limits
 
 - **Direct joins only** (the editor and LAN tests): a player whose build has a different Netcode setup (tick rate, network prefabs…) is dropped by Netcode before the version check, and sees "Couldn't reach the host." Over Steam the lobby's build tag tells builds apart first: a lobby of another build is left, with a message.

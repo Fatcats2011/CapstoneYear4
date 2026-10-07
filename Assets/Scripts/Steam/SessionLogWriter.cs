@@ -11,6 +11,7 @@ public class SessionLogWriter : MonoBehaviour
 {
     readonly object writing = new object();
     StreamWriter writer;
+    long written; // characters written so far (about the bytes)
 
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
     static void CreateOnLaunch()
@@ -50,7 +51,16 @@ public class SessionLogWriter : MonoBehaviour
 
             try
             {
-                writer.Write(SessionLog.Line(DateTime.Now, type, message, stack));
+                string line = SessionLog.Line(DateTime.Now, type, message, stack);
+                written += line.Length;
+                if (SessionLog.Full(written))
+                {
+                    writer.Write(SessionLog.FULL_LINE);
+                    writer.Dispose();
+                    writer = null;
+                    return;
+                }
+                writer.Write(line);
             }
             catch (IOException)
             {

@@ -122,30 +122,66 @@ public class CutoutHandler : MonoBehaviour
         if (hasStolen)
             return;
 
-        try
-        {
-            OrderHandler player = other.gameObject.transform.parent.GetComponentInChildren<OrderHandler>();
-            BallDriving playerBall = other.gameObject.transform.parent.GetComponentInChildren<BallDriving>();
-
-            // Another machine's scooter: its own machine sees its boost and asks the host
-            if (RemoteAvatar.IsRemote(player) || !playerBall.Boosting)
-                return;
-
-            if (OrderSync.MayChange)
-            {
-                StealFor(player);
-            }
-            else
-            {
-                // Online client: the barrier opens here at once (no bumping into it while the host answers), and the
-                // host hands out the order
-                Open(player);
-                TutorialSync.AskCutout(Seat);
-            }
-        }
-        catch
-        {
+        if (!FindScooter(other, out OrderHandler player, out BallDriving playerBall))
             return;
+
+        // Another machine's scooter: its own machine sees its boost and asks the host
+        if (RemoteAvatar.IsRemote(player) || !playerBall.Boosting)
+            return;
+
+        if (OrderSync.MayChange)
+        {
+            StealFor(player);
         }
+        else
+        {
+            // Online client: the barrier opens here at once (no bumping into it while the host answers), and the
+            // host hands out the order
+            Open(player);
+            TutorialSync.AskCutout(Seat);
+        }
+    }
+
+    // What each collider that has touched the cutout belongs to: a scooter's order handler and ball driving, or neither
+    private struct Scooter
+    {
+        public OrderHandler Player;
+        public BallDriving Ball;
+        public bool IsScooter; // it has a ball driving (the cutout only reacts to those)
+    }
+
+    private static readonly Dictionary<Collider, Scooter> scooters = new Dictionary<Collider, Scooter>();
+
+    /// <summary>
+    /// Finds the scooter a collider belongs to (its parent's order handler and ball driving). It looks each collider up
+    /// once: one that isn't a scooter's is remembered as such
+    /// </summary>
+    private static bool FindScooter(Collider other, out OrderHandler player, out BallDriving playerBall)
+    {
+        // A known scooter whose parts are gone is looked up again
+        if (scooters.TryGetValue(other, out Scooter known) && (!known.IsScooter || known.Ball != null))
+        {
+            player = known.Player;
+            playerBall = known.Ball;
+            return known.IsScooter;
+        }
+
+        // Scenes come and go: don't hold on to the colliders of old ones
+        if (scooters.Count > 256)
+            scooters.Clear();
+
+        Transform parent = other.transform.parent;
+        known = new Scooter();
+        if (parent != null)
+        {
+            known.Player = parent.GetComponentInChildren<OrderHandler>();
+            known.Ball = parent.GetComponentInChildren<BallDriving>();
+        }
+
+        known.IsScooter = known.Ball != null;
+        scooters[other] = known;
+        player = known.Player;
+        playerBall = known.Ball;
+        return known.IsScooter;
     }
 }

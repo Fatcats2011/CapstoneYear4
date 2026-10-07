@@ -318,6 +318,11 @@ public class PlayerInstantiate : SingletonMonobehaviour<PlayerInstantiate>
             slot.Input.camera.rect = cameraRects[cameraRectCounter];
             cameraRectCounter++;
         }
+
+        // Each view on this machine pays for shadows and SSAO: 3-4 views get the lighter settings (GraphicsQuality).
+        // Only while playing: in edit mode the URP asset is the project's file
+        if (Application.isPlaying)
+            GraphicsQuality.ApplyFor(roster.LocalCount);
     }
 
     ///<summary>

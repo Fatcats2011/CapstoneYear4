@@ -90,6 +90,44 @@ public class PlayerCameraResizer : MonoBehaviour
         phaseRender.GetComponent<Image>().material = phaseTransitionMaterialMain;
     }
 
+    bool viewHidden;    // the main camera is off because a full-screen camera covers it (CameraBudget)
+    bool previewHidden; // the menu preview camera is off outside player select (CameraBudget)
+
+    // After the game's own camera switching this frame: cameras whose picture isn't on screen don't render. Only what
+    // this turned off is turned back on, so a camera the game keeps off stays off
+    void LateUpdate()
+    {
+        if (referenceCam != null)
+        {
+            bool covered = CameraBudget.CoveredNow();
+            if (covered && referenceCam.enabled)
+            {
+                referenceCam.enabled = false;
+                viewHidden = true;
+            }
+            else if (!covered && viewHidden)
+            {
+                referenceCam.enabled = true;
+                viewHidden = false;
+            }
+        }
+
+        if (playerCamera != null && GameManager.Instance != null)
+        {
+            bool shown = CameraBudget.PreviewShown(GameManager.Instance.MainState);
+            if (!shown && playerCamera.enabled)
+            {
+                playerCamera.enabled = false;
+                previewHidden = true;
+            }
+            else if (shown && previewHidden)
+            {
+                playerCamera.enabled = true;
+                previewHidden = false;
+            }
+        }
+    }
+
     // Update is called once per frame
     void Update()
     {

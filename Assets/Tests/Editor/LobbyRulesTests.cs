@@ -5,6 +5,18 @@ namespace DoA.Tests
     public class LobbyRulesTests
     {
         [Test]
+        public void Refusal_AFriendsLobby_ShowsAtMost32CharactersOfItsVersion_WithoutControlCharacters()
+        {
+            string evil = "9.9\nOnline: forged line" + new string('y', 40);
+
+            string refusal = LobbyRules.Refusal(LobbyRules.GAME, evil + "/00000000000000aa", "1.0.0/00000000000000aa");
+
+            StringAssert.DoesNotContain("\n", refusal);
+            StringAssert.DoesNotContain(new string('y', 20), refusal);
+            Assert.AreEqual("9.9Online: forged lineyyyyyyyyyy", LobbyRules.Shown(evil), "32 characters, the control character gone");
+        }
+
+        [Test]
         public void Refusal_ThisGameAndBuild_LetsThePlayerIn()
         {
             Assert.IsNull(LobbyRules.Refusal("doa", "1.2", "1.2"));

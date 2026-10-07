@@ -10,6 +10,7 @@ Every key below goes through `DevTools.GetKeyDown`: it works in the Unity editor
 | F2 | Anywhere | Presses A on every test controller (ready up, confirm the loading screen) | `TestPlayers.PressSouthOnAll` |
 | F3 | Anywhere | Unplugs the newest test controller; press again to plug it back in (tests the disconnect pause and "reconnect" message) | `TestPlayers.ToggleNewest` |
 | F4 | Anywhere | Cycles graphics quality Low → Medium → High (not saved; logged to the Console) | `GraphicsQuality.Apply` via `HotKeys.cs` |
+| F6 | Anywhere | Shows or hides the frame rate box: FPS, frame time, 1% low, players, cameras (`docs/performance.md`) | `PerfOverlay.Toggle` via `HotKeys.cs` |
 
 Test controllers are removed when Play Mode ends. They don't move: steer with your real controller as P1.
 

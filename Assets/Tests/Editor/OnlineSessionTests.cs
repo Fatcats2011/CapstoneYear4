@@ -50,6 +50,34 @@ namespace DoA.Tests
         }
 
         [Test]
+        public void NewSessions_CheckNetworkVariableLengths_AndDropSlowJoinsAfter5Seconds()
+        {
+            NetworkConfig config = NewSession().Network.NetworkConfig;
+
+            Assert.IsTrue(config.EnsureNetworkVariableLengthSafety);
+            Assert.AreEqual(5, config.ClientConnectionBufferTimeout);
+        }
+
+        // Whether a method's declaration sits inside an editor-and-development-only block of a script
+        static bool EditorAndDevelopmentOnly(string script, string declaration)
+        {
+            string text = System.IO.File.ReadAllText(System.IO.Path.Combine(Application.dataPath, "Scripts/Online", script));
+            int at = text.IndexOf(declaration, System.StringComparison.Ordinal);
+            Assert.GreaterOrEqual(at, 0, declaration + " in " + script);
+            int open = text.LastIndexOf("#if UNITY_EDITOR || DEVELOPMENT_BUILD", at, System.StringComparison.Ordinal);
+            int close = text.LastIndexOf("#endif", at, System.StringComparison.Ordinal);
+            return open >= 0 && open > close;
+        }
+
+        [Test]
+        public void TheDirectTransport_IsEditorAndDevelopmentOnly()
+        {
+            Assert.IsTrue(EditorAndDevelopmentOnly("OnlineSession.cs", "public bool HostDirect("), "HostDirect");
+            Assert.IsTrue(EditorAndDevelopmentOnly("OnlineSession.cs", "public bool JoinDirect("), "JoinDirect");
+            Assert.IsTrue(EditorAndDevelopmentOnly("OnlinePlay.cs", "public void UseDirect("), "UseDirect");
+        }
+
+        [Test]
         public void Create_SetsUpNetcodeToApproveJoinsOverUnityTransport()
         {
             OnlineSession session = NewSession();
@@ -85,6 +113,32 @@ namespace DoA.Tests
             OnlineSession session = NewSession();
 
             Assert.AreEqual(session.Network.NetworkConfig.GetConfig(false), OnlineSession.NetcodeSetup(OnlinePrefabs.Load()));
+        }
+
+        [Test]
+        public void Approve_AHugePayload_IsRefusedUnread()
+        {
+            OnlineSession session = NewSession();
+            Approve(session, NetworkManager.ServerClientId, "1.0.0");
+            string huge = new string('x', 500000);
+
+            NetworkManager.ConnectionApprovalResponse response = Approve(session, 1, huge);
+
+            Assert.IsFalse(response.Approved);
+            Assert.AreEqual(JoinRules.NOT_THIS_GAME, response.Reason);
+        }
+
+        [Test]
+        public void Approve_AnotherVersion_ShowsAtMost32CharactersOfIt_WithoutControlCharacters()
+        {
+            OnlineSession session = NewSession();
+            Approve(session, NetworkManager.ServerClientId, "1.0.0");
+
+            NetworkManager.ConnectionApprovalResponse response = Approve(session, 1, "9.9\nOnline: forged line" + new string('y', 40));
+
+            Assert.IsFalse(response.Approved);
+            StringAssert.DoesNotContain("\n", response.Reason);
+            StringAssert.DoesNotContain(new string('y', 20), response.Reason);
         }
 
         [Test]

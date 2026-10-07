@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using Unity.Netcode;
 using UnityEngine;
 
@@ -27,8 +28,8 @@ public class OnlineMatch : NetworkBehaviour, IMatchLink
 
     OnlineSession session;
 
-    /// <summary>The host's latest state (Default until it sends one)</summary>
-    public GameState State { get { return state.Value; } }
+    /// <summary>The host's latest state (Default until it sends one, or if it sent one the game doesn't have)</summary>
+    public GameState State { get { return NetChecks.Defined(state.Value) ? state.Value : GameState.Default; } }
 
     /// <summary>When the host's match clock runs out, in Netcode's server time (MatchClock)</summary>
     public double ClockEnd { get { return clockEnd.Value; } }
@@ -93,10 +94,22 @@ public class OnlineMatch : NetworkBehaviour, IMatchLink
     /// <summary>Host: a client has a scene loaded (its Netcode client id)</summary>
     public event Action<ulong, MatchScene> MachineLoaded;
 
+    /// <summary>Why a machine that floods the host with requests is disconnected</summary>
+    public const string KICK_REASON = "Disconnected: too many messages.";
+
+    RateGate gate; // host: how many requests each machine may send
+    readonly HashSet<ulong> kicked = new HashSet<ulong>(); // host: disconnected for flooding
+
     public override void OnNetworkSpawn()
     {
         session = NetworkManager.GetComponent<OnlineSession>();
         DontDestroyOnLoad(gameObject);
+
+        if (IsServer)
+        {
+            gate = new RateGate(RealTime);
+            NetworkManager.OnClientDisconnectCallback += ForgetSender;
+        }
 
         if (session != null)
             session.SetMatch(this);
@@ -104,8 +117,44 @@ public class OnlineMatch : NetworkBehaviour, IMatchLink
 
     public override void OnNetworkDespawn()
     {
+        if (NetworkManager != null)
+            NetworkManager.OnClientDisconnectCallback -= ForgetSender;
+
         if (session != null)
             session.ClearMatch(this);
+    }
+
+    static double RealTime()
+    {
+        return Time.realtimeSinceStartupAsDouble;
+    }
+
+    // A kicked machine stays kicked: Netcode raises the disconnect at once, while its requests already received this
+    // frame are still being handled, and it never reuses a client id
+    void ForgetSender(ulong clientId)
+    {
+        gate?.Forget(clientId);
+    }
+
+    // Host: whether a client's request is let through (RateGate). A machine that keeps flooding is disconnected
+    bool Allowed(ulong sender, RpcKind kind)
+    {
+        if (gate == null || sender == NetworkManager.ServerClientId)
+            return true;
+
+        // A machine being disconnected gets nothing more: its requests already on the way are dropped
+        if (kicked.Contains(sender))
+            return false;
+
+        if (gate.Allow(sender, kind))
+            return true;
+
+        if (gate.ShouldKick(sender) && session != null)
+        {
+            kicked.Add(sender);
+            session.Kick(sender, KICK_REASON);
+        }
+        return false;
     }
 
     /// <summary>
@@ -275,7 +324,8 @@ public class OnlineMatch : NetworkBehaviour, IMatchLink
     [ClientRpc]
     void StateClientRpc(GameState newState)
     {
-        if (IsServer)
+        // Clients check what the host sends before the game sees it (NetChecks): another machine could send anything
+        if (IsServer || !NetChecks.Defined(newState))
             return;
 
         StateReceived?.Invoke(newState);
@@ -284,14 +334,14 @@ public class OnlineMatch : NetworkBehaviour, IMatchLink
     [ClientRpc]
     void LoadClientRpc(MatchScene scene)
     {
-        if (!IsServer)
+        if (!IsServer && NetChecks.Defined(scene))
             LoadRequested?.Invoke(scene);
     }
 
     [ClientRpc]
     void ShowClientRpc(MatchScene scene)
     {
-        if (!IsServer)
+        if (!IsServer && NetChecks.Defined(scene))
             ShowRequested?.Invoke(scene);
     }
 
@@ -305,14 +355,14 @@ public class OnlineMatch : NetworkBehaviour, IMatchLink
     [ClientRpc]
     void OrderClientRpc(OrderChange change)
     {
-        if (!IsServer)
+        if (!IsServer && NetChecks.Sane(change))
             OrderReceived?.Invoke(change);
     }
 
     [ClientRpc]
     void HitClientRpc(PlayerHit hit)
     {
-        if (!IsServer)
+        if (!IsServer && NetChecks.Defined(hit.Kind))
             HitReceived?.Invoke(hit);
     }
 
@@ -326,63 +376,84 @@ public class OnlineMatch : NetworkBehaviour, IMatchLink
     [ClientRpc]
     void CueClientRpc(int seat, ScooterCue cue)
     {
-        if (!IsServer)
+        if (!IsServer && NetChecks.Defined(cue.Kind))
             CueReceived?.Invoke(seat, cue);
     }
 
     [ClientRpc]
     void ClockClientRpc(ClockCue cue)
     {
-        if (!IsServer)
+        if (!IsServer && NetChecks.Defined(cue))
             ClockRang?.Invoke(cue);
     }
 
     [ClientRpc]
     void AchievementClientRpc(int seat, Achievement achievement)
     {
-        if (!IsServer)
+        if (!IsServer && NetChecks.Defined(achievement))
             AchievementReceived?.Invoke(seat, achievement);
     }
 
     [ServerRpc(RequireOwnership = false)]
     void LoadedServerRpc(MatchScene scene, ServerRpcParams rpc = default)
     {
+        if (!Allowed(rpc.Receive.SenderClientId, RpcKind.Loaded))
+            return;
+
         MachineLoaded?.Invoke(rpc.Receive.SenderClientId, scene);
     }
 
     [ServerRpc(RequireOwnership = false)]
     void DropServerRpc(int seat, Vector3 spot1, Vector3 spot2, bool spinOut, ServerRpcParams rpc = default)
     {
+        if (!Allowed(rpc.Receive.SenderClientId, RpcKind.Drop))
+            return;
+
         DropAsked?.Invoke(rpc.Receive.SenderClientId, seat, spot1, spot2, spinOut);
     }
 
     [ServerRpc(RequireOwnership = false)]
     void LearntServerRpc(int seat, ServerRpcParams rpc = default)
     {
+        if (!Allowed(rpc.Receive.SenderClientId, RpcKind.Learnt))
+            return;
+
         MachineLearnt?.Invoke(rpc.Receive.SenderClientId, seat);
     }
 
     [ServerRpc(RequireOwnership = false)]
     void CutoutServerRpc(int seat, ServerRpcParams rpc = default)
     {
+        if (!Allowed(rpc.Receive.SenderClientId, RpcKind.Cutout))
+            return;
+
         CutoutAsked?.Invoke(rpc.Receive.SenderClientId, seat);
     }
 
     [ServerRpc(RequireOwnership = false)]
     void StealServerRpc(int attacker, int victim, ServerRpcParams rpc = default)
     {
+        if (!Allowed(rpc.Receive.SenderClientId, RpcKind.Steal))
+            return;
+
         StealAsked?.Invoke(rpc.Receive.SenderClientId, attacker, victim);
     }
 
     [ServerRpc(RequireOwnership = false)]
     void RespawnServerRpc(int seat, Vector3 lastGrounded, ServerRpcParams rpc = default)
     {
+        if (!Allowed(rpc.Receive.SenderClientId, RpcKind.Respawn))
+            return;
+
         RespawnAsked?.Invoke(rpc.Receive.SenderClientId, seat, lastGrounded);
     }
 
     [ServerRpc(RequireOwnership = false)]
     void CueServerRpc(int seat, ScooterCue cue, ServerRpcParams rpc = default)
     {
+        if (!Allowed(rpc.Receive.SenderClientId, RpcKind.Cue))
+            return;
+
         CueReported?.Invoke(rpc.Receive.SenderClientId, seat, cue);
     }
 }

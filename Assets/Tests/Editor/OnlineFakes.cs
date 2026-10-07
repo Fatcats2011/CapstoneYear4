@@ -17,6 +17,8 @@ namespace DoA.Tests
         public readonly Dictionary<ulong, Dictionary<string, string>> Data = new Dictionary<ulong, Dictionary<string, string>>();
         public readonly Dictionary<ulong, ulong> Owners = new Dictionary<ulong, ulong>();
         public readonly Dictionary<ulong, bool> Joinable = new Dictionary<ulong, bool>();
+        /// <summary>Each lobby's members (Steam IDs)</summary>
+        public readonly Dictionary<ulong, List<ulong>> Members = new Dictionary<ulong, List<ulong>>();
 
         public bool Available { get; set; } = true;
         public bool InviteWorks = true;
@@ -74,6 +76,12 @@ namespace DoA.Tests
         public void SetJoinable(ulong lobby, bool joinable)
         {
             Joinable[lobby] = joinable;
+        }
+
+        public bool IsMember(ulong lobby, ulong steamId)
+        {
+            List<ulong> members;
+            return Members.TryGetValue(lobby, out members) && members.Contains(steamId);
         }
 
         public bool Invite(ulong lobby)

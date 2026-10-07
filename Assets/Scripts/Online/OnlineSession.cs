@@ -53,6 +53,12 @@ public class OnlineSession : MonoBehaviour
     /// <summary>Netcode's manager for this session</summary>
     public NetworkManager Network { get; private set; }
 
+    /// <summary>
+    /// Steam host: whether a Steam user may connect (OnlinePlay: only the lobby's members). Asked by the Steam transport
+    /// before it accepts a connection; null lets everyone in (direct sessions, tests). See docs/online-safety.md
+    /// </summary>
+    public Func<ulong, bool> AcceptsPeer { get; set; }
+
     /// <summary>The Unity Transport that direct (IP address) sessions use</summary>
     public UnityTransport Direct { get; private set; }
 
@@ -145,6 +151,12 @@ public class OnlineSession : MonoBehaviour
             NetworkTransport = transport,
             ConnectionApproval = true,
             EnableSceneManagement = false, // scene loads stay local until the networked scene flow (roadmap Task 3.4)
+            // Safety (docs/online-safety.md): a shared value's length is checked as it's read, a connection that isn't let
+            // in within 5 s is dropped, and Netcode's own logs (which another machine's messages can fill) are off in
+            // release builds
+            EnsureNetworkVariableLengthSafety = true,
+            ClientConnectionBufferTimeout = 5,
+            EnableNetworkLogs = Debug.isDebugBuild,
         };
     }
 
@@ -153,6 +165,10 @@ public class OnlineSession : MonoBehaviour
     {
         return new[] { prefabs.PlayerPrefab, prefabs.MatchPrefab, prefabs.ScooterPrefab };
     }
+
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+    // Direct (IP address) sessions are for the editor and tests only: a release build has no way to start one, so no
+    // player's game listens on an address (docs/online-safety.md)
 
     /// <summary>
     /// Hosts a match that players join by IP address (Unity Transport): the editor and LAN tests
@@ -182,6 +198,7 @@ public class OnlineSession : MonoBehaviour
         Network.NetworkConfig.NetworkTransport = Direct;
         return StartClient();
     }
+#endif
 
 #if !DISABLESTEAMWORKS
     /// <summary>
@@ -207,6 +224,12 @@ public class OnlineSession : MonoBehaviour
         return StartClient();
     }
 
+    // The Steam transport asks this before it accepts a connection; read each time, so a later AcceptsPeer applies
+    bool AcceptsSteamPeer(ulong steamId)
+    {
+        return AcceptsPeer == null || AcceptsPeer(steamId);
+    }
+
     // Switches Netcode to the Steam transport. Without Steam, Steamworks throws as soon as the transport starts
     bool UseSteam()
     {
@@ -220,11 +243,27 @@ public class OnlineSession : MonoBehaviour
         }
 
         if (steam == null)
+        {
             steam = gameObject.AddComponent<SteamNetworkingSocketsTransport>();
+            steam.AcceptPeer = AcceptsSteamPeer; // a stranger is closed before Netcode sees them
+            steam.options = SteamRelay.Options(); // relay only: no player learns another's IP
+        }
         Network.NetworkConfig.NetworkTransport = steam;
         return true;
     }
 #endif
+
+    /// <summary>
+    /// Host: disconnects a client, telling it why (a machine flooding the host, OnlineMatch)
+    /// </summary>
+    public void Kick(ulong clientId, string reason)
+    {
+        if (Network.IsServer && clientId != NetworkManager.ServerClientId && Network.ConnectedClients.ContainsKey(clientId))
+        {
+            Debug.Log("Online: disconnected player " + clientId + ": " + reason);
+            Network.DisconnectClient(clientId, reason);
+        }
+    }
 
     /// <summary>
     /// Ends the session on purpose (Ended isn't raised). The host leaving ends the match for everyone
@@ -290,6 +329,7 @@ public class OnlineSession : MonoBehaviour
     void Approve(NetworkManager.ConnectionApprovalRequest request, NetworkManager.ConnectionApprovalResponse response)
     {
         string refusal = request.ClientNetworkId == NetworkManager.ServerClientId ? null
+            : request.Payload != null && request.Payload.Length > MAX_PAYLOAD ? JoinRules.NOT_THIS_GAME // never read
             : JoinRules.Refusal(Version, ReadVersion(request.Payload), seats.Count, HostState());
 
         response.Approved = refusal == null;
@@ -301,6 +341,9 @@ public class OnlineSession : MonoBehaviour
         else
             Debug.Log("Online: turned a player away: " + refusal);
     }
+
+    /// <summary>The most a joining player may send (their version): anything longer isn't this game, and isn't read</summary>
+    public const int MAX_PAYLOAD = 64;
 
     static string ReadVersion(byte[] payload)
     {
@@ -379,6 +422,14 @@ public class OnlineSession : MonoBehaviour
     // OnlinePlayer and OnlineMatch report here as they arrive and go
     internal void AddPlayer(OnlinePlayer player)
     {
+        // A client takes no more players than the game has seats, and no second player in a seat: another machine's
+        // host could spawn any number
+        if (!Network.IsServer && (players.Count >= Constants.MAX_PLAYERS || players.Exists(other => other.Seat == player.Seat)))
+        {
+            WarnTooMany();
+            return;
+        }
+
         players.Add(player);
         PlayerSpawned?.Invoke(player);
     }
@@ -391,6 +442,13 @@ public class OnlineSession : MonoBehaviour
 
     internal void SetMatch(OnlineMatch match)
     {
+        // One match per session: a second one from another machine's host is ignored
+        if (Match != null && Match != match)
+        {
+            WarnTooMany();
+            return;
+        }
+
         Match = match;
         MatchSpawned?.Invoke(match);
     }
@@ -404,7 +462,25 @@ public class OnlineSession : MonoBehaviour
     // OnlineScooter reports here as it arrives and goes
     internal void AddScooter(OnlineScooter scooter)
     {
+        if (!Network.IsServer && scooters.Count >= Constants.MAX_PLAYERS)
+        {
+            WarnTooMany();
+            return;
+        }
+
         scooters.Add(scooter);
+    }
+
+    bool warnedTooMany;
+
+    // Logged once per session: the host sent more than the game allows
+    void WarnTooMany()
+    {
+        if (warnedTooMany)
+            return;
+
+        warnedTooMany = true;
+        Debug.LogWarning("Online: the host sent more than the game allows; ignored.");
     }
 
     internal void RemoveScooter(OnlineScooter scooter)

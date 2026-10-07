@@ -36,6 +36,9 @@ public interface ILobbyService
 
     void SetJoinable(ulong lobby, bool joinable);
 
+    /// <summary>Whether a Steam user (a Steam ID) is in a lobby now. Only members may connect to a host (SteamPeerRules)</summary>
+    bool IsMember(ulong lobby, ulong steamId);
+
     /// <summary>Opens the invite dialog for a lobby. False when it can't open (Steam's overlay is off)</summary>
     bool Invite(ulong lobby);
 }

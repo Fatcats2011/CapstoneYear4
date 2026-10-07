@@ -142,13 +142,28 @@ namespace DoA.Tests
                 yield return null;
             }
 
-            // The opening cutscene plays by itself, then the tutorial starts
+            // The opening cutscene plays by itself, then the tutorial starts. While the cutscene's full-screen camera
+            // covers them, the players' views aren't drawn (CameraBudget)
             deadline = Deadline(60);
+            bool sawCovered = false;
             while (State() != GameState.Tutorial)
             {
                 FailIfLate(log, deadline, "the tutorial");
+                if (CutsceneCovers())
+                {
+                    yield return null; // the players' cameras follow at the end of the frame
+                    if (CutsceneCovers())
+                    {
+                        Assert.IsFalse(PlayerViews().Any(view => view.enabled), "a player's view rendered under the cutscene");
+                        sawCovered = true;
+                    }
+                }
                 yield return null;
             }
+            Assert.IsTrue(sawCovered, "the cutscene's camera covered the players' views at some point");
+            yield return null;
+            Assert.IsTrue(PlayerViews().All(view => view.enabled), "the players' views are back for the tutorial");
+            Assert.IsFalse(PreviewCameras().Any(camera => camera.enabled), "the menu preview camera renders nothing in a match");
 
             // Skip the tutorial the way the S hotkey does
             foreach (TutorialHandler handler in UnityEngine.Object.FindObjectsOfType<TutorialHandler>())
@@ -298,6 +313,24 @@ namespace DoA.Tests
         static float Deadline(float seconds)
         {
             return Time.realtimeSinceStartup + seconds;
+        }
+
+        // Every player's main camera (their view)
+        static Camera[] PlayerViews()
+        {
+            return UnityEngine.Object.FindObjectsOfType<PlayerCameraResizer>().Select(r => r.PlayerReferenceCamera).ToArray();
+        }
+
+        // Every player's menu preview camera (it renders into player select's picture of them)
+        static Camera[] PreviewCameras()
+        {
+            return UnityEngine.Object.FindObjectsOfType<PlayerCameraResizer>().Select(r => (Camera)Reflect.GetField(r, "playerCamera")).ToArray();
+        }
+
+        // Whether an enabled full-screen camera (the cutscene's) is drawing over the players' views
+        static bool CutsceneCovers()
+        {
+            return Camera.allCameras.Any(camera => CameraBudget.Covers(camera.targetTexture != null, camera.rect, camera.clearFlags, camera.depth));
         }
 
         /// <summary>

@@ -136,9 +136,18 @@ public class OnlineOrders : MonoBehaviour
 
     // Host: a client's player fell in the water holding orders. They drop where the client says, from heights the host
     // picks, and every machine sees it. A machine only drops its own player's orders
+    /// <summary>
+    /// Host: whether a client's drop request names places in the world (NetChecks): another machine could send any
+    /// number, and a drop at none would lose the orders for everyone
+    /// </summary>
+    public static bool AcceptsDrop(Vector3 spot1, Vector3 spot2)
+    {
+        return NetChecks.InWorld(spot1) && NetChecks.InWorld(spot2);
+    }
+
     void DropFor(ulong machine, int seat, Vector3 spot1, Vector3 spot2, bool spinOut)
     {
-        if (session.SeatOf(machine) != seat)
+        if (session.SeatOf(machine) != seat || !AcceptsDrop(spot1, spot2))
             return;
 
         OrderHandler handler = OrderSync.HandlerIn(seat);

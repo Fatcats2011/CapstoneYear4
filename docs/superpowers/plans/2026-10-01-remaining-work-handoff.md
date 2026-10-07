@@ -8,7 +8,8 @@
 
 ## Where things stand (2026-10-06)
 
-- **Branch `steam-phase1a`** is at `03818e1c` "Phase 4A: Steam features in the game", with **Phase 1C done on top, uncommitted** (`docs/superpowers/plans/2026-10-06-phase1c-display-and-keyboard.md`): all 575 tests pass. See "1. Commit Phase 1C" below.
+- **Branch `steam-phase1a`** is at `8ce31e85` "Phase 1C: display settings and keyboard play", with **Phase 4C (online safety) done on top, uncommitted** (`docs/superpowers/plans/2026-10-06-phase4c-online-safety.md`, `docs/online-safety.md`), and **Phase 4D (frame rate)** done on top of that, uncommitted (`docs/superpowers/plans/2026-10-06-phase4d-frame-rate.md`, `docs/performance.md`). The biggest remaining frame-rate gains are editor changes, listed in order in `docs/performance.md` (`EDITOR-TODO.md` section 2). All 629 tests pass.
+- The user allows Sonnet agents "as you see fit" for these phases (memory: `code-review-agents`); still one test run at a time.
 - **`main` holds the Steam API only** (the branch policy, below).
 - **Done:**
   - Phase 1's code (1A, 1B, 1C), Phase 2 (2A–2C), Phase 3 (3A–3I) apart from the optional Task 3.9, and Phase 4A.
@@ -43,7 +44,7 @@
   - No lambda captures a test's local: after `EnterPlayMode`, even assigning one throws. Use recorder classes subscribed as method groups.
   - Wait by real time. Only `yield return null`.
   - Call `log.MachinesLeave()` before a machine leaves.
-  - Network test ports in use: 7791–7810. The next free port is 7811.
+  - Network test ports in use: 7791–7812. The next free port is 7813.
   - A test that loads the golden round: `OnlineOrdersNetworkTests.Hosting_AMachineLeavesHoldingTheGoldenOrder_…` (a `LoadAnswerer` on the other machine's match, then time up).
   - Fake "mid-match" in the menu scene with `GameState.MainLoop`: `StartingCutscene`'s listeners need the match scene.
 - **The game's own global `SceneManager` class** shadows Unity's: write `UnityEngine.SceneManagement.SceneManager` for Unity's.
@@ -51,29 +52,22 @@
 
 ## What's left, in order
 
-### 1. Commit Phase 1C (the user)
+### 1. Art, then its small code tasks (`EDITOR-TODO.md` section 14)
 
-- Phase 1C (roadmap Tasks 1.3's keyboard line and 1.4's display options, code only) is implemented and tested, uncommitted (`docs/controls.md`):
-  - Display settings in `settings.cfg`: `exclusive`, `width`, `height`, `vsync`, `framecap`, applied at launch (`DisplayRules`, `DisplaySettings`). Not applied in the editor.
-  - One keyboard player: a keyboard-only scheme and keys added in memory at launch (`KeyboardControls`); it joins on Space or Enter only, so dev keys don't bring it in.
-- The user: `EDITOR-TODO.md` sections 1–2, then commit ("Phase 1C: display settings and keyboard play").
-
-### 2. (Done) Phase 4A and Phase 1C's code
-
-- Phase 4A is committed (`03818e1c`). Its dashboard half is in 4B below.
-- **Phase 1C's art, still to come** (`EDITOR-TODO.md` section 11):
-  - Options rows for the display settings and Quality: the code reads and saves them already.
+- Phase 4A (`03818e1c`) and Phase 1C (`8ce31e85`) are committed. Phase 4A's dashboard half is in Phase 4B below.
+- Still waiting on art:
+  - Options rows for the display settings and Quality. The code reads and saves them already: each row's selector is wired like the existing rows (`OptionsMenu`).
   - Keyboard button prompts.
-  - PlayStation and Nintendo button prompts (roadmap Task 1.3): they need those button sprites drawn first, then a small code task to pick the sprites by device.
+  - PlayStation and Nintendo button prompts (roadmap Task 1.3). They need those button sprites drawn first, then a small code task to pick the sprites by device.
 
-### 3. Phase 4B: launch operations (mostly the user)
+### 2. Phase 4B: launch operations (mostly the user)
 
 - **When the App ID arrives,** on `main` and after asking: `SteamStartup.APP_ID`, `steam_appid.txt`, and `docs/steam/steampipe/app_build.vdf` (`APP_ID`, `WINDOWS_DEPOT_ID`).
 - **The Steamworks dashboard:**
   - Remote Play Together, and the Shared/Split Screen tags.
   - Steam Input: Gamepad as the default config. Then test that one PlayStation pad doesn't join as two players.
   - Steam Cloud (Auto-Cloud: `WinAppDataLocalLow`, `The Boo Crew/Dead on Arrival`, `settings.cfg`).
-  - The achievements (`FIRST_DELIVERY`, `GOLDEN_WIN`: names, texts and icons in `docs/steam/in-game-features.md`), and the Rich Presence file (`docs/steam/rich-presence-english.vdf`). `EDITOR-TODO.md` section 9.
+  - The achievements (`FIRST_DELIVERY`, `GOLDEN_WIN`: names, texts and icons in `docs/steam/in-game-features.md`), and the Rich Presence file (`docs/steam/rich-presence-english.vdf`). `EDITOR-TODO.md` section 13.
 - **Builds:** SteamPipe (`docs/steam/steampipe/README.md`), a `beta` branch for testers, the Steam Deck review, and Steam Playtest for open testing.
 - **The store page:**
   - The art sizes are in roadmap Task 1.6, plus screenshots and a trailer.
@@ -84,7 +78,7 @@
   - `LICENSES.md` still has 13 ⚠️/❌ items. The urgent ones are the two fonts in use (Sobiscuit, jcandlestick), DOTween, Udar SceneField, OToon, which audio is original, and unused files to delete.
 - **Valve's review** of the store page and the build (a few business days each).
 
-### 4. Optional, after launch: Task 3.9, online plus couch
+### 3. Optional, after launch: Task 3.9, online plus couch
 
 Several local players per machine online. Each local `PlayerInput` gets its own online player, and each machine split-screens only its own players.
 
@@ -110,6 +104,20 @@ Several local players per machine online. Each local `PlayerInput` gets its own 
 ## Deferred minors still open
 
 Collected from the plan ledgers. None blocks a release.
+- **Phase 4D:**
+  - A first-ever `GraphicsQuality.ApplyFor(3-4)` resets the player count to 1 (harmless in play).
+  - An `ApplyFor` after `Application.quitting` in the editor re-applies with nothing to restore it (in memory only).
+  - No warning if URP's renderer list field is ever missing (SSAO would stay on).
+  - `CutoutHandler` would log every physics step for a ball with a `BallDriving` but no `OrderHandler` (none exists).
+  - A camera toggled after the players' `LateUpdate` in the same frame would leave one blank frame.
+  - The F6 overlay's 1%-low allocates each `OnGUI` (dev builds only).
+  - Pedestrians' animators cull off-screen: check the ragdoll swap reads nothing from culled bones.
+- **Phase 4C:**
+  - A kicked player is still in the lobby and can reconnect and flood again (remember the kicked Steam ID for the session).
+  - The kick reason may not reach the kicked player; they may see "connection lost".
+  - Release builds warn that `OnlinePlay.directAddress`/`directPort` are never assigned.
+  - A stream of NaN poses still makes Unity log an error per frame on the client (the log's 5 MB cap bounds it).
+  - A host hitch over 5 s during a friend's approval would drop them (`ClientConnectionBufferTimeout`).
 - **Phase 1C:**
   - The display settings are applied again on every return to the menu, so exclusive fullscreen may flicker once each time.
   - A keyboard tap's join relies on `KeyboardControls` hearing the press before the scene's `PlayerInputManager` (it subscribes before the first scene loads); that order isn't enforced.

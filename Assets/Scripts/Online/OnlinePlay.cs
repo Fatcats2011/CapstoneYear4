@@ -51,6 +51,7 @@ public class OnlinePlay : MonoBehaviour, ISessionControl
                 OnlineGame.Attach(session);
                 session.RoleChanged += ForwardRole;
                 session.Ended += ForwardEnd;
+                session.AcceptsPeer = LetsIn;
             }
             return session;
         }
@@ -85,6 +86,7 @@ public class OnlinePlay : MonoBehaviour, ISessionControl
         RequestJoin(LobbyRules.LobbyToJoin(Environment.GetCommandLineArgs()));
     }
 
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
     /// <summary>
     /// Tests and editor tools: sessions by IP address (a Steam account can't join itself), with these lobbies
     /// </summary>
@@ -93,6 +95,13 @@ public class OnlinePlay : MonoBehaviour, ISessionControl
         directAddress = address;
         directPort = port;
         Use(lobbyService);
+    }
+#endif
+
+    // Steam host: only the lobby's members may connect (OnlineLobby.LetsIn)
+    bool LetsIn(ulong steamId)
+    {
+        return Lobby != null && Lobby.LetsIn(steamId);
     }
 
     void Use(ILobbyService lobbyService)
@@ -213,8 +222,10 @@ public class OnlinePlay : MonoBehaviour, ISessionControl
 
     bool ISessionControl.Host()
     {
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
         if (directAddress != null)
             return Session.HostDirect(directAddress, directPort);
+#endif
 #if !DISABLESTEAMWORKS
         return Session.HostSteam();
 #else
@@ -224,8 +235,10 @@ public class OnlinePlay : MonoBehaviour, ISessionControl
 
     bool ISessionControl.Join(ulong hostId)
     {
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
         if (directAddress != null)
             return Session.JoinDirect(directAddress, directPort);
+#endif
 #if !DISABLESTEAMWORKS
         return Session.JoinSteam(hostId);
 #else

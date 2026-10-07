@@ -68,7 +68,8 @@ public class OnlineRespawns : MonoBehaviour
     {
         OnlineMatch match = session.Match;
         OrderHandler handler = OrderSync.HandlerIn(seat);
-        if (match == null || session.SeatOf(machine) != seat || handler == null || RespawnManager.Instance == null)
+        if (match == null || session.SeatOf(machine) != seat || handler == null || RespawnManager.Instance == null
+            || !NetChecks.InWorld(lastGrounded))
             return;
 
         RespawnPoint point = RespawnManager.Instance.GetRespawnPoint(lastGrounded);

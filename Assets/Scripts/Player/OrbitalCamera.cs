@@ -49,7 +49,9 @@ public class OrbitalCamera : MonoBehaviour
     void Update()
     {
         IDriveInput driver = DriveInput;
-        fovValue = Mathf.Lerp(fovValue, passInFOV, changeSpeed);
+        // While boosting, the view goes wide after a moment, and stays wide a moment after (BoostFOV)
+        float targetFOV = boostHold.Active(Time.time) ? boostFOV : passInFOV;
+        fovValue = Mathf.Lerp(fovValue, targetFOV, changeSpeed);
 
         // Custom joystick camera aim
         if (!driver.LookBehind && reverseCamera == false)
@@ -96,9 +98,18 @@ public class OrbitalCamera : MonoBehaviour
         }
     }
 
-    public IEnumerator SetFOVAfterTime(float newFOVValue, float waitTime)
+    // The boost's wide view (FovHold)
+    const float BOOST_FOV_DELAY = 0.3f;
+    readonly FovHold boostHold = new FovHold(BOOST_FOV_DELAY);
+    float boostFOV;
+
+    /// <summary>
+    /// Asked every frame while boosting: the view widens to this field of view a moment after the boost starts, and
+    /// stays wide a moment after it ends
+    /// </summary>
+    public void BoostFOV(float fov)
     {
-        yield return new WaitForSeconds(waitTime);
-        passInFOV = newFOVValue;
-    } 
+        boostFOV = fov;
+        boostHold.Request(Time.time);
+    }
 }

@@ -41,7 +41,7 @@ public class OnlineDriving : MonoBehaviour
             if (slot == null)
                 continue; // nobody in that seat here yet (this machine's player may be moving into it)
 
-            BallDriving driving = slot.Player.GetComponentInChildren<BallDriving>(true);
+            BallDriving driving = DrivingOf(seat, slot.Player);
             if (scooter.IsOwner)
             {
                 if (slot.IsLocal)
@@ -52,10 +52,29 @@ public class OnlineDriving : MonoBehaviour
         }
     }
 
+    // Each seat's BallDriving, and the player object it was found on: looked up again only when the seat's player changes
+    readonly BallDriving[] drivings = new BallDriving[Constants.MAX_PLAYERS];
+    readonly GameObject[] drivingOwners = new GameObject[Constants.MAX_PLAYERS];
+
+    BallDriving DrivingOf(int seat, GameObject player)
+    {
+        if (drivingOwners[seat] != player || drivings[seat] == null)
+        {
+            drivings[seat] = player.GetComponentInChildren<BallDriving>(true);
+            drivingOwners[seat] = player;
+        }
+
+        return drivings[seat];
+    }
+
     // Another machine's scooter, where its owner has it, doing what it does
     static void Show(OnlineScooter scooter, BallDriving driving)
     {
         ScooterPose pose = scooter.Pose;
+
+        // Another machine could send any pose: one no game could have is skipped, and the last good one stays
+        if (!NetChecks.Sane(pose))
+            return;
         float speed = 0f;
         if (scooter.Shown && Time.deltaTime > 0f)
             speed = Mathf.Min(Vector3.Distance(scooter.ShownBall, pose.Ball) / Time.deltaTime, TOP_SPEED);

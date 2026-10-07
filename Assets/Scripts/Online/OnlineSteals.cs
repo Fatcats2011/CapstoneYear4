@@ -14,6 +14,7 @@ using UnityEngine;
 public class OnlineSteals : MonoBehaviour
 {
     readonly StealRules rules = new StealRules();
+    readonly System.Collections.Generic.Dictionary<int, float> shownHits = new System.Collections.Generic.Dictionary<int, float>(); // client: each pair's last hit shown
     OnlineSession session;
     OnlineMatch listening; // the match whose clients' requests the host hears
 
@@ -113,6 +114,11 @@ public class OnlineSteals : MonoBehaviour
         if (attacker == null || victim == null)
             return;
 
+        // A client shows a pair's hits no closer together than the host could decide them (half its cooldown, for
+        // network jitter): another machine's host can't lock this machine's player in bounces
+        if (!GameAuthority.IsAuthority && TooSoon(hit.Attacker, hit.Victim, Time.realtimeSinceStartup))
+            return;
+
         if (hit.Kind == HitKind.Steal)
         {
             if (!RemoteAvatar.IsRemote(victim))
@@ -124,6 +130,17 @@ public class OnlineSteals : MonoBehaviour
             attacker.ClashWith(victim);
         if (!RemoteAvatar.IsRemote(victim))
             victim.ClashWith(attacker);
+    }
+
+    // Client: whether this pair (either way round) had a hit shown within half the host's pair cooldown; if not, it's now
+    bool TooSoon(int seatA, int seatB, float now)
+    {
+        int pair = Mathf.Min(seatA, seatB) * Constants.MAX_PLAYERS + Mathf.Max(seatA, seatB);
+        if (shownHits.TryGetValue(pair, out float last) && now - last < StealRules.PAIR_COOLDOWN / 2f)
+            return true;
+
+        shownHits[pair] = now;
+        return false;
     }
 
     // Where a player's ball is, as this machine shows it

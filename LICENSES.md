@@ -16,7 +16,7 @@ Inventory for the Steam release (2026-09-22). "Used" = referenced by a build sce
 | Steamworks.NET 2025.164.1 | `Packages` (git: rlabrecque/Steamworks.NET) | MIT | ✅ | Wrapper code. |
 | Netcode for GameObjects 1.15.1 | `Packages` (Unity registry) | MIT (© Unity Technologies) | ✅ | Online play (Phase 3). |
 | Unity Transport 1.5.0, Collections 1.2.4, Mono Cecil 1.11.6 | `Packages` (installed with Netcode) | Unity Companion License | ✅ | |
-| SteamNetworkingSockets transport (community) | `Packages` (git: Unity-Technologies/multiplayer-community-contributions, pinned `d862504b`) | MIT | ✅ | Keep the copyright notice. |
+| SteamNetworkingSockets transport (community) | `Packages/com.community.netcode.transport.steamnetworkingsockets` (embedded copy of Unity-Technologies/multiplayer-community-contributions `d862504b`, patched: `CHANGES-DOA.md`) | MIT | ✅ | Keep the copyright notice (`LICENSE.md` in the folder). |
 | ParrelSync 1.5.3 | `Packages` (git: VeriorPies/ParrelSync) | MIT | ✅ | Editor only; not in builds. |
 | Steamworks SDK runtime (`steam_api64.dll` etc., shipped inside Steamworks.NET) | build `Plugins` folder | Steamworks SDK Access Agreement | ✅ | Redistributable with a Steam game; covered by your Steamworks partner agreement. |
 | OToon – URP Toon Shading | `Assets/OToon- URP Toon Shading` | Unity Asset Store EULA | ⚠️ | Confirm who bought it; Asset Store tool licenses can be per seat. |
