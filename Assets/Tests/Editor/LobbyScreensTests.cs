@@ -45,7 +45,7 @@ namespace DoA.Tests
         {
             PlayerSelectCanvas canvas = objects.Add<PlayerSelectCanvas>();
             GameObject[] joinPrompts = NewObjects("Join Prompt", true);
-            Reflect.SetField(canvas, "pressButtonTexts", joinPrompts);
+            canvas.pressButtonTexts = joinPrompts;
 
             canvas.TogglePressButtonOnAllTexts(RosterWithAGap());
 
@@ -63,9 +63,9 @@ namespace DoA.Tests
             GameObject[] positions = NewObjects("Button Position", true);
             GameObject confirmText = objects.NewGameObject("Confirm Text");
             confirmText.SetActive(false);
-            Reflect.SetField(loading, "ButtonGameobjects", buttons);
-            Reflect.SetField(loading, "buttonPositions", System.Array.ConvertAll(positions, p => p.transform));
-            Reflect.SetField(loading, "textConfirm", confirmText);
+            loading.ButtonGameobjects = buttons;
+            loading.buttonPositions = System.Array.ConvertAll(positions, p => p.transform);
+            loading.textConfirm = confirmText;
 
             loading.InitalizeButtonGameobjects(RosterWithAGap());
 

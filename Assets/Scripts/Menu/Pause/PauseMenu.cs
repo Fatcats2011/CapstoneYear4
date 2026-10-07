@@ -6,7 +6,7 @@ public class PauseMenu : MonoBehaviour
 {
     public bool goToMainMenu = false;
 
-    [SerializeField] GameObject tint;
+    [SerializeField] internal GameObject tint;
     
     public enum PauseType
     {
@@ -20,8 +20,8 @@ public class PauseMenu : MonoBehaviour
 
     [Header("Host Pause")]
     [SerializeField] GameObject hostPauseGO;
-    [SerializeField] GameObject selector;
-    [SerializeField] GameObject[] selectorObjects;
+    [SerializeField] internal GameObject selector;
+    [SerializeField] internal GameObject[] selectorObjects;
     int selectorPos;
 
     private void OnEnable()
@@ -117,7 +117,7 @@ public class PauseMenu : MonoBehaviour
         }
     }
 
-    private void ReturnToMenu()
+    internal void ReturnToMenu()
     {
         SoundManager.Instance.ChangeSnapshot("gameplay");
         PlayerInstantiate.Instance.PlayerPlay();

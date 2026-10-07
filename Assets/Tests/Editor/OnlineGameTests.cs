@@ -27,11 +27,11 @@ namespace DoA.Tests
             session = OnlineSession.Create("1.0.0");
             OnlineGame.Attach(session);
 
-            Reflect.Invoke(session, "SetRole", NetworkRole.Host);
+            session.SetRole(NetworkRole.Host);
             Assert.AreEqual(NetworkRole.Host, GameAuthority.Role);
             Assert.IsInstanceOf<OnlineSceneFlow>(SceneFlow.Current);
 
-            Reflect.Invoke(session, "SetRole", NetworkRole.Offline);
+            session.SetRole(NetworkRole.Offline);
             Assert.AreEqual(NetworkRole.Offline, GameAuthority.Role);
             Assert.IsNotInstanceOf<OnlineSceneFlow>(SceneFlow.Current);
         }
@@ -41,7 +41,7 @@ namespace DoA.Tests
         {
             session = OnlineSession.Create("1.0.0");
 
-            Reflect.Invoke(session, "SetRole", NetworkRole.Client);
+            session.SetRole(NetworkRole.Client);
 
             Assert.AreEqual(NetworkRole.Offline, GameAuthority.Role);
         }

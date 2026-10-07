@@ -108,7 +108,7 @@ namespace DoA.Tests
             GameAuthority.Role = role;
             OrderManager orders = objects.Add<OrderManager>();
 
-            IEnumerator linger = (IEnumerator)Reflect.Invoke(orders, "PostGameClarity", false);
+            IEnumerator linger = orders.PostGameClarity(false);
             linger.MoveNext(); // up to the half-speed pause
 
             Assert.AreEqual(expectedTimeScale, Time.timeScale);

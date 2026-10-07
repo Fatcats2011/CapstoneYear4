@@ -56,20 +56,20 @@ public class BallDriving : MonoBehaviour
     [SerializeField] private Transform scooterNormal;
     public Transform ScooterNormal { get { return scooterNormal; } }
     [Tooltip("Reference to the movement sphere")]
-    [SerializeField] private GameObject sphere; 
+    [SerializeField] internal GameObject sphere;
     public GameObject Sphere { get { return sphere; } }
     [Tooltip("An input manager class, from the correlated InputReceiver object")]
-    [SerializeField] private InputManager inp;
+    [SerializeField] internal InputManager inp;
     private IDriveInput driveInput; // set when something other than this prefab's controller drives the scooter
     private bool listening; // from Start until the scooter is destroyed: drift and boost follow the driver's buttons
     [Tooltip("Reference to the order manager object")]
-    [SerializeField] private OrderHandler orderHandler;
+    [SerializeField] internal OrderHandler orderHandler;
     [Tooltip("Reference to the left slipstream trail")]
     [SerializeField] private TrailRenderer leftSlipstreamTrail;
     [Tooltip("Reference to the right slipstream trail")]
     [SerializeField] private TrailRenderer rightSlipstreamTrail;
     [Tooltip("Reference to the particles basket")]
-    [SerializeField] private Transform particleBasket;
+    [SerializeField] internal Transform particleBasket;
     [Tooltip("Reference to the left-side sparks position")]
     [SerializeField] private Transform sparksPos1;
     [Tooltip("Reference to the right-side sparks position")]
@@ -153,7 +153,7 @@ public class BallDriving : MonoBehaviour
     [SerializeField] private float slipstreamBoostAmount = 300.0f;
 
     [Header("Animator Information")]
-    [SerializeField] Animator playerAnimator;
+    [SerializeField] internal Animator playerAnimator;
 
     [Header("Speed Lines")]
     [SerializeField] float speedLineValue = 1;
@@ -199,7 +199,7 @@ public class BallDriving : MonoBehaviour
     private Rigidbody sphereBody; //just reference to components of the sphere
     private Collider sphereCollider;
     public Collider SphereCollider { get { return sphereCollider; } }
-    private Respawn respawn; // used to update the respawn point when grounded
+    internal Respawn respawn; // used to update the respawn point when grounded
     public Respawn Respawn { get { return respawn; } }
 
     private float startingDrag;
@@ -211,12 +211,12 @@ public class BallDriving : MonoBehaviour
 
     private float currentForce; //the amount of force to add to the speed on any given frame
     private float scaledVelocityMax; //a complicated variable derived from a bunch of testing and math which really just boils down to accelerationPower * 0.35
-    private float currentVelocity; //just shorthand for the sphere's current velocity magnitude
+    internal float currentVelocity; //just shorthand for the sphere's current velocity magnitude
     public float CurrentVelocity { get { return currentVelocity; } }
 
     private float rotationAmount; //the amount to turn on any given frame
 
-    private bool reverseGear, forwardGear, grounded;
+    internal bool reverseGear, forwardGear, grounded;
     public bool Grounded => grounded;
     private bool coyoteing = false;
     private bool hasCoyoted = false;
@@ -225,7 +225,7 @@ public class BallDriving : MonoBehaviour
     private bool stopped = true;
     private float timeSpentChecking = 0.0f;
 
-    private bool spinningOut = false;
+    internal bool spinningOut = false;
     private bool wheelying = false;
 
     private Tween wheelie;
@@ -233,13 +233,13 @@ public class BallDriving : MonoBehaviour
     private Sequence mySeq;
 
     private bool callToDrift = false; //whether the controller should attempt to drift. only used if drift is called while the left stick is neutral
-    private bool drifting = false;
+    internal bool drifting = false;
     public bool Drifting => drifting;
-    private int driftDirection; //-1 is drifting leftward, 1 is drifting rightward
+    internal int driftDirection; //-1 is drifting leftward, 1 is drifting rightward
     private bool driftBoostAchieved, firstFrameDriftBoostFlag = false;
     private float driftPoints = 0.0f;
     private float driftBoost = 0.0f;
-    private int driftTier = 0;
+    internal int driftTier = 0;
     private bool moveOnTransform = false;
     private bool isFrozen = false;
 
@@ -253,7 +253,7 @@ public class BallDriving : MonoBehaviour
     private int movingPlatformIndex; //a local copy of the index that the current moving platform recognizes this scooter as
 
     private bool boostInitialburst = false;
-    private bool boosting = false;
+    internal bool boosting = false;
     public bool Boosting => boosting;
     private bool boostAble = true;
     public bool BoostAble { set { boostAble = value; } }
@@ -276,7 +276,7 @@ public class BallDriving : MonoBehaviour
 
     public bool insideBuilding = false;
 
-    private void OnEnable()
+    internal void OnEnable()
     {
         GameManager.Instance.OnSwapStartingCutscene += ResetBoost;
         GameManager.Instance.OnSwapGoldenCutscene += ResetBoost;
@@ -290,7 +290,7 @@ public class BallDriving : MonoBehaviour
         GameManager.Instance.OnSwapFinalPackage += UnfreezeBallForGameState;
     }
 
-    private void OnDisable()
+    internal void OnDisable()
     {
         GameManager.Instance.OnSwapStartingCutscene -= ResetBoost;
         GameManager.Instance.OnSwapGoldenCutscene -= ResetBoost;
@@ -429,7 +429,7 @@ public class BallDriving : MonoBehaviour
         driver.BoostButton -= BoostFlag;
     }
 
-    private void OnDestroy()
+    internal void OnDestroy()
     {
         if (listening)
             StopListening();
@@ -439,7 +439,7 @@ public class BallDriving : MonoBehaviour
     /// <summary>
     /// Standard Start. Just used to get references, get initial values, and subscribe to events
     /// </summary>
-    private void Start()
+    internal void Start()
     {
         pad = PlayerInstantiate.Instance.PlayerGamepads[playerIndex - 1];
         rumble = gameObject.GetComponent<Rumbler>();
@@ -1384,6 +1384,20 @@ public class BallDriving : MonoBehaviour
 
         sphereBody.AddForce(difference * clashForce, ForceMode.Impulse);
         PeterSparker.Instance.CreateImpactFromCollider(sphereCollider, oppositePoint);
+    }
+
+    /// <summary>
+    /// Online: another machine's player bumped this one (OnlineBumps): pushed away from them, as hard as the host says.
+    /// (BounceOff always pushes with the full clash force)
+    /// </summary>
+    public void PushFrom(Vector3 bumperPosition, float force)
+    {
+        Vector3 away = sphereBody.position - bumperPosition;
+        away.y = 0f;
+        if (away.sqrMagnitude < 0.0001f)
+            return;
+
+        sphereBody.AddForce(away.normalized * force, ForceMode.Impulse);
     }
 
     /// <summary>

@@ -61,6 +61,12 @@ public class OnlineMatch : NetworkBehaviour, IMatchLink
     /// <summary>Clients: a steal or clash the host decided</summary>
     public event Action<PlayerHit> HitReceived;
 
+    /// <summary>Host: a client says its player (the bumper's seat) bumped another (the victim's seat) at a speed</summary>
+    public event Action<ulong, int, int, float> BumpAsked;
+
+    /// <summary>Client: the host passed on a bump (each machine pushes only its own player)</summary>
+    public event Action<PlayerBump> BumpReceived;
+
     /// <summary>Host: a client's player fell in the water (the client's id, their seat, where they were last on the ground)</summary>
     public event Action<ulong, int, Vector3> RespawnAsked;
 
@@ -257,6 +263,23 @@ public class OnlineMatch : NetworkBehaviour, IMatchLink
             StealServerRpc(attacker, victim);
     }
 
+    /// <summary>
+    /// Client: tells the host its player (the bumper's seat) bumped another machine's player (the victim's seat) at a
+    /// speed. Does nothing on the host, which judges its own player's bumps at once
+    /// </summary>
+    public void AskBump(int bumper, int victim, float speed)
+    {
+        if (!IsServer)
+            BumpServerRpc(bumper, victim, speed);
+    }
+
+    /// <summary>Host: tells every client about a bump it let through. Does nothing on a client</summary>
+    public void SendBump(PlayerBump bump)
+    {
+        if (IsServer)
+            BumpClientRpc(bump);
+    }
+
     /// <summary>Host: tells every client about a steal or clash it decided. Does nothing on a client</summary>
     public void SendHit(PlayerHit hit)
     {
@@ -367,6 +390,15 @@ public class OnlineMatch : NetworkBehaviour, IMatchLink
     }
 
     [ClientRpc]
+    void BumpClientRpc(PlayerBump bump)
+    {
+        // Another machine's host could send any numbers: a push that isn't one, or a seat that isn't one, is ignored
+        if (!IsServer && NetChecks.Finite(bump.Push) && bump.Push >= 0f && bump.Bumper >= 0 && bump.Bumper < Constants.MAX_PLAYERS
+            && bump.Victim >= 0 && bump.Victim < Constants.MAX_PLAYERS)
+            BumpReceived?.Invoke(bump);
+    }
+
+    [ClientRpc]
     void RespawnClientRpc(int seat, int point)
     {
         if (!IsServer)
@@ -437,6 +469,15 @@ public class OnlineMatch : NetworkBehaviour, IMatchLink
             return;
 
         StealAsked?.Invoke(rpc.Receive.SenderClientId, attacker, victim);
+    }
+
+    [ServerRpc(RequireOwnership = false)]
+    void BumpServerRpc(int bumper, int victim, float speed, ServerRpcParams rpc = default)
+    {
+        if (!Allowed(rpc.Receive.SenderClientId, RpcKind.Bump))
+            return;
+
+        BumpAsked?.Invoke(rpc.Receive.SenderClientId, bumper, victim, speed);
     }
 
     [ServerRpc(RequireOwnership = false)]

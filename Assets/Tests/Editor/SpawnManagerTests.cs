@@ -62,8 +62,8 @@ namespace DoA.Tests
         {
             SpawnManager spawns = objects.Add<SpawnManager>();
             tutorial = new[] { Point("Tutorial 1", 1), Point("Tutorial 2", 2) };
-            Reflect.SetField(spawns, "gameSpawnPositions", tutorial);
-            Reflect.SetField(spawns, "playerInstantiate", instantiate);
+            spawns.gameSpawnPositions = tutorial;
+            spawns.playerInstantiate = instantiate;
             return spawns;
         }
 
@@ -120,9 +120,9 @@ namespace DoA.Tests
             PlayerInstantiate instantiate = objects.Add<PlayerInstantiate>();
             GameObject[] golden = { Point("Golden 1", 1), Point("Golden 2", 2), Point("Golden 3", 3) };
             GameObject[] normal = { Point("Spawn 1", 11), Point("Spawn 2", 12), Point("Spawn 3", 13), Point("Spawn 4", 14) };
-            Reflect.SetField(spawns, "goldenPackageSpawnPositions", golden);
-            Reflect.SetField(spawns, "gameSpawnPositions", normal);
-            Reflect.SetField(spawns, "playerInstantiate", instantiate);
+            spawns.goldenPackageSpawnPositions = golden;
+            spawns.gameSpawnPositions = normal;
+            spawns.playerInstantiate = instantiate;
             Rigidbody[] balls = new Rigidbody[Constants.MAX_PLAYERS];
             for (int i = 0; i < balls.Length; i++)
                 balls[i] = AddLocalPlayer(instantiate.Roster, "P" + (i + 1));
@@ -140,9 +140,9 @@ namespace DoA.Tests
             SpawnManager spawns = objects.Add<SpawnManager>();
             PlayerInstantiate instantiate = objects.Add<PlayerInstantiate>();
             GameObject[] golden = { Point("Golden 1", 1), Point("Golden 2", 2), Point("Golden 3", 3) };
-            Reflect.SetField(spawns, "goldenPackageSpawnPositions", golden);
-            Reflect.SetField(spawns, "gameSpawnPositions", new GameObject[0]);
-            Reflect.SetField(spawns, "playerInstantiate", instantiate);
+            spawns.goldenPackageSpawnPositions = golden;
+            spawns.gameSpawnPositions = new GameObject[0];
+            spawns.playerInstantiate = instantiate;
             Rigidbody mine = AddLocalPlayer(instantiate.Roster, "P1");
             Rigidbody theirs = AddOnlinePlayer(instantiate.Roster, "P2");
             theirs.transform.position = new Vector3(50f, 5f, 50f); // where its own machine has it

@@ -28,9 +28,9 @@ namespace DoA.Tests
             PlayerCameraResizer resizer = objects.Add<PlayerCameraResizer>();
             reference = objects.Add<Camera>();
             follower = objects.Add<Camera>();
-            Reflect.SetField(resizer, "referenceCam", reference);
-            Reflect.SetField(resizer, "camerasToFollow", new[] { follower });
-            Reflect.SetField(resizer, "viewPortRectDefault", new Vector4(0f, 0f, 1f, 1f));
+            resizer.referenceCam = reference;
+            resizer.camerasToFollow = new[] { follower };
+            resizer.viewPortRectDefault = new Vector4(0f, 0f, 1f, 1f);
             return resizer;
         }
 
@@ -48,9 +48,9 @@ namespace DoA.Tests
             Material transition = new Material(Shader.Find("UI/Default"));
             textures.Add(transition);
 
-            Reflect.SetField(resizer, "phaseCamera", phase);
-            Reflect.SetField(resizer, "phaseRender", phaseRender);
-            Reflect.SetField(resizer, "phaseTransitionMaterial", transition);
+            resizer.phaseCamera = phase;
+            resizer.phaseRender = phaseRender;
+            resizer.phaseTransitionMaterial = transition;
             return resizer;
         }
 
@@ -72,10 +72,10 @@ namespace DoA.Tests
         {
             PlayerCameraResizer resizer = CreateResizer(out Camera reference, out Camera follower);
             reference.rect = new Rect(0.25f, 0.5f, 0.5f, 0.5f); // 2 players
-            Reflect.Invoke(resizer, "Update");
+            resizer.Update();
 
             reference.rect = new Rect(0f, 0.5f, 0.5f, 0.5f); // a 3rd player joined
-            Reflect.Invoke(resizer, "Update");
+            resizer.Update();
 
             Assert.AreEqual(new Rect(0f, 0.5f, 0.5f, 0.5f), follower.rect);
         }
@@ -85,10 +85,10 @@ namespace DoA.Tests
         {
             PlayerCameraResizer resizer = CreateResizer(out Camera reference, out Camera follower);
             reference.rect = new Rect(0.25f, 0.5f, 0.5f, 0.5f);
-            Reflect.Invoke(resizer, "Update");
+            resizer.Update();
 
             reference.rect = new Rect(0f, 0f, 1f, 1f);
-            Reflect.Invoke(resizer, "Update");
+            resizer.Update();
 
             Assert.AreEqual(new Rect(0f, 0f, 1f, 1f), follower.rect);
         }
@@ -99,7 +99,7 @@ namespace DoA.Tests
             PlayerCameraResizer resizer = CreateResizerWithPhaseCamera(1920, 1080, out Camera reference, out Camera phase);
             reference.rect = new Rect(0.5f, 0f, 0.5f, 0.5f);
 
-            Reflect.Invoke(resizer, "Start");
+            resizer.Start();
 
             Assert.AreEqual(new Vector2Int(960, 540), PhaseTextureSize(phase));
         }
@@ -110,7 +110,7 @@ namespace DoA.Tests
             PlayerCameraResizer resizer = CreateResizerWithPhaseCamera(1280, 800, out Camera reference, out Camera phase);
             reference.rect = new Rect(0.25f, 0.5f, 0.5f, 0.5f);
 
-            Reflect.Invoke(resizer, "Start");
+            resizer.Start();
 
             Assert.AreEqual(new Vector2Int(640, 400), PhaseTextureSize(phase));
         }
@@ -119,11 +119,11 @@ namespace DoA.Tests
         public void PhaseTexture_ShrinksWhenMorePlayersJoin()
         {
             PlayerCameraResizer resizer = CreateResizerWithPhaseCamera(1920, 1080, out Camera reference, out Camera phase);
-            Reflect.Invoke(resizer, "Start");
+            resizer.Start();
             textures.Add(phase.targetTexture);
 
             reference.rect = new Rect(0f, 0f, 0.5f, 0.5f); // a 3rd and 4th player joined
-            Reflect.Invoke(resizer, "Update");
+            resizer.Update();
 
             Assert.AreEqual(new Vector2Int(960, 540), PhaseTextureSize(phase));
         }
@@ -132,11 +132,11 @@ namespace DoA.Tests
         public void PhaseTexture_FollowsTheWindowSize()
         {
             PlayerCameraResizer resizer = CreateResizerWithPhaseCamera(1920, 1080, out Camera reference, out Camera phase);
-            Reflect.Invoke(resizer, "Start");
+            resizer.Start();
             textures.Add(phase.targetTexture);
 
             reference.targetTexture = NewScreen(2560, 1080); // moved to an ultrawide monitor
-            Reflect.Invoke(resizer, "Update");
+            resizer.Update();
 
             Assert.AreEqual(new Vector2Int(2560, 1080), PhaseTextureSize(phase));
         }
@@ -147,7 +147,7 @@ namespace DoA.Tests
             PlayerCameraResizer resizer = CreateResizerWithPhaseCamera(1920, 1080, out Camera reference, out Camera phase);
             reference.rect = new Rect(0f, 0f, 0f, 0f);
 
-            Reflect.Invoke(resizer, "Start");
+            resizer.Start();
 
             Assert.AreEqual(new Vector2Int(1, 1), PhaseTextureSize(phase));
         }

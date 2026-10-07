@@ -10,7 +10,7 @@ public class EmoteHandler : MonoBehaviour
 {
     [Header("Player Information")]
     [Tooltip("GO on the player prefab with the InputManager component.")]
-    [SerializeField] private InputManager input;
+    [SerializeField] internal InputManager input;
     private IDriveInput driveInput; // set when something other than this prefab's controller drives the player
     private bool listening; // while enabled: emotes follow the driver's d-pad
 
@@ -40,12 +40,12 @@ public class EmoteHandler : MonoBehaviour
         ResetEmote();
     }
 
-    private void OnEnable()
+    internal void OnEnable()
     {
         listening = true;
         StartListening();
     }
-    private void OnDisable()
+    internal void OnDisable()
     {
         StopListening();
         listening = false;

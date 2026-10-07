@@ -99,13 +99,13 @@ namespace DoA.Tests
         static bool HeldHere()
         {
             SceneManager loader = SceneFlow.Loader as SceneManager;
-            return loader != null && Reflect.GetField(loader, "sceneLoad") != null;
+            return loader != null && loader.sceneLoad != null;
         }
 
         // Where the players start: the start of their seat's tutorial lane
         static GameObject[] TutorialStarts()
         {
-            return (GameObject[])Reflect.GetField(SpawnManager.Instance, "gameSpawnPositions");
+            return SpawnManager.Instance.gameSpawnPositions;
         }
 
         // A player on this machine drives their ball there and stops
@@ -299,7 +299,7 @@ namespace DoA.Tests
             yield return null;
             Assert.IsNull(Slot(1), "their seat is free");
             Assert.IsTrue(theirScooter == null, "their scooter went");
-            Assert.IsNull(Reflect.GetField(PlayerInstantiate.Instance, "readyUpCountdown"), "nobody in the match counts down to a new one");
+            Assert.IsNull(PlayerInstantiate.Instance.readyUpCountdown, "nobody in the match counts down to a new one");
             Assert.AreEqual(GAME, ActiveScene(), "the match goes on");
 
             host.Leave();
@@ -347,7 +347,7 @@ namespace DoA.Tests
                 yield return null;
             yield return null;
             Assert.IsNull(Slot(1), "their seat is free");
-            Assert.IsNull(Reflect.GetField(PlayerInstantiate.Instance, "readyUpCountdown"), "nobody counts down to another match");
+            Assert.IsNull(PlayerInstantiate.Instance.readyUpCountdown, "nobody counts down to another match");
 
             // The host stops waiting for them: the match starts here, with this machine's scooter at the start of its lane
             deadline = Time.realtimeSinceStartup + LOADING;

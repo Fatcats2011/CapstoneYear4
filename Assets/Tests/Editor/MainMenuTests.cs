@@ -17,14 +17,14 @@ namespace DoA.Tests
         public void SetUp()
         {
             game = objects.Add<GameManager>();
-            Reflect.SetSingleton(game);
+            GameManager.instance = game;
             menu = objects.Add<MainMenu>();
             playerSelect = objects.Add<Canvas>();
             options = objects.Add<Canvas>();
             credits = objects.Add<Canvas>();
-            Reflect.SetField(menu, "PlayerSelectCanvas", playerSelect);
-            Reflect.SetField(menu, "OptionsCanvas", options);
-            Reflect.SetField(menu, "CreditsCanvas", credits);
+            menu.PlayerSelectCanvas = playerSelect;
+            menu.OptionsCanvas = options;
+            menu.CreditsCanvas = credits;
             playerSelect.enabled = false;
             menu.OnEnable();
         }
@@ -32,7 +32,7 @@ namespace DoA.Tests
         [TearDown]
         public void TearDown()
         {
-            Reflect.SetSingleton<GameManager>(null);
+            GameManager.instance = null;
             objects.DestroyAll();
             GameAuthority.Role = NetworkRole.Offline;
         }
@@ -78,10 +78,10 @@ namespace DoA.Tests
         [Test]
         public void EnabledThenDisabled_LeavesNoGameStateHandlers()
         {
-            Reflect.Invoke(menu, "OnDisable");
+            menu.OnDisable();
 
-            Assert.AreEqual(0, Reflect.HandlerCount(game, "OnSwapPlayerSelect", menu));
-            Assert.AreEqual(0, Reflect.HandlerCount(game, "OnSwapMenu", menu));
+            Assert.AreEqual(0, Reflect.HandlerCount(game, nameof(GameManager.OnSwapPlayerSelect), menu));
+            Assert.AreEqual(0, Reflect.HandlerCount(game, nameof(GameManager.OnSwapMenu), menu));
         }
     }
 }

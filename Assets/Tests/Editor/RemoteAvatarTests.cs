@@ -33,7 +33,7 @@ namespace DoA.Tests
 
         static bool CountingDown(PlayerInstantiate players)
         {
-            return Reflect.GetField(players, "readyUpCountdown") != null;
+            return players.readyUpCountdown != null;
         }
 
         static PlayerHatInformationSO AShowingHat(CustomizationSelector customization)
@@ -72,7 +72,7 @@ namespace DoA.Tests
             Assert.AreEqual(11, remote.Driving.Sphere.layer, "player 2's ball layer");
             Assert.IsFalse(remote.Driving.enabled, "no controls here");
             Assert.IsTrue(remote.Driving.Sphere.GetComponent<Rigidbody>().isKinematic, "no physics here");
-            GameObject[] podiums = (GameObject[])Reflect.GetField(players, "menuSpawnPositions");
+            GameObject[] podiums = players.menuSpawnPositions;
             Assert.Less(Vector3.Distance(podiums[1].transform.position, remote.Driving.transform.position), 0.01f, "on seat 2's podium");
 
             CompanyInformation company = players.CompanyForSlot(1);

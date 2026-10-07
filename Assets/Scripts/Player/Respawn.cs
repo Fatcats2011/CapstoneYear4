@@ -39,7 +39,7 @@ public class Respawn : MonoBehaviour
     [SerializeField] private float wispSpawnOffset = 5f;
 
     [Tooltip("Distance between tombstone spawn and player spawn.")]
-    [SerializeField] private int tombstoneOffset = 2;
+    [SerializeField] internal int tombstoneOffset = 2;
 
     [Tooltip("How far below the tombstone the player spawns.")]
     [SerializeField] private float graveDepth = 2f;
@@ -52,11 +52,11 @@ public class Respawn : MonoBehaviour
     [SerializeField] private GameObject control;
 
     [Tooltip("For enabling / disabling the mesh.")]
-    [SerializeField] private GameObject modelParent;
+    [SerializeField] internal GameObject modelParent;
 
     [Tooltip("The VFX used to animate the respawn.")]
-    [SerializeField] private VisualEffect deathWisp;
-    private TrailRenderer wispTrail;
+    [SerializeField] internal VisualEffect deathWisp;
+    internal TrailRenderer wispTrail;
 
     [Tooltip("ParticleFX to play when you respawn")]
     [SerializeField] private ParticleSystem rebornParticles;
@@ -321,7 +321,7 @@ public class Respawn : MonoBehaviour
             sparkle.Stop();
     }
 
-    private void OnTriggerEnter(Collider other)
+    internal void OnTriggerEnter(Collider other)
     {
         // Another machine's scooter (online): its own machine respawns it (this script is off there, but triggers still arrive)
         if (RemoteAvatar.IsRemote(this))

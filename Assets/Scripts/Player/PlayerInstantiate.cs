@@ -16,7 +16,7 @@ public class PlayerInstantiate : SingletonMonobehaviour<PlayerInstantiate>
 
     [Space(10)]
     [Tooltip("Enables or disables the ability for players to spawn into the lobby")]
-    [SerializeField] bool allowPlayerSpawn = true;
+    [SerializeField] internal bool allowPlayerSpawn = true;
 
     // Who is in each of the 4 player slots
     readonly PlayerRoster roster = new PlayerRoster();
@@ -25,7 +25,7 @@ public class PlayerInstantiate : SingletonMonobehaviour<PlayerInstantiate>
     // How many players have joined
     public int PlayerCount { get { return roster.Count; } }
     [Tooltip("The indexed array of player spawn positions")]
-    [SerializeField] GameObject[] menuSpawnPositions = new GameObject[Constants.MAX_PLAYERS];
+    [SerializeField] internal GameObject[] menuSpawnPositions = new GameObject[Constants.MAX_PLAYERS];
 
     [Tooltip("The indexed array of player render texutres")]
     [SerializeField] RenderTexture[] playerRenderTextures = new RenderTexture[Constants.MAX_PLAYERS];
@@ -40,11 +40,11 @@ public class PlayerInstantiate : SingletonMonobehaviour<PlayerInstantiate>
     int readyUpCounter = 0;
     [Tooltip("Set to true when all players are readied up")]
     [SerializeField] bool isAllReadedUp = false;
-    Coroutine readyUpCountdown;
+    internal Coroutine readyUpCountdown;
 
     [Header("Loading Screen Ready Information")]
     [Tooltip("The indexed array tracking players' loading screen ready status")]
-    [SerializeField] bool[] playerLoadingConfirm = new bool[Constants.MAX_PLAYERS];
+    [SerializeField] internal bool[] playerLoadingConfirm = new bool[Constants.MAX_PLAYERS];
 
     [Header("Other")]
     private Gamepad[] playerGamepads = new Gamepad[Constants.MAX_PLAYERS];
@@ -56,7 +56,6 @@ public class PlayerInstantiate : SingletonMonobehaviour<PlayerInstantiate>
 
     // Online: the seat the host gave this machine's one player (-1 offline)
     int onlineSeat = -1;
-    InputDevice rejoining; // online: the device of the player moving seats, while it joins again (MoveToOnlineSeat)
        
     ///<summary>
     /// OnEnable, where i set event methods
@@ -89,6 +88,24 @@ public class PlayerInstantiate : SingletonMonobehaviour<PlayerInstantiate>
 
         // When players confirm load, disable all confirm bools
         sceneManager.OnConfirmToLoad += DisableLoadingConfirmCount;
+
+        // The game joins players itself: controllers on any button, the keyboard on Space or Enter. Only the kept
+        // instance: the menu scene's copy, which a return to the menu brings and destroys, mustn't switch joining off
+        if (Instance == this)
+            PlayerJoiner.Enable(TurnAwayKey);
+    }
+
+    private void Start()
+    {
+        // The scene's PlayerInputManager is enabled by now: it stops joining by itself
+        PlayerJoiner.UseManualJoins();
+    }
+
+    // A key that doesn't join was pressed on a keyboard nobody uses: outside a match, the player hears how to join
+    private void TurnAwayKey(InputDevice device)
+    {
+        if (allowPlayerSpawn || PlayerCount == 0)
+            ShowUnsupportedDeviceHint(device);
     }
 
     ///<summary>
@@ -96,6 +113,10 @@ public class PlayerInstantiate : SingletonMonobehaviour<PlayerInstantiate>
     ///</summary>
     public void OnDisable()
     {
+        // First (nothing below can stop it), and only the kept instance (see OnEnable)
+        if (Instance == this)
+            PlayerJoiner.Disable();
+
         gameManager.OnSwapPlayerSelect -= EnablePlayerSpawn;
         gameManager.OnSwapPlayerSelect -= SwapForCharacterSelect;
 
@@ -131,12 +152,10 @@ public class PlayerInstantiate : SingletonMonobehaviour<PlayerInstantiate>
     ///</summary>
     public void AddPlayerReference(PlayerInput playerInput)
     {
-        // Controllers join on any button. The keyboard joins only on Space or Enter, so a dev hotkey (F1 adds a test pad)
-        // never brings it in as a player too
-        Keyboard keyboard = playerInput.GetDevice<Keyboard>();
-        bool keyboardJoin = playerInput.currentControlScheme == KeyboardControls.SCHEME
-            && (KeyboardJoinPressed(keyboard) || (keyboard != null && keyboard == rejoining));
-        if(playerInput.currentControlScheme != "Gamepad" && !keyboardJoin)
+        // Controllers join on any button and the keyboard only on Space or Enter (PlayerJoiner, so a dev hotkey like F1,
+        // which adds a test pad, never brings the keyboard in too). Anything else that arrives here is turned away
+        bool keyboardJoin = playerInput.currentControlScheme == KeyboardControls.SCHEME;
+        if(playerInput.currentControlScheme != PlayerJoiner.GAMEPAD_SCHEME && !keyboardJoin)
         {
             // Outside a match, tell whoever pressed another key or an unsupported controller why nothing happened
             if (allowPlayerSpawn || PlayerCount == 0)
@@ -905,30 +924,7 @@ public class PlayerInstantiate : SingletonMonobehaviour<PlayerInstantiate>
         yield return null;
 
         if (device != null && device.added)
-        {
-            rejoining = device; // the keyboard's join keys aren't down now: this join is the move's
-            try
-            {
-                PlayerInputManager.instance.JoinPlayer(-1, -1, scheme, device);
-            }
-            finally
-            {
-                rejoining = null;
-            }
-        }
-    }
-
-    ///<summary>
-    /// Whether a keyboard's join keys (Space, Enter) are down, or were pressed this frame (a tap can be up again by the
-    /// time the join runs): the keyboard joins as a player only with these
-    ///</summary>
-    public static bool KeyboardJoinPressed(Keyboard keyboard)
-    {
-        if (keyboard == null)
-            return false;
-
-        return keyboard.spaceKey.isPressed || keyboard.enterKey.isPressed || keyboard.numpadEnterKey.isPressed
-            || KeyboardControls.JoinKeyUsedThisFrame(keyboard);
+            PlayerInputManager.instance.JoinPlayer(-1, -1, scheme, device);
     }
 
     ///<summary>

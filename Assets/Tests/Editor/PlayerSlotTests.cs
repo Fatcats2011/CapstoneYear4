@@ -13,8 +13,8 @@ namespace DoA.Tests
         [TearDown]
         public void TearDown()
         {
-            Reflect.SetSingleton<PlayerSelectCanvas>(null);
-            Reflect.SetSingleton<ScoreManager>(null);
+            PlayerSelectCanvas.instance = null;
+            ScoreManager.instance = null;
             objects.DestroyAll();
         }
 
@@ -30,9 +30,9 @@ namespace DoA.Tests
                 joinPrompts[i] = objects.NewGameObject("Join Prompt " + i);
                 joinPrompts[i].SetActive(false);
             }
-            Reflect.SetField(canvas, "pressButtonTexts", joinPrompts);
-            Reflect.SetSingleton(canvas);
-            Reflect.SetSingleton(objects.Add<ScoreManager>());
+            canvas.pressButtonTexts = joinPrompts;
+            PlayerSelectCanvas.instance = canvas;
+            ScoreManager.instance = objects.Add<ScoreManager>();
             return joinPrompts;
         }
 

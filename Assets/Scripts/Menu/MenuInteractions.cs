@@ -36,7 +36,7 @@ public class MenuInteractions : MonoBehaviour
     [SerializeField] OptionsMenu optionsMenu;
     [SerializeField] CreditsMenu creditsMenu;
     [SerializeField] ResultsMenu resultsMenu;
-    [SerializeField] GameObject readyUpText;
+    [SerializeField] internal GameObject readyUpText;
     [SerializeField] TutorialToggle tutorialToggle;
 
     private SoundPool soundPool;

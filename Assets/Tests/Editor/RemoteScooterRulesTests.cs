@@ -22,7 +22,7 @@ namespace DoA.Tests
         public void SetUp()
         {
             players = objects.Add<PlayerInstantiate>();
-            Reflect.SetSingleton(players); // seats, for OrderSync.SeatOf
+            PlayerInstantiate.instance = players; // seats, for OrderSync.SeatOf
             asks = new List<Vector2Int>();
             StealSync.Asked += (attacker, victim) => asks.Add(new Vector2Int(attacker, victim));
         }
@@ -31,8 +31,8 @@ namespace DoA.Tests
         public void TearDown()
         {
             objects.DestroyAll();
-            Reflect.SetSingleton<OrderManager>(null);
-            Reflect.SetSingleton<PlayerInstantiate>(null);
+            OrderManager.instance = null;
+            PlayerInstantiate.instance = null;
             GameAuthority.Role = NetworkRole.Offline;
             StealSync.Reset();
         }
@@ -53,7 +53,7 @@ namespace DoA.Tests
             GameObject control = new GameObject("Control");
             control.transform.SetParent(root.transform);
             OrderHandler handler = control.AddComponent<OrderHandler>();
-            Reflect.SetField(handler, "ball", control.AddComponent<BallDriving>());
+            handler.ball = control.AddComponent<BallDriving>();
 
             int seat = remote ? 0 : 1;
             players.Roster.JoinRemoteAt(root, (ulong)seat, seat);
@@ -63,7 +63,7 @@ namespace DoA.Tests
         // The scooter is boosting (another machine's: its owner is, and ShowRemote shows it)
         static void Boost(GameObject scooter)
         {
-            Reflect.SetField(scooter.GetComponentInChildren<BallDriving>(), "boosting", true);
+            scooter.GetComponentInChildren<BallDriving>().boosting = true;
         }
 
         [Test]
@@ -94,7 +94,7 @@ namespace DoA.Tests
             water.tag = "Water";
             Collider waterCollider = water.AddComponent<BoxCollider>();
 
-            Reflect.Invoke(respawn, "OnTriggerEnter", waterCollider);
+            respawn.OnTriggerEnter(waterCollider);
 
             Assert.IsFalse(respawn.IsRespawning, "its own machine respawns it");
         }
@@ -107,7 +107,7 @@ namespace DoA.Tests
             SphereCollider ball = remote.GetComponentInChildren<SphereCollider>();
             GameObject rider = new GameObject("SubBasket");
             rider.transform.SetParent(remote.transform);
-            Reflect.SetField(respawn, "modelParent", rider);
+            respawn.modelParent = rider;
             // Its wisp, off with no trail, as Respawn.Awake leaves it (Awake doesn't run in EditMode)
             GameObject wispObject = new GameObject("DeathWisp");
             wispObject.transform.SetParent(respawn.transform);
@@ -116,8 +116,8 @@ namespace DoA.Tests
             trail.transform.SetParent(wispObject.transform);
             wisp.enabled = false;
             trail.time = 0f;
-            Reflect.SetField(respawn, "deathWisp", wisp);
-            Reflect.SetField(respawn, "wispTrail", trail);
+            respawn.deathWisp = wisp;
+            respawn.wispTrail = trail;
 
             respawn.ShowRemote(true);
             Assert.IsFalse(rider.activeSelf, "no rider while its owner's is hidden");
@@ -138,15 +138,15 @@ namespace DoA.Tests
             GameObject remote = Scooter(true);
             BallDriving driving = remote.GetComponentInChildren<BallDriving>();
             Respawn respawn = remote.GetComponentInChildren<Respawn>();
-            Reflect.SetField(driving, "currentVelocity", 20f);
-            Reflect.SetField(driving, "drifting", true);
-            Reflect.SetField(driving, "respawn", respawn);
+            driving.currentVelocity = 20f;
+            driving.drifting = true;
+            driving.respawn = respawn;
             BallCollision bump = respawn.gameObject.AddComponent<BallCollision>();
-            Reflect.SetField(bump, "control", driving);
+            bump.control = driving;
             BoxCollider post = objects.NewGameObject("Lamp post").AddComponent<BoxCollider>();
             post.isTrigger = true;
 
-            Reflect.Invoke(bump, "OnTriggerEnter", post);
+            bump.OnTriggerEnter(post);
 
             Assert.IsTrue(driving.Drifting, "its own machine drops its drift");
         }
@@ -157,7 +157,7 @@ namespace DoA.Tests
             GameObject remote = Scooter(true), local = Scooter(false);
             OrderHandler remoteHandler = remote.GetComponentInChildren<OrderHandler>();
 
-            Reflect.Invoke(remoteHandler, "OnTriggerEnter", local.GetComponentInChildren<SphereCollider>());
+            remoteHandler.OnTriggerEnter(local.GetComponentInChildren<SphereCollider>());
 
             Assert.AreSame(remoteHandler, local.GetComponentInChildren<OrderHandler>().PlayerTouching,
                 "its own machine never tells this one: this machine notes it");
@@ -171,7 +171,7 @@ namespace DoA.Tests
             GameObject remote = Scooter(true), local = Scooter(false);
             Boost(local);
 
-            Reflect.Invoke(local.GetComponentInChildren<OrderHandler>(), "OnTriggerEnter", remote.GetComponentInChildren<SphereCollider>());
+            local.GetComponentInChildren<OrderHandler>().OnTriggerEnter(remote.GetComponentInChildren<SphereCollider>());
 
             CollectionAssert.AreEqual(new[] { new Vector2Int(1, 0) }, asks, "this machine's player hit seat 0's: the host decides");
         }
@@ -196,7 +196,7 @@ namespace DoA.Tests
             GameObject remote = Scooter(true), local = Scooter(false);
             Boost(remote); // its owner boosts (ShowRemote)
 
-            Reflect.Invoke(remote.GetComponentInChildren<OrderHandler>(), "OnTriggerEnter", local.GetComponentInChildren<SphereCollider>());
+            remote.GetComponentInChildren<OrderHandler>().OnTriggerEnter(local.GetComponentInChildren<SphereCollider>());
 
             Assert.IsEmpty(asks, "its own machine asks");
         }
@@ -214,12 +214,12 @@ namespace DoA.Tests
         public void TheEndOfTheMainGame_DoesntFreezeAnotherMachinesScooterHere()
         {
             OrderManager orders = objects.Add<OrderManager>();
-            Reflect.SetSingleton(orders);
+            OrderManager.instance = orders;
             OrderHandler remoteHandler = Scooter(true).GetComponentInChildren<OrderHandler>();
 
-            Reflect.Invoke(remoteHandler, "InitHandler");
+            remoteHandler.InitHandler();
 
-            Assert.IsNull(Reflect.GetField(orders, "OnMainGameFinishes"), "its own machine freezes it (here its BallDriving never started)");
+            Assert.AreEqual(0, Reflect.HandlerCount(orders, nameof(OrderManager.OnMainGameFinishes), remoteHandler), "its own machine freezes it (here its BallDriving never started)");
         }
     }
 }

@@ -10,7 +10,7 @@ using UnityEngine.InputSystem.Users;
 /// actions (Resources/CapstoneYear4) before the first scene loads, so the asset on disk never changes. The asset's own
 /// Keyboard&amp;Mouse scheme has no bindings and needs a mouse too, so it's swapped for this one. In the editor the asset is
 /// put back when Play Mode ends; installing twice changes nothing. A keyboard joins only on Space or Enter
-/// (PlayerInstantiate.AddPlayerReference). The keys are in docs/controls.md
+/// (PlayerJoiner). The keys are in docs/controls.md
 /// </summary>
 public static class KeyboardControls
 {
@@ -19,42 +19,10 @@ public static class KeyboardControls
     public const string ASSET = "CapstoneYear4";
 
     static bool undoOnQuit;
-    static Keyboard joinKeyboard; // the keyboard whose Space or Enter was pressed while it was nobody's,
-    static int joinFrame = -1;    // and on which frame
-
-    /// <summary>
-    /// Whether this frame a keyboard that was nobody's had Space or Enter pressed: the join that press starts may run when
-    /// the key is already up again (a tap within one update), so the press is read from its event
-    /// </summary>
-    public static bool JoinKeyUsedThisFrame(Keyboard keyboard)
-    {
-        return keyboard != null && keyboard == joinKeyboard && joinFrame == Time.frameCount;
-    }
-
-    // Before the scene's PlayerInputManager subscribes, so this runs before the join it starts
-    static void OnUnpairedDeviceUsed(InputControl control, InputEventPtr inputEvent)
-    {
-        if (!(control.device is Keyboard keyboard))
-            return;
-
-        if (PressedIn(keyboard.spaceKey, inputEvent) || PressedIn(keyboard.enterKey, inputEvent) || PressedIn(keyboard.numpadEnterKey, inputEvent))
-        {
-            joinKeyboard = keyboard;
-            joinFrame = Time.frameCount;
-        }
-    }
-
-    static bool PressedIn(KeyControl key, InputEventPtr inputEvent)
-    {
-        return key.ReadValueFromEvent(inputEvent, out float value) && value > 0.5f;
-    }
 
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
     static void InstallOnLaunch()
     {
-        InputUser.onUnpairedDeviceUsed -= OnUnpairedDeviceUsed;
-        InputUser.onUnpairedDeviceUsed += OnUnpairedDeviceUsed;
-
         InputActionAsset asset = Resources.Load<InputActionAsset>(ASSET);
         if (asset == null || !Install(asset))
             return;

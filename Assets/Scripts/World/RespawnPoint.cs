@@ -4,8 +4,8 @@ using UnityEngine;
 
 public class RespawnPoint : MonoBehaviour
 {
-    [SerializeField] private Transform order1Spawn;
-    [SerializeField] private Transform order2Spawn;
+    [SerializeField] internal Transform order1Spawn;
+    [SerializeField] internal Transform order2Spawn;
 
     public Vector3 PlayerSpawn { get { return transform.position; } }
     public Vector3 Order1Spawn { get { return order1Spawn.position; } }

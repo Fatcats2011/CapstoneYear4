@@ -25,6 +25,13 @@ namespace DoA.Tests
         }
 
         [Test]
+        public void SortsBelowTheHints()
+        {
+            Assert.AreEqual(LobbyPrompt.SORTING_ORDER, LobbyPrompt.Instance.GetComponent<Canvas>().sortingOrder);
+            Assert.Less(LobbyPrompt.SORTING_ORDER, ControllerPrompts.SORTING_ORDER, "a hint about why a session ended stays readable");
+        }
+
+        [Test]
         public void Show_Nothing_HidesIt()
         {
             LobbyPrompt.Instance.Show("hello");

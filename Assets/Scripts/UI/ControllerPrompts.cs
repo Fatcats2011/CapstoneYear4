@@ -117,7 +117,7 @@ public class ControllerPrompts : MonoBehaviour
         hintHideTime = Time.unscaledTime + seconds;
     }
 
-    private void Update()
+    internal void Update()
     {
         // Unscaled time, so hints still go away while the game is paused
         if (hintPanel.activeSelf && Time.unscaledTime >= hintHideTime)
@@ -127,6 +127,9 @@ public class ControllerPrompts : MonoBehaviour
     ///<summary>
     /// Builds the overlay canvas: one reconnect panel per player and the hint bar, all hidden
     ///</summary>
+    /// <summary>Above every menu and HUD canvas, and above the online line along the top (LobbyPrompt)</summary>
+    internal const int SORTING_ORDER = 1000;
+
     static ControllerPrompts Create()
     {
         GameObject root = new GameObject(nameof(ControllerPrompts), typeof(Canvas), typeof(CanvasScaler));
@@ -135,7 +138,7 @@ public class ControllerPrompts : MonoBehaviour
 
         Canvas canvas = root.GetComponent<Canvas>();
         canvas.renderMode = RenderMode.ScreenSpaceOverlay;
-        canvas.sortingOrder = 1000; // above every menu and HUD canvas
+        canvas.sortingOrder = SORTING_ORDER;
 
         CanvasScaler scaler = root.GetComponent<CanvasScaler>();
         scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;

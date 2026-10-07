@@ -31,7 +31,7 @@ namespace DoA.Tests
         public void RumblePulse_WithNoGamepad_FinishesWithoutError()
         {
             Rumbler rumbler = objects.Add<Rumbler>();
-            IEnumerator pulse = (IEnumerator)Reflect.Invoke(rumbler, "PulseTime", 0f, null, false);
+            IEnumerator pulse = rumbler.PulseTime(0f, null, false);
 
             Assert.DoesNotThrow(() => { while (pulse.MoveNext()) { } });
         }

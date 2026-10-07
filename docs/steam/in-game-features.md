@@ -35,8 +35,9 @@ Every game state sets what friends see in the Steam friends list (`PresenceRules
 | Menu, Options, Credits | `#Menus` | In the menus |
 | PlayerSelect | `#GettingReady` | Getting ready |
 | Tutorial | `#Tutorial` | Learning the ropes |
-| StartingCutscene, Begin, MainLoop | `#Delivering`, or `#DeliveringSolo` for one player | Delivering — 3 players / Delivering solo |
-| GoldenCutscene, FinalPackage | `#Golden`, or `#GoldenSolo` for one player | Chasing the golden order — 3 players / … solo |
+| StartingCutscene | nothing: "Getting ready" stays until the tutorial | |
+| Begin, MainLoop | `#Delivering`, or `#DeliveringSolo` for one player | Delivering (3 players) / Delivering solo |
+| GoldenCutscene, FinalPackage | `#Golden`, or `#GoldenSolo` for one player | Chasing the golden order (3 players) / … solo |
 | Results | `#Results` | Counting the takings |
 
 - Loading and Paused change nothing.

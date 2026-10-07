@@ -68,14 +68,25 @@ namespace DoA.Tests
             CultureInfo was = Thread.CurrentThread.CurrentCulture;
             try
             {
-                Assert.AreEqual("session-20261006-090503.log", SessionLog.FileName(START));
+                Assert.AreEqual("session-20261006-090503-000.log", SessionLog.FileName(START));
                 Thread.CurrentThread.CurrentCulture = new CultureInfo("de-DE");
-                Assert.AreEqual("session-20261006-090503.log", SessionLog.FileName(START));
+                Assert.AreEqual("session-20261006-090503-000.log", SessionLog.FileName(START));
             }
             finally
             {
                 Thread.CurrentThread.CurrentCulture = was;
             }
+        }
+
+        [Test]
+        public void FileName_TwoLaunchesInOneSecond_Differ_AndStillSortByTime()
+        {
+            string first = SessionLog.FileName(START);
+            string second = SessionLog.FileName(START.AddMilliseconds(300));
+
+            Assert.AreNotEqual(first, second, "the second launch would overwrite the first");
+            Assert.Less(string.CompareOrdinal(first, second), 0, "oldest first");
+            Assert.Less(string.CompareOrdinal(second, SessionLog.FileName(START.AddSeconds(1))), 0);
         }
 
         [Test]

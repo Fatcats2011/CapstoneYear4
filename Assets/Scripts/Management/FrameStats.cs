@@ -8,11 +8,13 @@ using System.Globalization;
 public class FrameStats
 {
     readonly float[] frames; // seconds per frame, a ring
+    readonly float[] longest; // the 1% low's slowest frames, reused: the F6 overlay asks for it every OnGUI
     int next;
 
     public FrameStats(int capacity = 600)
     {
         frames = new float[Math.Max(1, capacity)];
+        longest = new float[Math.Max(1, frames.Length / 100)];
     }
 
     /// <summary>How many frames are kept now (up to the capacity)</summary>
@@ -47,13 +49,27 @@ public class FrameStats
             if (Count == 0)
                 return 0f;
 
-            float[] sorted = new float[Count];
-            Array.Copy(frames, sorted, Count);
-            Array.Sort(sorted);
+            // The slowest frames, longest first, kept in a small reused buffer (no sort, no allocation)
             int slowest = Math.Max(1, Count / 100);
+            int kept = 0;
+            for (int i = 0; i < Count; i++)
+            {
+                float frame = frames[i];
+                if (kept == slowest && frame <= longest[kept - 1])
+                    continue;
+
+                int at = kept < slowest ? kept++ : kept - 1;
+                while (at > 0 && longest[at - 1] < frame)
+                {
+                    longest[at] = longest[at - 1];
+                    at--;
+                }
+                longest[at] = frame;
+            }
+
             float total = 0f;
-            for (int i = Count - slowest; i < Count; i++)
-                total += sorted[i];
+            for (int i = 0; i < slowest; i++)
+                total += longest[i];
             return total > 0f ? slowest / total : 0f;
         }
     }

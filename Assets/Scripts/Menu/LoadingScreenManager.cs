@@ -5,10 +5,10 @@ using UnityEngine;
 public class LoadingScreenManager : SingletonMonobehaviour<LoadingScreenManager>
 {
     [Header("Loading Screen Information")]
-    [SerializeField] GameObject textConfirm;
-    [SerializeField] Transform[] buttonPositions;
+    [SerializeField] internal GameObject textConfirm;
+    [SerializeField] internal Transform[] buttonPositions;
 
-    [SerializeField] GameObject[] ButtonGameobjects;
+    [SerializeField] internal GameObject[] ButtonGameobjects;
     [SerializeField] GameObject[] ButtonColors;
 
     ///<summary>

@@ -22,7 +22,7 @@ namespace DoA.Tests
         {
             GameAuthority.Role = NetworkRole.Offline;
             OrderSync.Reset();
-            Reflect.SetSingleton<PlayerInstantiate>(null);
+            PlayerInstantiate.instance = null;
             objects.DestroyAll();
         }
 
@@ -35,7 +35,7 @@ namespace DoA.Tests
             GameObject control = new GameObject("Control");
             control.transform.SetParent(player.transform);
             OrderHandler handler = control.AddComponent<OrderHandler>();
-            Reflect.SetField(handler, "ball", control.AddComponent<BallDriving>());
+            handler.ball = control.AddComponent<BallDriving>();
             GameObject sphere = new GameObject("Ball Of Fun");
             sphere.transform.SetParent(player.transform);
             sphere.AddComponent<SphereCollider>();
@@ -89,9 +89,9 @@ namespace DoA.Tests
             GameAuthority.Role = NetworkRole.Client;
             OrderHandler player = NewPlayer("Player 2");
             Order order = objects.Add<Order>();
-            Reflect.SetField(player, "order1", order);
+            player.order1 = order;
             player.DeliverOrder(order);
-            Assert.AreSame(order, Reflect.GetField(player, "order1"), "still held");
+            Assert.AreSame(order, player.order1, "still held");
             Assert.AreEqual(0, player.Score);
         }
 
@@ -101,7 +101,7 @@ namespace DoA.Tests
             GameAuthority.Role = NetworkRole.Client;
             OrderHandler player = NewPlayer("Player 2");
             Order order = objects.Add<Order>();
-            Reflect.SetField(player, "order1", order);
+            player.order1 = order;
             OrderHandler asked = null;
             Vector3 first = default;
             OrderSync.DropAsked += (h, a, b, s) => { asked = h; first = a; };
@@ -110,7 +110,7 @@ namespace DoA.Tests
 
             Assert.AreSame(player, asked, "the host is asked");
             Assert.AreEqual(Vector3.up, first);
-            Assert.AreSame(order, Reflect.GetField(player, "order1"), "the host drops it");
+            Assert.AreSame(order, player.order1, "the host drops it");
         }
 
         [Test]
@@ -123,7 +123,7 @@ namespace DoA.Tests
             {
                 Order order = new GameObject("Order").AddComponent<Order>();
                 UnityEngine.SceneManagement.SceneManager.MoveGameObjectToScene(order.gameObject, home);
-                Reflect.SetField(order, "homeScene", home);
+                order.homeScene = home;
                 order.transform.SetParent(NewPlayer("Player 1").transform); // riding on a scooter, in another scene
 
                 order.ReturnHome();
@@ -143,11 +143,11 @@ namespace DoA.Tests
             GameAuthority.Role = NetworkRole.Client;
             OrderHandler thief = NewPlayer("Player 1"), victim = NewPlayer("Player 2");
             Order order = objects.Add<Order>();
-            Reflect.SetField(victim, "order1", order);
+            victim.order1 = order;
 
             thief.TakeOrderFrom(victim, order);
 
-            Assert.AreSame(order, Reflect.GetField(victim, "order1"), "the host's Steal moves it");
+            Assert.AreSame(order, victim.order1, "the host's Steal moves it");
             Assert.IsFalse(thief.HasOrder);
         }
 
@@ -155,7 +155,7 @@ namespace DoA.Tests
         public void RemovePlayerHolding_TheGoldenOrder_NoLongerSlowsItsLastHolder()
         {
             // A steal takes it (2024: the robbed player stayed slowed for the rest of the golden round)
-            Reflect.SetSingleton(objects.Add<PlayerInstantiate>()); // the compass markers look for this machine's players
+            PlayerInstantiate.instance = objects.Add<PlayerInstantiate>(); // the compass markers look for this machine's players
             OrderHandler robbed = NewPlayer("Player 1");
             robbed.HasGoldenOrder = true;
             Order golden = GoldenOrderHeldBy(robbed);
@@ -169,12 +169,12 @@ namespace DoA.Tests
         Order GoldenOrderHeldBy(OrderHandler player)
         {
             Order golden = objects.Add<Order>();
-            Reflect.SetField(golden, "value", Constants.OrderValue.Golden);
-            Reflect.SetField(golden, "arrow", objects.NewGameObject("Arrow"));
-            Reflect.SetField(golden, "orderMeshObject", objects.NewGameObject("Mesh"));
-            Reflect.SetField(golden, "ogMeshRot", Quaternion.identity);
+            golden.value = Constants.OrderValue.Golden;
+            golden.arrow = objects.NewGameObject("Arrow");
+            golden.orderMeshObject = objects.NewGameObject("Mesh");
+            golden.ogMeshRot = Quaternion.identity;
             golden.compassMarker = objects.Add<CompassMarker>();
-            Reflect.SetField(golden, "playerHolding", player);
+            golden.playerHolding = player;
             return golden;
         }
     }

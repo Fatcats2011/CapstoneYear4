@@ -25,8 +25,10 @@ public class OnlinePlay : MonoBehaviour, ISessionControl
 
     ILobbyService lobbies;
     OnlineSession session;
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
     string directAddress; // tests and editor tools: sessions by IP address instead of over Steam
     ushort directPort;
+#endif
     ulong requested;      // a lobby to join once the title is up (0 = none)
     bool stateShown;
     GameState shownState;
@@ -108,6 +110,12 @@ public class OnlinePlay : MonoBehaviour, ISessionControl
     {
         if (lobbies != null)
             lobbies.JoinRequested -= RequestJoin;
+        if (Lobby != null)
+        {
+            // The replaced lobby flow stops hearing the lobby service and the session
+            Lobby.Notice -= Tell;
+            Lobby.Detach();
+        }
 
         lobbies = lobbyService;
         lobbies.JoinRequested += RequestJoin;

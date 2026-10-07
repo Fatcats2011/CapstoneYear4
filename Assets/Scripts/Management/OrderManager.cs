@@ -18,11 +18,11 @@ public class OrderManager : SingletonMonobehaviour<OrderManager>
     [Header("Game Information")]
     [Tooltip("Maxium number of orders present in the scene at a time. Array represents different waves")]
     [SerializeField]
-    private int[] maxEasy, maxMedium, maxHard; // didn't think this variable name through
+    internal int[] maxEasy, maxMedium, maxHard; // didn't think this variable name through
 
     [Tooltip("Time it takes in seconds for a wave to be completed")]
     [SerializeField] private float waveLengthInSeconds = 20f;
-    private int wave = 0;
+    internal int wave = 0;
     private float waveTimer = 0f;
     private float gameTimer = 0f;
     private float totalGameTime = 0f;
@@ -50,24 +50,24 @@ public class OrderManager : SingletonMonobehaviour<OrderManager>
 
     [Tooltip("Timer for when value is added to the golden package. 1 will have it add money every second")]
     [SerializeField] private float goldValueTimer = 1f;
-    float goldTimer = 0f;
+    internal float goldTimer = 0f;
 
     [Tooltip("The master list of all non-golden orders in the game.")]
-    [SerializeField] private List<Order> normalOrders;
+    [SerializeField] internal List<Order> normalOrders;
     [Tooltip("The final order in the game.")]
-    [SerializeField] private Order finalOrder;
+    [SerializeField] internal Order finalOrder;
     [Tooltip("The orders used for tutorialization.")]
-    [SerializeField] private Order[] tutorialOrders = new Order[4];
+    [SerializeField] internal Order[] tutorialOrders = new Order[4];
 
     [Tooltip("The audio source of the clocktower for the bell chimes on new wave.")]
-    [SerializeField] private AudioSource clockSource;
+    [SerializeField] internal AudioSource clockSource;
 
     // lists for each of the types of orders in each game (minus golden ofc)
     private List<Order> easy = new List<Order>();
     private List<Order> medium = new List<Order>();
     private List<Order> hard = new List<Order>();
 
-    private bool finalOrderActive = false;
+    internal bool finalOrderActive = false;
     public bool FinalOrderActive { get { return finalOrderActive; } }
     private float finalOrderValue = (float)Constants.OrderValue.Golden;
     public int FinalOrderValue { get { return (int)finalOrderValue; } set { finalOrderValue = (float)value; } }
@@ -116,7 +116,7 @@ public class OrderManager : SingletonMonobehaviour<OrderManager>
         this.transform.parent = GameManager.Instance.transform;
     }
 
-    private void Update()
+    internal void Update()
     {
         // Online, the host runs the waves, the order spawns and the golden order's value; clients show what it sends
         if (!GameAuthority.IsAuthority)
@@ -246,7 +246,7 @@ public class OrderManager : SingletonMonobehaviour<OrderManager>
         }
     }
 
-    private void InitTutorial()
+    internal void InitTutorial()
     {
         // Online, the host hands out the tutorial orders
         if (!GameAuthority.IsAuthority)
@@ -269,7 +269,7 @@ public class OrderManager : SingletonMonobehaviour<OrderManager>
     /// <summary>
     /// Calls when the Begin/MainLoop sequence begins
     /// </summary>
-    private void InitGame()
+    internal void InitGame()
     {
         // Online, the host picks and spawns the orders
         if (!GameAuthority.IsAuthority)
@@ -679,7 +679,7 @@ public class OrderManager : SingletonMonobehaviour<OrderManager>
     /// Called when the main game ends. Lingers for a set amout of time before switching to the final order sequence.
     /// </summary>
     /// <returns></returns>
-    private IEnumerator PostGameClarity(bool isFinal)
+    internal IEnumerator PostGameClarity(bool isFinal)
     {
         GameAuthority.SetTimeScale(0.5f);
         yield return new WaitForSeconds(postGameLinger/2);

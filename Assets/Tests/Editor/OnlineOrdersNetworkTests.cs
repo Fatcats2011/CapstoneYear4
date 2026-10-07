@@ -164,14 +164,14 @@ namespace DoA.Tests
         // The layer of an order's beacon glow: which players' cameras show it
         static int GlowLayer(Order order)
         {
-            OrderBeacon beacon = (OrderBeacon)Reflect.GetField(order, "beacon");
-            return ((VisualEffect)Reflect.GetField(beacon, "beaconFX")).gameObject.layer;
+            OrderBeacon beacon = order.beacon;
+            return beacon.beaconFX.gameObject.layer;
         }
 
         // Whether an order's beacon marks its pickup (not its dropoff)
         static bool IsPickupBeacon(Order order)
         {
-            return ((OrderBeacon)Reflect.GetField(order, "beacon")).IsPickup;
+            return order.beacon.IsPickup;
         }
 
         // The layers a seat's camera shows, on this machine
@@ -202,7 +202,7 @@ namespace DoA.Tests
         // Where the players start: the start of their seat's tutorial lane
         static GameObject[] TutorialStarts()
         {
-            return (GameObject[])Reflect.GetField(SpawnManager.Instance, "gameSpawnPositions");
+            return SpawnManager.Instance.gameSpawnPositions;
         }
 
         // Where a player who finished the tutorial waits: a city respawn point far from every order's beacons
@@ -343,7 +343,7 @@ namespace DoA.Tests
             Assert.AreEqual(GameState.Begin, State(), "the first wave");
 
             // The tutorial's orders were out for both lanes until the first wave: they aren't the wave's
-            foreach (Order tutorial in (Order[])Reflect.GetField(OrderManager.Instance, "tutorialOrders"))
+            foreach (Order tutorial in OrderManager.Instance.tutorialOrders)
                 match.Taken.Add(tutorial.Key);
         }
 
@@ -530,7 +530,7 @@ namespace DoA.Tests
             // Time up: the host's golden round loads on both machines (the other machine has it at once), and its
             // cutscene is skipped
             new LoadAnswerer(other.Match);
-            Reflect.SetField(OrderManager.Instance, "wave", 99);
+            OrderManager.Instance.wave = 99;
             OrderManager.Instance.InitWave();
             float deadline = Time.realtimeSinceStartup + LOADING;
             while (State() != GameState.GoldenCutscene && Time.realtimeSinceStartup < deadline)
@@ -543,7 +543,7 @@ namespace DoA.Tests
             Assert.AreEqual(GameState.FinalPackage, State());
 
             // The other machine's player takes the golden order
-            Order golden = (Order)Reflect.GetField(OrderManager.Instance, "finalOrder");
+            Order golden = OrderManager.Instance.finalOrder;
             Vector3 start = golden.PickupPoint.position;
             ShareAt(ScooterInSeat(other, 1), start);
             deadline = Time.realtimeSinceStartup + WAIT;
@@ -587,6 +587,112 @@ namespace DoA.Tests
             yield return null;
             log.Dispose();
             Assert.IsEmpty(log.Problems, "Errors:\n\n" + string.Join("\n\n", log.Problems));
+        }
+
+        [UnityTest]
+        public IEnumerator Joining_AGoldenHolderLeaving_ThisMachineShowsItBackAtItsStart()
+        {
+            EditorSceneManager.playModeStartScene = AssetDatabase.LoadAssetAtPath<SceneAsset>(MENU_SCENE);
+            yield return new EnterPlayMode();
+            LogAssert.ignoreFailingMessages = true;
+            LogCollector log = new LogCollector();
+            float deadline = Time.realtimeSinceStartup + 60;
+            while (State() != GameState.Menu && Time.realtimeSinceStartup < deadline)
+                yield return null;
+            TestPlayers.Add();
+            deadline = Time.realtimeSinceStartup + 10;
+            while (PlayerInstantiate.Instance.PlayerCount < 1 && Time.realtimeSinceStartup < deadline)
+                yield return null;
+
+            OnlineSession host = OnlineSession.Create(VERSION); // another machine hosting: a session without the game
+            host.HostDirect(THIS_COMPUTER, PORT);
+            OnlineSession mine = OnlineSession.Create(VERSION);
+            OnlineGame.Attach(mine);
+            mine.JoinDirect(THIS_COMPUTER, PORT);
+            deadline = Time.realtimeSinceStartup + WAIT;
+            while (!(Slot(1) != null && Slot(1).IsLocal && Slot(0) != null) && Time.realtimeSinceStartup < deadline)
+                yield return null;
+            Assert.IsTrue(Slot(1) != null && Slot(1).IsLocal, "this machine's player moved to seat 2");
+            ReportRecorder reports = new ReportRecorder(host.Match);
+
+            // The host's match, then its golden round, come up here
+            host.Match.RequestLoad(MatchScene.Game);
+            deadline = Time.realtimeSinceStartup + LOADING;
+            while (reports.Machines.Count == 0 && Time.realtimeSinceStartup < deadline)
+                yield return null;
+            host.Match.RequestShow(MatchScene.Game);
+            host.Match.SendState(GameState.StartingCutscene);
+            host.Match.SendState(GameState.MainLoop);
+            deadline = Time.realtimeSinceStartup + 60;
+            while (!(ActiveScene() == GAME && State() == GameState.MainLoop) && Time.realtimeSinceStartup < deadline)
+                yield return null;
+            Assert.AreEqual(GameState.MainLoop, State(), "the host's match is up here");
+            GoldenRecorder golds = new GoldenRecorder(host.Match);
+            host.Match.RequestLoad(MatchScene.FinalOrder);
+            deadline = Time.realtimeSinceStartup + LOADING;
+            while (golds.Loaded == 0 && Time.realtimeSinceStartup < deadline)
+                yield return null;
+            host.Match.RequestShow(MatchScene.FinalOrder);
+            host.Match.SendState(GameState.GoldenCutscene);
+            host.Match.SendState(GameState.FinalPackage);
+            deadline = Time.realtimeSinceStartup + 60;
+            while (State() != GameState.FinalPackage && Time.realtimeSinceStartup < deadline)
+                yield return null;
+            Assert.AreEqual(GameState.FinalPackage, State(), "the golden round, as the host says");
+
+            // The host's player takes the golden order out at its start. It's found in the golden round's scene: the order
+            // manager only learns of it once it spawns
+            Order golden = null;
+            foreach (Order order in Object.FindObjectsOfType<Order>(true))
+            {
+                if (order.Value == Constants.OrderValue.Golden)
+                    golden = order;
+            }
+            Assert.IsNotNull(golden, "the golden round's scene has its golden order");
+            Vector3 start = golden.PickupPoint.position;
+            host.Match.SendOrder(OrderChange.Spawn(golden.Key, true));
+            host.Match.SendOrder(OrderChange.Pickup(golden.Key, 0));
+            deadline = Time.realtimeSinceStartup + WAIT;
+            while (golden.PlayerHolding != Handler(0) && Time.realtimeSinceStartup < deadline)
+                yield return null;
+            Assert.AreSame(Handler(0), golden.PlayerHolding, "on the host's scooter here");
+
+            // Their holder leaves: the host puts it back (what its OrderHandler.ReleaseOrders sends), and so does this machine
+            host.Match.SendOrder(OrderChange.EraseGold(golden.Key));
+            host.Match.SendOrder(OrderChange.Spawn(golden.Key, true));
+            deadline = Time.realtimeSinceStartup + WAIT;
+            while (!(golden.IsActive && golden.PlayerHolding == null) && Time.realtimeSinceStartup < deadline)
+                yield return null;
+            Assert.IsTrue(golden.IsActive, "out again");
+            Assert.IsNull(golden.PlayerHolding, "nobody holds it");
+            Assert.Less(Vector3.Distance(start, golden.transform.position), 0.01f, "back at its start");
+
+            log.MachinesLeave(); // Windows may report a leaving machine's closed port: see LogCollector.CLOSED_PORT
+            mine.Leave();
+            deadline = Time.realtimeSinceStartup + WAIT;
+            while (host.PlayersIn > 1 && Time.realtimeSinceStartup < deadline)
+                yield return null;
+            host.Leave();
+            yield return null;
+            log.Dispose();
+            Assert.IsEmpty(log.Problems, "Errors:\n\n" + string.Join("\n\n", log.Problems));
+        }
+
+        // How many machines reported the golden round's scene loaded
+        class GoldenRecorder
+        {
+            public int Loaded;
+
+            public GoldenRecorder(OnlineMatch match)
+            {
+                match.MachineLoaded += OnLoaded;
+            }
+
+            void OnLoaded(ulong machine, MatchScene scene)
+            {
+                if (scene == MatchScene.FinalOrder)
+                    Loaded++;
+            }
         }
 
         [UnityTest]
@@ -639,7 +745,7 @@ namespace DoA.Tests
             while (State() != GameState.Begin && Time.realtimeSinceStartup < deadline)
                 yield return null;
             Assert.AreEqual(GameState.Begin, State(), "the first wave, as the host says");
-            List<Order> orders = (List<Order>)Reflect.GetField(OrderManager.Instance, "normalOrders");
+            List<Order> orders = OrderManager.Instance.normalOrders;
             Order first = orders[0], second = orders[1], third = orders[2], fourth = orders[3], fifth = orders[4];
 
             // Nothing spawns here by itself (the order manager spawns one every 4 s)

@@ -4,7 +4,7 @@ using System.Collections.Generic;
 /// <summary>
 /// The requests a client may send the host (OnlineMatch's ServerRpcs)
 /// </summary>
-public enum RpcKind { Cue, Drop, Steal, Respawn, Learnt, Cutout, Loaded }
+public enum RpcKind { Cue, Drop, Steal, Respawn, Learnt, Cutout, Loaded, Bump }
 
 /// <summary>
 /// Host: how many requests each machine may send, per kind, as a token bucket: a burst, refilled over time. An honest
@@ -44,6 +44,7 @@ public class RateGate
             case RpcKind.Drop:
             case RpcKind.Steal:
             case RpcKind.Respawn:
+            case RpcKind.Bump:
                 burst = 10;
                 perSecond = 5;
                 break;

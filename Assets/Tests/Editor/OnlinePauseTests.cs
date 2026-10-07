@@ -48,19 +48,19 @@ namespace DoA.Tests
         // The pause menu's tint: up while it's open
         static GameObject Tint(MenuInteractions menu)
         {
-            return (GameObject)Reflect.GetField(menu.pauseMenu, "tint");
+            return menu.pauseMenu.tint;
         }
 
         // The pause menu's selector, beside the row it's on
         static GameObject Selector(MenuInteractions menu)
         {
-            return (GameObject)Reflect.GetField(menu.pauseMenu, "selector");
+            return menu.pauseMenu.selector;
         }
 
         // How high a row of the pause menu is (0: Resume, 1: Main Menu)
         static float RowY(MenuInteractions menu, int row)
         {
-            return ((GameObject[])Reflect.GetField(menu.pauseMenu, "selectorObjects"))[row].transform.position.y;
+            return menu.pauseMenu.selectorObjects[row].transform.position.y;
         }
 
         [UnityTest]

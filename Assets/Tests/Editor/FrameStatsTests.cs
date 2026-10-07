@@ -24,6 +24,25 @@ namespace DoA.Tests
         }
 
         [Test]
+        public void OnePercentLow_AllocatesNothing()
+        {
+            FrameStats stats = new FrameStats();
+            for (int i = 0; i < 500; i++)
+                stats.Add(1f / (60f + i % 7));
+            float warm = stats.OnePercentLowFps; // the first call may size its buffer
+
+            // Unity's Mono has no per-thread allocation count: the heap's growth over 100 calls shows it instead (an array
+            // per call would be 200 KB)
+            long before = System.GC.GetTotalMemory(false);
+            for (int i = 0; i < 100; i++)
+                warm += stats.OnePercentLowFps;
+            long allocated = System.GC.GetTotalMemory(false) - before;
+
+            Assert.Less(allocated, 4096, "the F6 overlay asks for it every OnGUI");
+            Assert.Greater(warm, 0f);
+        }
+
+        [Test]
         public void KeepsOnlyTheLatestFrames()
         {
             FrameStats stats = new FrameStats(10);

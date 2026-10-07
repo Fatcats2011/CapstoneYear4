@@ -27,7 +27,7 @@ namespace DoA.Tests
         {
             try
             {
-                Reflect.Invoke(compass, "Update");
+                compass.Update();
                 return null;
             }
             catch (Exception e)
@@ -45,7 +45,7 @@ namespace DoA.Tests
             GameObject holder = new GameObject("Compass");
             holder.SetActive(false); // its OnEnable listens to the game's managers, which this empty scene hasn't got
             Compass compass = holder.AddComponent<Compass>();
-            List<CompassInformationInstance> markers = (List<CompassInformationInstance>)Reflect.GetField(compass, "compassInformationObjects");
+            List<CompassInformationInstance> markers = compass.compassInformationObjects;
             for (int i = 0; i < 3; i++)
                 markers.Add(new CompassInformationInstance(new GameObject("Icon " + i).AddComponent<CompassIconUI>(), null)); // the marked object is gone
 

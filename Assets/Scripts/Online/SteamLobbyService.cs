@@ -39,13 +39,27 @@ public class SteamLobbyService : ILobbyService
     /// <summary>Whether Steam is running</summary>
     public bool Available { get { return SteamManager.Initialized; } }
 
+#if !DISABLESTEAMWORKS
+    /// <summary>Whether Steam took a call: one it refuses at once is invalid, and no answer will ever come for it</summary>
+    internal static bool Started(SteamAPICall_t call)
+    {
+        return call != SteamAPICall_t.Invalid;
+    }
+#endif
+
     public void Create(int maxMembers)
     {
 #if !DISABLESTEAMWORKS
         if (Available)
         {
+            SteamAPICall_t made = SteamMatchmaking.CreateLobby(ELobbyType.k_ELobbyTypeFriendsOnly, maxMembers);
+            if (!Started(made))
+            {
+                Created?.Invoke(0);
+                return;
+            }
             CallResult<LobbyCreated_t> call = CallResult<LobbyCreated_t>.Create(OnCreated);
-            call.Set(SteamMatchmaking.CreateLobby(ELobbyType.k_ELobbyTypeFriendsOnly, maxMembers));
+            call.Set(made);
             creates.RemoveAll(Answered);
             creates.Add(call);
             return;
@@ -59,9 +73,15 @@ public class SteamLobbyService : ILobbyService
 #if !DISABLESTEAMWORKS
         if (Available)
         {
+            SteamAPICall_t entering = SteamMatchmaking.JoinLobby(new CSteamID(lobby));
+            if (!Started(entering))
+            {
+                Entered?.Invoke(lobby, false);
+                return;
+            }
             CallResult<LobbyEnter_t> call = CallResult<LobbyEnter_t>.Create(
                 delegate (LobbyEnter_t result, bool ioFailure) { OnEntered(lobby, result, ioFailure); });
-            call.Set(SteamMatchmaking.JoinLobby(new CSteamID(lobby)));
+            call.Set(entering);
             joins.RemoveAll(Answered);
             joins.Add(call);
             return;

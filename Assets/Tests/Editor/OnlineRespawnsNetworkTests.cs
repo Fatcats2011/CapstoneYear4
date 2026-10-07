@@ -340,7 +340,7 @@ namespace DoA.Tests
             // The other machine's player picks up an order (the tutorial's orders aren't the wave's), then waits up in the
             // air, away from every beacon
             List<int> taken = new List<int>();
-            foreach (Order tutorial in (Order[])Reflect.GetField(OrderManager.Instance, "tutorialOrders"))
+            foreach (Order tutorial in OrderManager.Instance.tutorialOrders)
                 taken.Add(tutorial.Key);
             OrderChange? spawn = null;
             deadline = Time.realtimeSinceStartup + WAIT;

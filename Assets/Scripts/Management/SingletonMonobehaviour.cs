@@ -6,7 +6,7 @@ using UnityEngine;
 
 public abstract class SingletonMonobehaviour<T> : MonoBehaviour where T : MonoBehaviour
 {
-    private static T instance;
+    internal static T instance;
     [Space(10)]
     public bool dontDestroyOnLoad;
 

@@ -14,19 +14,19 @@ public class OrderHandler : MonoBehaviour
     public int Placement { get { return placement; }set { placement = value; } }
     [SerializeField] NumberHandler numberHandler;    
 
-    private Order order1 = null; // first order the player is holding
+    internal Order order1 = null; // first order the player is holding
     private Order order2 = null; // second order the player is holding
 
     [SerializeField] DrivingIndicators drivingIndicators; // Reference to driving indicator script on player
 
-    private bool canTakeOrder;
+    internal bool canTakeOrder;
     public bool CanTakeOrder { get { return canTakeOrder; } }
 
     [Tooltip("Positions the orders will snap to on the back of the scooter.")]
     [SerializeField] private Transform order1Position;
     [SerializeField] private Transform order2Position;
     [Tooltip("Reference to the ball for event subscription.")]
-    [SerializeField] private BallDriving ball;
+    [SerializeField] internal BallDriving ball;
     private TutorialHandler tutHandler;
     public bool IsBoosting { get { return ball.Boosting; } }
     private bool hasGoldenOrder;
@@ -49,7 +49,7 @@ public class OrderHandler : MonoBehaviour
     private CompanyInformation companyInfo;
     public CompanyInformation CompanyInfo { get {  return companyInfo; } set {  companyInfo = value; } }
 
-    [SerializeField] Animator playerAnimator;
+    [SerializeField] internal Animator playerAnimator;
     public Animator PlayerAnimator { get { return playerAnimator; } } // the scooter's animator (the results screen plays placements on it)
 
     private ISceneFlow sceneFlow; // the scene flow this handler listens to while enabled
@@ -64,7 +64,7 @@ public class OrderHandler : MonoBehaviour
         SetDrivingIndicators();
     }
 
-    private void OnEnable()
+    internal void OnEnable()
     {
         ball.OnBoostStart += AttemptSteal;
         sceneFlow = SceneFlow.Current;
@@ -73,7 +73,7 @@ public class OrderHandler : MonoBehaviour
         GameManager.Instance.OnSwapStartingCutscene += InitHandler;
     }
 
-    private void OnDisable()
+    internal void OnDisable()
     {
         ball.OnBoostStart -= AttemptSteal;
         sceneFlow.OnReturnToMenu -= ResetHandler;
@@ -439,13 +439,32 @@ public class OrderHandler : MonoBehaviour
     /// <summary>
     /// For initializing the handler once they enter the main scene.
     /// </summary>
-    private void InitHandler()
+    internal void InitHandler()
     {
         // Another machine's scooter: its own machine freezes it when the main game ends (here it never started driving)
         if (RemoteAvatar.IsRemote(this))
             return;
 
-        OrderManager.Instance.OnMainGameFinishes += () => ball.FreezeBall(true);
+        HookMatchEnd(OrderManager.Instance);
+    }
+
+    // This player's scooter freezes when a match's main game ends. Hooked to that match's order manager by InitHandler and
+    // unhooked by ResetHandler: the same handler both ways, so matches after matches don't pile listeners up (a lambda
+    // removed with -= never matches the one added)
+    internal void HookMatchEnd(OrderManager orders)
+    {
+        orders.OnMainGameFinishes -= FreezeAtMatchEnd;
+        orders.OnMainGameFinishes += FreezeAtMatchEnd;
+    }
+
+    internal void UnhookMatchEnd(OrderManager orders)
+    {
+        orders.OnMainGameFinishes -= FreezeAtMatchEnd;
+    }
+
+    void FreezeAtMatchEnd()
+    {
+        ball.FreezeBall(true);
     }
 
     /// <summary>
@@ -455,7 +474,7 @@ public class OrderHandler : MonoBehaviour
     {
         // Online, a session that ends in the menus or mid-load comes back here before any match scene's order manager
         if (OrderManager.Instance != null)
-            OrderManager.Instance.OnMainGameFinishes -= () => ball.FreezeBall(false);
+            UnhookMatchEnd(OrderManager.Instance);
 
         if(order1 != null)
         {
@@ -555,7 +574,7 @@ public class OrderHandler : MonoBehaviour
     /// Typical OnTriggerEnter. Handles stealing orders from other players.
     /// </summary>
     /// <param name="other">Collider player has hit. Will attempt to steal if this hitbox is another player</param>
-    private void OnTriggerEnter(Collider other)
+    internal void OnTriggerEnter(Collider other)
     {
         OrderHandler otherHandler;
         try

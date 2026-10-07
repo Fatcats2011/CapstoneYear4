@@ -58,11 +58,11 @@ public static class SessionLog
     }
 
     /// <summary>
-    /// A launch's file name, which sorts by its start time
+    /// A launch's file name, which sorts by its start time (to the millisecond: two launches in one second get their own)
     /// </summary>
     public static string FileName(DateTime start)
     {
-        return PREFIX + start.ToString("yyyyMMdd-HHmmss", CultureInfo.InvariantCulture) + EXTENSION;
+        return PREFIX + start.ToString("yyyyMMdd-HHmmss-fff", CultureInfo.InvariantCulture) + EXTENSION;
     }
 
     /// <summary>

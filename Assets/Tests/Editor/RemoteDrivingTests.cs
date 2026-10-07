@@ -70,8 +70,8 @@ namespace DoA.Tests
             BallDriving driving = remote.Driving;
             BoostRecorder boosts = new BoostRecorder(driving);
             Transform sparks = driving.ScooterModel.Find("Particles"); // base, wide, flare 1, flare 2, flare 3, long
-            TrailRenderer skid = (TrailRenderer)Reflect.GetField(remote.GetComponentInChildren<SkideeSkidoo>(), "frontTire");
-            Animator rider = (Animator)Reflect.GetField(driving, "playerAnimator");
+            TrailRenderer skid = remote.GetComponentInChildren<SkideeSkidoo>().frontTire;
+            Animator rider = driving.playerAnimator;
 
             // A boost: its trail starts once, however often the same flags arrive
             DriveFlags boosting = new DriveFlags(true, false, false, 0, true, false);
@@ -98,13 +98,13 @@ namespace DoA.Tests
             Assert.IsFalse(skid.emitting, "skid marks stop");
 
             // Its owner fell in the water: while its rider is hidden, so is it here, and its ball bumps nobody
-            GameObject model = (GameObject)Reflect.GetField(driving.Sphere.GetComponent<Respawn>(), "modelParent");
+            GameObject model = driving.Sphere.GetComponent<Respawn>().modelParent;
             SphereCollider ball = driving.Sphere.GetComponent<SphereCollider>();
             Assert.IsTrue(model.activeInHierarchy && ball.enabled, "shown and solid before");
             driving.ShowRemote(new DriveFlags(false, false, false, 0, false, false, true), 0f);
             Assert.IsFalse(model.activeInHierarchy, "hidden");
             Assert.IsFalse(ball.enabled, "no ball to bump into");
-            VisualEffect wisp = (VisualEffect)Reflect.GetField(driving.Sphere.GetComponent<Respawn>(), "deathWisp");
+            VisualEffect wisp = driving.Sphere.GetComponent<Respawn>().deathWisp;
             Assert.IsTrue(wisp.enabled, "its wisp shows");
 
             // It rises from its grave

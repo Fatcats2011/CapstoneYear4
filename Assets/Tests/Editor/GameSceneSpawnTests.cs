@@ -42,7 +42,7 @@ namespace DoA.Tests
         {
             scene = EditorSceneManager.OpenScene(GAME_SCENE, OpenSceneMode.Additive);
             Physics.SyncTransforms();
-            GameObject[] points = (GameObject[])Reflect.GetField(Find<SpawnManager>(), "gameSpawnPositions");
+            GameObject[] points = Find<SpawnManager>().gameSpawnPositions;
 
             Assert.AreEqual(Constants.MAX_PLAYERS, points.Length, "a start point per seat");
             for (int seat = 0; seat < points.Length; seat++)

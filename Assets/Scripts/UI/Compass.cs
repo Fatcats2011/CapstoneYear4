@@ -19,7 +19,7 @@ public class Compass : MonoBehaviour
     [SerializeField] GameObject iconPrefab;
 
 
-    [SerializeField] List<CompassInformationInstance> compassInformationObjects = new List<CompassInformationInstance>();
+    [SerializeField] internal List<CompassInformationInstance> compassInformationObjects = new List<CompassInformationInstance>();
 
     [SerializeField] float compassUnit;
 
@@ -39,7 +39,7 @@ public class Compass : MonoBehaviour
         compassUnit = compassImage.rectTransform.rect.width / 360f;
     }
 
-    private void Update()
+    internal void Update()
     {
         // Loops for all markers on player and updates their position on the compass ui (backwards: a marker whose object is
         // gone leaves the list on the way)

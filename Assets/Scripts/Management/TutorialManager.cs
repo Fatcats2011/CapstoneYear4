@@ -24,14 +24,14 @@ public class TutorialManager : SingletonMonobehaviour<TutorialManager>
     public delegate void TutorialComplete();
     public TutorialComplete OnTutorialComplete;
 
-    private void OnEnable()
+    internal void OnEnable()
     {
         GameManager.Instance.OnSwapStartingCutscene += StartOver;
         GameManager.Instance.OnSwapBegin += StartOver;
         shouldTutorialize = true;
     }
 
-    private void OnDisable()
+    internal void OnDisable()
     {
         GameManager.Instance.OnSwapStartingCutscene -= StartOver;
         GameManager.Instance.OnSwapBegin -= StartOver;

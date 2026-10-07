@@ -240,6 +240,15 @@ namespace DoA.Tests
         }
 
         [Test]
+        public void Answer_TheSameLobbyTwice_JoinsOnce()
+        {
+            lobby.Answer(7, null);
+            lobby.Answer(7, null); // a double "Join Game" before Steam answers
+
+            CollectionAssert.AreEqual(new[] { 7UL }, lobbies.Joins, "entered once: a second answer would leave it");
+        }
+
+        [Test]
         public void Answer_TheLobbyThisMachineIsIn_IsIgnored()
         {
             Hosting();

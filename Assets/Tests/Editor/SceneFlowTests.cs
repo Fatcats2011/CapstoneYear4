@@ -36,10 +36,10 @@ namespace DoA.Tests
             GameAuthority.Role = NetworkRole.Offline;
             SceneFlow.Current = null;
             Time.timeScale = 1f;
-            Reflect.SetSingleton<SceneManager>(null);
-            Reflect.SetSingleton<GameManager>(null);
-            Reflect.SetSingleton<SoundManager>(null);
-            Reflect.SetSingleton<PlayerInstantiate>(null);
+            SceneManager.instance = null;
+            GameManager.instance = null;
+            SoundManager.instance = null;
+            PlayerInstantiate.instance = null;
             objects.DestroyAll();
         }
 
@@ -47,7 +47,7 @@ namespace DoA.Tests
         public void Current_WhenNothingElseIsSet_IsTheLocalLoader()
         {
             SceneManager loader = objects.Add<SceneManager>();
-            Reflect.SetSingleton(loader);
+            SceneManager.instance = loader;
 
             Assert.AreSame(loader, SceneFlow.Current);
         }
@@ -56,7 +56,7 @@ namespace DoA.Tests
         public void Current_SetToAnotherFlow_IsThatFlowUntilCleared()
         {
             SceneManager loader = objects.Add<SceneManager>();
-            Reflect.SetSingleton(loader);
+            SceneManager.instance = loader;
             FakeSceneFlow online = new FakeSceneFlow();
 
             SceneFlow.Current = online;
@@ -85,7 +85,7 @@ namespace DoA.Tests
             ISceneFlow flow = loader;
 
             Assert.IsFalse(flow.WaitingForConfirm, "before the loading screen asks");
-            Reflect.SetField(loader, "enableConfirm", true);
+            loader.enableConfirm = true;
             Assert.IsTrue(flow.WaitingForConfirm, "while it asks");
         }
 
@@ -108,7 +108,7 @@ namespace DoA.Tests
             SceneFlow.Current = flow;
             ResultsUI results = objects.Add<ResultsUI>();
 
-            Reflect.Invoke(results, "ResetGame");
+            results.ResetGame();
 
             Assert.AreEqual(1, flow.MenuReturns);
         }
@@ -118,10 +118,10 @@ namespace DoA.Tests
         {
             FakeSceneFlow flow = new FakeSceneFlow();
             SceneFlow.Current = flow;
-            Reflect.SetSingleton(objects.Add<PlayerInstantiate>()); // no players to reset
+            PlayerInstantiate.instance = objects.Add<PlayerInstantiate>(); // no players to reset
             ResultsMenu results = objects.Add<ResultsMenu>();
-            Reflect.SetField(results, "displayText", new TMPro.TMP_Text[0]);
-            Reflect.SetField(results, "canQuit", true);
+            results.displayText = new TMPro.TMP_Text[0];
+            results.canQuit = true;
 
             GameAuthority.Role = NetworkRole.Client;
             results.ConfirmMenu();
@@ -137,12 +137,12 @@ namespace DoA.Tests
         {
             FakeSceneFlow flow = new FakeSceneFlow();
             SceneFlow.Current = flow;
-            Reflect.SetSingleton(objects.Add<SoundManager>()); // no mixer snapshots, so the music change does nothing
-            Reflect.SetSingleton(objects.Add<PlayerInstantiate>());
+            SoundManager.instance = objects.Add<SoundManager>(); // no mixer snapshots, so the music change does nothing
+            PlayerInstantiate.instance = objects.Add<PlayerInstantiate>();
             PauseMenu pause = objects.Add<PauseMenu>();
             Time.timeScale = 0f; // paused
 
-            Reflect.Invoke(pause, "ReturnToMenu");
+            pause.ReturnToMenu();
 
             Assert.AreEqual(1f, Time.timeScale, "clock running again");
             Assert.AreEqual(1, flow.MenuReturns);
@@ -155,7 +155,7 @@ namespace DoA.Tests
             SceneFlow.Current = flow;
             OrderManager orders = objects.Add<OrderManager>();
 
-            IEnumerator linger = (IEnumerator)Reflect.Invoke(orders, "PostGameClarity", false);
+            IEnumerator linger = orders.PostGameClarity(false);
             linger.MoveNext(); // the half-speed pause
             linger.MoveNext(); // then the golden-order scene
 
@@ -169,7 +169,7 @@ namespace DoA.Tests
             SceneFlow.Current = flow;
             PlayerInstantiate players = objects.Add<PlayerInstantiate>();
             players.Roster.JoinLocal(objects.Add<PlayerInput>());
-            Reflect.SetField(players, "playerLoadingConfirm", new[] { true, false, false, false });
+            players.playerLoadingConfirm = new[] { true, false, false, false };
 
             players.CheckLoadingConfirmCount();
 
@@ -183,7 +183,7 @@ namespace DoA.Tests
             SceneFlow.Current = flow;
             SceneManager loader = objects.Add<SceneManager>();
 
-            Reflect.Invoke(loader, "StartMatch"); // what OnReadiedUp calls when the countdown ends
+            loader.StartMatch(); // what OnReadiedUp calls when the countdown ends
 
             Assert.AreEqual(1, flow.GameLoads);
         }
@@ -191,18 +191,18 @@ namespace DoA.Tests
         [Test]
         public void OrderHandler_EnabledThenDisabled_LeavesTheFlowItListenedTo()
         {
-            Reflect.SetSingleton(objects.Add<GameManager>());
+            GameManager.instance = objects.Add<GameManager>();
             FakeSceneFlow flow = new FakeSceneFlow();
             SceneFlow.Current = flow;
             OrderHandler handler = objects.Add<OrderHandler>();
-            Reflect.SetField(handler, "ball", objects.Add<BallDriving>());
+            handler.ball = objects.Add<BallDriving>();
 
-            Reflect.Invoke(handler, "OnEnable");
-            Assert.AreEqual(1, Reflect.HandlerCount(flow, "OnReturnToMenu", handler), "while enabled");
+            handler.OnEnable();
+            Assert.AreEqual(1, Reflect.HandlerCount(flow, nameof(FakeSceneFlow.OnReturnToMenu), handler), "while enabled");
 
             SceneFlow.Current = null; // e.g. an online session ended while the handler was enabled
-            Reflect.Invoke(handler, "OnDisable");
-            Assert.AreEqual(0, Reflect.HandlerCount(flow, "OnReturnToMenu", handler), "after disabling");
+            handler.OnDisable();
+            Assert.AreEqual(0, Reflect.HandlerCount(flow, nameof(FakeSceneFlow.OnReturnToMenu), handler), "after disabling");
         }
     }
 }

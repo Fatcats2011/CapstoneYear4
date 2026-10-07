@@ -7,7 +7,7 @@ using UnityEngine;
 /// </summary>
 public class ScoreManager : SingletonMonobehaviour<ScoreManager>
 {
-    [SerializeField] private List<OrderHandler> orderHandlers = new List<OrderHandler>(); // list of order handlers in the scene
+    [SerializeField] internal List<OrderHandler> orderHandlers = new List<OrderHandler>(); // list of order handlers in the scene
 
     private void OnEnable()
     {

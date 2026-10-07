@@ -161,7 +161,12 @@ public static class GraphicsQuality
     // Every SSAO feature on the asset's renderers (an internal URP type, found by name)
     static IEnumerable<ScriptableRendererFeature> SsaoFeatures(UniversalRenderPipelineAsset asset)
     {
-        if (rendererListField == null || !(rendererListField.GetValue(asset) is ScriptableRendererData[] renderers))
+        if (rendererListField == null)
+        {
+            RendererListMissing();
+            yield break;
+        }
+        if (!(rendererListField.GetValue(asset) is ScriptableRendererData[] renderers))
             yield break;
 
         foreach (ScriptableRendererData renderer in renderers)
@@ -199,18 +204,27 @@ public static class GraphicsQuality
     ///</summary>
     public static void ApplyForAsset(int players, UniversalRenderPipelineAsset asset)
     {
+        if (quit)
+            return;
+
         CurrentPlayers = Mathf.Clamp(players, 1, Constants.MAX_PLAYERS);
         Apply(CurrentLevel, asset);
     }
 
     ///<summary>
-    /// Applies a level to a URP asset, remembering its authored settings the first time so High can bring them back
+    /// Applies a level to a URP asset, remembering its authored settings the first time so High can bring them back.
+    /// Nothing once the game is quitting: the asset was put back, and nothing would put it back again
     ///</summary>
     public static void Apply(int level, UniversalRenderPipelineAsset asset)
     {
+        if (quit)
+            return;
+
         if (changedAsset != asset)
         {
+            int players = CurrentPlayers; // putting the last asset back forgets them
             Restore();
+            CurrentPlayers = players;
             authoredSsao.Clear();
             foreach (ScriptableRendererFeature feature in SsaoFeatures(asset))
                 authoredSsao[feature] = feature.isActive;
@@ -218,11 +232,39 @@ public static class GraphicsQuality
             changedAsset = asset;
 
             // In the editor the URP asset and its renderers are project files: exiting Play Mode puts them back as authored
-            Application.quitting += Restore;
+            Application.quitting += OnQuitting;
         }
 
         CurrentLevel = Mathf.Clamp(level, 0, LEVEL_COUNT - 1);
         Write(asset, PresetFor(CurrentLevel, authoredSettings, CurrentPlayers));
+    }
+
+    static bool quit;               // the game is quitting: nothing is applied any more
+    static bool warnedRendererList; // the missing renderer list was logged
+
+    // The game (or Play Mode) is ending: the asset goes back as authored, and stays so
+    internal static void OnQuitting()
+    {
+        Restore();
+        quit = true;
+    }
+
+    // Each launch (and each Play Mode, with domain reload off) starts able to apply
+    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+    internal static void ResetForLaunch()
+    {
+        quit = false;
+        warnedRendererList = false;
+    }
+
+    // URP renamed or removed the renderer list: SSAO can't be found, so it stays as authored
+    internal static void RendererListMissing()
+    {
+        if (warnedRendererList)
+            return;
+
+        warnedRendererList = true;
+        Debug.LogWarning("Graphics quality: this URP version has no renderer list; SSAO is left as authored");
     }
 
     ///<summary>
@@ -243,6 +285,6 @@ public static class GraphicsQuality
         changedAsset = null;
         CurrentLevel = HIGH;
         CurrentPlayers = 1;
-        Application.quitting -= Restore;
+        Application.quitting -= OnQuitting;
     }
 }

@@ -9,7 +9,7 @@ namespace DoA.Tests
 {
     /// <summary>
     /// Creates throwaway GameObjects for EditMode tests and destroys them afterwards.
-    /// Components added in Edit Mode don't get Awake/OnEnable/Start, so tests call those through Reflect.
+    /// Components added in Edit Mode don't get Awake/OnEnable/Start, so tests call those directly (the game's members they reach are internal).
     /// </summary>
     public class TestObjects
     {
@@ -39,21 +39,11 @@ namespace DoA.Tests
     }
 
     /// <summary>
-    /// Reaches private fields, lifecycle methods, singleton instances and event subscriber lists for tests.
+    /// Reaches what direct access can't: event subscriber lists (a C# event's backing field) and another package's private methods.
     /// </summary>
     public static class Reflect
     {
         const BindingFlags Members = BindingFlags.Instance | BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.DeclaredOnly;
-
-        public static void SetField(object target, string name, object value)
-        {
-            FindField(target.GetType(), name).SetValue(target, value);
-        }
-
-        public static object GetField(object target, string name)
-        {
-            return FindField(target.GetType(), name).GetValue(target);
-        }
 
         public static object Invoke(object target, string methodName, params object[] args)
         {
@@ -67,11 +57,6 @@ namespace DoA.Tests
                 ExceptionDispatchInfo.Capture(e.InnerException).Throw();
                 throw;
             }
-        }
-
-        public static void SetSingleton<T>(T instance) where T : MonoBehaviour
-        {
-            typeof(SingletonMonobehaviour<T>).GetField("instance", BindingFlags.Static | BindingFlags.NonPublic).SetValue(null, instance);
         }
 
         /// <summary>

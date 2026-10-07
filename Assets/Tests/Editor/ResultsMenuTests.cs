@@ -18,8 +18,8 @@ namespace DoA.Tests
         public void TearDown()
         {
             SceneFlow.Current = null;
-            Reflect.SetSingleton<ScoreManager>(null);
-            Reflect.SetSingleton<PlayerInstantiate>(null);
+            ScoreManager.instance = null;
+            PlayerInstantiate.instance = null;
             objects.DestroyAll();
             if (controller != null)
                 Object.DestroyImmediate(controller);
@@ -49,7 +49,7 @@ namespace DoA.Tests
             GameObject control = new GameObject("Control");
             control.transform.SetParent(avatar.transform);
             OrderHandler orders = control.AddComponent<OrderHandler>();
-            Reflect.SetField(orders, "playerAnimator", animator);
+            orders.playerAnimator = animator;
             return orders;
         }
 
@@ -63,14 +63,14 @@ namespace DoA.Tests
             Assert.AreEqual(2, animator.GetInteger(END_STATUS), "the test animator holds its parameter in Edit Mode");
             OrderHandler orders = NestedScooter(animator);
             ScoreManager scores = objects.Add<ScoreManager>();
-            Reflect.SetSingleton(scores);
-            Reflect.SetField(scores, "orderHandlers", new List<OrderHandler> { orders });
+            ScoreManager.instance = scores;
+            scores.orderHandlers = new List<OrderHandler> { orders };
             PlayerInstantiate players = objects.Add<PlayerInstantiate>();
-            Reflect.SetSingleton(players);
+            PlayerInstantiate.instance = players;
             players.Roster.JoinLocal(objects.Add<PlayerInput>());
             ResultsMenu results = objects.Add<ResultsMenu>();
-            Reflect.SetField(results, "displayText", new TMP_Text[0]);
-            Reflect.SetField(results, "canQuit", true);
+            results.displayText = new TMP_Text[0];
+            results.canQuit = true;
 
             results.ConfirmMenu();
 

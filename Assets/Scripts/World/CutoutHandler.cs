@@ -15,13 +15,13 @@ public class CutoutHandler : MonoBehaviour
     [SerializeField] private Transform cutoutModel;
 
     [Tooltip("Order the cutout will be holding.")]
-    [SerializeField] private Order order;
+    [SerializeField] internal Order order;
 
     [Tooltip("Position the order will be.")]
     [SerializeField] private Transform orderPos;
 
     [Tooltip("GO to block the player from advancing until they've stolen the order.")]
-    [SerializeField] private GameObject barrier;
+    [SerializeField] internal GameObject barrier;
 
     [Tooltip("Time it takes for the barrier to dissolve.")]
     [SerializeField] private float dissolveTime = 0.5f;
@@ -143,7 +143,7 @@ public class CutoutHandler : MonoBehaviour
     {
         public OrderHandler Player;
         public BallDriving Ball;
-        public bool IsScooter; // it has a ball driving (the cutout only reacts to those)
+        public bool IsScooter; // it has a ball driving and an order handler (the cutout only reacts to those)
     }
 
     private static readonly Dictionary<Collider, Scooter> scooters = new Dictionary<Collider, Scooter>();
@@ -152,7 +152,7 @@ public class CutoutHandler : MonoBehaviour
     /// Finds the scooter a collider belongs to (its parent's order handler and ball driving). It looks each collider up
     /// once: one that isn't a scooter's is remembered as such
     /// </summary>
-    private static bool FindScooter(Collider other, out OrderHandler player, out BallDriving playerBall)
+    internal static bool FindScooter(Collider other, out OrderHandler player, out BallDriving playerBall)
     {
         // A known scooter whose parts are gone is looked up again
         if (scooters.TryGetValue(other, out Scooter known) && (!known.IsScooter || known.Ball != null))
@@ -174,7 +174,7 @@ public class CutoutHandler : MonoBehaviour
             known.Ball = parent.GetComponentInChildren<BallDriving>();
         }
 
-        known.IsScooter = known.Ball != null;
+        known.IsScooter = known.Ball != null && known.Player != null; // a ball without orders has nothing to steal
         scooters[other] = known;
         player = known.Player;
         playerBall = known.Ball;

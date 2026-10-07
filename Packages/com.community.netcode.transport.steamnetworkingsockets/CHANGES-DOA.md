@@ -18,6 +18,12 @@ This is a copy of `com.community.netcode.transport.steamnetworkingsockets` from
    since the host's copy of the lobby can lag a friend's join; then it's refused.
 5. **One connection per Steam ID.** A second connection from a Steam ID that's already connected is refused, so one
    player can't take several seats.
+6. **A kicked peer stays out (Phase 5A).** With `BanOnNextDisconnect` set (the game sets it in `OnlineSession.Kick`),
+   `DisconnectRemoteClient` bans that Steam ID in `ConnectionGate` for the session. Steam lobbies have no kick, so the
+   player is still a lobby member, but every new connection from them is refused. `ClearBans` forgets the bans (each new
+   hosting session).
+7. **The kick reason arrives (Phase 5A).** `DisconnectRemoteClient` closes with linger on, so the reason message Netcode
+   queued just before is delivered before the connection closes.
 
 The game also sets the public `options` to relay-only (`SteamRelay.Options()`), so no peer learns another's IP; that
 needs no change here.

@@ -4,7 +4,7 @@ using UnityEngine;
 
 public class SkideeSkidoo : MonoBehaviour
 {
-    [SerializeField] private TrailRenderer frontTire;
+    [SerializeField] internal TrailRenderer frontTire;
     [SerializeField] private TrailRenderer backTire;
 
     private BallDriving control;
@@ -15,12 +15,12 @@ public class SkideeSkidoo : MonoBehaviour
     [Tooltip("Time the skidmarks last.")]
     [SerializeField] private float skidTime = 1f;
 
-    private void OnEnable()
+    internal void OnEnable()
     {
         GameManager.Instance.OnSwapStartingCutscene += StartSkidding;
         GameManager.Instance.OnSwapResults += StopSkidding;
     }
-    private void OnDisable()
+    internal void OnDisable()
     {
         GameManager.Instance.OnSwapStartingCutscene -= StartSkidding;
         GameManager.Instance.OnSwapResults -= StopSkidding;

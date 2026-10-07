@@ -28,6 +28,9 @@ public static class LobbyRules
     /// </summary>
     public static string VersionOf(string buildTag)
     {
+        if (buildTag == null)
+            return "";
+
         int slash = buildTag.LastIndexOf('/');
         return slash < 0 ? buildTag : buildTag.Substring(0, slash);
     }

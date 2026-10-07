@@ -15,7 +15,7 @@ public class SceneManager : SingletonMonobehaviour<SceneManager>, ISceneFlow, IM
 
     [Header("Loading Screen")]
     [SerializeField] bool loadingScreenEnabled;
-    [SerializeField] bool enableConfirm;
+    [SerializeField] internal bool enableConfirm;
     public bool LoadingScreenEnabled { get { return loadingScreenEnabled; } }
     public bool EnableConfirm { get { return enableConfirm; }}
 
@@ -38,7 +38,7 @@ public class SceneManager : SingletonMonobehaviour<SceneManager>, ISceneFlow, IM
     [SerializeField] private Sprite finalTut;
     [SerializeField] private Image tutorialImage;
 
-    AsyncOperation sceneLoad;
+    internal AsyncOperation sceneLoad;
     Coroutine sceneLoadCoroutune;
     bool spawnMenuBool;
     int loadingIndex = -1; // the scene the load in progress goes to (-1: none)
@@ -127,7 +127,7 @@ public class SceneManager : SingletonMonobehaviour<SceneManager>, ISceneFlow, IM
     /// Everyone is ready in player select: the match starts through the scene flow (this loader offline; online, the
     /// online flow)
     ///</summary>
-    private void StartMatch()
+    internal void StartMatch()
     {
         SceneFlow.Current.LoadGameScene();
     }

@@ -25,7 +25,7 @@ namespace DoA.Tests
         {
             OrderSync.Reset();
             GameAuthority.Role = NetworkRole.Offline;
-            Reflect.SetSingleton<PlayerInstantiate>(null);
+            PlayerInstantiate.instance = null;
             objects.DestroyAll();
             told.Clear();
         }
@@ -116,7 +116,7 @@ namespace DoA.Tests
         public void SeatOf_AndHandlerIn_FollowTheRoster()
         {
             PlayerInstantiate players = objects.Add<PlayerInstantiate>();
-            Reflect.SetSingleton(players);
+            PlayerInstantiate.instance = players;
             GameObject avatar = objects.NewGameObject("P3");
             GameObject control = new GameObject("Control");
             control.transform.SetParent(avatar.transform);

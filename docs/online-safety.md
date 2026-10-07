@@ -13,7 +13,10 @@ Online matches are peer to peer: one player's game hosts, and their friends' gam
 | A stranger who knows the host's Steam ID connects directly, not through the lobby | The Steam transport asks the game before accepting a connection; the host accepts only Steam users in its lobby right now. Someone not in the lobby yet gets 3 s for the host's copy of the lobby to catch up, then is closed before Netcode sees them. A Steam ID that's already connected can't open a second connection (and take a second seat). | `SteamPeerRules`, `OnlineLobby.LetsIn`, `OnlineSession.AcceptsPeer`, the patched transport's `ConnectionGate` |
 | Learning another player's IP address | Steam sessions are relay-only: direct (ICE) connections are off, so every connection goes through Valve's relay. | `SteamRelay.Options()` |
 | An empty or huge message crashing the receiver | The patched transport drops messages of 1 byte or less, or over 256 KB, and always releases Steam's message. It used to throw and leak on an empty one. | the patched transport, `SteamPeerRules.Deliverable` |
-| Flooding the host with requests (one-shots, drops, steals…) | Each machine has an allowance per kind of request (a burst, refilled each second). The excess is dropped; 200 drops within 10 s disconnects that machine ("Disconnected: too many messages."). | `RateGate`, `OnlineMatch.Allowed` |
+| Flooding the host with requests (one-shots, drops, steals, bumps…) | Each machine has an allowance per kind of request (a burst, refilled each second). The excess is dropped; 200 drops within 10 s disconnects that machine ("Disconnected: too many messages."). The disconnect closes with linger on, so the reason reaches them first. | `RateGate`, `OnlineMatch.Allowed`, `OnlineSession.Kick` |
+| A kicked player reconnecting to flood again | Over Steam the kicked Steam ID is banned for the rest of the session: the lobby has no kick, so they stay a member, but every new connection from them is refused. A new hosting session starts with no bans. | the patched transport's `BanOnNextDisconnect`, `ConnectionGate.Ban` |
+| Bumps that push another player across the map | The host passes on a bump only for the sender's own seat, between players within reach, neither respawning, one per pair per half second, and never harder than a clash, whatever speed was sent. Clients take only seats 0–3 and a finite push. | `BumpRules`, `OnlineBumps`, `OnlineMatch.BumpClientRpc` |
+| A scooter pose that isn't numbers (NaN, infinity), making Unity log an error every frame | Another machine's scooter proxy stops following poses that aren't numbers, and holds its last good one until a second of good poses has come. | `PoseHold`, `OwnerNetworkTransform` |
 | A huge or tricky join request | Join data over 64 bytes is refused unread. Version text shown or logged is cut to 32 characters, without control characters, so it can't forge log lines. | `OnlineSession.MAX_PAYLOAD`, `LobbyRules.Shown` |
 | Nonsense values (NaN or far-away places, undefined states, scenes, cues or achievements, a clock that never ends) | The host refuses requests with places outside the world (±5000 m). Clients check everything the host sends where it arrives, and skip what no honest game sends. | `NetChecks`, `OnlineMatch`'s client messages, `OnlineOrders.AcceptsDrop`, `MatchClock.Remaining` |
 | A malicious host spawning extra objects | A client takes one match, at most 4 players and scooters, and no two players in one seat. Anything more is ignored, with one warning. | `OnlineSession.AddPlayer`, `SetMatch`, `AddScooter` |
@@ -25,7 +28,7 @@ Online matches are peer to peer: one player's game hosts, and their friends' gam
 
 Netcode's own settings (`OnlineSession.NewConfig`):
 - Network-variable lengths are checked as they're read.
-- A connection that isn't let in within 5 s is dropped.
+- A connection that isn't let in within 10 s is dropped (5 s until Phase 5A: a host hitch of a few seconds in the menus could drop a joining friend).
 - Netcode's logs are off in release builds.
 
 ## Already in place before this phase

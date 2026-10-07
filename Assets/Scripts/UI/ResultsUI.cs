@@ -24,7 +24,7 @@ public class ResultsUI : MonoBehaviour
     /// <summary>
     /// This method resets the game by setting the GameManager game state to menu.
     /// </summary>
-    private void ResetGame()
+    internal void ResetGame()
     {
         SceneFlow.Current.ReturnToMenu();
     }

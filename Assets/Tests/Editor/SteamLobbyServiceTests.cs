@@ -17,6 +17,14 @@ namespace DoA.Tests
         }
 
         [Test]
+        public void Started_AnInvalidCall_IsNot()
+        {
+            // Steam refusing at once gives an invalid call: no answer would ever come, so Y would stay blocked
+            Assert.IsFalse(SteamLobbyService.Started(Steamworks.SteamAPICall_t.Invalid));
+            Assert.IsTrue(SteamLobbyService.Started(new Steamworks.SteamAPICall_t(5)));
+        }
+
+        [Test]
         public void WithoutSteam_IsUnavailable()
         {
             Assert.IsFalse(new SteamLobbyService().Available);

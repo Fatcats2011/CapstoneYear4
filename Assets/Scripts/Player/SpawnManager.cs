@@ -5,11 +5,11 @@ using UnityEngine;
 public class SpawnManager : SingletonMonobehaviour<SpawnManager>
 {
     GameManager gameManager;
-    PlayerInstantiate playerInstantiate;
+    internal PlayerInstantiate playerInstantiate;
 
     [Tooltip("The spawn positions of the players as they start the game: the start of each seat's tutorial lane")]
-    [SerializeField] GameObject[] gameSpawnPositions = new GameObject[Constants.MAX_PLAYERS];
-    [SerializeField] GameObject[] goldenPackageSpawnPositions = new GameObject[Constants.MAX_PLAYERS];
+    [SerializeField] internal GameObject[] gameSpawnPositions = new GameObject[Constants.MAX_PLAYERS];
+    [SerializeField] internal GameObject[] goldenPackageSpawnPositions = new GameObject[Constants.MAX_PLAYERS];
 
     ///<summary>
     /// On Enable of Script

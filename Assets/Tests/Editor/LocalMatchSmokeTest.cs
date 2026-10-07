@@ -324,7 +324,7 @@ namespace DoA.Tests
         // Every player's menu preview camera (it renders into player select's picture of them)
         static Camera[] PreviewCameras()
         {
-            return UnityEngine.Object.FindObjectsOfType<PlayerCameraResizer>().Select(r => (Camera)Reflect.GetField(r, "playerCamera")).ToArray();
+            return UnityEngine.Object.FindObjectsOfType<PlayerCameraResizer>().Select(r => r.playerCamera).ToArray();
         }
 
         // Whether an enabled full-screen camera (the cutscene's) is drawing over the players' views

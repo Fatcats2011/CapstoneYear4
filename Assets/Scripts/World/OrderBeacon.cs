@@ -9,7 +9,7 @@ using UnityEngine.VFX;
 /// </summary>
 public class OrderBeacon : MonoBehaviour
 {
-    private Order order; // order the beacon is tracking
+    internal Order order; // order the beacon is tracking
     private bool isPickup = true;
     public bool IsPickup { get { return isPickup; } }
 
@@ -21,7 +21,7 @@ public class OrderBeacon : MonoBehaviour
     [SerializeField] private OrderGhost customer;
 
     [Header("Material Information")]
-    [SerializeField] private VisualEffect beaconFX;
+    [SerializeField] internal VisualEffect beaconFX;
     [Tooltip("The last element in the array is for dropoff beacons.")]
     [SerializeField][ColorUsage(true, true)] private Color[] mainColors;
     [Tooltip("The last element in the array is for dropoff beacons.")]
@@ -34,7 +34,7 @@ public class OrderBeacon : MonoBehaviour
     [Tooltip("Height offset for the flame. Employ guess and check strategies to fine tune this number.")]
     [SerializeField] private float flameOffset = 0.06f;
 
-    private bool canInteract;
+    internal bool canInteract;
 
     [SerializeField] private Transform flameChecker;
 
@@ -212,7 +212,7 @@ public class OrderBeacon : MonoBehaviour
     /// Will execute whenever something enters the beacon's light.
     /// </summary>
     /// <param name="other"></param>
-    private void OnTriggerStay(Collider other)
+    internal void OnTriggerStay(Collider other)
     {
         // Online, only the host decides pickups and deliveries
         if (!GameAuthority.IsAuthority)

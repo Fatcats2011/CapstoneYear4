@@ -47,6 +47,9 @@ public class LobbyPrompt : MonoBehaviour
     ///<summary>
     /// Builds the overlay canvas with the line, hidden
     ///</summary>
+    /// <summary>Above every menu and HUD canvas, below ControllerPrompts' hints (why a session ended must stay readable)</summary>
+    internal const int SORTING_ORDER = 999;
+
     static LobbyPrompt Create()
     {
         GameObject root = new GameObject(nameof(LobbyPrompt), typeof(Canvas), typeof(CanvasScaler));
@@ -55,7 +58,7 @@ public class LobbyPrompt : MonoBehaviour
 
         Canvas canvas = root.GetComponent<Canvas>();
         canvas.renderMode = RenderMode.ScreenSpaceOverlay;
-        canvas.sortingOrder = 1000; // above every menu and HUD canvas
+        canvas.sortingOrder = SORTING_ORDER;
 
         CanvasScaler scaler = root.GetComponent<CanvasScaler>();
         scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;

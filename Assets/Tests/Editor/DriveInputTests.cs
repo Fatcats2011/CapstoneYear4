@@ -40,7 +40,7 @@ namespace DoA.Tests
         [TearDown]
         public void TearDown()
         {
-            Reflect.SetSingleton<PlayerInstantiate>(null);
+            PlayerInstantiate.instance = null;
             objects.DestroyAll();
         }
 
@@ -48,12 +48,12 @@ namespace DoA.Tests
         public void InputManager_AsADriver_ReportsItsSticksAndTriggers()
         {
             InputManager controller = objects.Add<InputManager>();
-            Reflect.SetField(controller, "leftStickValue", -0.5f);
-            Reflect.SetField(controller, "rightTriggerValue", 0.75f);
-            Reflect.SetField(controller, "leftTriggerValue", 0.25f);
-            Reflect.SetField(controller, "rightStickXValue", 0.3f);
-            Reflect.SetField(controller, "rightStickYValue", -0.4f);
-            Reflect.SetField(controller, "rightStickValue", true);
+            controller.leftStickValue = -0.5f;
+            controller.rightTriggerValue = 0.75f;
+            controller.leftTriggerValue = 0.25f;
+            controller.rightStickXValue = 0.3f;
+            controller.rightStickYValue = -0.4f;
+            controller.rightStickValue = true;
 
             IDriveInput driver = controller;
 
@@ -75,16 +75,16 @@ namespace DoA.Tests
             driver.DriftButton += listener.Button;
             driver.BoostButton += listener.Button;
             driver.EmotePad += listener.Pad;
-            Assert.AreEqual(1, Reflect.HandlerCount(controller, "WestFaceEvent", listener), "drift = X");
-            Assert.AreEqual(1, Reflect.HandlerCount(controller, "SouthFaceEvent", listener), "boost = A");
-            Assert.AreEqual(1, Reflect.HandlerCount(controller, "DPadEvent", listener), "emotes = d-pad");
+            Assert.AreEqual(1, Reflect.HandlerCount(controller, nameof(InputManager.WestFaceEvent), listener), "drift = X");
+            Assert.AreEqual(1, Reflect.HandlerCount(controller, nameof(InputManager.SouthFaceEvent), listener), "boost = A");
+            Assert.AreEqual(1, Reflect.HandlerCount(controller, nameof(InputManager.DPadEvent), listener), "emotes = d-pad");
 
             driver.DriftButton -= listener.Button;
             driver.BoostButton -= listener.Button;
             driver.EmotePad -= listener.Pad;
-            Assert.AreEqual(0, Reflect.HandlerCount(controller, "WestFaceEvent", listener)
-                + Reflect.HandlerCount(controller, "SouthFaceEvent", listener)
-                + Reflect.HandlerCount(controller, "DPadEvent", listener), "after unsubscribing");
+            Assert.AreEqual(0, Reflect.HandlerCount(controller, nameof(InputManager.WestFaceEvent), listener)
+                + Reflect.HandlerCount(controller, nameof(InputManager.SouthFaceEvent), listener)
+                + Reflect.HandlerCount(controller, nameof(InputManager.DPadEvent), listener), "after unsubscribing");
         }
 
         // A controller whose scooter is gone, or whose scooter listens to another driver, has nobody on its buttons
@@ -103,7 +103,7 @@ namespace DoA.Tests
         /// </summary>
         BallDriving StartedScooter(InputManager controller, IDriveInput driverSetBeforeStart = null)
         {
-            Reflect.SetSingleton(objects.Add<PlayerInstantiate>()); // Start looks up this player's gamepad for rumble
+            PlayerInstantiate.instance = objects.Add<PlayerInstantiate>(); // Start looks up this player's gamepad for rumble
             BallDriving scooter = objects.Add<BallDriving>();
             scooter.playerIndex = 1;
             GameObject sphere = objects.NewGameObject("Ball Of Fun");
@@ -112,14 +112,14 @@ namespace DoA.Tests
             GameObject sparks = objects.NewGameObject("Particle Basket");
             for (int i = 0; i < 6; i++)
                 new GameObject("Spark " + i).transform.SetParent(sparks.transform);
-            Reflect.SetField(scooter, "sphere", sphere);
-            Reflect.SetField(scooter, "particleBasket", sparks.transform);
-            Reflect.SetField(scooter, "orderHandler", objects.Add<OrderHandler>());
-            Reflect.SetField(scooter, "inp", controller);
+            scooter.sphere = sphere;
+            scooter.particleBasket = sparks.transform;
+            scooter.orderHandler = objects.Add<OrderHandler>();
+            scooter.inp = controller;
             if (driverSetBeforeStart != null)
                 scooter.DriveInput = driverSetBeforeStart;
 
-            Reflect.Invoke(scooter, "Start");
+            scooter.Start();
             return scooter;
         }
 
@@ -131,8 +131,8 @@ namespace DoA.Tests
             BallDriving scooter = StartedScooter(controller);
 
             Assert.AreSame(controller, scooter.DriveInput);
-            Assert.AreEqual(1, Reflect.HandlerCount(controller, "WestFaceEvent", scooter), "drift (X)");
-            Assert.AreEqual(1, Reflect.HandlerCount(controller, "SouthFaceEvent", scooter), "boost (A)");
+            Assert.AreEqual(1, Reflect.HandlerCount(controller, nameof(InputManager.WestFaceEvent), scooter), "drift (X)");
+            Assert.AreEqual(1, Reflect.HandlerCount(controller, nameof(InputManager.SouthFaceEvent), scooter), "boost (A)");
         }
 
         [Test]
@@ -144,10 +144,10 @@ namespace DoA.Tests
 
             scooter.DriveInput = online;
 
-            Assert.AreEqual(0, Reflect.HandlerCount(controller, "WestFaceEvent", scooter)
-                + Reflect.HandlerCount(controller, "SouthFaceEvent", scooter), "old driver");
-            Assert.AreEqual(1, Reflect.HandlerCount(online, "DriftButton", scooter), "new driver's drift");
-            Assert.AreEqual(1, Reflect.HandlerCount(online, "BoostButton", scooter), "new driver's boost");
+            Assert.AreEqual(0, Reflect.HandlerCount(controller, nameof(InputManager.WestFaceEvent), scooter)
+                + Reflect.HandlerCount(controller, nameof(InputManager.SouthFaceEvent), scooter), "old driver");
+            Assert.AreEqual(1, Reflect.HandlerCount(online, nameof(FakeDriveInput.DriftButton), scooter), "new driver's drift");
+            Assert.AreEqual(1, Reflect.HandlerCount(online, nameof(FakeDriveInput.BoostButton), scooter), "new driver's boost");
         }
 
         [Test]
@@ -157,8 +157,8 @@ namespace DoA.Tests
 
             BallDriving scooter = StartedScooter(null, online); // a scooter with no controller of its own (after Task 2.2)
 
-            Assert.AreEqual(1, Reflect.HandlerCount(online, "DriftButton", scooter), "drift");
-            Assert.AreEqual(1, Reflect.HandlerCount(online, "BoostButton", scooter), "boost");
+            Assert.AreEqual(1, Reflect.HandlerCount(online, nameof(FakeDriveInput.DriftButton), scooter), "drift");
+            Assert.AreEqual(1, Reflect.HandlerCount(online, nameof(FakeDriveInput.BoostButton), scooter), "boost");
         }
 
         [Test]
@@ -167,10 +167,10 @@ namespace DoA.Tests
             FakeDriveInput online = new FakeDriveInput();
             BallDriving scooter = StartedScooter(null, online);
 
-            Reflect.Invoke(scooter, "OnDestroy");
+            scooter.OnDestroy();
 
-            Assert.AreEqual(0, Reflect.HandlerCount(online, "DriftButton", scooter)
-                + Reflect.HandlerCount(online, "BoostButton", scooter));
+            Assert.AreEqual(0, Reflect.HandlerCount(online, nameof(FakeDriveInput.DriftButton), scooter)
+                + Reflect.HandlerCount(online, nameof(FakeDriveInput.BoostButton), scooter));
         }
 
         [Test]
@@ -178,17 +178,17 @@ namespace DoA.Tests
         {
             InputManager controller = objects.Add<InputManager>();
             EmoteHandler emotes = objects.Add<EmoteHandler>();
-            Reflect.SetField(emotes, "input", controller);
-            Reflect.Invoke(emotes, "OnEnable");
-            Assert.AreEqual(1, Reflect.HandlerCount(controller, "DPadEvent", emotes), "its controller at first");
+            emotes.input = controller;
+            emotes.OnEnable();
+            Assert.AreEqual(1, Reflect.HandlerCount(controller, nameof(InputManager.DPadEvent), emotes), "its controller at first");
 
             FakeDriveInput online = new FakeDriveInput();
             emotes.DriveInput = online;
-            Assert.AreEqual(0, Reflect.HandlerCount(controller, "DPadEvent", emotes), "old driver");
-            Assert.AreEqual(1, Reflect.HandlerCount(online, "EmotePad", emotes), "new driver");
+            Assert.AreEqual(0, Reflect.HandlerCount(controller, nameof(InputManager.DPadEvent), emotes), "old driver");
+            Assert.AreEqual(1, Reflect.HandlerCount(online, nameof(FakeDriveInput.EmotePad), emotes), "new driver");
 
-            Reflect.Invoke(emotes, "OnDisable");
-            Assert.AreEqual(0, Reflect.HandlerCount(online, "EmotePad", emotes), "after disabling");
+            emotes.OnDisable();
+            Assert.AreEqual(0, Reflect.HandlerCount(online, nameof(FakeDriveInput.EmotePad), emotes), "after disabling");
         }
 
         [Test]
@@ -198,9 +198,9 @@ namespace DoA.Tests
             FakeDriveInput online = new FakeDriveInput();
 
             emotes.DriveInput = online;
-            Reflect.Invoke(emotes, "OnEnable");
+            emotes.OnEnable();
 
-            Assert.AreEqual(1, Reflect.HandlerCount(online, "EmotePad", emotes));
+            Assert.AreEqual(1, Reflect.HandlerCount(online, nameof(FakeDriveInput.EmotePad), emotes));
         }
 
         /// <summary>
@@ -213,11 +213,11 @@ namespace DoA.Tests
             CinemachineVirtualCamera icon = objects.Add<CinemachineVirtualCamera>();
             mainOrbit = main.AddCinemachineComponent<CinemachineOrbitalTransposer>();
             iconOrbit = icon.AddCinemachineComponent<CinemachineOrbitalTransposer>();
-            Reflect.SetField(rig, "virtualCameraMain", main);
-            Reflect.SetField(rig, "virtualCameraIcon", icon);
-            Reflect.SetField(rig, "mainOrb", mainOrbit);
-            Reflect.SetField(rig, "iconOrb", iconOrbit);
-            Reflect.SetField(rig, "CameraFocus", objects.NewGameObject("Camera Focus"));
+            rig.virtualCameraMain = main;
+            rig.virtualCameraIcon = icon;
+            rig.mainOrb = mainOrbit;
+            rig.iconOrb = iconOrbit;
+            rig.CameraFocus = objects.NewGameObject("Camera Focus");
             rig.DriveInput = driver;
             return rig;
         }
@@ -227,7 +227,7 @@ namespace DoA.Tests
         {
             OrbitalCamera rig = CameraRig(new FakeDriveInput { CameraX = 1f }, out CinemachineOrbitalTransposer mainOrbit, out CinemachineOrbitalTransposer iconOrbit);
 
-            Reflect.Invoke(rig, "Update");
+            rig.Update();
 
             Assert.Greater(mainOrbit.m_XAxis.Value, 0f, "main camera");
             Assert.AreEqual(mainOrbit.m_XAxis.Value, iconOrbit.m_XAxis.Value, "icon camera follows");
@@ -238,7 +238,7 @@ namespace DoA.Tests
         {
             OrbitalCamera rig = CameraRig(new FakeDriveInput { LookBehind = true }, out CinemachineOrbitalTransposer mainOrbit, out CinemachineOrbitalTransposer iconOrbit);
 
-            Reflect.Invoke(rig, "Update");
+            rig.Update();
 
             Assert.AreEqual(-180f, mainOrbit.m_XAxis.Value, "main camera");
             Assert.AreEqual(-180f, iconOrbit.m_XAxis.Value, "icon camera");

@@ -7,7 +7,7 @@ public class PlayerSelectCanvas : SingletonMonobehaviour<PlayerSelectCanvas>
 {
     [Header("Text Information")]
     [SerializeField] TMP_Text countdownText;
-    [SerializeField] GameObject[] pressButtonTexts;
+    [SerializeField] internal GameObject[] pressButtonTexts;
 
     [Header("Other")]
     [SerializeField] PlayerInstantiate playerInstantiate;

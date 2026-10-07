@@ -15,8 +15,8 @@ namespace DoA.Tests
         public void TearDown()
         {
             GameAuthority.Role = NetworkRole.Offline;
-            Reflect.SetSingleton<TutorialManager>(null);
-            Reflect.SetSingleton<PlayerInstantiate>(null);
+            TutorialManager.instance = null;
+            PlayerInstantiate.instance = null;
             StealSync.Reset();
             objects.DestroyAll();
         }
@@ -27,10 +27,10 @@ namespace DoA.Tests
         OrderManager OrdersWithOneWave()
         {
             OrderManager orders = objects.Add<OrderManager>();
-            Reflect.SetField(orders, "maxEasy", new[] { 1 });
-            Reflect.SetField(orders, "maxMedium", new[] { 1 });
-            Reflect.SetField(orders, "maxHard", new[] { 1 });
-            Reflect.SetField(orders, "normalOrders", new List<Order>());
+            orders.maxEasy = new[] { 1 };
+            orders.maxMedium = new[] { 1 };
+            orders.maxHard = new[] { 1 };
+            orders.normalOrders = new List<Order>();
             return orders;
         }
 
@@ -43,7 +43,7 @@ namespace DoA.Tests
             GameObject control = new GameObject("Control");
             control.transform.SetParent(player.transform);
             OrderHandler handler = control.AddComponent<OrderHandler>();
-            Reflect.SetField(handler, "ball", control.AddComponent<BallDriving>());
+            handler.ball = control.AddComponent<BallDriving>();
             GameObject sphere = new GameObject("Ball Of Fun");
             sphere.transform.SetParent(player.transform);
             ball = sphere.AddComponent<SphereCollider>();
@@ -71,7 +71,7 @@ namespace DoA.Tests
             GameAuthority.Role = role;
             OrderManager orders = OrdersWithOneWave();
 
-            Reflect.Invoke(orders, "InitGame");
+            orders.InitGame();
 
             Assert.AreEqual(decides, orders.GameStarted);
         }
@@ -83,12 +83,12 @@ namespace DoA.Tests
         {
             GameAuthority.Role = role;
             TutorialManager tutorial = objects.Add<TutorialManager>();
-            Reflect.SetSingleton(tutorial);
-            Reflect.SetSingleton(objects.Add<PlayerInstantiate>()); // nobody has joined, so no tutorial orders are handed out
+            TutorialManager.instance = tutorial;
+            PlayerInstantiate.instance = objects.Add<PlayerInstantiate>(); // nobody has joined, so no tutorial orders are handed out
             tutorial.ShouldTutorialize = false;
             OrderManager orders = OrdersWithOneWave();
 
-            Reflect.Invoke(orders, "InitTutorial");
+            orders.InitTutorial();
 
             Assert.AreEqual(decides, tutorial.ShouldTutorialize);
         }
@@ -101,13 +101,13 @@ namespace DoA.Tests
             GameAuthority.Role = role;
             OrderManager orders = OrdersWithOneWave();
             Order golden = objects.Add<Order>();
-            Reflect.SetField(golden, "playerHolding", objects.Add<OrderHandler>());
-            Reflect.SetField(orders, "finalOrder", golden);
-            Reflect.SetField(orders, "finalOrderActive", true);
-            Reflect.SetField(orders, "goldTimer", 1f); // a second has passed since the last raise
+            golden.playerHolding = objects.Add<OrderHandler>();
+            orders.finalOrder = golden;
+            orders.finalOrderActive = true;
+            orders.goldTimer = 1f; // a second has passed since the last raise
             orders.FinalOrderValue = 50;
 
-            Reflect.Invoke(orders, "Update");
+            orders.Update();
 
             Assert.AreEqual(decides ? 51 : 50, orders.FinalOrderValue);
         }
@@ -117,13 +117,13 @@ namespace DoA.Tests
         {
             GameAuthority.Role = NetworkRole.Client;
             OrderHandler player = NewPlayer("Player 1", out Collider ball);
-            Reflect.SetField(player, "canTakeOrder", true);
+            player.canTakeOrder = true;
             OrderBeacon beacon = objects.Add<OrderBeacon>();
-            Reflect.SetField(beacon, "order", objects.Add<Order>());
-            Reflect.SetField(beacon, "canInteract", true);
+            beacon.order = objects.Add<Order>();
+            beacon.canInteract = true;
 
             // Offline this is a pickup, which goes on to the order's scene objects that a test doesn't build
-            Assert.DoesNotThrow(() => Reflect.Invoke(beacon, "OnTriggerStay", ball));
+            Assert.DoesNotThrow(() => beacon.OnTriggerStay(ball));
             Assert.IsFalse(player.HasOrder);
         }
 
@@ -137,7 +137,7 @@ namespace DoA.Tests
             OrderHandler me = NewPlayer("Player 1", out _);
             OrderHandler other = NewPlayer("Player 2", out Collider otherBall);
 
-            Reflect.Invoke(me, "OnTriggerEnter", otherBall);
+            me.OnTriggerEnter(otherBall);
 
             Assert.AreSame(me, other.PlayerTouching);
         }
@@ -150,7 +150,7 @@ namespace DoA.Tests
             GameAuthority.Role = role;
             OrderHandler me = NewPlayer("Player 1", out _);
             OrderHandler other = NewPlayer("Player 2", out _);
-            Reflect.SetField(other.GetComponent<BallDriving>(), "boosting", true);
+            other.GetComponent<BallDriving>().boosting = true;
             me.PlayerTouching = other;
             int clashes = 0;
             me.Clash += _ => clashes++;

@@ -28,7 +28,6 @@ public static class PresenceRules
                 return "#GettingReady";
             case GameState.Tutorial:
                 return "#Tutorial";
-            case GameState.StartingCutscene:
             case GameState.Begin:
             case GameState.MainLoop:
                 return solo ? "#DeliveringSolo" : "#Delivering";
@@ -37,6 +36,8 @@ public static class PresenceRules
                 return solo ? "#GoldenSolo" : "#Golden";
             case GameState.Results:
                 return "#Results";
+            case GameState.StartingCutscene:
+                return null; // every match opens with the tutorial: "Getting ready" stays until it begins
             default:
                 return null;
         }

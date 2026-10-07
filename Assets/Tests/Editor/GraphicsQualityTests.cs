@@ -214,6 +214,54 @@ namespace DoA.Tests
         }
 
         [Test]
+        public void ApplyFor_TheFirstTime_KeepsThePlayerCount()
+        {
+            FieldInfo mainShadows = typeof(UniversalRenderPipelineAsset).GetField("m_MainLightShadowmapResolution", BindingFlags.Instance | BindingFlags.NonPublic);
+            mainShadows.SetValue(asset, Enum.ToObject(mainShadows.FieldType, 4096));
+
+            GraphicsQuality.ApplyForAsset(3, asset); // nothing applied to this asset before
+
+            Assert.AreEqual(3, GraphicsQuality.CurrentPlayers);
+            Assert.AreEqual(2048, asset.mainLightShadowmapResolution, "3 players on High: the smaller shadow map");
+        }
+
+        [Test]
+        public void Apply_AfterQuitting_ChangesNothing()
+        {
+            try
+            {
+                GraphicsQuality.Apply(GraphicsQuality.MEDIUM, asset);
+                GraphicsQuality.OnQuitting(); // Play Mode ends: the asset is put back
+
+                GraphicsQuality.ApplyForAsset(4, asset); // a player leaving while the game shuts down
+
+                AssertPreset(8, 500f, 4, GraphicsQuality.Read(asset));
+            }
+            finally
+            {
+                GraphicsQuality.ResetForLaunch();
+            }
+        }
+
+        [Test]
+        public void RendererListMissing_WarnsOnce()
+        {
+            try
+            {
+                LogAssert.Expect(LogType.Warning, new System.Text.RegularExpressions.Regex("no renderer list"));
+
+                GraphicsQuality.RendererListMissing();
+                GraphicsQuality.RendererListMissing();
+
+                LogAssert.NoUnexpectedReceived();
+            }
+            finally
+            {
+                GraphicsQuality.ResetForLaunch();
+            }
+        }
+
+        [Test]
         public void Apply_UnknownLevel_UsesTheNearestOne()
         {
             GraphicsQuality.Apply(7, asset);

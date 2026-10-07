@@ -122,6 +122,9 @@ public class OnlineGame : MonoBehaviour
         steals = gameObject.AddComponent<OnlineSteals>();
         steals.Begin(session);
 
+        // Bumps between machines' scooters: the host passes each one on, and the bumped player's own machine pushes them
+        gameObject.AddComponent<OnlineBumps>().Begin(session);
+
         // Where players who fall in the water rise: the host picks for everyone
         respawns = gameObject.AddComponent<OnlineRespawns>();
         respawns.Begin(session);
@@ -165,6 +168,7 @@ public class OnlineGame : MonoBehaviour
                 session.Match.OrderReceived -= FollowHostOrder;
                 session.Match.HitReceived -= FollowHostHit;
                 session.Match.RespawnReceived -= FollowHostRespawn;
+                session.Match.ReturnRequested -= DropAbandonedMatch;
             }
         }
         if (sceneFlow != null)
@@ -282,6 +286,7 @@ public class OnlineGame : MonoBehaviour
         match.OrderReceived += FollowHostOrder;
         match.HitReceived += FollowHostHit;
         match.RespawnReceived += FollowHostRespawn;
+        match.ReturnRequested += DropAbandonedMatch;
         if (match.State != GameState.Default)
             FollowHost(match.State);
     }
@@ -343,6 +348,14 @@ public class OnlineGame : MonoBehaviour
     void FollowHostRespawn(int seat, int point)
     {
         hostMessages.Add(() => respawns.Show(seat, point));
+    }
+
+    // Client: the host is taking everyone back to the menu. What still waits for this machine's scene (a slow machine's
+    // match states, order changes…) belongs to the match being left: it would show the match starting on the way out.
+    // What the host sends after this queues as usual
+    void DropAbandonedMatch()
+    {
+        hostMessages.Clear();
     }
 
     bool IsChangingScene()

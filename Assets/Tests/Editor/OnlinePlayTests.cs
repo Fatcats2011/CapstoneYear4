@@ -1,4 +1,5 @@
 using NUnit.Framework;
+using UnityEngine;
 
 namespace DoA.Tests
 {
@@ -42,6 +43,29 @@ namespace DoA.Tests
         public void Hint_OutsidePlayerSelect_OffersNothing(GameState state)
         {
             Assert.AreEqual("", OnlinePlay.HintFor(state, true, true, true, 1));
+        }
+
+        [Test]
+        public void UseDirect_Twice_TheFirstLobbyHearsNothingMore()
+        {
+            GameObject holder = new GameObject("Online Play");
+            try
+            {
+                OnlinePlay play = holder.AddComponent<OnlinePlay>();
+                FakeLobbyService lobbies = new FakeLobbyService();
+                play.UseDirect(lobbies, "127.0.0.1", 7777);
+                OnlineLobby first = play.Lobby;
+
+                play.UseDirect(lobbies, "127.0.0.1", 7777);
+
+                Assert.AreNotSame(first, play.Lobby);
+                Assert.AreEqual(0, Reflect.HandlerCount(lobbies, nameof(FakeLobbyService.Created), first), "Created");
+                Assert.AreEqual(0, Reflect.HandlerCount(lobbies, nameof(FakeLobbyService.Entered), first), "Entered");
+            }
+            finally
+            {
+                Object.DestroyImmediate(holder);
+            }
         }
     }
 }

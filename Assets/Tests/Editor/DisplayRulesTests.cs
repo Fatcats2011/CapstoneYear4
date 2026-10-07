@@ -71,5 +71,14 @@ namespace DoA.Tests
             Assert.AreEqual(-1, DisplayRules.TargetFrameRate(0));
             Assert.AreEqual(144, DisplayRules.TargetFrameRate(144));
         }
+
+        [Test]
+        public void NeedsResize_OnlyWhenTheModeOrSizeDiffers()
+        {
+            // Returning to the menu applies the settings again: re-setting exclusive fullscreen as it is would flicker
+            Assert.IsFalse(DisplayRules.NeedsResize(FullScreenMode.ExclusiveFullScreen, DESKTOP_1080, FullScreenMode.ExclusiveFullScreen, DESKTOP_1080));
+            Assert.IsTrue(DisplayRules.NeedsResize(FullScreenMode.Windowed, DESKTOP_1080, FullScreenMode.ExclusiveFullScreen, DESKTOP_1080), "another mode");
+            Assert.IsTrue(DisplayRules.NeedsResize(FullScreenMode.Windowed, DESKTOP_1080, FullScreenMode.Windowed, DisplayRules.WINDOWED_DEFAULT), "another size");
+        }
     }
 }

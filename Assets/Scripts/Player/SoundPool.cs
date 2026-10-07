@@ -293,9 +293,24 @@ public class SoundPool : MonoBehaviour
         if (key == null)
             return;
 
+        // Phasing takes over the boost's sound (every boost still sounding here), as on its own machine
+        if (kind == CueKind.Phase)
+        {
+            AudioClip boost = SoundManager.Instance.GetSFX(RemoteSound.KeyFor(CueKind.Boost)).clip;
+            foreach (AudioSource playing in sourcePool)
+            {
+                if (playing != null && playing.isPlaying && playing.clip == boost)
+                    ResetSource(playing);
+            }
+        }
+
         AudioSource source = PlayAtDistance(key);
         if (kind == CueKind.Phase)
             remotePhaseSource = source;
+
+        // A death plays on the players' group, as its own machine plays it (PlayDeathSound)
+        if (kind == CueKind.Death && source != null)
+            SoundManager.Instance.SwitchSource(ref source, "Player");
     }
 
     // Another machine's scooter: a one-shot, as loud as its distance from this machine's player allows. Out of earshot it

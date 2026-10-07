@@ -10,7 +10,8 @@ namespace Netcode.Transports
     /// <summary>
     /// Decides each incoming connection: a peer the game accepts (a member of the host's lobby) is accepted; one it
     /// doesn't yet waits up to GRACE seconds, since the host's copy of the lobby can lag the friend's join, then is
-    /// refused; a Steam ID that's already connected can't open a second connection (and take a second seat)
+    /// refused; a Steam ID that's already connected can't open a second connection (and take a second seat); a Steam ID
+    /// the host kicked can't connect again this session (Steam lobbies have no kick, so it's still a member)
     /// </summary>
     public class ConnectionGate
     {
@@ -18,10 +19,24 @@ namespace Netcode.Transports
         public const float GRACE = 3f;
 
         readonly Dictionary<ulong, float> waitingSince = new Dictionary<ulong, float>();
+        readonly HashSet<ulong> banned = new HashSet<ulong>();
+
+        /// <summary>Refuses a Steam ID from now on (the host kicked it), until ClearBans</summary>
+        public void Ban(ulong steamId)
+        {
+            banned.Add(steamId);
+            waitingSince.Remove(steamId);
+        }
+
+        /// <summary>Forgets every ban: a new session starts clean</summary>
+        public void ClearBans()
+        {
+            banned.Clear();
+        }
 
         public PeerDecision Decide(ulong steamId, float now, Func<ulong, bool> accepts, bool alreadyConnected)
         {
-            if (alreadyConnected)
+            if (alreadyConnected || banned.Contains(steamId))
             {
                 waitingSince.Remove(steamId);
                 return PeerDecision.Refuse;

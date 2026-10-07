@@ -23,7 +23,7 @@ namespace DoA.Tests
         Order OrderWithKey(int key)
         {
             Order order = objects.Add<Order>();
-            Reflect.SetField(order, "key", key);
+            order.key = key;
             return order;
         }
 

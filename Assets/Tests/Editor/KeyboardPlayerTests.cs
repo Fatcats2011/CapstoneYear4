@@ -125,6 +125,71 @@ namespace DoA.Tests
             Assert.IsEmpty(log.Problems, "Errors:\n\n" + string.Join("\n\n", log.Problems));
         }
 
+        // Counts the players made (each gets an input user), even one the game destroys in the same frame
+        class JoinCounter : System.IDisposable
+        {
+            public int Joined;
+
+            public JoinCounter()
+            {
+                UnityEngine.InputSystem.Users.InputUser.onChange += OnChange;
+            }
+
+            void OnChange(UnityEngine.InputSystem.Users.InputUser user, UnityEngine.InputSystem.Users.InputUserChange change, InputDevice device)
+            {
+                if (change == UnityEngine.InputSystem.Users.InputUserChange.Added)
+                    Joined++;
+            }
+
+            public void Dispose()
+            {
+                UnityEngine.InputSystem.Users.InputUser.onChange -= OnChange;
+            }
+        }
+
+        [UnityTest]
+        public IEnumerator PressingOtherKeys_SpawnsNothing()
+        {
+            EditorSceneManager.playModeStartScene = AssetDatabase.LoadAssetAtPath<SceneAsset>(MENU_SCENE);
+            yield return new EnterPlayMode();
+            LogAssert.ignoreFailingMessages = true;
+            yield return ToTheTitleScreen();
+            JoinCounter counter = new JoinCounter();
+
+            // Unity used to make a player for any key, which the game then destroyed: now no key but Space or Enter makes one
+            for (Key key = Key.A; key <= Key.Z; key++)
+            {
+                Press(key);
+                yield return null;
+                yield return null;
+            }
+            yield return WaitSeconds(0.5f);
+
+            counter.Dispose();
+            Assert.AreEqual(0, counter.Joined, "no player object was made, even for a frame");
+            Assert.IsFalse(AnyKeyboardPlayer());
+        }
+
+        [UnityTest]
+        public IEnumerator AfterTheMenuSceneLoadsAgain_TheKeyboardStillJoins()
+        {
+            EditorSceneManager.playModeStartScene = AssetDatabase.LoadAssetAtPath<SceneAsset>(MENU_SCENE);
+            yield return new EnterPlayMode();
+            LogAssert.ignoreFailingMessages = true;
+            yield return ToTheTitleScreen();
+
+            // Back from a match: the menu scene loads again, and its copy of the kept PlayerInstantiate is destroyed
+            UnityEngine.SceneManagement.SceneManager.LoadScene(System.IO.Path.GetFileNameWithoutExtension(MENU_SCENE));
+            yield return null;
+            yield return null;
+            float deadline = Time.realtimeSinceStartup + 60;
+            while (!AtTitleScreen() && Time.realtimeSinceStartup < deadline)
+                yield return null;
+
+            yield return JoinWithSpace();
+            Assert.IsTrue(KeyboardIn(0), "joining still works after the menu came back");
+        }
+
         [UnityTest]
         public IEnumerator AKeyboard_DoesntJoinOnOtherKeys()
         {

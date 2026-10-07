@@ -68,5 +68,18 @@ namespace DoA.Tests
         {
             Assert.AreEqual(PeerDecision.Refuse, new ConnectionGate().Decide(7, 0f, Members, true));
         }
+
+        [Test]
+        public void Ban_RefusesThatSteamId_UntilCleared()
+        {
+            ConnectionGate gate = new ConnectionGate();
+            gate.Ban(7); // kicked for flooding: still in the Steam lobby, which has no kick
+
+            Assert.AreEqual(PeerDecision.Refuse, gate.Decide(7, 0f, Members, false), "the kicked member can't reconnect");
+            Assert.AreEqual(PeerDecision.Accept, gate.Decide(8, 0f, id => true, false), "others still can");
+
+            gate.ClearBans(); // a new session
+            Assert.AreEqual(PeerDecision.Accept, gate.Decide(7, 0f, Members, false));
+        }
     }
 }

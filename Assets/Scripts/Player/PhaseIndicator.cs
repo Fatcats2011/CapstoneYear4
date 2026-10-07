@@ -28,7 +28,7 @@ public class PhaseIndicator : MonoBehaviour
     [Header("Flashyflash")]
     [SerializeField] Transform leftHorn;
     [SerializeField] Transform rightHorn;
-    [SerializeField] GameObject flashParticles;
+    [SerializeField] internal GameObject flashParticles;
 
     private SoundPool soundPool; // for playing SFX
     private bool dirtyBoostReady = true;

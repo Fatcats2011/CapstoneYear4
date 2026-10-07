@@ -31,9 +31,16 @@ namespace DoA.Tests
         }
 
         [Test]
+        public void For_TheOpeningCutscene_KeepsTheLastPresence()
+        {
+            // Every match opens with the tutorial: "Getting ready" stays until it sets "Learning the ropes"
+            Assert.IsNull(PresenceRules.For(GameState.StartingCutscene, 3));
+            Assert.IsNull(PresenceRules.For(GameState.StartingCutscene, 1));
+        }
+
+        [Test]
         public void For_TheMatch_IsDelivering_OrSoloForOne()
         {
-            Assert.AreEqual("#Delivering", PresenceRules.For(GameState.StartingCutscene, 3));
             Assert.AreEqual("#Delivering", PresenceRules.For(GameState.Begin, 3));
             Assert.AreEqual("#Delivering", PresenceRules.For(GameState.MainLoop, 3));
             Assert.AreEqual("#DeliveringSolo", PresenceRules.For(GameState.MainLoop, 1));
@@ -69,7 +76,8 @@ namespace DoA.Tests
             foreach (GameState state in Enum.GetValues(typeof(GameState)))
             {
                 string token = PresenceRules.For(state, 2);
-                if (state == GameState.Loading || state == GameState.Paused || state == GameState.Default)
+                if (state == GameState.Loading || state == GameState.Paused || state == GameState.Default
+                    || state == GameState.StartingCutscene)
                     Assert.IsNull(token, state.ToString());
                 else
                     StringAssert.StartsWith("#", token, state + " needs a token");

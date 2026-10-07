@@ -224,11 +224,28 @@ namespace DoA.Tests
             return false;
         }
 
+        // The source of a sound pool playing a sound now, or null
+        static AudioSource SourcePlaying(SoundPool pool, string key)
+        {
+            AudioClip clip = SoundManager.Instance.GetSFX(key).clip;
+            foreach (AudioSource source in pool.GetComponentsInChildren<AudioSource>(true))
+            {
+                if (source.isPlaying && source.clip == clip)
+                    return source;
+            }
+            return null;
+        }
+
+        static bool Playing(SoundPool pool, string key)
+        {
+            return SourcePlaying(pool, key) != null;
+        }
+
         // How many horn flashes the scooter in a seat shows here
         static int Flashes(int seat)
         {
             PhaseIndicator horns = Slot(seat).Player.GetComponentInChildren<PhaseIndicator>(true);
-            string flash = ((GameObject)Reflect.GetField(horns, "flashParticles")).name + "(Clone)";
+            string flash = horns.flashParticles.name + "(Clone)";
             int count = 0;
             foreach (Transform child in horns.transform)
             {
@@ -386,6 +403,29 @@ namespace DoA.Tests
             remote.PlayOrderTheft(); // a steal's whoosh, as the host's order changes replay it here
             Assert.IsTrue(Played(remote, "whoosh"), "the thief's whoosh");
 
+            // Phasing takes over their boost's sound, as on their own machine
+            other.Match.ReportCue(1, ScooterCue.Of(CueKind.Boost));
+            deadline = Time.realtimeSinceStartup + WAIT;
+            while (!Playing(remote, "boost_used") && Time.realtimeSinceStartup < deadline)
+                yield return null;
+            Assert.IsTrue(Playing(remote, "boost_used"), "their boost plays");
+            other.Match.ReportCue(1, ScooterCue.Of(CueKind.Phase));
+            deadline = Time.realtimeSinceStartup + WAIT;
+            while (!Playing(remote, "phasing") && Time.realtimeSinceStartup < deadline)
+                yield return null;
+            Assert.IsTrue(Playing(remote, "phasing"), "their phasing plays");
+            Assert.IsFalse(Playing(remote, "boost_used"), "and their boost's sound stops");
+            other.Match.ReportCue(1, ScooterCue.Of(CueKind.PhaseEnd));
+
+            // Their death plays on the players' mixer group, as their own machine plays it
+            other.Match.ReportCue(1, ScooterCue.Of(CueKind.Death));
+            deadline = Time.realtimeSinceStartup + WAIT;
+            while (SourcePlaying(remote, "death") == null && Time.realtimeSinceStartup < deadline)
+                yield return null;
+            AudioSource death = SourcePlaying(remote, "death");
+            Assert.IsNotNull(death, "their death plays here");
+            Assert.AreEqual("Player", death.outputAudioMixerGroup.name, "on the Player group");
+
             // 200 m away it's silent
             Vector3 far = spot + Vector3.right * 200f;
             ShareAt(theirs, far);
@@ -413,14 +453,14 @@ namespace DoA.Tests
 
             // The host's clock rings out: a new wave's bells, then time up
             ClockRecorder rang = new ClockRecorder(other.Match);
-            Reflect.SetField(OrderManager.Instance, "wave", 1);
+            OrderManager.Instance.wave = 1;
             OrderManager.Instance.InitWave(); // the second wave
             deadline = Time.realtimeSinceStartup + WAIT;
             while (rang.Cues.Count < 1 && Time.realtimeSinceStartup < deadline)
                 yield return null;
             Assert.AreEqual(1, rang.Cues.Count, "the bells ring out");
             Assert.AreEqual(ClockCue.WaveBells, rang.Cues[0]);
-            Reflect.SetField(OrderManager.Instance, "wave", 99);
+            OrderManager.Instance.wave = 99;
             OrderManager.Instance.InitWave(); // past the last wave: time up
             OrderManager.Instance.StopAllCoroutines(); // the golden round doesn't load: the test ends here
             deadline = Time.realtimeSinceStartup + WAIT;
@@ -532,7 +572,7 @@ namespace DoA.Tests
             int theirs = RespawnManager.Instance.IndexOf(RespawnManager.Instance.GetRespawnPoint(spot));
             Assert.AreNotEqual(far, theirs, "not this machine's player's point");
             RespawnPoint point = RespawnManager.Instance.PointAt(theirs);
-            Pose grave = Respawn.GraveAt(point, (int)Reflect.GetField(RespawnOf(0), "tombstoneOffset"));
+            Pose grave = Respawn.GraveAt(point, RespawnOf(0).tombstoneOffset);
             host.Match.SendCue(0, ScooterCue.Rise(theirs));
             deadline = Time.realtimeSinceStartup + WAIT;
             while (!GraveStandsAt(grave.position) && Time.realtimeSinceStartup < deadline)

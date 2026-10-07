@@ -122,5 +122,11 @@ namespace DoA.Tests
         {
             Assert.AreEqual(LobbyRules.ALREADY_ONLINE, LobbyRules.Busy(GameState.MainLoop, 1, true));
         }
+
+        [Test]
+        public void VersionOf_NoTag_IsEmpty()
+        {
+            Assert.AreEqual("", LobbyRules.VersionOf(null), "Steam gives \"\" for a missing key, but nothing should throw here");
+        }
     }
 }

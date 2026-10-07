@@ -56,7 +56,7 @@ public class Rumbler : MonoBehaviour
         StartPulseTime(duration, pad, breakSuspension);
     }
 
-    private IEnumerator PulseTime(float duration, Gamepad pad, bool breakSuspension)
+    internal IEnumerator PulseTime(float duration, Gamepad pad, bool breakSuspension)
     {
         yield return new WaitForSeconds(duration);
         pad?.SetMotorSpeeds(breakSuspension ? 0f : suspendedLow, breakSuspension ? 0f : suspendedHigh);

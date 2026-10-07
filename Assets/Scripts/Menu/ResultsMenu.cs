@@ -5,13 +5,13 @@ using TMPro;
 
 public class ResultsMenu : SingletonMonobehaviour<ResultsMenu>
 {
-    [SerializeField] private TMP_Text[] displayText;
+    [SerializeField] internal TMP_Text[] displayText;
     [SerializeField] Canvas resultsCanvas;
 
     [SerializeField] private GameObject quitInfo;
 
     [SerializeField] private Camera cam;
-    bool canQuit = false;
+    internal bool canQuit = false;
 
     [SerializeField] private GameObject wiper;
     [SerializeField] private GameObject canvasElements;

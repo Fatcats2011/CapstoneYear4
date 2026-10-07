@@ -100,13 +100,32 @@ namespace Netcode.Transports
                 return;
             }
 
+            // DoA: a kicked peer (BanOnNextDisconnect) can't connect again this session; the client id is its Steam ID
+            if (BanOnNextDisconnect)
+            {
+                gate.Ban(clientId);
+                BanOnNextDisconnect = false;
+            }
+
+            // DoA: linger, so the reason Netcode queued just before (a kick's) still reaches the peer
 #if UNITY_SERVER
-            SteamGameServerNetworkingSockets.CloseConnection(connectionMapping[clientId].connection, 0, "Disconnected", false);
+            SteamGameServerNetworkingSockets.CloseConnection(connectionMapping[clientId].connection, 0, "Disconnected", true);
 #else
-            SteamNetworkingSockets.CloseConnection(connectionMapping[clientId].connection, 0, "Disconnected", false);
+            SteamNetworkingSockets.CloseConnection(connectionMapping[clientId].connection, 0, "Disconnected", true);
 #endif
 
             connectionMapping.Remove(clientId);
+        }
+
+        /// <summary>
+        /// DoA (CHANGES-DOA.md): the next DisconnectRemoteClient bans that peer for the session (the host kicking it)
+        /// </summary>
+        public bool BanOnNextDisconnect { get; set; }
+
+        /// <summary>DoA: forgets every ban (a new hosting session)</summary>
+        public void ClearBans()
+        {
+            gate.ClearBans();
         }
 
         public override ulong GetCurrentRtt(ulong clientId)

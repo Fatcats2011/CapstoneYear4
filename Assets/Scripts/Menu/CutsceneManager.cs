@@ -11,7 +11,7 @@ public enum CutsceneType
 }
 public class CutsceneManager : SingletonMonobehaviour<CutsceneManager>
 {
-    [SerializeField] Camera cutsceneCamera;
+    [SerializeField] internal Camera cutsceneCamera;
     [SerializeField] Canvas cutsceneCanvas;
     [SerializeField] PlayableDirector playableDirector;
     [SerializeField] Animator cutsceneCountdownAnimation;

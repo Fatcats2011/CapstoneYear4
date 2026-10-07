@@ -241,7 +241,7 @@ namespace DoA.Tests
             while (GameManager.Instance.MainState != GameState.PlayerSelect && Time.realtimeSinceStartup < deadline)
                 yield return null;
             Assert.AreEqual(GameState.PlayerSelect, GameManager.Instance.MainState, "followed the host into player select");
-            Assert.IsTrue(((Canvas)Reflect.GetField(MainMenu.Instance, "PlayerSelectCanvas")).enabled, "player select's menu is open");
+            Assert.IsTrue(MainMenu.Instance.PlayerSelectCanvas.enabled, "player select's menu is open");
 
             // Ready up here (menus ignore buttons for a moment after they open, so keep pressing): the host hears it
             OnlinePlayer onHost = PlayerInSeat(host, 1);
@@ -364,7 +364,7 @@ namespace DoA.Tests
 
         static bool CountingDown()
         {
-            return Reflect.GetField(PlayerInstantiate.Instance, "readyUpCountdown") != null;
+            return PlayerInstantiate.Instance.readyUpCountdown != null;
         }
 
         // The host (another machine) is in player select and this machine has joined and readied up. With hostReady the host
@@ -471,7 +471,7 @@ namespace DoA.Tests
             Assert.AreEqual(GameState.PlayerSelect, GameManager.Instance.MainState, "still in player select, no offline match");
             Assert.IsTrue(Slot(1) != null && Slot(1).IsLocal, "this machine's player stays");
             Assert.IsFalse(players.IsReady(1), "and isn't ready any more");
-            Assert.IsFalse(((GameObject)Reflect.GetField(Slot(1).Input.GetComponent<PlayerUIHandler>().menuInteractions, "readyUpText")).activeSelf,
+            Assert.IsFalse(Slot(1).Input.GetComponent<PlayerUIHandler>().menuInteractions.readyUpText.activeSelf,
                 "the ready text is off too");
 
             // Ready up again: the countdown starts as usual

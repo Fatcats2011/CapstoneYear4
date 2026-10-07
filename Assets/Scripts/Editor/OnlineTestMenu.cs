@@ -66,11 +66,18 @@ public static class OnlineTestMenu
 
     [MenuItem(MENU + "Host", true)]
     [MenuItem(MENU + "Join This Computer", true)]
-    static bool CanStart()
+    internal static bool CanStart()
     {
         // The game joins a session through its managers, which load with the title screen (not on the splash screen)
-        return Application.isPlaying && GameManager.Instance != null && PlayerInstantiate.Instance != null
-            && (session == null || !session.IsRunning);
+        return CanStart(Application.isPlaying, GameManager.Instance != null && PlayerInstantiate.Instance != null,
+            session != null && session.IsRunning, GameAuthority.IsOnline);
+    }
+
+    // Host and Join need the game's managers, and no session running: neither this menu's, nor one the game plays
+    // already (OnlinePlay's Steam session), which a second one beside it would confuse
+    internal static bool CanStart(bool playing, bool managersUp, bool menuSessionRunning, bool online)
+    {
+        return playing && managersUp && !menuSessionRunning && !online;
     }
 
     [MenuItem(MENU + "Leave", true)]

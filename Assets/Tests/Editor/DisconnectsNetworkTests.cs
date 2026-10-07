@@ -181,7 +181,7 @@ namespace DoA.Tests
         // Whether this machine shows a cutscene
         static bool CutsceneOn()
         {
-            return CutsceneManager.Instance != null && ((Camera)Reflect.GetField(CutsceneManager.Instance, "cutsceneCamera")).enabled;
+            return CutsceneManager.Instance != null && CutsceneManager.Instance.cutsceneCamera.enabled;
         }
 
         static MenuInteractions MenuOf(int slot)
@@ -487,6 +487,67 @@ namespace DoA.Tests
             Assert.AreEqual(OnlineSession.HOST_LEFT, ControllerPrompts.Instance.HintText);
 
             yield return null;
+            log.Dispose();
+            Assert.IsEmpty(log.Problems, "Errors:\n\n" + string.Join("\n\n", log.Problems));
+        }
+
+        [UnityTest]
+        public IEnumerator Joining_TheHostReturnsWhileThisMachinesSceneComesUp_NoMatchStateShowsHere()
+        {
+            EditorSceneManager.playModeStartScene = AssetDatabase.LoadAssetAtPath<SceneAsset>(MENU_SCENE);
+            yield return new EnterPlayMode();
+            LogAssert.ignoreFailingMessages = true;
+            LogCollector log = new LogCollector();
+            yield return OnePlayerAtTheTitle();
+            Sessions sessions = new Sessions();
+            yield return JoinAHost(sessions, OnlineSession.DIRECT_DISCONNECT_MS);
+
+            // This machine loads the game and holds it for the host's show
+            ReportRecorder reports = new ReportRecorder(sessions.Host.Match);
+            sessions.Host.Match.RequestLoad(MatchScene.Game);
+            sessions.Host.Match.SendState(GameState.Loading);
+            float deadline = Time.realtimeSinceStartup + LOADING;
+            while (reports.Machines.Count == 0 && Time.realtimeSinceStartup < deadline)
+                yield return null;
+            Assert.IsNotEmpty(reports.Machines, "loaded, and held for the host's show");
+
+            // The host shows the match, starts it, and takes everyone back at once: here the states wait for the scene
+            StateRecorder states = new StateRecorder();
+            GameManager.Instance.StateApplied += states.OnState;
+            SceneRecorder scenes = new SceneRecorder();
+            sessions.Host.Match.RequestShow(MatchScene.Game);
+            sessions.Host.Match.SendState(GameState.StartingCutscene);
+            sessions.Host.Match.SendState(GameState.Tutorial);
+            // A few frames later the host picks Main Menu, while this (slow) machine's scene is still coming up
+            OnlineSceneFlow flow = (OnlineSceneFlow)SceneFlow.Current;
+            deadline = Time.realtimeSinceStartup + WAIT;
+            while (!flow.Changing && Time.realtimeSinceStartup < deadline)
+                yield return null;
+            yield return null;
+            yield return null;
+            Assert.IsTrue(flow.Changing, "the return reaches this machine while its scene still comes up");
+            sessions.Host.Match.RequestReturn();
+            // The scene comes up: what waited for it belonged to the match being left
+            deadline = Time.realtimeSinceStartup + LOADING;
+            while (flow.Changing && Time.realtimeSinceStartup < deadline)
+                yield return null;
+            Assert.IsFalse(flow.Changing, "the scene came up");
+            for (float until = Time.realtimeSinceStartup + 2f; Time.realtimeSinceStartup < until;)
+                yield return null;
+            GameManager.Instance.StateApplied -= states.OnState;
+            scenes.Dispose();
+
+            CollectionAssert.DoesNotContain(states.States, GameState.StartingCutscene, "the abandoned match's states never show");
+            CollectionAssert.DoesNotContain(states.States, GameState.Tutorial);
+
+            log.MachinesLeave(); // Windows may report a leaving machine's closed port: see LogCollector.CLOSED_PORT
+            sessions.Mine.Leave();
+            deadline = Time.realtimeSinceStartup + WAIT;
+            while (sessions.Host.PlayersIn > 1 && Time.realtimeSinceStartup < deadline)
+                yield return null;
+            sessions.Host.Leave();
+            for (float until = Time.realtimeSinceStartup + 1f; Time.realtimeSinceStartup < until;)
+                yield return null;
             log.Dispose();
             Assert.IsEmpty(log.Problems, "Errors:\n\n" + string.Join("\n\n", log.Problems));
         }

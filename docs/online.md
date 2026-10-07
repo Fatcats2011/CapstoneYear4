@@ -212,6 +212,20 @@ Online multiplayer is being built in steps (roadmap Phase 3: `docs/superpowers/p
   - **Timeouts:** direct sessions wait `OnlineSession.DIRECT_DISCONNECT_MS` (90 s). Unity Transport reads it when a session starts.
   - **`LoadWatch`** times each match load on every machine: `OnlineSceneFlow.Tick`, from `OnlineGame.Update`.
 
+### Phase 5A: bumps, and the deferred fixes
+
+- **Bumping another player's scooter pushes them, on their machine too.** Another machine's scooter is kinematic here, so before this only the bumper moved.
+  - The machine whose player drives into another machine's scooter (not boosting: boosting into someone is a steal or a clash) reports the bump, with how fast they closed.
+  - The host checks it (both there, within reach, neither respawning; one bump per pair per half second), then every machine hears it.
+  - The bumped player's own machine pushes them away from the bumper: a quarter of a clash at 10 m/s, a whole clash at 40 m/s.
+- **A host taking everyone back to the menu while a slow machine's match is still coming up:** that machine no longer shows the match starting on the way out.
+- **Other machines' sounds play as on their own machine:** a death on the players' mixer group, and a phase takes over the boost's sound.
+- **A double "Join Game" enters the lobby once**, and a lobby Steam refuses at once is reported at once (Y isn't left blocked).
+- How it works:
+  - **Bumps:** `BumpReporter` (added by `OnlineBumps` to each of this machine's players' balls) reports through `BumpSync`. `OnlineMatch.AskBump` takes it to the host (rate-limited as `RpcKind.Bump`), `BumpRules` decides, and `PlayerBump` (`SendBump`) reaches every machine. `BallDriving.PushFrom` pushes.
+  - **The menu return:** `OnlineGame` drops the host messages still waiting for this machine's scene when the host's return reaches it (`OnlineMatch.ReturnRequested`).
+  - **`OnlineSession.Ended`** calls each listener on its own: one that throws is logged and the rest still hear it (the Steam lobby's leave).
+
 ## Two editors on one computer (ParrelSync)
 
 - **ParrelSync → Clones Manager → Create new clone** (once). The clone shares this project's Assets and ProjectSettings. Unity imports the project the first time the clone opens, which takes a while.
@@ -265,6 +279,8 @@ What stops a modified game from harming other players (strangers connecting, IP 
 - **On a client, a steal or clash takes effect a round trip after the bump**, because the host decides it. If the victim started boosting less than a round trip before the bump, the host may call it a steal where a local match would call a clash.
 - A client whose player falls in the water rises a round trip later than offline: it waits, for at most 2 s, for the host's respawn point.
 - Another machine's scooter can be bumped during the last 0.7 s of its rise from its grave: its collider comes back when its rider shows.
+- **A bump pushes the other player a round trip after it:** it goes through the host. The bumper bounces off at once, as before.
+- **A machine the host takes back to the menu while its game scene is still coming up may stay in the game scene** (a slow PC; found in Phase 5A, older than it). The match states don't show there any more, but the menu load can stop. Leaving and joining again gets it back. See the handoff's deferred minors.
 - **A pickup shows once the host has seen the scooter in the light:** on a client, about a round trip after it drove in.
 - A cutout's order reaches a client's scooter about a round trip after its barrier opens.
 - **Other machines' scooters play one-shots only:** no engine, brake or drift-spark sounds. Their horns don't glow with their boost gauge; they flash when it's full.

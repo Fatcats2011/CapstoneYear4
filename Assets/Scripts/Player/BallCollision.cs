@@ -9,9 +9,9 @@ using UnityEngine;
 public class BallCollision : MonoBehaviour
 {
     [Tooltip("Reference to the ball driving component")]
-    [SerializeField] private BallDriving control;
+    [SerializeField] internal BallDriving control;
 
-    private void OnTriggerEnter(Collider other)
+    internal void OnTriggerEnter(Collider other)
     {
         if (control.CurrentVelocity < 10) return;
         if (other.tag == "Kickable" || other.tag == "Speed" || other.tag == "TouchGrass" || other.tag == "Water" || other.tag == "Pickup" || other.tag == "IgnoreBallCollision") return;

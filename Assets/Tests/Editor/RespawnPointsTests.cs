@@ -27,10 +27,10 @@ namespace DoA.Tests
                 point.transform.SetParent(parent.transform);
                 point.transform.position = new Vector3(along[i], 0, 0);
                 points[i] = point.AddComponent<RespawnPoint>();
-                Reflect.SetField(points[i], "order1Spawn", Spot(point, "Order 1"));
-                Reflect.SetField(points[i], "order2Spawn", Spot(point, "Order 2"));
+                points[i].order1Spawn = Spot(point, "Order 1");
+                points[i].order2Spawn = Spot(point, "Order 2");
             }
-            Reflect.Invoke(manager, "InitRespawnPoints", parent);
+            manager.InitRespawnPoints(parent);
         }
 
         [TearDown]

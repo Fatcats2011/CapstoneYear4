@@ -46,6 +46,17 @@ public class OnlineLobby
     }
 
     /// <summary>
+    /// Stops listening to the lobby service and the session (OnlinePlay replaced this flow with another)
+    /// </summary>
+    public void Detach()
+    {
+        lobbies.Created -= OnCreated;
+        lobbies.Entered -= OnEntered;
+        session.RoleChanged -= OnRoleChanged;
+        session.Ended -= OnEnded;
+    }
+
+    /// <summary>
     /// Makes a lobby and hosts the session in it, then opens the invite dialog. Nothing while one is being made, or while
     /// this machine is in a lobby or a session already
     /// </summary>
@@ -71,7 +82,8 @@ public class OnlineLobby
     /// </summary>
     public void Answer(ulong lobby, string busy)
     {
-        if (lobby == 0 || lobby == Current)
+        // The lobby it's in, or already entering (a double "Join Game": a second answer would leave it)
+        if (lobby == 0 || lobby == Current || lobby == joining)
             return;
 
         if (busy != null)

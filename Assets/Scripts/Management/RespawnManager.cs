@@ -21,7 +21,7 @@ public class RespawnManager : SingletonMonobehaviour<RespawnManager>
     /// Initializes the respawn point array based on the child GOs of the parent parameter.
     /// </summary>
     /// <param name="parent">Parent GO of the respawn points for the map.</param>
-    private void InitRespawnPoints(GameObject parent)
+    internal void InitRespawnPoints(GameObject parent)
     {
         respawnPoints = new RespawnPoint[parent.transform.childCount];
         for(int i=0;i<parent.transform.childCount;i++)

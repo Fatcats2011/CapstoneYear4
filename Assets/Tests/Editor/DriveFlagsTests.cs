@@ -64,10 +64,10 @@ namespace DoA.Tests
         public void AScooterDrivenHere_ReportsWhatItsDoing()
         {
             BallDriving driving = objects.Add<BallDriving>();
-            Reflect.SetField(driving, "drifting", true);
-            Reflect.SetField(driving, "driftDirection", 1);
-            Reflect.SetField(driving, "driftTier", 2);
-            Reflect.SetField(driving, "grounded", true);
+            driving.drifting = true;
+            driving.driftDirection = 1;
+            driving.driftTier = 2;
+            driving.grounded = true;
 
             DriveFlags flags = driving.Flags;
 
@@ -82,8 +82,8 @@ namespace DoA.Tests
             BallDriving driving = objects.Add<BallDriving>();
             Respawn respawn = objects.Add<Respawn>();
             GameObject rider = objects.NewGameObject("SubBasket");
-            Reflect.SetField(respawn, "modelParent", rider);
-            Reflect.SetField(driving, "respawn", respawn);
+            respawn.modelParent = rider;
+            driving.respawn = respawn;
 
             Assert.IsFalse(driving.Flags.Hidden, "its rider shows");
 

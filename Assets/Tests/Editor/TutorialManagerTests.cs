@@ -21,12 +21,12 @@ namespace DoA.Tests
         public void SetUp()
         {
             game = objects.Add<GameManager>();
-            Reflect.SetSingleton(game);
+            GameManager.instance = game;
             players = objects.Add<PlayerInstantiate>();
-            Reflect.SetSingleton(players);
+            PlayerInstantiate.instance = players;
             tutorial = objects.Add<TutorialManager>();
-            Reflect.SetSingleton(tutorial);
-            Reflect.Invoke(tutorial, "OnEnable"); // it hears the game's states
+            TutorialManager.instance = tutorial;
+            tutorial.OnEnable(); // it hears the game's states
             game.SetGameState(GameState.Tutorial);
             ended = 0;
             tutorial.OnTutorialComplete += CountEnd;
@@ -35,10 +35,10 @@ namespace DoA.Tests
         [TearDown]
         public void TearDown()
         {
-            Reflect.Invoke(tutorial, "OnDisable");
-            Reflect.SetSingleton<TutorialManager>(null);
-            Reflect.SetSingleton<PlayerInstantiate>(null);
-            Reflect.SetSingleton<GameManager>(null);
+            tutorial.OnDisable();
+            TutorialManager.instance = null;
+            PlayerInstantiate.instance = null;
+            GameManager.instance = null;
             GameAuthority.Role = NetworkRole.Offline;
             TutorialSync.Reset();
             objects.DestroyAll();

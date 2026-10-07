@@ -152,10 +152,10 @@ public class OnlineSession : MonoBehaviour
             ConnectionApproval = true,
             EnableSceneManagement = false, // scene loads stay local until the networked scene flow (roadmap Task 3.4)
             // Safety (docs/online-safety.md): a shared value's length is checked as it's read, a connection that isn't let
-            // in within 5 s is dropped, and Netcode's own logs (which another machine's messages can fill) are off in
-            // release builds
+            // in within 10 s is dropped (joins happen in the menus, so a host hitch of a few seconds doesn't drop a friend),
+            // and Netcode's own logs (which another machine's messages can fill) are off in release builds
             EnsureNetworkVariableLengthSafety = true,
-            ClientConnectionBufferTimeout = 5,
+            ClientConnectionBufferTimeout = 10,
             EnableNetworkLogs = Debug.isDebugBuild,
         };
     }
@@ -261,7 +261,16 @@ public class OnlineSession : MonoBehaviour
         if (Network.IsServer && clientId != NetworkManager.ServerClientId && Network.ConnectedClients.ContainsKey(clientId))
         {
             Debug.Log("Online: disconnected player " + clientId + ": " + reason);
+#if !DISABLESTEAMWORKS
+            // Over Steam the kicked player stays out for the session: the lobby has no kick, so they could just reconnect
+            if (steam != null && Network.NetworkConfig.NetworkTransport == steam)
+                steam.BanOnNextDisconnect = true;
+#endif
             Network.DisconnectClient(clientId, reason);
+#if !DISABLESTEAMWORKS
+            if (steam != null)
+                steam.BanOnNextDisconnect = false;
+#endif
         }
     }
 
@@ -301,6 +310,10 @@ public class OnlineSession : MonoBehaviour
     bool StartHost()
     {
         seats.Clear(); // the host takes the first seat while Netcode starts
+#if !DISABLESTEAMWORKS
+        if (steam != null)
+            steam.ClearBans(); // last session's kicks don't carry over
+#endif
         if (!Network.StartHost())
             return false;
 
@@ -409,7 +422,27 @@ public class OnlineSession : MonoBehaviour
             return;
 
         Debug.Log("Online: session ended: " + reason);
-        Ended?.Invoke(reason);
+        RaiseEach(Ended, reason);
+    }
+
+    // Calls each listener in turn: one that throws (logged) doesn't keep the rest from hearing it (the game going back to
+    // the menu must not skip the Steam lobby's leave)
+    internal static void RaiseEach(Action<string> listeners, string reason)
+    {
+        if (listeners == null)
+            return;
+
+        foreach (Delegate listener in listeners.GetInvocationList())
+        {
+            try
+            {
+                ((Action<string>)listener)(reason);
+            }
+            catch (Exception e)
+            {
+                Debug.LogException(e);
+            }
+        }
     }
 
     // Host: spawns a network object on every machine (tied to this session's Netcode, which matters when several run in
@@ -488,7 +521,7 @@ public class OnlineSession : MonoBehaviour
         scooters.Remove(scooter);
     }
 
-    void SetRole(NetworkRole role)
+    internal void SetRole(NetworkRole role)
     {
         bool changed = role != Role;
         Role = role;

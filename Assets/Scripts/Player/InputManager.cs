@@ -33,27 +33,27 @@ public class InputManager : MonoBehaviour, IDriveInput
     public bool WestFaceValue { get { return westFaceValue; } }
 
     // Right Stick Press
-    private bool rightStickValue; //a bool representing the pushed state of the right stick button (true for pushed, false for loose)
+    internal bool rightStickValue; //a bool representing the pushed state of the right stick button (true for pushed, false for loose)
     public bool RightStickValue { get { return rightStickValue; } }
 
     // Left Stick Movement
-    private float leftStickValue; //a value from -1 to 1, which represents the horizontal position of the left stick
+    internal float leftStickValue; //a value from -1 to 1, which represents the horizontal position of the left stick
     public float LeftStickValue { get { return leftStickValue; } }
 
     // Right Stick X Movement
-    private float rightStickXValue; //a value from -1 to 1, which represents the horizontal position of the right stick
+    internal float rightStickXValue; //a value from -1 to 1, which represents the horizontal position of the right stick
     public float RightStickXValue { get { return rightStickXValue; } }
 
     // Right Stick Y Movement
-    private float rightStickYValue; //a value from -1 to 1, which represents the horizontal position of the right stick
+    internal float rightStickYValue; //a value from -1 to 1, which represents the horizontal position of the right stick
     public float RightStickYValue { get { return rightStickYValue; } }
 
     // Left Trigger
-    private float leftTriggerValue; //a value from 0 to 1, which represents the pull of the left trigger
+    internal float leftTriggerValue; //a value from 0 to 1, which represents the pull of the left trigger
     public float LeftTriggerValue { get { return leftTriggerValue; } }
 
     // Right Trigger
-    private float rightTriggerValue; //a value from 0 to 1, which represents the pull of the right trigger
+    internal float rightTriggerValue; //a value from 0 to 1, which represents the pull of the right trigger
     public float RightTriggerValue { get { return rightTriggerValue; } }
 
     // D-Pad for emotes

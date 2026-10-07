@@ -9,15 +9,15 @@ using UnityEngine.VFX;
 /// </summary>
 public class Order : MonoBehaviour
 {
-    [SerializeField] private Constants.OrderValue value;
+    [SerializeField] internal Constants.OrderValue value;
     public Constants.OrderValue Value { get { return value; } }
 
     // This order's key, the same on every machine (OrderBook): online, an order change names its order by it
-    private int key;
+    internal int key;
     public int Key { get { return key; } }
 
     // The scene this order loaded with
-    private UnityEngine.SceneManagement.Scene homeScene;
+    internal UnityEngine.SceneManagement.Scene homeScene;
 
     [Tooltip("Order will spawn at runtime. Use this for the tutorial orders.")]
     [SerializeField] private bool isActive = false;
@@ -31,7 +31,7 @@ public class Order : MonoBehaviour
 
     [Header("Mesh Information")]
     [Tooltip("Actual mesh of the order for rotation and swapping models.")]
-    [SerializeField] private GameObject orderMeshObject;
+    [SerializeField] internal GameObject orderMeshObject;
     private MeshRenderer meshRenderer;
     private MeshFilter meshFilter;
     [Tooltip("Scale of the mesh based on order difficulty.")]
@@ -44,13 +44,13 @@ public class Order : MonoBehaviour
     public Transform DropoffPoint { get { return dropoff; } }
     private Transform lastGrounded;
     public Transform LastGrounded { get { return lastGrounded; } set { lastGrounded = value;} }
-    private OrderHandler playerHolding = null;
+    internal OrderHandler playerHolding = null;
     public OrderHandler PlayerHolding { get {  return playerHolding; } }
     private OrderHandler playerDropped; // for cooldown with losing an order
     public OrderHandler PlayerDropped { get {  return playerDropped; } }
 
     [Tooltip("Arrow that points to the dropoff.")]
-    [SerializeField] private GameObject arrow;
+    [SerializeField] internal GameObject arrow;
 
     [Tooltip("Time between a player dropping a package and being able to pick it back up again")]
     [SerializeField] private float pickupCooldown = 3;
@@ -60,7 +60,7 @@ public class Order : MonoBehaviour
     [SerializeField] private float height = 4.43f;
 
     [Tooltip("Reference to the beacon on this prefab")]
-    [SerializeField] private OrderBeacon beacon;
+    [SerializeField] internal OrderBeacon beacon;
 
     [Tooltip("Reference to the compass marker component on this object")]
     public CompassMarker compassMarker;
@@ -100,7 +100,7 @@ public class Order : MonoBehaviour
     private IEnumerator pickupCooldownCoroutine; // IEnumerator reference for pickupCooldown coroutine
 
     private Vector3 ogMeshPos;
-    private Quaternion ogMeshRot;
+    internal Quaternion ogMeshRot;
 
     private void Awake()
     {

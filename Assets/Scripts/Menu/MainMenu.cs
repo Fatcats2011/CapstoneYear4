@@ -16,9 +16,9 @@ public class MainMenu : SingletonMonobehaviour<MainMenu>
     int selectorPos;
 
     [Header("Canvas Objects")]
-    [SerializeField] Canvas PlayerSelectCanvas;
-    [SerializeField] Canvas OptionsCanvas;
-    [SerializeField] Canvas CreditsCanvas;
+    [SerializeField] internal Canvas PlayerSelectCanvas;
+    [SerializeField] internal Canvas OptionsCanvas;
+    [SerializeField] internal Canvas CreditsCanvas;
 
     [SerializeField] TMP_Text p1ConnectedController;
     PlayerInstantiate playerInstantiate;
@@ -35,7 +35,7 @@ public class MainMenu : SingletonMonobehaviour<MainMenu>
         }
     }
 
-    void OnDisable()
+    internal void OnDisable()
     {
         if (gameManager != null)
         {

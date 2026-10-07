@@ -3,7 +3,8 @@ using NUnit.Framework;
 namespace DoA.Tests
 {
     /// <summary>
-    /// Online seats: the host sits in seat 0, each joiner in the lowest free seat, 4 at most
+    /// Online seats: the host sits in seat 0, each new seat goes to the lowest free one, 4 at most. A machine can hold
+    /// several (players sharing its screen, Phase 3J)
     /// </summary>
     public class SeatTableTests
     {
@@ -23,7 +24,7 @@ namespace DoA.Tests
             seats.Take(0);
             seats.Take(7);
             seats.Take(8);
-            seats.Free(7);
+            seats.FreeAll(7);
 
             Assert.AreEqual(1, seats.Take(9), "the freed seat");
             Assert.AreEqual(3, seats.Take(10), "then the next free one");
@@ -42,24 +43,72 @@ namespace DoA.Tests
         }
 
         [Test]
-        public void Take_ASeatedPlayerAgain_KeepsTheirSeat()
+        public void Take_TheSameMachineAgain_GetsAnotherSeat()
+        {
+            SeatTable seats = new SeatTable();
+            seats.Take(0);
+
+            Assert.AreEqual(1, seats.Take(5));
+            Assert.AreEqual(2, seats.Take(5), "a second player on that machine");
+            Assert.AreEqual(3, seats.Count);
+            CollectionAssert.AreEqual(new[] { 1, 2 }, seats.SeatsOf(5));
+            Assert.AreEqual(2, seats.CountOf(5));
+        }
+
+        [Test]
+        public void Owns_OnlyTheMachinesOwnSeats()
         {
             SeatTable seats = new SeatTable();
             seats.Take(0);
             seats.Take(5);
+            seats.Take(5);
 
-            Assert.AreEqual(1, seats.Take(5));
+            Assert.IsTrue(seats.Owns(5, 1));
+            Assert.IsTrue(seats.Owns(5, 2));
+            Assert.IsFalse(seats.Owns(5, 0), "the host's");
+            Assert.IsFalse(seats.Owns(5, -1), "not a seat");
+            Assert.IsFalse(seats.Owns(5, 4), "not a seat");
+            Assert.IsFalse(seats.Owns(5, 3), "a free seat");
+        }
+
+        [Test]
+        public void Free_OneSeat_KeepsTheMachinesOthers()
+        {
+            SeatTable seats = new SeatTable();
+            seats.Take(0);
+            seats.Take(5);
+            seats.Take(5);
+
+            Assert.IsTrue(seats.Free(5, 1));
+            Assert.IsTrue(seats.Owns(5, 2), "its other seat stays");
+            Assert.AreEqual(1, seats.CountOf(5));
+            Assert.IsFalse(seats.Free(7, 2), "not that machine's seat");
+            Assert.IsFalse(seats.Free(5, 1), "already free");
             Assert.AreEqual(2, seats.Count);
         }
 
         [Test]
-        public void SeatOfAndFree_APlayerWithoutASeat_AreMinusOne()
+        public void FreeAll_FreesEveryOneOfAMachinesSeats()
+        {
+            SeatTable seats = new SeatTable();
+            seats.Take(0);
+            seats.Take(5);
+            seats.Take(5);
+
+            Assert.AreEqual(2, seats.FreeAll(5));
+            Assert.AreEqual(1, seats.Count);
+            Assert.AreEqual(1, seats.Take(9), "the lowest freed seat");
+        }
+
+        [Test]
+        public void SeatsAndFree_AMachineWithoutASeat_HaveNone()
         {
             SeatTable seats = new SeatTable();
             seats.Take(0);
 
-            Assert.AreEqual(-1, seats.SeatOf(3));
-            Assert.AreEqual(-1, seats.Free(3));
+            Assert.IsEmpty(seats.SeatsOf(3));
+            Assert.AreEqual(0, seats.CountOf(3));
+            Assert.AreEqual(0, seats.FreeAll(3));
             Assert.AreEqual(1, seats.Count);
         }
 
@@ -73,7 +122,7 @@ namespace DoA.Tests
             seats.Clear();
 
             Assert.AreEqual(0, seats.Count);
-            Assert.AreEqual(-1, seats.SeatOf(1));
+            Assert.IsFalse(seats.Owns(1, 1));
             Assert.AreEqual(0, seats.Take(4), "seat 0 is free again");
         }
     }

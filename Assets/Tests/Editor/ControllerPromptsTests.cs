@@ -52,7 +52,7 @@ namespace DoA.Tests
             ControllerPrompts prompts = ControllerPrompts.Instance;
             prompts.ShowHint(ControllerPrompts.CONNECT_CONTROLLER_HINT, 0f);
 
-            Reflect.Invoke(prompts, "Update");
+            prompts.Update();
 
             Assert.IsFalse(prompts.IsHintShown);
         }
@@ -63,7 +63,7 @@ namespace DoA.Tests
             ControllerPrompts prompts = ControllerPrompts.Instance;
             prompts.ShowHint(ControllerPrompts.CONNECT_CONTROLLER_HINT, 60f);
 
-            Reflect.Invoke(prompts, "Update");
+            prompts.Update();
 
             Assert.IsTrue(prompts.IsHintShown);
         }
@@ -143,7 +143,7 @@ namespace DoA.Tests
         public void AddPlayerReference_KeyboardDuringAMatch_ShowsNoHint()
         {
             PlayerInstantiate instantiate = objects.Add<PlayerInstantiate>();
-            Reflect.SetField(instantiate, "allowPlayerSpawn", false); // spawning is off from the loading screen on
+            instantiate.allowPlayerSpawn = false; // spawning is off from the loading screen on
             instantiate.Roster.JoinLocal(objects.Add<PlayerInput>());
             instantiate.Roster.JoinLocal(objects.Add<PlayerInput>());
             PlayerInput playerWithoutController = objects.Add<PlayerInput>();

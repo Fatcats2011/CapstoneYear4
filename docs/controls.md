@@ -20,6 +20,8 @@ Up to 4 players, one controller each (Xbox, PlayStation and Switch Pro controlle
 
 One player can use the keyboard, alongside up to 3 controllers. **Press Space or Enter to join.** Any other key shows "Press Space to play with the keyboard, or connect a controller". This stops the dev keys (F1 and others) from joining the keyboard by accident.
 
+The game joins players itself (`PlayerJoiner`, Phase 5A): the scene's `PlayerInputManager` is switched to manual joins, so another key makes no player at all (Unity used to make one for any key, which the game then destroyed).
+
 | What | Keys |
 |---|---|
 | Steer | A / D, or ← / → |

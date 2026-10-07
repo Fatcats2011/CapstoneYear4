@@ -127,7 +127,7 @@ namespace DoA.Tests
         // Where the players start: the start of their seat's tutorial lane
         static GameObject[] TutorialStarts()
         {
-            return (GameObject[])Reflect.GetField(SpawnManager.Instance, "gameSpawnPositions");
+            return SpawnManager.Instance.gameSpawnPositions;
         }
 
         // A player on this machine drives their ball there and stops
@@ -175,13 +175,13 @@ namespace DoA.Tests
         // The order a cutout holds until a player steals it
         static Order CutoutOrder(CutoutHandler cutout)
         {
-            return (Order)Reflect.GetField(cutout, "order");
+            return cutout.order;
         }
 
         // The barrier behind a cutout, which blocks its lane until the cutout is stolen from
         static BoxCollider Barrier(CutoutHandler cutout)
         {
-            return ((GameObject)Reflect.GetField(cutout, "barrier")).GetComponent<BoxCollider>();
+            return cutout.barrier.GetComponent<BoxCollider>();
         }
 
         // The middle of a cutout's light, where a boosting scooter steals from it
@@ -233,7 +233,7 @@ namespace DoA.Tests
             while (State() != GameState.Tutorial && Time.realtimeSinceStartup < deadline)
                 yield return null;
             Assert.AreEqual(GameState.Tutorial, State(), "the tutorial, after the opening cutscene");
-            Order[] lessons = (Order[])Reflect.GetField(OrderManager.Instance, "tutorialOrders");
+            Order[] lessons = OrderManager.Instance.tutorialOrders;
             deadline = Time.realtimeSinceStartup + WAIT;
             while (!(heard.Changes.Contains(OrderChange.Spawn(lessons[0].Key, false)) && heard.Changes.Contains(OrderChange.Spawn(lessons[1].Key, false)))
                 && Time.realtimeSinceStartup < deadline)

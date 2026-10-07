@@ -89,7 +89,7 @@ public class SoundManager : SingletonMonobehaviour<SoundManager>
 
     private bool shouldPlayMain = true;
 
-    private void OnEnable()
+    internal void OnEnable()
     {
         // events for music
         GameManager.Instance.OnSwapMenu += PlayMenuTheme;
@@ -99,7 +99,7 @@ public class SoundManager : SingletonMonobehaviour<SoundManager>
         // reset snapshot
         GameManager.Instance.OnSwapAnything += ResetSnapshotToGameplay;
     }
-    private void OnDisable()
+    internal void OnDisable()
     {
         // events for music
         GameManager.Instance.OnSwapMenu -= PlayMenuTheme;

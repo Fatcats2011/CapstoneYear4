@@ -81,7 +81,7 @@ namespace DoA.Tests
         // Whether this machine shows a cutscene
         static bool CutsceneOn()
         {
-            return CutsceneManager.Instance != null && ((Camera)Reflect.GetField(CutsceneManager.Instance, "cutsceneCamera")).enabled;
+            return CutsceneManager.Instance != null && CutsceneManager.Instance.cutsceneCamera.enabled;
         }
 
         // Whether this machine's player's ball is held still (the end of the main game)
@@ -146,7 +146,7 @@ namespace DoA.Tests
             Assert.Less(Time.realtimeSinceStartup - started, 8f, "long before its own 9.2 s ran out");
 
             // The host's clock: a new wave's bells
-            AudioSource clock = (AudioSource)Reflect.GetField(OrderManager.Instance, "clockSource");
+            AudioSource clock = OrderManager.Instance.clockSource;
             clock.clip = null; // whatever the scene left on it
             AudioClip bells = SoundManager.Instance.GetSFX("bells").clip;
             host.Match.RingClock(ClockCue.WaveBells);

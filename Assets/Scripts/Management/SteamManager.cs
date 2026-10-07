@@ -40,6 +40,7 @@ public class SteamManager : MonoBehaviour
 
 #if !DISABLESTEAMWORKS
     SteamAPIWarningMessageHook_t warningMessageHook;
+    static bool apiInitialized; // SteamAPI.Init succeeded and SteamAPI.Shutdown hasn't run since
 
     ///<summary>
     /// Clears the static instance before entering Play Mode, in case domain reload is disabled
@@ -89,7 +90,11 @@ public class SteamManager : MonoBehaviour
                 return;
             }
 
-            initialized = SteamAPI.Init();
+            // SteamAPI.Init once per process: with domain reload off a new Play Mode can start while the last one's Init
+            // was never shut down (ResetStatics clears the instance, not this)
+            if (!apiInitialized)
+                apiInitialized = SteamAPI.Init();
+            initialized = apiInitialized;
         }
         catch (DllNotFoundException e) // steam_api64.dll missing next to the game
         {
@@ -132,7 +137,10 @@ public class SteamManager : MonoBehaviour
         instance = null;
 
         if (initialized)
+        {
             SteamAPI.Shutdown();
+            apiInitialized = false;
+        }
     }
 #endif
 }

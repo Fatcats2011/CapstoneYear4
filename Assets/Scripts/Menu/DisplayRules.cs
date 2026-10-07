@@ -64,6 +64,15 @@ public static class DisplayRules
     }
 
     /// <summary>Unity's vSyncCount: 1 with VSync on, 0 with it off</summary>
+    /// <summary>
+    /// Whether the screen must change to show the wanted mode and size: setting them again as they are (each return to
+    /// the menu applies the settings) would flicker in exclusive fullscreen
+    /// </summary>
+    public static bool NeedsResize(FullScreenMode current, ScreenSize currentSize, FullScreenMode wanted, ScreenSize wantedSize)
+    {
+        return current != wanted || !currentSize.Equals(wantedSize);
+    }
+
     public static int VSyncCount(int vsync)
     {
         return vsync == 1 ? 1 : 0;

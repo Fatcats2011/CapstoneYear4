@@ -75,7 +75,11 @@ public class PlayerUIHandler : MonoBehaviour
         TriggerDisableInteraction();
 
         // Y (triangle) reaches the menus like the other buttons. By now every player has their own copy of the actions
-        northFace = GetComponentInParent<PlayerInput>().actions.FindAction(NORTH_ACTION);
+        // (unless the prefab's PlayerInput sends it here already: then Y would fire twice)
+        PlayerInput input = GetComponentInParent<PlayerInput>();
+        northFace = input.actions.FindAction(NORTH_ACTION);
+        if (northFace != null && WiredByPlayerInput(input, northFace))
+            northFace = null;
         if (northFace != null)
             northFace.performed += NorthFaceTrigger;
     }
@@ -84,6 +88,23 @@ public class PlayerUIHandler : MonoBehaviour
     {
         if (northFace != null)
             northFace.performed -= NorthFaceTrigger;
+    }
+
+    /// <summary>
+    /// Whether the player's PlayerInput already sends an action to listeners set up in the editor (its own UnityEvents):
+    /// then wiring it in code too would run it twice
+    /// </summary>
+    internal static bool WiredByPlayerInput(PlayerInput input, InputAction action)
+    {
+        if (input == null || action == null || input.notificationBehavior != PlayerNotifications.InvokeUnityEvents)
+            return false;
+
+        foreach (PlayerInput.ActionEvent actionEvent in input.actionEvents)
+        {
+            if (actionEvent != null && actionEvent.actionId == action.id.ToString() && actionEvent.GetPersistentEventCount() > 0)
+                return true;
+        }
+        return false;
     }
 
     public void TriggerDisableInteraction()

@@ -14,17 +14,17 @@ public class OrbitalCamera : MonoBehaviour
     public IDriveInput DriveInput { get { return driveInput ?? inputManager; } set { driveInput = value; } }
 
     [Header("Horizontal Movement")]
-    [SerializeField] CinemachineVirtualCamera virtualCameraMain;
-    [SerializeField] CinemachineVirtualCamera virtualCameraIcon;
-    [SerializeField] CinemachineOrbitalTransposer mainOrb;
-    [SerializeField] CinemachineOrbitalTransposer iconOrb;
+    [SerializeField] internal CinemachineVirtualCamera virtualCameraMain;
+    [SerializeField] internal CinemachineVirtualCamera virtualCameraIcon;
+    [SerializeField] internal CinemachineOrbitalTransposer mainOrb;
+    [SerializeField] internal CinemachineOrbitalTransposer iconOrb;
     [SerializeField] float maxXAngle = 180;
     [SerializeField] float smoothSpeedValue = 0.1f;
     [SerializeField] float realXAxis;
     public float smoothXAxis;
 
     [Header("Vertical Movement")]
-    [SerializeField] GameObject CameraFocus;
+    [SerializeField] internal GameObject CameraFocus;
     [SerializeField] Vector2 yAngleMinMax;
     [SerializeField] float realYAxis;
     public float smoothYAxis;
@@ -45,7 +45,7 @@ public class OrbitalCamera : MonoBehaviour
     }
 
     // Update is called once per frame
-    void Update()
+    internal void Update()
     {
         IDriveInput driver = DriveInput;
         // While boosting, the view goes wide after a moment, and stays wide a moment after (BoostFOV)

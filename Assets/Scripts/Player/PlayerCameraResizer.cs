@@ -10,19 +10,21 @@ using UnityEngine.UI;
 /// This is needed due to the player input script only allowing one camera to be resized on instantiation. 
 /// This acts to allow all cameras needed to be resized, after the main is resized.
 /// /// </summary>
+// Late in the frame: its LateUpdate turns views off under a camera another script turned on in its own LateUpdate
+[DefaultExecutionOrder(1000)]
 public class PlayerCameraResizer : MonoBehaviour
 {
     [Header("Main Camera Details")]
     [Tooltip("This is the camera in which if changed, other cameras will also change to match")]
-    [SerializeField] Camera referenceCam;
+    [SerializeField] internal Camera referenceCam;
     public Camera PlayerReferenceCamera { get { return referenceCam; } }
     [SerializeField] UniversalAdditionalCameraData referenceCamData;
 
     [Tooltip("This is the camera array in which all will resize to the main upon main being changed")]
-    [SerializeField] Camera[] camerasToFollow;
+    [SerializeField] internal Camera[] camerasToFollow;
 
     [Tooltip("This is a vector4 value indicating the default rect of a camera. the four values are xPos, yPos, Width and Height")]
-    [SerializeField] Vector4 viewPortRectDefault;
+    [SerializeField] internal Vector4 viewPortRectDefault;
 
     [Tooltip("This reference is to the player camera outputing to the render textures")]
     [SerializeField] Camera playerRenderCamera;
@@ -41,16 +43,16 @@ public class PlayerCameraResizer : MonoBehaviour
 
     [SerializeField] Camera drivingUICamera;
     [SerializeField] Camera iconCamera;
-    [SerializeField] Camera playerCamera;
+    [SerializeField] internal Camera playerCamera;
     [SerializeField] Camera menuUICamera;
 
     [Space(10)]
     [Header("Phase Camera")]
     [SerializeField] float phaseTransitionSpeed = 0.15f;
     [SerializeField] float shaderPassIncrements = 10f;
-    [SerializeField] Material phaseTransitionMaterial;
-    [SerializeField] GameObject phaseRender;
-    [SerializeField] Camera phaseCamera;
+    [SerializeField] internal Material phaseTransitionMaterial;
+    [SerializeField] internal GameObject phaseRender;
+    [SerializeField] internal Camera phaseCamera;
     [SerializeField] UniversalAdditionalCameraData phaseCamData;
     Material phaseTransitionMaterialMain;
     RenderTexture phaseCameraRT;
@@ -80,7 +82,7 @@ public class PlayerCameraResizer : MonoBehaviour
     int iconLayer = 0;
     [SerializeField] int nextFillSlot = 0;
 
-    private void Start()
+    internal void Start()
     {
         phaseTransitionMaterialMain = new Material(phaseTransitionMaterial);
 
@@ -128,7 +130,7 @@ public class PlayerCameraResizer : MonoBehaviour
     }
 
     // Update is called once per frame
-    void Update()
+    internal void Update()
     {
         // Updates the phase camera to follow the movement of the main camera
         if (phaseCameraUpdate)

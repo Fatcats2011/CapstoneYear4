@@ -25,7 +25,7 @@ namespace DoA.Tests
             }
             sessions.Clear();
             objects.DestroyAll();
-            Reflect.SetSingleton<GameManager>(null);
+            GameManager.instance = null;
             GameAuthority.Role = NetworkRole.Offline;
         }
 
@@ -50,12 +50,49 @@ namespace DoA.Tests
         }
 
         [Test]
-        public void NewSessions_CheckNetworkVariableLengths_AndDropSlowJoinsAfter5Seconds()
+        public void NewSessions_CheckNetworkVariableLengths_AndDropSlowJoinsAfter10Seconds()
         {
             NetworkConfig config = NewSession().Network.NetworkConfig;
 
             Assert.IsTrue(config.EnsureNetworkVariableLengthSafety);
-            Assert.AreEqual(5, config.ClientConnectionBufferTimeout);
+            Assert.AreEqual(10, config.ClientConnectionBufferTimeout, "a host hitch of a few seconds doesn't drop a joining friend");
+        }
+
+        // Listeners of Ended, the second recording what it heard
+        class EndListeners
+        {
+            public string Heard;
+
+            public void Throws(string reason)
+            {
+                throw new System.InvalidOperationException("a listener that throws");
+            }
+
+            public void Records(string reason)
+            {
+                Heard = reason;
+            }
+        }
+
+        [Test]
+        public void Ended_AListenerThatThrows_DoesntStopTheNext()
+        {
+            EndListeners listeners = new EndListeners();
+            System.Action<string> ended = listeners.Throws;
+            ended += listeners.Records; // e.g. the game going back to the menu, then the Steam lobby leaving
+            LogAssert.Expect(LogType.Exception, new System.Text.RegularExpressions.Regex("a listener that throws"));
+
+            OnlineSession.RaiseEach(ended, OnlineSession.HOST_LEFT);
+
+            Assert.AreEqual(OnlineSession.HOST_LEFT, listeners.Heard, "the next listener still heard it");
+        }
+
+        [Test]
+        public void TheDirectAddressFields_AreEditorAndDevelopmentOnly()
+        {
+            // Release builds have no direct sessions: fields only those use would be "never assigned" warnings there
+            Assert.IsTrue(EditorAndDevelopmentOnly("OnlinePlay.cs", "string directAddress;"), "directAddress");
+            Assert.IsTrue(EditorAndDevelopmentOnly("OnlinePlay.cs", "ushort directPort;"), "directPort");
         }
 
         // Whether a method's declaration sits inside an editor-and-development-only block of a script
@@ -197,7 +234,7 @@ namespace DoA.Tests
         public void Approve_WhileTheHostsMatchIsUnderWay_TurnsPlayersAway()
         {
             GameManager game = objects.Add<GameManager>();
-            Reflect.SetSingleton(game);
+            GameManager.instance = game;
             game.SetGameState(GameState.MainLoop);
             OnlineSession session = NewSession();
             Approve(session, NetworkManager.ServerClientId, "1.0.0");

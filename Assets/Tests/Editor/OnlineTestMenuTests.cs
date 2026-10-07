@@ -38,7 +38,16 @@ namespace DoA.Tests
         /// </summary>
         public static bool MenuCanStart()
         {
-            return (bool)typeof(OnlineTestMenu).GetMethod("CanStart", BindingFlags.NonPublic | BindingFlags.Static).Invoke(null, null);
+            return OnlineTestMenu.CanStart();
+        }
+
+        [Test]
+        public void CanStart_WhileTheGamePlaysAnotherSession_IsFalse()
+        {
+            Assert.IsTrue(OnlineTestMenu.CanStart(true, true, false, false), "playing, at the title, offline");
+            Assert.IsFalse(OnlineTestMenu.CanStart(true, true, false, true), "OnlinePlay's Steam session runs: no second one beside it");
+            Assert.IsFalse(OnlineTestMenu.CanStart(true, true, true, false), "the menu's own session runs");
+            Assert.IsFalse(OnlineTestMenu.CanStart(false, true, false, false), "not playing");
         }
 
         [Test]
