@@ -8,26 +8,18 @@ namespace DoA.Tests
 {
     public class DevToolsTests
     {
-        readonly TestObjects objects = new TestObjects();
         bool devToolsWereEnabled;
-        string playtestFolder;
 
         [SetUp]
         public void SetUp()
         {
             devToolsWereEnabled = DevTools.Enabled;
-            playtestFolder = Path.Combine(Path.GetTempPath(), "doa-playtest-" + System.Guid.NewGuid().ToString("N"));
-            QAManager.DataDirectory = playtestFolder;
         }
 
         [TearDown]
         public void TearDown()
         {
             DevTools.Enabled = devToolsWereEnabled;
-            QAManager.DataDirectory = null;
-            if (Directory.Exists(playtestFolder))
-                Directory.Delete(playtestFolder, true);
-            objects.DestroyAll();
         }
 
         [Test]
@@ -48,35 +40,6 @@ namespace DoA.Tests
                 .ToArray();
 
             CollectionAssert.IsEmpty(offenders);
-        }
-
-        [Test]
-        public void QAManager_RecordsPlaytestDataInItsDataDirectory()
-        {
-            DevTools.Enabled = true;
-            QAManager qa = objects.Add<QAManager>();
-
-            Reflect.Invoke(qa, "SendData");
-
-            Assert.IsTrue(File.Exists(Path.Combine(playtestFolder, "QAData.csv")));
-        }
-
-        [Test]
-        public void QAManager_WhenDevToolsAreOff_RecordsNothing()
-        {
-            DevTools.Enabled = false;
-            QAManager qa = objects.Add<QAManager>();
-
-            Reflect.Invoke(qa, "SendData");
-
-            Assert.IsFalse(Directory.Exists(playtestFolder));
-        }
-
-        [Test]
-        public void StreamingAssets_ShipNoPlaytestData()
-        {
-            Assert.IsFalse(File.Exists("Assets/StreamingAssets/QAData.csv"), "QAData.csv would ship inside the build");
-            Assert.IsFalse(Directory.Exists("Assets/StreamingAssets/HeatMaps"), "HeatMaps would ship inside the build");
         }
     }
 }

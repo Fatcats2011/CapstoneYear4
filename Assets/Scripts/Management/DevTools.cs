@@ -1,7 +1,7 @@
 using UnityEngine;
 
 /// <summary>
-/// Gate for developer-only features: debug hotkeys and playtest data recording.
+/// Gate for developer-only features: debug hotkeys and the F6 frame-rate overlay.
 /// On in the editor and development builds, off in release builds.
 /// </summary>
 public static class DevTools

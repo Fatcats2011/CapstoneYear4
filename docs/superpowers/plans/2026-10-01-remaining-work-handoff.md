@@ -147,7 +147,6 @@ Collected from the plan ledgers. None blocks a release.
   - The host picking Main Menu while a slow client is still activating the game scene: Phase 3I covers it (see Phase 3I above).
 - **Phases 1A, 1B and 2A:**
   - Tests reach private members by reflection.
-  - `QAManager` catches only `IOException`.
   - `SteamManager` has no guard against a second `SteamAPI.Init` if domain reload is ever turned off.
   - Keyboard presses spawn and destroy a player prefab.
   - A few unused usings, and some test-message wording.

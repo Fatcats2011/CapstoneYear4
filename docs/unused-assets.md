@@ -197,7 +197,7 @@ Biggest subfolders:
 - `Prefabs/Secret Beacon Folder`: 3 files, 0.4 MB
 - `Prefabs/Buildings`: 16 files, 0.2 MB
 - `Prefabs/Player Prefabs`: 4 files, 0.1 MB
-- `Prefabs/Trail Objects`: 5 files, 0.0 MB
+- `Prefabs/Trail Objects`: 5 files, 0.0 MB (deleted 2026-10-07 with the QA recorder)
 - `Prefabs/Market`: 1 files, 0.0 MB
 
 10 biggest files:
