@@ -48,7 +48,6 @@ public class CivilianManager : MonoBehaviour
 
             CivilianAgent pedestrianAgent = pedestrian.GetComponent<CivilianAgent>();
 
-            //pedestrian.transform.position = chosenPoints[0].position;
             pedestrianAgent.Points = chosenPoints;
             pedestrianAgent.BeginPathing();
         }

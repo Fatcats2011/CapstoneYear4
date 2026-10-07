@@ -11,12 +11,10 @@ public class TrailHandler : MonoBehaviour
     [Tooltip("Whatever trails you want enabled during the boost.")]
     [SerializeField] private TrailRenderer[] boostTrails;
     private float[] trailTime;
-    private float timeToFill = 0.1f;
 
     [Tooltip("Speed at which the boost trails shrink and grow.")]
     [SerializeField] private float boostTrailMulitplier = 1f;
 
-    private IEnumerator boostTrailCoroutine;
     // Start is called before the first frame update
     void Start()
     {

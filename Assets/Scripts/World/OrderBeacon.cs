@@ -1,10 +1,7 @@
 using DG.Tweening;
 using System.Collections;
 using System.Collections.Generic;
-using Unity.VisualScripting;
-using UnityEditor;
 using UnityEngine;
-using UnityEngine.UIElements;
 using UnityEngine.VFX;
 
 /// <summary>
@@ -37,10 +34,8 @@ public class OrderBeacon : MonoBehaviour
     [Tooltip("Height offset for the flame. Employ guess and check strategies to fine tune this number.")]
     [SerializeField] private float flameOffset = 0.06f;
 
-    //private Material cachedMat;
     private bool canInteract;
 
-    private const float REND_HEIGHT = 1.9f; // for calculating the height of the flame
     [SerializeField] private Transform flameChecker;
 
     /// <summary>
@@ -129,7 +124,6 @@ public class OrderBeacon : MonoBehaviour
 
         compassMarker.RemoveCompassUIFromAllPlayers();
         order.compassMarker.InitalizeCompassUIOnAllPlayers();
-        //meshRenderer.material = cachedMat;
         beaconFX.SetVector4("MainColor", cachedMain);
         beaconFX.SetVector4("SubColor", cachedSub);
 
@@ -137,7 +131,6 @@ public class OrderBeacon : MonoBehaviour
         this.transform.position = order.transform.position;
         this.transform.parent = order.transform;
         ToggleBeaconMesh(true);
-        //meshRenderer.material.color = color;
         isPickup = true;
         order.RemovePlayerHolding();
         beaconFX.gameObject.layer = 28; // reset to render in phase layer
@@ -155,7 +148,7 @@ public class OrderBeacon : MonoBehaviour
 
         if (Physics.Raycast(dissolveRend.transform.position, Vector3.down, out hit, Mathf.Infinity, lm))
         {
-            float diff = hit.distance;// - REND_HEIGHT;
+            float diff = hit.distance;
             dissolveRend.transform.position -= diff * Vector3.up;
             dissolveRend.transform.localPosition += flameOffset * Vector3.up;
         }
@@ -170,7 +163,6 @@ public class OrderBeacon : MonoBehaviour
     public void ToggleBeaconMesh(bool status)
     {
         canInteract = status;
-        //meshRenderer.enabled = status;
         dissolveRend.enabled = status;
         beaconFX.enabled = status;
     }

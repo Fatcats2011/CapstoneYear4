@@ -229,9 +229,6 @@ public class Order : MonoBehaviour
         ResetMesh();
         arrow.SetActive(true);
 
-        // Removes the ui from all players
-        //compassMarker.RemoveCompassUIFromAllPlayers();
-
         if (value == Constants.OrderValue.Golden)
         {
             playerHolding.HasGoldenOrder = true;
@@ -333,9 +330,6 @@ public class Order : MonoBehaviour
 
         this.transform.parent = OrderManager.Instance.transform;
         orderMeshObject.transform.rotation = initMeshRotation;
-
-        //// Removes the ui from all players
-        //compassMarker.RemoveCompassUIFromAllPlayers();
 
         arrow.SetActive(false);
         transform.LookAt(Vector3.zero);
@@ -499,7 +493,6 @@ public class Order : MonoBehaviour
         if (value == Constants.OrderValue.Golden)
             return;
 
-        //OrderManager.Instance.ReparentOrder(gameObject);
         EraseOrder();
     }
 

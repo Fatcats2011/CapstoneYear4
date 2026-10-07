@@ -1,7 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.Rendering;
 
 /// <summary>
 /// Manages the scores of all players and assigns placements.
@@ -13,14 +12,12 @@ public class ScoreManager : SingletonMonobehaviour<ScoreManager>
     private void OnEnable()
     {
         GameManager.Instance.OnSwapMenu += ResetScore;
-        //GameManager.Instance.OnSwapBegin += ResetScore;
         GameManager.Instance.OnSwapResults += UpdatePlacement;
     }
 
     private void OnDisable()
     {
         GameManager.Instance.OnSwapMenu -= ResetScore;
-        //GameManager.Instance.OnSwapBegin -= ResetScore;
         GameManager.Instance.OnSwapResults -= UpdatePlacement;
     }
 

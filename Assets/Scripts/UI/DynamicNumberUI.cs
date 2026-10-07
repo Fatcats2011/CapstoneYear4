@@ -24,13 +24,11 @@ public class DynamicNumberUI : MonoBehaviour
 
     private void OnEnable()
     {
-        //Ticker.OnTickAction010 += Tick;
         GameManager.Instance.OnSwapAnything += SetNothing;
     }
 
     private void OnDisable()
     {
-        //Ticker.OnTickAction010 -= Tick;
         GameManager.Instance.OnSwapAnything -= SetNothing;
     }
 
@@ -59,7 +57,6 @@ public class DynamicNumberUI : MonoBehaviour
             numHandler.UpdateTimerUI(timer);
         }
 
-        //waveText.text = timeSpan.ToString("m\\:ss\\.ff");
         finalOrderNumber.gameObject.SetActive(false);
     }
 

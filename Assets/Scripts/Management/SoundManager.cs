@@ -2,10 +2,8 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.Audio;
-using static Unity.VisualScripting.Member;
 using Random = UnityEngine.Random;
 
 /// <summary>
@@ -89,9 +87,6 @@ public class SoundManager : SingletonMonobehaviour<SoundManager>
     [Tooltip("We might not have player select music.")]
     [SerializeField] private bool playPlayerSelect;
 
-    // looping coroutine
-    //private IEnumerator bgmRoutine;
-
     private bool shouldPlayMain = true;
 
     private void OnEnable()
@@ -135,7 +130,6 @@ public class SoundManager : SingletonMonobehaviour<SoundManager>
         // gameplay
         sfxDictionary.Add("engine", engineActive);
         sfxDictionary.Add("idle", engineIdle);
-        //sfxDictionary.Add("drift", drift);
         sfxDictionary.Add("brake", brake);
         sfxDictionary.Add("boost_used", boostUsed);
         sfxDictionary.Add("boost_charged", boostCharged);
@@ -222,7 +216,6 @@ public class SoundManager : SingletonMonobehaviour<SoundManager>
 
     public void PlayEngineSound(AudioSource source)
     {
-        //source.volume = 0.1f;
         source.clip = engineActive.clip;
         source.volume = engineActive.volume;
         source.gameObject.SetActive(true);

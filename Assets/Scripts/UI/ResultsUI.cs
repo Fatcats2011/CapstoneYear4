@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using UnityEngine;
 using TMPro;
 using UnityEngine.UI;
-using UnityEngine.SceneManagement;
 
 public class ResultsUI : MonoBehaviour
 {
@@ -28,6 +27,5 @@ public class ResultsUI : MonoBehaviour
     private void ResetGame()
     {
         SceneFlow.Current.ReturnToMenu();
-        //GameManager.Instance.SetGameState(GameState.Menu);
     }
 }

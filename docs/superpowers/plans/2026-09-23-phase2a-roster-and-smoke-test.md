@@ -1455,7 +1455,7 @@ Files: `Assets/Scripts/Player/PlayerInstantiate.cs`, `Assets/Scripts/Menu/MenuIn
 - Modify: `Assets/Scripts/Management/ScoreManager.cs:43-55` — `UpdateOrderHandlers(PlayerRoster)`
 - Modify: `Assets/Scripts/Player/PlayerInstantiate.cs` (CRLF) and `Assets/Scripts/Menu/MainMenu.cs:45` (CRLF) — the two `UpdateOrderHandlers` callers
 - Modify: `Assets/Scripts/Management/CutoutManager.cs:24-33`, `Assets/Scripts/Management/OrderManager.cs:246-258` (`InitTutorial`)
-- Modify: `Assets/Scripts/UI/CompassMarker.cs:33-84`, `Assets/Scripts/BeconIndicator.cs:92-107` (CRLF), `Assets/Scripts/DrivingIndicators.cs:83-107` (CRLF), `Assets/Scripts/Management/BoostPadManager.cs:39-54` (CRLF)
+- Modify: `Assets/Scripts/UI/CompassMarker.cs:33-84`, `Assets/Scripts/UI/BeconIndicator.cs:92-107` (CRLF), `Assets/Scripts/UI/DrivingIndicators.cs:83-107` (CRLF), `Assets/Scripts/Management/BoostPadManager.cs:39-54` (CRLF)
 - Test: `Assets/Tests/Editor/SpawnManagerTests.cs`, `Assets/Tests/Editor/ScoreManagerTests.cs` (+ `.meta`s)
 
 **Interfaces:**
@@ -1768,7 +1768,7 @@ Expected: `tests: 4 total, 4 passed, 0 failed, 0 skipped`.
 
 and delete `using UnityEngine.InputSystem;`.
 
-`Assets/Scripts/BeconIndicator.cs` — in `InitalizeBeconIndicator`, the loop after `playerCameraTransforms = new Transform[4];` becomes
+`Assets/Scripts/UI/BeconIndicator.cs` — in `InitalizeBeconIndicator`, the loop after `playerCameraTransforms = new Transform[4];` becomes
 
 ```csharp
         // Each split-screen view on this machine sees its own copy of the beacon, turned towards its camera
@@ -1780,7 +1780,7 @@ and delete `using UnityEngine.InputSystem;`.
         }
 ```
 
-`Assets/Scripts/DrivingIndicators.cs` — in `UpdatePlayerReferencesForObjects`, the loop after `playerCameraTransforms = new Transform[4];` becomes
+`Assets/Scripts/UI/DrivingIndicators.cs` — in `UpdatePlayerReferencesForObjects`, the loop after `playerCameraTransforms = new Transform[4];` becomes
 
 ```csharp
         // Every other split-screen view on this machine sees this player's indicator, turned towards its camera

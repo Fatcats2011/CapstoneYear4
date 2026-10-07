@@ -151,4 +151,3 @@ Collected from the plan ledgers. None blocks a release.
   - `SteamManager` has no guard against a second `SteamAPI.Init` if domain reload is ever turned off.
   - Keyboard presses spawn and destroy a player prefab.
   - A few unused usings, and some test-message wording.
-- The old ledger folders under `.superpowers/sdd/` (Phases 1A, 1B, 2A, 3C, 3D) hold nothing else. They're git-ignored scratch, and can be deleted.

@@ -59,12 +59,6 @@ public class QAHandler : MonoBehaviour
         shouldTrail = true;
     }
 
-    public void SetDeath()
-    {
-        Instantiate(deathIcon, transform.position + iconHeight * transform.up, 
-            transform.rotation * Quaternion.Euler(90,1,1), trailParent.transform);
-    }
-
     public void ResetQA()
     {
         easy = 0;

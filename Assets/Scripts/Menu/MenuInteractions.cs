@@ -1,4 +1,3 @@
-using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -282,11 +281,6 @@ public class MenuInteractions : MonoBehaviour
         }
         else
         {
-/*            if(hostPlayer) // outdated tutorial enabling stuff
-            {
-                tutorialToggle.gameObject.SetActive(false);
-                uiHandler.SouthFaceEvent.RemoveListener(tutorialToggle.SetTutorial);
-            }*/
             readyUpText.SetActive(false);
             readiedUp = false;
             PlayerInstantiate.Instance.UnreadyUp(ballDriving.playerIndex - 1);

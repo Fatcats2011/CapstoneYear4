@@ -28,7 +28,6 @@ public class CutoutHandler : MonoBehaviour
 
     private Dissolver barrierDissolver;
     private BoxCollider barrierCollider;
-    //private BoxCollider cutoutMeshCollider;
 
     private bool hasStolen = false;
 
@@ -66,7 +65,6 @@ public class CutoutHandler : MonoBehaviour
 
         barrierDissolver = barrier.GetComponent<Dissolver>();
         barrierCollider = barrier.GetComponent<BoxCollider>();
-        //cutoutMeshCollider = cutoutModel.GetComponent<BoxCollider>();
 
         barrierCollider.enabled = true;
     }
@@ -111,10 +109,8 @@ public class CutoutHandler : MonoBehaviour
     /// </summary>
     private void SpinCutout(float tweenTime)
     {
-        //cutoutMeshCollider.enabled = false;
         Tween spinning = cutoutModel.DORotate(new Vector3(cutoutModel.rotation.x, 360, cutoutModel.rotation.z), tweenTime, RotateMode.LocalAxisAdd);
         spinning.SetEase(Ease.OutBack); //an easing function which dictates a steep climb, slight overshoot, then gradual correction
-        //spinning.onComplete += () => cutoutMeshCollider.enabled = true;
     }
 
     private void OnTriggerStay(Collider other)

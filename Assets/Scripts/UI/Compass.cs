@@ -1,9 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
-using System.Linq;
-using System.Net;
 using UnityEngine;
-using UnityEngine.InputSystem;
 using UnityEngine.UI;
 
 public class Compass : MonoBehaviour
@@ -23,12 +20,6 @@ public class Compass : MonoBehaviour
 
 
     [SerializeField] List<CompassInformationInstance> compassInformationObjects = new List<CompassInformationInstance>();
-
-    //[SerializeField] List<CompassIconUI> compassUIObjects = new List<CompassIconUI>();
-    //public List<CompassIconUI> CompassUIObjects { get { return compassUIObjects; } }
-
-    //[SerializeField] List<CompassMarker> compassMarkerObjects = new List<CompassMarker>();
-    //public List<CompassMarker> CompassMarkerObjects { get { return compassMarkerObjects; } }
 
     [SerializeField] float compassUnit;
 
@@ -50,9 +41,6 @@ public class Compass : MonoBehaviour
 
     private void Update()
     {
-        // Updates the uv rect of the compass image, to scroll based on player rotation
-        //compassImage.uvRect = new Rect((player.localEulerAngles.y + orbitalCamera.smoothXAxis) / 360f, 0f, 1f, 1f);
-
         // Loops for all markers on player and updates their position on the compass ui (backwards: a marker whose object is
         // gone leaves the list on the way)
         for (int i = compassInformationObjects.Count - 1; i >= 0; i--)
@@ -63,7 +51,6 @@ public class Compass : MonoBehaviour
                 CompassIconUI marker = instance.compassIcon;
 
                 // Updates the position on the compass
-                //marker.imageRect.rectTransform.anchoredPosition = GetPosOnCompass(marker.objectReference);
                 marker.imageRect.rectTransform.anchoredPosition = GetPosOnCompass(marker.objectReference);
 
                 // Calculates the distance of the player to the object
@@ -138,12 +125,6 @@ public class Compass : MonoBehaviour
         CompassInformationInstance currentCompassIconInstance = new CompassInformationInstance(compassIconUI, marker);
 
         compassInformationObjects.Add(currentCompassIconInstance);
-
-        // Adds to list
-        //compassMarkerObjects.Add(marker);
-        //compassUIObjects.Add(compassIconUI);
-
-        //return compassIconUI;
     }
 
     ///<summary>

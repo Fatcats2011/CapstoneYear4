@@ -1,8 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using System.Runtime.CompilerServices;
-using Unity.VisualScripting;
 using UnityEngine;
 
 /// <summary>
@@ -58,9 +56,6 @@ public class OrderHandler : MonoBehaviour
 
     private void Start()
     {
-        /*score = 0; // init score to 0
-        numberHandler.UpdateScoreUI(score.ToString());*/
-
         ScoreManager.Instance.AddOrderHandler(this);
         ball = transform.parent.GetComponentInChildren<BallDriving>();
         soundPool = GetComponent<SoundPool>();

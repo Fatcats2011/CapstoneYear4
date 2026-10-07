@@ -1,16 +1,11 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEditor;
-using Unity.VisualScripting;
 using UnityEngine.UI;
 using UnityEngine.Rendering.Universal;
-using System.Numerics;
 
 public class PhaseIndicator : MonoBehaviour
 {
-    bool initalized = false;
-
     [SerializeField] SliderBar hornSliderLeft;
     [SerializeField] SliderBar hornSliderRight;
     [SerializeField] float intensity = 3;
@@ -19,7 +14,6 @@ public class PhaseIndicator : MonoBehaviour
     [Range(0f, 1f)]
     [SerializeField] float hornGlowValue = 0;
     private float hornValueMax = 1f;
-    float hornGlowStep;
 
     [SerializeField] Color readyColor;
     [SerializeField] Gradient hornGlowGraident;
@@ -41,22 +35,15 @@ public class PhaseIndicator : MonoBehaviour
 
     public bool ShowPhase = false;
 
-    Coroutine hornStatus;
-
     private const float RATIO_EPSILON = 0.0001f;
     private float lastRatio = float.NaN; // the gauge ratio last drawn on the sliders and horns
 
     private float currentBoostMaxTime;
     private float currentBoostRechargeAmount;
 
-    // Define a delegate for the completion of the glow depletion
-    public delegate void GlowDepleteComplete();
-
     private void Start()
     {
         soundPool = GetComponent<SoundPool>();
-
-        hornGlowStep = hornValueMax / 100;
     }
 
     private void Update()
@@ -87,8 +74,6 @@ public class PhaseIndicator : MonoBehaviour
         ghostRenderer.materials = ghostMaterials;
 
         lastRatio = float.NaN; // the new horn material needs drawing again
-
-        initalized = true;
     }
 
     /// <summary>

@@ -1,6 +1,5 @@
 using System.Collections;
 using System.Collections.Generic;
-using Unity.VisualScripting;
 using UnityEngine;
 
 /// <summary>
@@ -22,7 +21,6 @@ public class PhaseChecker : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        //Debug.DrawRay(transform.position, target.position - transform.position, Color.magenta, 0.1f);
         RaycastHit hit;
         if (Physics.Raycast(transform.position, target.position - transform.position, out hit, Vector3.Distance(transform.position, target.position), 1 << 9))
         {

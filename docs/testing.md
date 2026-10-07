@@ -71,3 +71,10 @@
 - `DOA_MIRROR` and `DOA_UNITY` change the mirror folder and the Unity install.
 - `DOA_NO_SYNC=1` tests the mirror without copying the project into it first.
 - Unity runs with graphics, because the smoke test renders real scenes. Unity started with `-nographics` crashes in URP.
+
+## A quick compile check
+
+- `python tools/compile-check.py` compiles the game, editor and test scripts in about 30 s, without Unity. It ends with `COMPILES` or the errors. Use it while editing, then run the tests.
+- `--warnings` also lists unused locals and private fields.
+- It needs the .NET SDK, the `.csproj` files Unity generates (Assets → Open C# Project, once), and a mirror that `run-tests.sh` has built once: package assemblies come from there.
+- Its file list is rebuilt from disk each time, so scripts added, moved or deleted outside the editor still count.

@@ -26,18 +26,6 @@ public class HeatmapCamera : MonoBehaviour
         }
     }
 
-/*    private void OnEnable()
-    {
-        GameManager.Instance.OnSwapGoldenCutscene += TakePicture;
-        GameManager.Instance.OnSwapResults += TakeFinalPicture;
-    }
-
-    private void OnDisable()
-    {
-        GameManager.Instance.OnSwapGoldenCutscene -= TakePicture;
-        GameManager.Instance.OnSwapResults -= TakeFinalPicture;
-    }*/
-
     private void TakePicture()
     {
 

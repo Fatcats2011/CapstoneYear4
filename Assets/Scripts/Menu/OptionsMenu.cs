@@ -115,8 +115,6 @@ public class OptionsMenu : SingletonMonobehaviour<OptionsMenu>
         UpdateFullscreen(fullscreenPosition);
 
         GraphicsQuality.Apply(qualityPosition);
-
-        //UpdateSelectors();
     }
 
 

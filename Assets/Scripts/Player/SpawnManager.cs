@@ -39,7 +39,6 @@ public class SpawnManager : SingletonMonobehaviour<SpawnManager>
         if (flow != null && flow.LeavingForMenu)
             return;
 
-        //gameManager.SetGameState(GameState.StartingCutscene);
         // Set game to begin upon loading into scene
         if (TutorialManager.Instance.ShouldTutorialize)
         {

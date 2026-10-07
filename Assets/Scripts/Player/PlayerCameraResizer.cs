@@ -1,7 +1,6 @@
 using Cinemachine;
 using System.Collections;
 using System.Collections.Generic;
-using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.Rendering.Universal;
 using UnityEngine.UI;
@@ -307,13 +306,11 @@ public class PlayerCameraResizer : MonoBehaviour
         {
             menuUICamera.enabled = true;
             drivingUICamera.enabled = false;
-            //drivingCanvas.SetActive(false);
         }
         else 
         {
             menuUICamera.enabled = false;
             drivingUICamera.enabled = true;
-            //drivingCanvas.SetActive(true);
         }
     }
 

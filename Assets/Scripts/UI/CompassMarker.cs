@@ -15,16 +15,6 @@ public class CompassMarker : MonoBehaviour
         playerInstantiate = PlayerInstantiate.Instance;
     }
 
-    private void OnEnable()
-    {
-        //GameManager.Instance.OnSwapResults += RemoveCompassUIFromAllPlayers;
-    }
-
-    private void OnDisable()
-    {
-        //GameManager.Instance.OnSwapResults -= RemoveCompassUIFromAllPlayers;
-    }
-
     ///<summary>
     /// Initalizes the compass ui on all players
     ///</summary>

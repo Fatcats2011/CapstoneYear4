@@ -7,10 +7,7 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 using DG.Tweening;
-using UnityEditor;
 using UnityEngine.InputSystem;
-using System.ComponentModel;
-using System.Runtime.InteropServices.WindowsRuntime;
 
 /// <summary>
 /// Version 3.0 of the vehicle controller. Drives by rolling a sphere collider around the world then simply matching the bike model to its position.
@@ -200,7 +197,6 @@ public class BallDriving : MonoBehaviour
     private Rumbler rumble;
 
     private Rigidbody sphereBody; //just reference to components of the sphere
-    private Transform sphereTransform;
     private Collider sphereCollider;
     public Collider SphereCollider { get { return sphereCollider; } }
     private Respawn respawn; // used to update the respawn point when grounded
@@ -220,7 +216,7 @@ public class BallDriving : MonoBehaviour
 
     private float rotationAmount; //the amount to turn on any given frame
 
-    private bool reverseGear, forwardGear, grounded, airboost;
+    private bool reverseGear, forwardGear, grounded;
     public bool Grounded => grounded;
     private bool coyoteing = false;
     private bool hasCoyoted = false;
@@ -453,7 +449,6 @@ public class BallDriving : MonoBehaviour
         boostRechargeTimeSet = boostRechargeTime;
 
         sphereBody = sphere.GetComponent<Rigidbody>();
-        sphereTransform = sphere.GetComponent<Transform>();
         sphereCollider = sphere.GetComponent<Collider>();
 
         pMat = new PhysicMaterial();
@@ -464,8 +459,6 @@ public class BallDriving : MonoBehaviour
         sphereCollider.material = pMat;
 
         startingDrag = sphereBody.drag;
-        //baseFriction = selfPhysicsMaterial.dynamicFriction;
-        //frictionDifference = brakingFriction - baseFriction;
 
         listening = true;
         StartListening(); // drift on the drift button, boost on the boost button
@@ -975,14 +968,12 @@ public class BallDriving : MonoBehaviour
         {
             driftTier = 2;
             DriftSparkSet(2);
-            //soundPool.PlayDriftSpark(1);
             rumble.SuspendedRumble(pad, 0.02f, 0.13f);
         }
         if (driftPoints > (driftBoostThreshold * 3))
         {
             driftTier = 3;
             DriftSparkSet(3);
-            //soundPool.PlayDriftSpark(2);
             rumble.SuspendedRumble(pad, 0.04f, 0.16f);
         }
 
@@ -1579,15 +1570,6 @@ public class BallDriving : MonoBehaviour
         spinOutTimeCoroutine = SpinOutTime();
         StartCoroutine(spinOutTimeCoroutine);
     }
-    private void StopSpinOutTime()
-    {
-        if (spinOutTimeCoroutine != null)
-        {
-            StopCoroutine(spinOutTimeCoroutine);
-            spinOutTimeCoroutine = null;
-        }
-    }
-
     private void StartBrakeCheck()
     {
         brakeCheckCoroutine = BrakeCheck();

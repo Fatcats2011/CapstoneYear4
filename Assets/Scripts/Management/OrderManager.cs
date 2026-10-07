@@ -73,7 +73,6 @@ public class OrderManager : SingletonMonobehaviour<OrderManager>
     public int FinalOrderValue { get { return (int)finalOrderValue; } set { finalOrderValue = (float)value; } }
 
     private List<Order> activeOrders = new List<Order>(); // list of all the orders in the game at any time
-    //private List<Order> ordersThisWave = new List<Order>();
 
     private IEnumerator easySpawnCoroutine, mediumSpawnCoroutine, hardSpawnCoroutine; // coroutines for managing cooldowns of the order spawns
 
@@ -276,7 +275,6 @@ public class OrderManager : SingletonMonobehaviour<OrderManager>
         if (!GameAuthority.IsAuthority)
             return;
 
-        //finalOrder.EraseGoldWithoutDelivering();
         OnDeleteActiveOrders?.Invoke();
 
         GetOrders();
@@ -314,10 +312,6 @@ public class OrderManager : SingletonMonobehaviour<OrderManager>
                 OnMainGameFinishes?.Invoke();
 
                 DisableSpawning();
-
-                /*StopEasySpawn();
-                StopMediumSpawn();
-                StopHardSpawn();*/
 
                 MasterSkywalker();
                 StartCoroutine(PostGameClarity(false));
@@ -469,7 +463,6 @@ public class OrderManager : SingletonMonobehaviour<OrderManager>
     /// <param name="amount">Amount you want to increment by (typically +1 or -1)</param>
     public void IncrementCounters(Constants.OrderValue value, int amount)
     {
-        //if(amount == -1 && scarcityMode) { return; } // won't let you count down orders on scarcity mode
         switch(value)
         {
             case Constants.OrderValue.Easy:
@@ -699,6 +692,5 @@ public class OrderManager : SingletonMonobehaviour<OrderManager>
         {
             GameManager.Instance.SetGameState(GameState.Results);
         }
-        //GameManager.Instance.SetGameState(GameState.GoldenCutscene);
     }
 }

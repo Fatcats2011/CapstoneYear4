@@ -114,7 +114,6 @@ public class PlayerInstantiate : SingletonMonobehaviour<PlayerInstantiate>
         gameManager.OnSwapResults -= DisableReadiedUp;
         gameManager.OnSwapResults -= ResetPlayerCanvas;
         gameManager.OnSwapResults -= SwapForResults;
-        //gameManager.OnSwapResults -= SetAllPlayerSpawn;
 
         gameManager.OnSwapMenu -= SwapForMainMenu;
 

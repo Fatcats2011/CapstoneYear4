@@ -142,7 +142,7 @@ public class QAManager : SingletonMonobehaviour<QAManager>
             File.AppendAllLines(filePath, new[] { string.Join(",", data) });
 
         }
-        catch(IOException e) // mainly occurs when the file is open somewhere else
+        catch(IOException) // mainly occurs when the file is open somewhere else
         {
 
             return;
@@ -168,7 +168,7 @@ public class QAManager : SingletonMonobehaviour<QAManager>
 
             File.AppendAllText(filePath, Environment.NewLine);
         }
-        catch(IOException e) // mainly occurs when the file is open somewhere else
+        catch(IOException) // mainly occurs when the file is open somewhere else
         {
 
             return;

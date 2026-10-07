@@ -1,10 +1,8 @@
 using DG.Tweening;
 using System.Collections;
 using System.Collections.Generic;
-using System.Runtime.CompilerServices;
 using UnityEngine;
 using UnityEngine.AI;
-using UnityEngine.UIElements;
 
 /// <summary>
 /// Runs individual pedestrians. They move between a number of points, cycling between them.
@@ -178,38 +176,13 @@ public class CivilianAgent : MonoBehaviour
         slowUpdateCoroutine = SlowUpdate();
         StartCoroutine(slowUpdateCoroutine);
     }
-    private void StopSlowUpdate()
-    {
-        if (slowUpdateCoroutine != null)
-        {
-            StopCoroutine(slowUpdateCoroutine);
-            slowUpdateCoroutine = null;
-        }
-    }
     private void StartDeath()
     {
         deathCoroutine = Death();
         StartCoroutine(deathCoroutine);
     }
-    private void StopDeath()
-    {
-        if (deathCoroutine != null)
-        {
-            StopCoroutine(deathCoroutine);
-            deathCoroutine = null;
-        }
-    }
     private void StartKickDeath()
     {
         kickDeathCoroutine = KickDeath();
         StartCoroutine(kickDeathCoroutine);
-    }
-    private void StopKickDeath()
-    {
-        if (kickDeathCoroutine != null)
-        {
-            StopCoroutine(kickDeathCoroutine);
-            kickDeathCoroutine = null;
-        }
-    }
-}
+    }}

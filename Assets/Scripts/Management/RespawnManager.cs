@@ -7,25 +7,10 @@ public class RespawnManager : SingletonMonobehaviour<RespawnManager>
     [Tooltip("Parent Game Object for the respawn points.")]
     [SerializeField] private GameObject RSPParent;
 
-    /*[Tooltip("Parent Game Object for the respawn points of the final order sequence map.")]
-    [SerializeField] private GameObject finalMapRSPParent;*/
-
     [Tooltip("Will return any respawn point less than this distance, even if it's not technically the closest.")]
     [SerializeField] private float closeEnough = 10f;
 
     private RespawnPoint[] respawnPoints;
-
-    /*private void OnEnable()
-    {
-        GameManager.Instance.OnSwapStartingCutscene += InitMainRSPs;
-        GameManager.Instance.OnSwapGoldenCutscene += InitFinalRSPs;
-    }
-
-    private void OnDisable()
-    {
-        GameManager.Instance.OnSwapStartingCutscene -= InitMainRSPs;
-        GameManager.Instance.OnSwapGoldenCutscene -= InitFinalRSPs;
-    }*/
 
     private void Start()
     {

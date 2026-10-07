@@ -3,7 +3,6 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Events;
-using UnityEngine.UI;
 
 [AddComponentMenu("UI/SliderBar", 34)]
 public class SliderBar : MonoBehaviour
@@ -22,7 +21,6 @@ public class SliderBar : MonoBehaviour
     /// The slider value for the slider
     /// </summary>
     [Range(0f, 1f)] public float value;
-    //public float Value { get { return value; } set { Mathf.Clamp(value, 0, 1); } }
 
     /// <summary>
     /// Event type used by the UI.Slider.

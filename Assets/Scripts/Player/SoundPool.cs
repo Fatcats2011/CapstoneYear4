@@ -1,9 +1,6 @@
-using DG.Tweening;
 using System.Collections;
 using System.Collections.Generic;
-using System.Diagnostics.Tracing;
 using UnityEngine;
-using UnityEngine.Animations;
 
 public class SoundPool : MonoBehaviour
 {
@@ -26,8 +23,6 @@ public class SoundPool : MonoBehaviour
 
     // another machine's scooter (online): the phasing sound it plays for its owner, until their phase ends
     private AudioSource remotePhaseSource;
-
-    private IEnumerator emoteRoutine;
 
     private void Awake()
     {
@@ -390,23 +385,6 @@ public class SoundPool : MonoBehaviour
     }
 
     /// <summary>
-    /// This coroutine "fades out" a passed in audio source over duration seconds. It's not called with the dedicated start/stop coroutine methods
-    /// as it might need to run on multiple threads at once.
-    /// </summary>
-    /// <param name="source">The audio source to fade out</param>
-    /// <param name="duration">Time in seconds the audio source takes to fade</param>
-    /// <returns></returns>
-    private IEnumerator FadeOutSFX(AudioSource source, float duration)
-    {
-        source.DOFade(0, duration);
-        while (source.volume > 0.1f)
-        {
-            yield return null;
-        }
-        ResetSource(source);
-    }
-
-    /// <summary>
     /// This coroutine is used for killing non-looping SFXs. It also won't be called with dedicated methods.
     /// </summary>
     /// <param name="source">Source to be killed after playback</param>
@@ -418,16 +396,5 @@ public class SoundPool : MonoBehaviour
             yield return null;
         }
         ResetSource(source);
-    }
-
-    private IEnumerator WaitForBrake()
-    {
-        while (engineSource.isPlaying)
-        {
-            yield return null;
-        }
-        engineSource.loop = true;
-        SoundManager.Instance.PlayIdleSound(engineSource);
-        
     }
 }
