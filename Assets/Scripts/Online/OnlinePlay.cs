@@ -133,16 +133,10 @@ public class OnlinePlay : MonoBehaviour, ISessionControl
     }
 
     /// <summary>
-    /// Y in player select: hosts a lobby and invites friends, or invites more once online. One player per machine
+    /// Y in player select: hosts a lobby and invites friends, or invites more once online. Every player here plays
     /// </summary>
     public void PlayOnline()
     {
-        if (!OnlineGame.CanGoOnline())
-        {
-            Tell(LobbyRules.ONE_PLAYER);
-            return;
-        }
-
         if (GameAuthority.IsOnline)
             Lobby.Invite();
         else
@@ -165,8 +159,7 @@ public class OnlinePlay : MonoBehaviour, ISessionControl
     /// <param name="online">Whether this machine is online</param>
     /// <param name="inLobby">Whether it's in a lobby (the editor's Online menu plays without one)</param>
     /// <param name="steam">Whether lobbies work here (Steam is running)</param>
-    /// <param name="localPlayers">Players on this machine</param>
-    public static string HintFor(GameState state, bool online, bool inLobby, bool steam, int localPlayers)
+    public static string HintFor(GameState state, bool online, bool inLobby, bool steam)
     {
         if (state != GameState.PlayerSelect)
             return "";
@@ -174,7 +167,7 @@ public class OnlinePlay : MonoBehaviour, ISessionControl
         if (online)
             return inLobby ? HINT_IN_LOBBY : HINT_LEAVE;
 
-        return steam && localPlayers <= 1 ? HINT_PLAY_ONLINE : "";
+        return steam ? HINT_PLAY_ONLINE : "";
     }
 
     void Update()
@@ -194,7 +187,7 @@ public class OnlinePlay : MonoBehaviour, ISessionControl
             Lobby.ShowState(shownState);
         }
 
-        string hint = HintFor(game.MainState, GameAuthority.IsOnline, Lobby.Current != 0, lobbies.Available, LocalPlayers());
+        string hint = HintFor(game.MainState, GameAuthority.IsOnline, Lobby.Current != 0, lobbies.Available);
         if (hint != shownHint)
         {
             shownHint = hint;
@@ -212,12 +205,7 @@ public class OnlinePlay : MonoBehaviour, ISessionControl
 
         ulong lobby = requested;
         requested = 0;
-        Lobby.Answer(lobby, LobbyRules.Busy(game.MainState, LocalPlayers(), GameAuthority.IsOnline));
-    }
-
-    static int LocalPlayers()
-    {
-        return PlayerInstantiate.Instance == null ? 0 : PlayerInstantiate.Instance.Roster.LocalCount;
+        Lobby.Answer(lobby, LobbyRules.Busy(game.MainState, GameAuthority.IsOnline));
     }
 
     void Tell(string message)

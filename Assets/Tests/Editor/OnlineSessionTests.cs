@@ -211,10 +211,11 @@ namespace DoA.Tests
             Approve(session, 5, "1.0.0");
             Approve(session, 9, "1.0.0");
 
-            Assert.AreEqual(0, session.SeatOf(NetworkManager.ServerClientId));
-            Assert.AreEqual(1, session.SeatOf(5));
-            Assert.AreEqual(2, session.SeatOf(9));
-            Assert.AreEqual(-1, session.SeatOf(3), "never joined");
+            Assert.IsTrue(session.Owns(NetworkManager.ServerClientId, 0));
+            Assert.IsTrue(session.Owns(5, 1));
+            Assert.IsTrue(session.Owns(9, 2));
+            Assert.AreEqual(1, session.SeatsHeldBy(5), "one seat each at joining");
+            Assert.AreEqual(0, session.SeatsHeldBy(3), "never joined");
         }
 
         [Test]

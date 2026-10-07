@@ -91,9 +91,9 @@ namespace DoA.Tests
         [TestCase(GameState.PlayerSelect)]
         [TestCase(GameState.Options)]
         [TestCase(GameState.Credits)]
-        public void Busy_InTheMenus_WithOnePlayer_IsFree(GameState state)
+        public void Busy_InTheMenus_IsFree(GameState state)
         {
-            Assert.IsNull(LobbyRules.Busy(state, 1, false));
+            Assert.IsNull(LobbyRules.Busy(state, false));
         }
 
         [TestCase(GameState.Loading)]
@@ -102,25 +102,20 @@ namespace DoA.Tests
         [TestCase(GameState.Paused)]
         public void Busy_InAMatch_SaysFinishItFirst(GameState state)
         {
-            Assert.AreEqual(LobbyRules.BUSY, LobbyRules.Busy(state, 1, false));
+            Assert.AreEqual(LobbyRules.BUSY, LobbyRules.Busy(state, false));
         }
 
         [Test]
-        public void Busy_NobodyHereYet_IsFree()
+        public void Busy_SeveralPlayersHere_IsFree()
         {
-            Assert.IsNull(LobbyRules.Busy(GameState.Menu, 0, false));
-        }
-
-        [Test]
-        public void Busy_TwoPlayersHere_SaysOnePlayerPerMachine()
-        {
-            Assert.AreEqual(LobbyRules.ONE_PLAYER, LobbyRules.Busy(GameState.PlayerSelect, 2, false));
+            // Phase 3J: everyone here plays online (the host turns away those it has no seat for)
+            Assert.IsNull(LobbyRules.Busy(GameState.PlayerSelect, false));
         }
 
         [Test]
         public void Busy_AlreadyOnline_SaysLeaveFirst()
         {
-            Assert.AreEqual(LobbyRules.ALREADY_ONLINE, LobbyRules.Busy(GameState.MainLoop, 1, true));
+            Assert.AreEqual(LobbyRules.ALREADY_ONLINE, LobbyRules.Busy(GameState.MainLoop, true));
         }
 
         [Test]

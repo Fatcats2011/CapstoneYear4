@@ -1,8 +1,8 @@
 # Editor to-do (master list)
 
-Things only you can do in the Unity editor (and on two PCs), top to bottom. Updated 2026-10-07 (Phase 5A: the deferred fixes, and bumps online).
+Things only you can do in the Unity editor (and on two PCs), top to bottom. Updated 2026-10-07 (Phase 5A: the deferred fixes and bumps online; Phase 3J: several players on one machine online).
 
-## 1. Phase 5A: import, then check (25 minutes)
+## 1. Phases 5A and 3J: import, then check (40 minutes)
 
 - **Import:** click into the main editor, then the ParrelSync clone. The patched Steam transport changed again (`Packages/.../CHANGES-DOA.md` items 6 and 7). No scene or prefab changes. The Console should end with no red errors.
 - **Joining:** in player select, press keys other than Space and Enter: no player appears, and the hint says to press Space. A controller still joins on any button, the keyboard on Space or Enter.
@@ -10,6 +10,12 @@ Things only you can do in the Unity editor (and on two PCs), top to bottom. Upda
 - **Bumps, in two editors:** drive into the other editor's scooter without boosting. It's pushed away in that editor too (a round trip later). If the push feels too weak or too strong, change `BumpRules.MAX_SPEED` (a bump that fast pushes as hard as a clash).
 - **Two PCs over Steam, optional:** a kicked player sees "Disconnected: too many messages." and can't reconnect until the host hosts again. Kicking needs a modified game, so skip this unless you have one.
 - **Steam's Rich Presence file** (`docs/steam/rich-presence-english.vdf`) is plain text now: upload it again when you upload it at all.
+- **Two players on one machine online (Phase 3J), in two editors** (`docs/online.md`, Two editors on one computer):
+  - Host in editor 1. In editor 2, have two controllers in player select (F1 adds a test pad), then Join: both sit down (the second a moment later), each with its own view; editor 1 shows three scooters.
+  - In editor 1, press A on a second controller in player select: it sits in the fourth seat. A fifth controller anywhere is told "That match is full.".
+  - B on editor 2's second player: its scooter goes in both editors. B on editor 2's first player leaves the match, as before.
+  - Ready everyone up and play a wave: four views across the two editors, steals and orders as usual.
+- **Two PCs over Steam, optional:** two players on each PC, playing together.
 
 ## 2. Let both editors import Phases 4C and 4D (2 minutes)
 

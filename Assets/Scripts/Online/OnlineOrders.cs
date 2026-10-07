@@ -147,7 +147,7 @@ public class OnlineOrders : MonoBehaviour
 
     void DropFor(ulong machine, int seat, Vector3 spot1, Vector3 spot2, bool spinOut)
     {
-        if (session.SeatOf(machine) != seat || !AcceptsDrop(spot1, spot2))
+        if (!session.Owns(machine, seat) || !AcceptsDrop(spot1, spot2))
             return;
 
         OrderHandler handler = OrderSync.HandlerIn(seat);

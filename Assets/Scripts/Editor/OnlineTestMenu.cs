@@ -29,12 +29,6 @@ public static class OnlineTestMenu
     [MenuItem(MENU + "Host", false, 1)]
     static void Host()
     {
-        if (!OnlineGame.CanGoOnline())
-        {
-            Debug.LogWarning(OnlineGame.ONE_PLAYER);
-            return;
-        }
-
         if (!Prepare().HostDirect(THIS_COMPUTER, OnlineSession.DIRECT_PORT))
         {
             Debug.LogWarning("Online: couldn't host. Is another editor hosting on port " + OnlineSession.DIRECT_PORT + "?");
@@ -49,12 +43,6 @@ public static class OnlineTestMenu
     [MenuItem(MENU + "Join This Computer", false, 2)]
     static void Join()
     {
-        if (!OnlineGame.CanGoOnline())
-        {
-            Debug.LogWarning(OnlineGame.ONE_PLAYER);
-            return;
-        }
-
         Prepare().JoinDirect(THIS_COMPUTER, OnlineSession.DIRECT_PORT);
     }
 

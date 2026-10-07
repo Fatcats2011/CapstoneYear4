@@ -298,7 +298,7 @@ Progress (2026-09-28):
 
 ### Task 3.9 (optional, post-launch): Online + couch
 
-- [ ] Several local players per client: each local `PlayerInput` requests its own `NetworkPlayer` owned by that client; that client split-screens only its local slots.
+- [x] Several local players per client: each local `PlayerInput` requests its own `NetworkPlayer` owned by that client; that client split-screens only its local slots. *(Phase 3J, `2026-10-06-phase3j-online-couch.md`: seats belong to machines, several each; a machine joins with one and asks for each further one; its players move into its seats.)*
 
 ---
 

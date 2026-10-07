@@ -4,7 +4,7 @@ using System.Collections.Generic;
 /// <summary>
 /// The requests a client may send the host (OnlineMatch's ServerRpcs)
 /// </summary>
-public enum RpcKind { Cue, Drop, Steal, Respawn, Learnt, Cutout, Loaded, Bump }
+public enum RpcKind { Cue, Drop, Steal, Respawn, Learnt, Cutout, Loaded, Bump, Seat }
 
 /// <summary>
 /// Host: how many requests each machine may send, per kind, as a token bucket: a burst, refilled over time. An honest
@@ -56,12 +56,17 @@ public class RateGate
     }
 
     /// <summary>
-    /// Whether a request is let through; one that isn't counts towards disconnecting its sender
+    /// Whether a request is let through; one that isn't counts towards disconnecting its sender. A machine with several
+    /// players (sharing its screen) gets each allowance that many times over
     /// </summary>
-    public bool Allow(ulong sender, RpcKind kind)
+    public bool Allow(ulong sender, RpcKind kind, int players = 1)
     {
         double now = clock();
         Allowance(kind, out int burst, out double perSecond);
+        // A machine with several players (sharing its screen) sends several players' requests
+        players = Math.Max(1, players);
+        burst *= players;
+        perSecond *= players;
 
         if (!buckets.TryGetValue((sender, kind), out Bucket bucket))
         {

@@ -45,20 +45,35 @@ public static class RemoteSound
     }
 
     /// <summary>
-    /// How loud a sound from there is here: by its distance from this machine's online player's ball. In full when this
-    /// machine has no such player
+    /// How loud a sound from there is here: by its distance from the nearest of this machine's players' balls (several
+    /// can share its screen). In full when this machine has none
     /// </summary>
     public static float VolumeAt(Vector3 where)
     {
         PlayerInstantiate players = PlayerInstantiate.Instance;
-        if (players == null || players.OnlineSeat < 0 || players.OnlineSeat >= Constants.MAX_PLAYERS)
+        if (players == null)
             return 1f;
 
-        PlayerSlot mine = players.Roster[players.OnlineSeat];
-        BallDriving driving = mine != null && mine.Player != null ? mine.Player.GetComponentInChildren<BallDriving>(true) : null;
-        if (driving == null || driving.Sphere == null)
-            return 1f;
+        listeners.Clear();
+        foreach (PlayerSlot mine in players.Roster.LocalPlayers)
+        {
+            BallDriving driving = mine.Player != null ? mine.Player.GetComponentInChildren<BallDriving>(true) : null;
+            if (driving != null && driving.Sphere != null)
+                listeners.Add(driving.Sphere.transform.position);
+        }
 
-        return Volume(Vector3.Distance(where, driving.Sphere.transform.position));
+        float distance = NearestDistance(where, listeners);
+        return float.IsPositiveInfinity(distance) ? 1f : Volume(distance);
+    }
+
+    static readonly System.Collections.Generic.List<Vector3> listeners = new System.Collections.Generic.List<Vector3>();
+
+    /// <summary>The distance from a place to the nearest listener (positive infinity with none)</summary>
+    public static float NearestDistance(Vector3 where, System.Collections.Generic.IEnumerable<Vector3> listeners)
+    {
+        float nearest = float.PositiveInfinity;
+        foreach (Vector3 listener in listeners)
+            nearest = Mathf.Min(nearest, Vector3.Distance(where, listener));
+        return nearest;
     }
 }

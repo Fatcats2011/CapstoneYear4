@@ -79,11 +79,11 @@ public class MatchFeats
 
     /// <summary>
     /// Whether an earned achievement unlocks on this machine: offline every seat is this PC's Steam user; online only
-    /// this machine's own seat is
+    /// this machine's own seats are (several players can share its screen, all on its Steam user, as offline)
     /// </summary>
-    public static bool UnlocksHere(bool online, int seat, int ownSeat)
+    public static bool UnlocksHere(bool online, int seat, ICollection<int> ownSeats)
     {
-        return !online || seat == ownSeat;
+        return !online || (ownSeats != null && ownSeats.Contains(seat));
     }
 
     void Earn(Feat feat, List<Feat> feats)

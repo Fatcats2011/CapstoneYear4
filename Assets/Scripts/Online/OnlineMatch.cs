@@ -67,6 +67,15 @@ public class OnlineMatch : NetworkBehaviour, IMatchLink
     /// <summary>Client: the host passed on a bump (each machine pushes only its own player)</summary>
     public event Action<PlayerBump> BumpReceived;
 
+    /// <summary>Host: a machine asks for another seat (another of its players joined player select)</summary>
+    public event Action<ulong> SeatAsked;
+
+    /// <summary>Host: a machine gives a seat back (one of its players left player select)</summary>
+    public event Action<ulong, int> SeatFreed;
+
+    /// <summary>Client: the host refused this machine's ask for a seat, with why (JoinRules.FULL or STARTED)</summary>
+    public event Action<string> SeatRefused;
+
     /// <summary>Host: a client's player fell in the water (the client's id, their seat, where they were last on the ground)</summary>
     public event Action<ulong, int, Vector3> RespawnAsked;
 
@@ -152,7 +161,7 @@ public class OnlineMatch : NetworkBehaviour, IMatchLink
         if (kicked.Contains(sender))
             return false;
 
-        if (gate.Allow(sender, kind))
+        if (gate.Allow(sender, kind, session != null ? session.SeatsHeldBy(sender) : 1))
             return true;
 
         if (gate.ShouldKick(sender) && session != null)
@@ -273,6 +282,27 @@ public class OnlineMatch : NetworkBehaviour, IMatchLink
             BumpServerRpc(bumper, victim, speed);
     }
 
+    /// <summary>Client: asks the host for a seat for another player on this machine. Does nothing on the host</summary>
+    public void AskSeat()
+    {
+        if (!IsServer)
+            SeatServerRpc();
+    }
+
+    /// <summary>Client: gives one of this machine's seats back. Does nothing on the host</summary>
+    public void FreeSeat(int seat)
+    {
+        if (!IsServer)
+            FreeSeatServerRpc(seat);
+    }
+
+    /// <summary>Host: tells one machine its ask for a seat was refused: the match is full, or it started</summary>
+    public void RefuseSeat(ulong machine, bool full)
+    {
+        if (IsServer)
+            SeatRefusedClientRpc(full, new ClientRpcParams { Send = new ClientRpcSendParams { TargetClientIds = new[] { machine } } });
+    }
+
     /// <summary>Host: tells every client about a bump it let through. Does nothing on a client</summary>
     public void SendBump(PlayerBump bump)
     {
@@ -390,6 +420,14 @@ public class OnlineMatch : NetworkBehaviour, IMatchLink
     }
 
     [ClientRpc]
+    void SeatRefusedClientRpc(bool full, ClientRpcParams rpc = default)
+    {
+        // Only two fixed texts: nothing from another machine is shown
+        if (!IsServer)
+            SeatRefused?.Invoke(full ? JoinRules.FULL : JoinRules.STARTED);
+    }
+
+    [ClientRpc]
     void BumpClientRpc(PlayerBump bump)
     {
         // Another machine's host could send any numbers: a push that isn't one, or a seat that isn't one, is ignored
@@ -469,6 +507,24 @@ public class OnlineMatch : NetworkBehaviour, IMatchLink
             return;
 
         StealAsked?.Invoke(rpc.Receive.SenderClientId, attacker, victim);
+    }
+
+    [ServerRpc(RequireOwnership = false)]
+    void SeatServerRpc(ServerRpcParams rpc = default)
+    {
+        if (!Allowed(rpc.Receive.SenderClientId, RpcKind.Seat))
+            return;
+
+        SeatAsked?.Invoke(rpc.Receive.SenderClientId);
+    }
+
+    [ServerRpc(RequireOwnership = false)]
+    void FreeSeatServerRpc(int seat, ServerRpcParams rpc = default)
+    {
+        if (!Allowed(rpc.Receive.SenderClientId, RpcKind.Seat))
+            return;
+
+        SeatFreed?.Invoke(rpc.Receive.SenderClientId, seat);
     }
 
     [ServerRpc(RequireOwnership = false)]

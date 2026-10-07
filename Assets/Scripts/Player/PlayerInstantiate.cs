@@ -1,5 +1,6 @@
 using System;
 using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.Users;
@@ -55,7 +56,10 @@ public class PlayerInstantiate : SingletonMonobehaviour<PlayerInstantiate>
     CutsceneManager cutsceneManager;
 
     // Online: the seat the host gave this machine's one player (-1 offline)
-    int onlineSeat = -1;
+    bool online;                                // a session gave this machine a seat, until GoOffline
+    readonly HashSet<int> onlineSeats = new HashSet<int>(); // online: the seats this machine holds
+    // Online: players moving seats, by device: they leave and join again next frame in their new seat (MoveToSeat)
+    readonly Dictionary<InputDevice, (int seat, bool host)> rejoinSeats = new Dictionary<InputDevice, (int seat, bool host)>();
        
     ///<summary>
     /// OnEnable, where i set event methods
@@ -165,10 +169,21 @@ public class PlayerInstantiate : SingletonMonobehaviour<PlayerInstantiate>
             return;
         }
 
-        // Online, this machine has one player, in the seat the host gave them
-        bool online = onlineSeat >= 0;
-        if (online && roster.LocalCount > 0)
+        // Online: a player moving seats joins there; this machine's first player at any time, and more only in player
+        // select, which ask the host for a seat (OnlineGame) unless one of this machine's seats is empty
+        InputDevice device = playerInput.devices.Count > 0 ? playerInput.devices[0] : null;
+        bool moving = online && device != null && rejoinSeats.ContainsKey(device);
+        (int seat, bool host) move = moving ? rejoinSeats[device] : (-1, false);
+        if (moving)
+            rejoinSeats.Remove(device);
+        else if (online && roster.LocalCount > 0 && gameManager.MainState != GameState.PlayerSelect)
         {
+            Destroy(playerInput.gameObject);
+            return;
+        }
+        else if (online && roster.Count >= Constants.MAX_PLAYERS)
+        {
+            ControllerPrompts.Instance.ShowHint(JoinRules.FULL, OnlineGame.NOTICE_SECONDS);
             Destroy(playerInput.gameObject);
             return;
         }
@@ -182,10 +197,18 @@ public class PlayerInstantiate : SingletonMonobehaviour<PlayerInstantiate>
         }
 
 
-        bool isFirstPlayer = online || PlayerCount == 0;
+        bool isFirstPlayer = moving ? move.host : online ? roster.LocalCount == 0 : PlayerCount == 0;
 
-        // Takes the lowest free slot (online: the seat)
-        PlayerSlot slot = online ? roster.JoinLocalAt(playerInput, onlineSeat) : roster.JoinLocal(playerInput);
+        // Takes the lowest free slot. Online: the seat it moves to, else an empty seat this machine holds, else the lowest
+        // free slot, unseated
+        PlayerSlot slot;
+        if (!online)
+            slot = roster.JoinLocal(playerInput);
+        else
+        {
+            int seat = moving ? move.seat : EmptyHeldSeat();
+            slot = (seat >= 0 ? roster.JoinLocalAt(playerInput, seat) : null) ?? roster.JoinLocal(playerInput);
+        }
         if (slot == null)
         {
             Destroy(playerInput.gameObject);
@@ -354,7 +377,12 @@ public class PlayerInstantiate : SingletonMonobehaviour<PlayerInstantiate>
             return;
         }
 
+        // Online, a player in one of this machine's seats gives it back
+        int slot = roster.IndexOf(playerInput);
+        bool gaveBack = online && slot >= 0 && onlineSeats.Remove(slot);
         LeaveLocal(playerInput);
+        if (gaveBack)
+            SeatGivenUp?.Invoke(slot);
     }
 
     ///<summary>
@@ -890,34 +918,172 @@ public class PlayerInstantiate : SingletonMonobehaviour<PlayerInstantiate>
     }
 
     ///<summary>
-    /// Online: the seat this machine's one player sits in (-1 offline)
+    /// Online: whether a session gave this machine a seat (from the first GiveSeat until GoOffline)
     ///</summary>
-    public int OnlineSeat { get { return onlineSeat; } }
+    public bool IsOnline { get { return online; } }
 
     ///<summary>
-    /// Online: this machine's player sits in the seat the host gave them (-1 = offline again). A player already in
-    /// another slot moves there: they leave and join again next frame with the same controller, so every slot-bound
-    /// part (layers, cameras, company, podium) is set up as for any join. A player joining later takes the seat
+    /// Online: the seats this machine holds (one per player sharing its screen)
     ///</summary>
-    public void SetOnlineSeat(int seat)
-    {
-        onlineSeat = seat;
-        if (seat < 0)
-            return;
+    public IReadOnlyCollection<int> OnlineSeats { get { return onlineSeats; } }
 
-        foreach (PlayerSlot local in roster.LocalPlayers)
+    ///<summary>
+    /// Online: a player gave back the seat they sat in (B in player select). It isn't held any more when this is raised
+    ///</summary>
+    public event Action<int> SeatGivenUp;
+
+    ///<summary>
+    /// Online: the host gave this machine a seat. This machine's players move into its seats (CouchSeats): they leave and
+    /// join again next frame with the same controller, so every slot-bound part (layers, cameras, company, podium) is set
+    /// up as for any join. Returns whether the seat is kept: a seat nobody here will sit in is given back by the caller,
+    /// except the machine's first (its first player can join later, from the title screen)
+    ///</summary>
+    public bool GiveSeat(int seat)
+    {
+        if (seat < 0 || seat >= Constants.MAX_PLAYERS)
+            return false;
+
+        online = true;
+        onlineSeats.Add(seat);
+        bool taken = Reseat(seat);
+        if (!taken && onlineSeats.Count > 1)
         {
-            if (local.Index != seat)
-                StartCoroutine(MoveToOnlineSeat(local.Input));
-            return; // one player per machine online
+            onlineSeats.Remove(seat);
+            return false;
+        }
+        return true;
+    }
+
+    ///<summary>
+    /// Online: a seat isn't this machine's any more (the host took it back). Its player, if any, stays where they are,
+    /// unseated
+    ///</summary>
+    public void LoseSeat(int seat)
+    {
+        onlineSeats.Remove(seat);
+    }
+
+    ///<summary>
+    /// Offline again: players join as usual
+    ///</summary>
+    public void GoOffline()
+    {
+        online = false;
+        onlineSeats.Clear();
+        rejoinSeats.Clear();
+    }
+
+    ///<summary>
+    /// Online: this machine's players outside the seats it holds (waiting for one). Players moving seats aren't counted
+    ///</summary>
+    public int UnseatedLocalCount
+    {
+        get
+        {
+            int count = 0;
+            foreach (PlayerSlot local in roster.LocalPlayers)
+            {
+                if (!onlineSeats.Contains(local.Index))
+                    count++;
+            }
+            return count;
         }
     }
 
-    private IEnumerator MoveToOnlineSeat(PlayerInput player)
+    ///<summary>
+    /// Online: up to count of this machine's unseated players leave (the highest slot first), and hear why. Returns how many
+    ///</summary>
+    public int TurnAwayUnseated(string reason, int count)
+    {
+        List<PlayerInput> leaving = new List<PlayerInput>();
+        for (int i = Constants.MAX_PLAYERS - 1; i >= 0 && leaving.Count < count; i--)
+        {
+            PlayerSlot slot = roster[i];
+            if (slot != null && slot.IsLocal && !onlineSeats.Contains(i))
+                leaving.Add(slot.Input);
+        }
+
+        foreach (PlayerInput player in leaving)
+            LeaveLocal(player);
+        if (leaving.Count > 0)
+            ControllerPrompts.Instance.ShowHint(reason, OnlineGame.NOTICE_SECONDS);
+        return leaving.Count;
+    }
+
+    // Online: one of this machine's seats with nobody in it, or -1
+    int EmptyHeldSeat()
+    {
+        for (int seat = 0; seat < Constants.MAX_PLAYERS; seat++)
+        {
+            if (onlineSeats.Contains(seat) && roster[seat] == null && !Moving(seat))
+                return seat;
+        }
+        return -1;
+    }
+
+    // Whether a player is on their way into a seat
+    bool Moving(int seat)
+    {
+        foreach ((int seat, bool host) move in rejoinSeats.Values)
+        {
+            if (move.seat == seat)
+                return true;
+        }
+        return false;
+    }
+
+    // Moves this machine's players into its seats (CouchSeats.Plan): the menu player first. Returns whether a player will
+    // sit in a seat
+    bool Reseat(int seat)
+    {
+        List<PlayerSlot> locals = new List<PlayerSlot>(roster.LocalPlayers);
+        locals.Sort(MenuPlayerFirst);
+        List<int> slots = new List<int>();
+        foreach (PlayerSlot local in locals)
+            slots.Add(local.Index);
+
+        // A seat a player is on their way into (they left their old slot this frame) isn't free
+        List<int> free = new List<int>();
+        foreach (int held in onlineSeats)
+        {
+            if (!Moving(held))
+                free.Add(held);
+        }
+
+        int[] targets = CouchSeats.Plan(slots, free);
+        bool taken = Moving(seat);
+        for (int i = 0; i < locals.Count; i++)
+        {
+            if (targets[i] == seat)
+                taken = true;
+            if (targets[i] >= 0 && targets[i] != locals[i].Index)
+                StartCoroutine(MoveToSeat(locals[i].Input, targets[i]));
+        }
+        return taken;
+    }
+
+    static int MenuPlayerFirst(PlayerSlot a, PlayerSlot b)
+    {
+        bool aHost = IsMenuPlayer(a), bHost = IsMenuPlayer(b);
+        if (aHost != bHost)
+            return aHost ? -1 : 1;
+        return a.Index.CompareTo(b.Index);
+    }
+
+    static bool IsMenuPlayer(PlayerSlot slot)
+    {
+        PlayerUIHandler ui = slot.Input.GetComponent<PlayerUIHandler>();
+        return ui != null && ui.menuInteractions.hostPlayer;
+    }
+
+    private IEnumerator MoveToSeat(PlayerInput player, int seat)
     {
         // The same controller, or the keyboard, with its own scheme
         string scheme = player.currentControlScheme;
         InputDevice device = player.devices.Count > 0 ? player.devices[0] : null;
+        bool host = player.GetComponent<PlayerUIHandler>().menuInteractions.hostPlayer;
+        if (device != null)
+            rejoinSeats[device] = (seat, host);
         LeaveLocal(player);
 
         // The old player lets go of the device when it's destroyed, at the end of this frame
@@ -925,6 +1091,8 @@ public class PlayerInstantiate : SingletonMonobehaviour<PlayerInstantiate>
 
         if (device != null && device.added)
             PlayerInputManager.instance.JoinPlayer(-1, -1, scheme, device);
+        else if (device != null)
+            rejoinSeats.Remove(device);
     }
 
     ///<summary>

@@ -65,7 +65,7 @@ public class OnlineTutorial : MonoBehaviour
     // Host: another machine's player finished the tutorial. Only that player's own machine can say so
     void CountFinished(ulong machine, int seat)
     {
-        if (session.SeatOf(machine) == seat && TutorialManager.Instance != null)
+        if (session.Owns(machine, seat) && TutorialManager.Instance != null)
             TutorialManager.Instance.SeatLearnt(seat);
     }
 
@@ -80,7 +80,7 @@ public class OnlineTutorial : MonoBehaviour
     // Host: another machine's player boosted into a cutout. They get its order only from their own lane's cutout
     void StealFromCutout(ulong machine, int seat)
     {
-        if (session.SeatOf(machine) != seat)
+        if (!session.Owns(machine, seat))
             return;
 
         CutoutHandler cutout = CutoutHandler.InSeat(seat);

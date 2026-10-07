@@ -23,10 +23,7 @@ Online multiplayer is being built in steps (roadmap Phase 3: `docs/superpowers/p
 ### Phase 3B: online player select
 
 - **Seats.** The host takes the first seat (P1) and each joiner the lowest free one. A seat is the player's slot on every machine: their company, podium, spawn point and name (P1–P4). In code, seats count from 0.
-- **One player per machine** (until roadmap Task 3.9).
-  - This machine's player moves into its seat, taking their controller with them.
-  - Any other controller is turned away.
-  - The Online menu won't host or join with more than one player here.
+- **This machine's player moves into its seat**, taking their controller with them. Since Phase 3J several players can share one machine: see Phase 3J below.
 - **Player select is the online lobby.**
   - Every other player's scooter stands on its podium, in its company's colours, with their ghost colour and hat, which update as they change them.
   - Who's ready counts on every machine.
@@ -83,7 +80,6 @@ Online multiplayer is being built in steps (roadmap Phase 3: `docs/superpowers/p
   - It makes a friends-only Steam lobby for four, hosts the match in it, and opens Steam's invite dialog.
   - Once online, Y opens the invite dialog again. Without Steam's overlay (the editor has none), a message says to invite from the Steam friends list.
   - A line along the top of player select says what Y and B do.
-  - One player per machine: with two players here, Y says the others need to leave first.
 - **Friends join through Steam:** they accept the invite, or pick "Join Game" on the host in their friends list. With the game's own App ID that works whether their game is running or not (Steam starts it with `+connect_lobby`). With the test App ID, start the game first (Known limits).
   - The game answers once its title screen is up, and lands in the host's player select.
   - A lobby from another game or another build is left, with a message. So is one that answers after the player moved on.
@@ -212,6 +208,22 @@ Online multiplayer is being built in steps (roadmap Phase 3: `docs/superpowers/p
   - **Timeouts:** direct sessions wait `OnlineSession.DIRECT_DISCONNECT_MS` (90 s). Unity Transport reads it when a session starts.
   - **`LoadWatch`** times each match load on every machine: `OnlineSceneFlow.Tick`, from `OnlineGame.Update`.
 
+### Phase 3J: several players on one machine online
+
+- **Up to 4 players in all, any mix of machines:** two players on one PC and two on another, or three and one, each machine split-screening its own players.
+  - Each of a machine's players has their own seat, scooter, company and view there, and every other machine sees them as separate players.
+  - Hosting or joining with several players here: the first sits down as the session starts; the others a round trip later (on the host, at once).
+  - A controller pressing A in player select once online joins this machine's player select, and sits down the same way.
+  - **B in player select:** this machine's menu player leaves the match, as before (the host's ends it for everyone). Any other player here leaves player select and gives their seat back.
+  - **A full match:** a machine's players the host has no seat for are told "That match is full." and leave player select. A player still waiting for a seat when the match starts is told it has started.
+  - Achievements a machine's players earn unlock for that machine's Steam account, as in local split-screen. Other machines' sounds fade with the distance to the nearest of this machine's players.
+- How it works:
+  - **Seats belong to machines, several each** (`SeatTable`). The host spawns one `OnlinePlayer` and `OnlineScooter` per seat, owned by that seat's machine, with the seat (`OnlineSession.SpawningSeat`). Every host check that a request names the sender's own seat is `OnlineSession.Owns(machine, seat)`.
+  - **A machine joins with one seat and asks for each further one:** `OnlineSession.AskSeat` (a client's goes as `OnlineMatch.AskSeat`, rate-limited as `RpcKind.Seat`). The host applies the join rules (full, started), then seats and spawns, or refuses (`SeatRefused`). `FreeSeat` gives one back; the host ignores another machine's seat or a machine's last.
+  - **This machine's players move into the seats it holds** (`PlayerInstantiate.GiveSeat`, `CouchSeats.Plan`): a player already in one stays, the menu player takes the first free one, and a move is a leave and rejoin next frame with the same device (as one player's move always was). A player without a seat waits where they joined (`UnseatedLocalCount`), and `OnlineGame` asks the host for one per waiting player (`SeatAsker`).
+  - **Rate limits** grow with the seats a machine holds (`RateGate.Allow`'s `players`): four players on one machine send four players' requests.
+  - **A seat given back during a load isn't the machine leaving** (`OnlineGame.MachineGone`).
+
 ### Phase 5A: bumps, and the deferred fixes
 
 - **Bumping another player's scooter pushes them, on their machine too.** Another machine's scooter is kinematic here, so before this only the bumper moved.
@@ -238,6 +250,7 @@ Online multiplayer is being built in steps (roadmap Phase 3: `docs/superpowers/p
   - Editor 2's player moves to the second podium, in the second company's colours.
   - Each editor shows the other's scooter.
   - Editor 1 shows `Online: player 1 joined (2 in)`.
+- **Two players in one editor (Phase 3J):** in editor 2's player select, press A on a second controller (F1 adds a test pad). It joins, and a moment later sits in the third seat, with its own view; editor 1 shows its scooter on the third podium. B on that second player gives the seat back in both editors.
 - Change colour or hat in one editor and watch the other.
 - Ready up in both. After the countdown both show the loading screen, and the game appears in both at once: the host waits for the other editor.
   - The opening cutscene plays in each, then each player drives their own lane of the tutorial. The first wave starts once both have driven out of it into the city.
@@ -288,7 +301,9 @@ What stops a modified game from harming other players (strangers connecting, IP 
 - The pause menu has no "End match" row (its rows are hand-lettered art). The host's "Main Menu" ends the match for everyone.
 - A client whose own connection drops is told "The host left the match." too: Netcode gives no reason either way.
 - A machine that crashes or loses its connection is noticed after the timeout: 90 s in the editor (direct sessions), Steam's own over Steam.
-- An empty seat still says "press A to join" on every machine, though only a machine's first controller can take a seat online.
+- An empty seat says "press A to join" on every machine: pressing A there joins this machine's player select, and they sit down a round trip later (on the host, at once).
+- **Nobody joins mid-match.** A machine's extra players sit down only while the host is in the menus.
+- **A machine with more players than seats left** gets in with the seats there are; its other players are told "That match is full." and leave player select.
 - When the host leaves, clients see "The host left the match." and stay in player select with their own player, not ready: no countdown starts, and a running one stops. They ready up again to start one.
 - **Friends only:** no public lobbies or lobby list yet. Friends join through Steam's invites and "Join Game".
 - A Steam account can't join itself, so two editors on one computer play over the Online menu (by IP address), not Steam.

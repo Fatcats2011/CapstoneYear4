@@ -12,7 +12,6 @@ public static class LobbyRules
     public const string NOT_THIS_GAME = "That lobby isn't a Dead on Arrival match.";
     public const string BUSY = "Finish your match before joining a friend's.";
     public const string ALREADY_ONLINE = "Leave your online match before joining another.";
-    public const string ONE_PLAYER = "Online play is one player per machine: the other players here need to leave first.";
 
     /// <summary>
     /// A build's tag: its version, then its Netcode setup (OnlineSession.NetcodeSetup), the hash Netcode compares when a
@@ -126,22 +125,18 @@ public static class LobbyRules
     }
 
     /// <summary>
-    /// Why this machine can't answer an invite now, or null when it can. Being online comes first, then a match, then
-    /// the players here
+    /// Why this machine can't answer an invite now, or null when it can. Being online comes first, then a match. Every
+    /// player here goes online (Phase 3J): the host turns away those it has no seat for
     /// </summary>
     /// <param name="state">What the game is doing</param>
-    /// <param name="localPlayers">Players on this machine</param>
     /// <param name="online">Whether this machine is online already</param>
-    public static string Busy(GameState state, int localPlayers, bool online)
+    public static string Busy(GameState state, bool online)
     {
         if (online)
             return ALREADY_ONLINE;
 
         if (!InTheMenus(state))
             return BUSY;
-
-        if (localPlayers > 1)
-            return ONE_PLAYER;
 
         return null;
     }

@@ -65,5 +65,14 @@ namespace DoA.Tests
             Assert.IsNull(OnlineGame.Pick(colours, 2));
             Assert.IsNull(OnlineGame.Pick(colours, -1));
         }
+
+        [Test]
+        public void MachineGone_OnlyWhenNoneOfItsPlayersRemain()
+        {
+            // A machine giving one of its seats back (a player left player select) hasn't left
+            Assert.IsFalse(OnlineGame.MachineGone(new ulong[] { 2, 5 }, 5));
+            Assert.IsTrue(OnlineGame.MachineGone(new ulong[] { 2, 5 }, 7));
+            Assert.IsTrue(OnlineGame.MachineGone(new ulong[0], 5));
+        }
     }
 }

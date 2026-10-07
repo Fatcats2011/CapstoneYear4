@@ -261,8 +261,9 @@ public class MenuInteractions : MonoBehaviour
         // Despawn
         if (readiedUp == false)
         {
-            // Online, B leaves the match (the host's ends it for everyone) and goes back to the title screen
-            if (GameAuthority.IsOnline)
+            // Online, this machine's menu player's B leaves the match (the host's ends it for everyone) and goes back to the
+            // title screen. Another player here leaves player select, as offline, and gives their seat back
+            if (GameAuthority.IsOnline && hostPlayer)
             {
                 OnlineGame.LeaveOnline();
                 MainMenu.Instance.SwapToMainMenu();

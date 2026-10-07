@@ -113,11 +113,11 @@ namespace DoA.Tests
         }
 
         [Test]
-        public void UnlocksHere_OfflineEverySeat_OnlineOnlyItsOwn()
+        public void UnlocksHere_OfflineEverySeat_OnlineAnyOfThisMachines()
         {
-            Assert.IsTrue(MatchFeats.UnlocksHere(false, 3, -1));
-            Assert.IsTrue(MatchFeats.UnlocksHere(true, 1, 1));
-            Assert.IsFalse(MatchFeats.UnlocksHere(true, 0, 1));
+            Assert.IsTrue(MatchFeats.UnlocksHere(false, 3, new int[0]), "offline: every player here");
+            Assert.IsTrue(MatchFeats.UnlocksHere(true, 3, new[] { 1, 3 }), "online: any player on this machine");
+            Assert.IsFalse(MatchFeats.UnlocksHere(true, 0, new[] { 1, 3 }), "not another machine's");
         }
 
         [Test]

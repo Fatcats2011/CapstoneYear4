@@ -95,7 +95,7 @@ public class OnlineCues : MonoBehaviour
     void OnReported(ulong machine, int seat, ScooterCue cue)
     {
         OnlineMatch match = session.Match;
-        if (match == null || session.SeatOf(machine) != seat)
+        if (match == null || !session.Owns(machine, seat))
             return;
 
         Show(seat, cue);

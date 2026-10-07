@@ -39,7 +39,7 @@ public class OnlinePlayer : NetworkBehaviour
 
         // The host seats the player as it spawns them: a value set here goes out with the spawn itself
         if (IsServer && session != null)
-            seat.Value = session.SeatOf(OwnerClientId);
+            seat.Value = session.SpawningSeat;
 
         DontDestroyOnLoad(gameObject);
 

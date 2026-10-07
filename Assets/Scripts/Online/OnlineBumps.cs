@@ -99,7 +99,7 @@ public class OnlineBumps : MonoBehaviour
     // Host: another machine's player bumped someone. Only that player's own machine can say so
     void JudgeFor(ulong machine, int bumper, int victim, float speed)
     {
-        if (session.SeatOf(machine) == bumper)
+        if (session.Owns(machine, bumper))
             Judge(bumper, victim, speed);
     }
 

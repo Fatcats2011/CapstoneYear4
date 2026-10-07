@@ -22,9 +22,6 @@ using UnityEngine;
 /// </summary>
 public class OnlineGame : MonoBehaviour
 {
-    /// <summary>Why a machine with more than one player can't go online</summary>
-    public const string ONE_PLAYER = "Online: online play is one player per machine (until roadmap Task 3.9). Let the other players leave player select first.";
-
     /// <summary>How long a message about online play shows (ControllerPrompts)</summary>
     public const float NOTICE_SECONDS = 5f;
 
@@ -44,7 +41,9 @@ public class OnlineGame : MonoBehaviour
     OnlinePrefabs prefabs;
     OnlineSceneFlow sceneFlow;
     CustomizationSelector choices; // player select's colours and hats, from the local player's prefab
-    OnlinePlayer localPlayer;     // this machine's player
+    readonly List<OnlinePlayer> localPlayers = new List<OnlinePlayer>(); // this machine's players (several can share its screen)
+    readonly SeatAsker asker = new SeatAsker(); // the seats asked of the host for this machine's players without one
+    PlayerInstantiate hooked;     // the player manager whose seats given back this hears
     readonly List<OnlinePlayer> waiting = new List<OnlinePlayer>(); // other machines' players, until their seat is free here
     readonly Dictionary<OnlinePlayer, RemotePlayer> remotes = new Dictionary<OnlinePlayer, RemotePlayer>();
     OnlineOrders orders;     // the host's orders and scores, on this machine
@@ -74,11 +73,18 @@ public class OnlineGame : MonoBehaviour
     }
 
     /// <summary>
-    /// Whether this machine can go online: at most one player (online play is one player per machine until Task 3.9)
+    /// Whether a machine has left the match: none of its players remain (a seat it gave back, with others still here,
+    /// isn't the machine leaving)
     /// </summary>
-    public static bool CanGoOnline()
+    /// <param name="ownersLeft">The machines of the players still in the session</param>
+    public static bool MachineGone(IEnumerable<ulong> ownersLeft, ulong machine)
     {
-        return PlayerInstantiate.Instance == null || PlayerInstantiate.Instance.Roster.LocalCount <= 1;
+        foreach (ulong owner in ownersLeft)
+        {
+            if (owner == machine)
+                return false;
+        }
+        return true;
     }
 
     /// <summary>
@@ -138,6 +144,7 @@ public class OnlineGame : MonoBehaviour
 
         session.RoleChanged += OnRoleChanged;
         session.Ended += ShowEnd;
+        session.SeatRefused += OnSeatRefused;
         session.PlayerSpawned += OnPlayerSpawned;
         session.PlayerDespawned += OnPlayerDespawned;
         session.MatchSpawned += OnMatchSpawned;
@@ -159,6 +166,7 @@ public class OnlineGame : MonoBehaviour
         {
             session.RoleChanged -= OnRoleChanged;
             session.Ended -= ShowEnd;
+            session.SeatRefused -= OnSeatRefused;
             session.PlayerSpawned -= OnPlayerSpawned;
             session.PlayerDespawned -= OnPlayerDespawned;
             session.MatchSpawned -= OnMatchSpawned;
@@ -175,6 +183,7 @@ public class OnlineGame : MonoBehaviour
             sceneFlow.Unlink();
         if (GameManager.Instance != null)
             GameManager.Instance.StateApplied -= OnStateApplied;
+        HookPlayers(null);
         if (playing == this)
             playing = null;
     }
@@ -209,9 +218,10 @@ public class OnlineGame : MonoBehaviour
         remotes.Clear();
         RecheckTutorial();
         waiting.Clear();
-        localPlayer = null;
+        localPlayers.Clear();
+        asker.Reset();
         if (players != null)
-            players.SetOnlineSeat(-1);
+            players.GoOffline();
     }
 
     // The session ended by itself (the host left, turned this player away, or couldn't be reached; on the host, its own
@@ -235,9 +245,12 @@ public class OnlineGame : MonoBehaviour
     {
         if (player.IsOwner)
         {
-            localPlayer = player;
-            if (PlayerInstantiate.Instance != null)
-                PlayerInstantiate.Instance.SetOnlineSeat(player.Seat);
+            // A seat for one of this machine's players: it answers an ask (the machine's first seat answers none). One
+            // nobody here will sit in any more goes back
+            localPlayers.Add(player);
+            asker.Answered();
+            if (PlayerInstantiate.Instance != null && !PlayerInstantiate.Instance.GiveSeat(player.Seat))
+                session.FreeSeat(player.Seat);
         }
         else
             waiting.Add(player);
@@ -245,11 +258,12 @@ public class OnlineGame : MonoBehaviour
 
     void OnPlayerDespawned(OnlinePlayer player)
     {
-        // A machine that leaves during a load isn't waited for
-        sceneFlow.MachineLeft(player.OwnerClientId);
+        // A machine that leaves during a load isn't waited for: once none of its players remain
+        if (MachineGone(OwnersInSession(), player.OwnerClientId))
+            sceneFlow.MachineLeft(player.OwnerClientId);
 
-        if (player == localPlayer)
-            localPlayer = null;
+        if (localPlayers.Remove(player) && PlayerInstantiate.Instance != null)
+            PlayerInstantiate.Instance.LoseSeat(player.Seat);
         waiting.Remove(player);
 
         RemotePlayer remote;
@@ -260,6 +274,50 @@ public class OnlineGame : MonoBehaviour
                 PlayerInstantiate.Instance.RemoveRemotePlayer(remote.Seat);
             RecheckTutorial();
         }
+    }
+
+    IEnumerable<ulong> OwnersInSession()
+    {
+        foreach (OnlinePlayer player in session.Players)
+            yield return player.OwnerClientId;
+    }
+
+    // The host refused a seat for one of this machine's players (the match is full, or started): one waiting player is
+    // turned away, and hears why
+    void OnSeatRefused(string reason)
+    {
+        asker.Answered();
+        if (PlayerInstantiate.Instance != null)
+            PlayerInstantiate.Instance.TurnAwayUnseated(reason, 1);
+    }
+
+    // A player here gave their seat back (B in player select): the host frees it on every machine
+    void OnSeatGivenUp(int seat)
+    {
+        session.FreeSeat(seat);
+    }
+
+    // Hears the player manager's seats given back (a scene's own copy can come and go)
+    void HookPlayers(PlayerInstantiate players)
+    {
+        if (hooked == players)
+            return;
+
+        if (hooked != null)
+            hooked.SeatGivenUp -= OnSeatGivenUp;
+        hooked = players;
+        if (hooked != null)
+            hooked.SeatGivenUp += OnSeatGivenUp;
+    }
+
+    // Asks the host for a seat for each of this machine's players without one (in the menus, once the match exists)
+    void AskForSeats(PlayerInstantiate players)
+    {
+        if (session.Match == null || !players.IsOnline || !session.IsRunning)
+            return;
+
+        for (int ask = asker.ToAsk(players.UnseatedLocalCount); ask > 0; ask--)
+            session.AskSeat();
     }
 
     // A player left (or this machine went offline): everyone left may have finished the tutorial
@@ -307,6 +365,10 @@ public class OnlineGame : MonoBehaviour
     // itself, the player hears why again
     void OnStateApplied(GameState state)
     {
+        // The match starts: a player here without a seat can't follow it (the host never counted them)
+        if (!LobbyRules.InTheMenus(state) && PlayerInstantiate.Instance != null && PlayerInstantiate.Instance.IsOnline)
+            PlayerInstantiate.Instance.TurnAwayUnseated(JoinRules.STARTED, Constants.MAX_PLAYERS);
+
         if (pendingNotice != null && LobbyRules.InTheMenus(state))
         {
             ControllerPrompts.Instance.ShowHint(pendingNotice, NOTICE_SECONDS);
@@ -380,9 +442,11 @@ public class OnlineGame : MonoBehaviour
         sceneFlow.Tick(); // every frame of a load counts, so before anything here can return
 
         PlayerInstantiate players = PlayerInstantiate.Instance;
+        HookPlayers(players);
         if (players == null)
             return;
 
+        AskForSeats(players);
         SeatWaitingPlayers(players);
         ShareLocalChoices(players);
         ShowRemoteChoices(players);
@@ -411,18 +475,21 @@ public class OnlineGame : MonoBehaviour
         }
     }
 
-    // This machine's player's colour, hat and readiness go to every machine
+    // This machine's players' colour, hat and readiness go to every machine
     void ShareLocalChoices(PlayerInstantiate players)
     {
-        if (localPlayer == null || localPlayer.Seat < 0 || localPlayer.Seat >= Constants.MAX_PLAYERS)
-            return;
+        foreach (OnlinePlayer localPlayer in localPlayers)
+        {
+            if (localPlayer == null || localPlayer.Seat < 0 || localPlayer.Seat >= Constants.MAX_PLAYERS)
+                continue;
 
-        PlayerSlot slot = players.Roster[localPlayer.Seat];
-        if (slot == null || !slot.IsLocal)
-            return;
+            PlayerSlot slot = players.Roster[localPlayer.Seat];
+            if (slot == null || !slot.IsLocal)
+                continue;
 
-        CustomizationSelector picked = slot.Input.GetComponent<PlayerUIHandler>().customizationSelector;
-        localPlayer.Share(picked.ColourIndex, picked.HatIndex, players.IsReady(slot.Index));
+            CustomizationSelector picked = slot.Input.GetComponent<PlayerUIHandler>().customizationSelector;
+            localPlayer.Share(picked.ColourIndex, picked.HatIndex, players.IsReady(slot.Index));
+        }
     }
 
     // Other machines' players' colour, hat and readiness show here as they change

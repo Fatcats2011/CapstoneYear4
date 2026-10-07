@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using NUnit.Framework;
+using Unity.Netcode;
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
@@ -61,6 +62,12 @@ namespace DoA.Tests
             return PlayerInstantiate.Instance.Roster.LocalCount;
         }
 
+        static bool LocalIn(int slot)
+        {
+            PlayerSlot player = PlayerInstantiate.Instance.Roster[slot];
+            return player != null && player.IsLocal;
+        }
+
         static PlayerSlot Slot(int index)
         {
             return PlayerInstantiate.Instance.Roster[index];
@@ -113,26 +120,23 @@ namespace DoA.Tests
             FakeLobbyService lobbies = new FakeLobbyService { AutoAnswer = true };
             OnlinePlay.Instance.UseDirect(lobbies, THIS_COMPUTER, PORT);
 
-            // The menus ignore buttons for a moment after they open
-            yield return WaitSeconds(0.5f);
-            Press(TestPlayers.Pads[0], GamepadButton.North);
-            yield return WaitSeconds(0.3f);
-            Assert.AreEqual(LobbyRules.ONE_PLAYER, ControllerPrompts.Instance.HintText, "one player per machine online");
-            Assert.IsEmpty(lobbies.Creates, "no lobby");
-
-            // Player 2 leaves, and Y hosts a lobby
-            Press(TestPlayers.Pads[1], GamepadButton.East);
-            deadline = Time.realtimeSinceStartup + 10;
-            while (LocalCount() > 1 && Time.realtimeSinceStartup < deadline)
-                yield return null;
-            Assert.AreEqual(1, LocalCount());
+            // The menus ignore buttons for a moment after they open. Y hosts a lobby, both players here playing (Phase 3J)
             yield return WaitSeconds(0.5f);
             Press(TestPlayers.Pads[0], GamepadButton.North);
             deadline = Time.realtimeSinceStartup + WAIT;
             while (GameAuthority.Role != NetworkRole.Host && Time.realtimeSinceStartup < deadline)
                 yield return null;
 
-            Assert.AreEqual(NetworkRole.Host, GameAuthority.Role, "Y hosts");
+            Assert.AreEqual(NetworkRole.Host, GameAuthority.Role, "Y hosts, with two players here");
+            Assert.AreEqual(1, lobbies.Creates.Count, "one lobby");
+            OnlineSession hosting = OnlinePlay.Instance.Session;
+            deadline = Time.realtimeSinceStartup + 5;
+            while (!(hosting.Players.Count == 2 && LocalIn(0) && LocalIn(1) && PlayerInstantiate.Instance.UnseatedLocalCount == 0)
+                && Time.realtimeSinceStartup < deadline)
+                yield return null;
+            Assert.AreEqual(2, hosting.Players.Count, "a player for each player here");
+            Assert.IsTrue(hosting.Owns(NetworkManager.ServerClientId, 0) && hosting.Owns(NetworkManager.ServerClientId, 1), "the host's seats 0 and 1");
+            Assert.IsTrue(LocalIn(0) && LocalIn(1), "both sit in their seats here");
             Assert.AreEqual("doa", lobbies.Data[42]["game"]);
             Assert.AreEqual(OnlinePlay.BuildTag(), lobbies.GetData(OnlinePlay.Instance.Lobby.Current, LobbyRules.BUILD_KEY),
                 "tagged with this build's version and Netcode setup");
@@ -148,9 +152,9 @@ namespace DoA.Tests
             EndRecorder ends = new EndRecorder();
             other.Ended += ends.Ended;
             deadline = Time.realtimeSinceStartup + WAIT;
-            while (Slot(1) == null && Time.realtimeSinceStartup < deadline)
+            while (Slot(2) == null && Time.realtimeSinceStartup < deadline)
                 yield return null;
-            Assert.IsNotNull(Slot(1), "the friend takes the second seat");
+            Assert.IsNotNull(Slot(2), "the friend takes the third seat (this machine's two players hold the first two)");
 
             // B (not ready) ends it for everyone
             log.MachinesLeave(); // Windows may report a leaving machine's closed port: see LogCollector.CLOSED_PORT

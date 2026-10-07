@@ -44,11 +44,11 @@ namespace DoA.Tests
             GameAuthority.Role = NetworkRole.Offline;
         }
 
-        static IEnumerator EmptyPlayMode()
+        // Each test enters Play Mode itself (Unity takes EnterPlayMode only from the test's own enumerator)
+        static void EmptyScene()
         {
             EditorSceneManager.playModeStartScene = null;
             EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
-            yield return new EnterPlayMode();
         }
 
         static OnlinePlayer PlayerInSeat(OnlineSession session, int seat)
@@ -117,7 +117,8 @@ namespace DoA.Tests
         [UnityTest]
         public IEnumerator ClientAskingASeat_SpawnsAnotherPlayerAndScooterForIt_Everywhere()
         {
-            yield return EmptyPlayMode();
+            EmptyScene();
+            yield return new EnterPlayMode();
             OnlineSession[] sessions = new OnlineSession[2];
             yield return HostAndClient(sessions);
             OnlineSession host = sessions[0], client = sessions[1];
@@ -141,7 +142,8 @@ namespace DoA.Tests
         [UnityTest]
         public IEnumerator HostAskingASeat_SeatsItsSecondPlayerAtOnce()
         {
-            yield return EmptyPlayMode();
+            EmptyScene();
+            yield return new EnterPlayMode();
             OnlineSession host = OnlineSession.Create("1.0.0");
             Assert.IsTrue(host.HostDirect(THIS_COMPUTER, PORT), "hosting");
 
@@ -158,7 +160,8 @@ namespace DoA.Tests
         [UnityTest]
         public IEnumerator FreeingASeat_DespawnsItEverywhere_AndTheNextAskGetsIt()
         {
-            yield return EmptyPlayMode();
+            EmptyScene();
+            yield return new EnterPlayMode();
             OnlineSession[] sessions = new OnlineSession[2];
             yield return HostAndClient(sessions);
             OnlineSession host = sessions[0], client = sessions[1];
@@ -187,7 +190,8 @@ namespace DoA.Tests
         [UnityTest]
         public IEnumerator FreeingAnotherMachinesSeat_OrItsLastSeat_IsIgnored()
         {
-            yield return EmptyPlayMode();
+            EmptyScene();
+            yield return new EnterPlayMode();
             OnlineSession[] sessions = new OnlineSession[2];
             yield return HostAndClient(sessions);
             OnlineSession host = sessions[0], client = sessions[1];
@@ -206,7 +210,8 @@ namespace DoA.Tests
         [UnityTest]
         public IEnumerator AskingWhenFull_IsRefused_WithTheReason()
         {
-            yield return EmptyPlayMode();
+            EmptyScene();
+            yield return new EnterPlayMode();
             OnlineSession[] sessions = new OnlineSession[2];
             yield return HostAndClient(sessions);
             OnlineSession host = sessions[0], client = sessions[1];
@@ -232,7 +237,8 @@ namespace DoA.Tests
         [UnityTest]
         public IEnumerator AMachineLeaving_FreesAllItsSeats()
         {
-            yield return EmptyPlayMode();
+            EmptyScene();
+            yield return new EnterPlayMode();
             OnlineSession[] sessions = new OnlineSession[2];
             yield return HostAndClient(sessions);
             OnlineSession host = sessions[0], client = sessions[1];

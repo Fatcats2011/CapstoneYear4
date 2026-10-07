@@ -32,6 +32,16 @@ namespace DoA.Tests
         }
 
         [Test]
+        public void NearestDistance_IsToTheClosestOfThisMachinesPlayers()
+        {
+            // Two players share this machine's screen: a sound is as loud as it is for the nearer one
+            Vector3[] listeners = { new Vector3(0, 0, 0), new Vector3(100, 0, 0) };
+
+            Assert.AreEqual(10f, RemoteSound.NearestDistance(new Vector3(90, 0, 0), listeners), 1e-4f);
+            Assert.AreEqual(float.PositiveInfinity, RemoteSound.NearestDistance(Vector3.zero, new Vector3[0]), "nobody here");
+        }
+
+        [Test]
         public void WithoutAPlayerOnThisMachine_EverythingIsHeardInFull()
         {
             Assert.AreEqual(1f, RemoteSound.VolumeAt(new Vector3(500, 0, 0))); // no PlayerInstantiate in EditMode

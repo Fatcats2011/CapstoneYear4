@@ -30,6 +30,21 @@ namespace DoA.Tests
         }
 
         [Test]
+        public void Allow_AMachineWithThreePlayers_GetsThreeTimesTheAllowance()
+        {
+            RateGate gate = new RateGate(Clock);
+            for (int i = 0; i < 60; i++)
+                Assert.IsTrue(gate.Allow(5, RpcKind.Cue, 3), "cue " + i + ": three players' one-shots");
+
+            Assert.IsFalse(gate.Allow(5, RpcKind.Cue, 3), "the 61st at once");
+
+            now += 0.1; // 30 a second
+            for (int i = 0; i < 3; i++)
+                Assert.IsTrue(gate.Allow(5, RpcKind.Cue, 3), "refilled " + i);
+            Assert.IsFalse(gate.Allow(5, RpcKind.Cue, 3));
+        }
+
+        [Test]
         public void Allow_EachSenderAndKindHasItsOwnBucket()
         {
             RateGate gate = new RateGate(Clock);

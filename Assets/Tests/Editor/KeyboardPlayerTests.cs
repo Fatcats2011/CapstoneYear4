@@ -241,7 +241,7 @@ namespace DoA.Tests
             yield return JoinWithSpace();
             PlayerInstantiate players = PlayerInstantiate.Instance;
 
-            players.SetOnlineSeat(2);
+            players.GiveSeat(2);
             float deadline = Time.realtimeSinceStartup + 10;
             while (!KeyboardIn(2) && Time.realtimeSinceStartup < deadline)
                 yield return null;
@@ -251,7 +251,7 @@ namespace DoA.Tests
             Assert.IsNull(players.Roster[0], "seat 1 is free");
             Assert.AreEqual(1, players.Roster.LocalCount);
 
-            players.SetOnlineSeat(-1);
+            players.GoOffline();
             log.Dispose();
             Assert.IsEmpty(log.Problems, "Errors:\n\n" + string.Join("\n\n", log.Problems));
         }

@@ -69,7 +69,7 @@ public class OnlineSteals : MonoBehaviour
     // Host: another machine's player hit someone. Only that player's own machine can say so
     void JudgeFor(ulong machine, int attacker, int victim)
     {
-        if (session.SeatOf(machine) == attacker)
+        if (session.Owns(machine, attacker))
             Judge(attacker, victim);
     }
 

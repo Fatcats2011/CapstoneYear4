@@ -300,11 +300,116 @@ public class OnlineSession : MonoBehaviour
     }
 
     /// <summary>
-    /// Host: a player's seat, 0-3 (their slot on every machine), or -1 if they have none. The host sits in seat 0
+    /// Host: whether a machine holds a seat, 0-3 (a player's slot on every machine). A machine can hold several (players
+    /// sharing its screen). The host's first player sits in seat 0
     /// </summary>
-    public int SeatOf(ulong clientId)
+    public bool Owns(ulong clientId, int seat)
     {
-        return seats.SeatOf(clientId);
+        return seats.Owns(clientId, seat);
+    }
+
+    /// <summary>Host: how many seats a machine holds</summary>
+    public int SeatsHeldBy(ulong clientId)
+    {
+        return seats.CountOf(clientId);
+    }
+
+    /// <summary>The seat being spawned (OnlinePlayer and OnlineScooter take it as they spawn), -1 otherwise</summary>
+    internal int SpawningSeat { get; private set; } = -1;
+
+    /// <summary>
+    /// This machine's ask for another seat was refused, with why: JoinRules.FULL or JoinRules.STARTED
+    /// </summary>
+    public event Action<string> SeatRefused;
+
+    /// <summary>
+    /// Another player on this machine wants a seat. The host seats them at once (or raises SeatRefused); a client asks the
+    /// host, which answers with the player's OnlinePlayer or a refusal. Nothing before the match exists
+    /// </summary>
+    public void AskSeat()
+    {
+        if (Match == null)
+            return;
+
+        if (Network.IsServer)
+        {
+            string refusal = SeatRefusal();
+            if (refusal != null)
+                SeatRefused?.Invoke(refusal);
+            else
+                AddSeat(NetworkManager.ServerClientId);
+        }
+        else
+            Match.AskSeat();
+    }
+
+    /// <summary>
+    /// A player on this machine gives their seat back (they left player select): their player and scooter go on every
+    /// machine. A machine keeps its last seat
+    /// </summary>
+    public void FreeSeat(int seat)
+    {
+        if (Match == null)
+            return;
+
+        if (Network.IsServer)
+            FreeSeatOf(NetworkManager.ServerClientId, seat);
+        else
+            Match.FreeSeat(seat);
+    }
+
+    // Host: why another seat can't be had now (the same rules as joining: a full match, or one that started), or null
+    string SeatRefusal()
+    {
+        return JoinRules.Refusal(Version, Version, seats.Count, HostState());
+    }
+
+    // Host: a machine asked for another seat
+    void OnSeatAsked(ulong machine)
+    {
+        string refusal = SeatRefusal();
+        if (refusal != null)
+            Match.RefuseSeat(machine, refusal == JoinRules.FULL);
+        else
+            AddSeat(machine);
+    }
+
+    // Host: seats another of a machine's players and spawns them on every machine
+    void AddSeat(ulong machine)
+    {
+        int seat = seats.Take(machine);
+        if (seat < 0)
+            return;
+
+        Debug.Log("Online: player " + machine + " took another seat (" + seats.Count + " in)");
+        Spawn(prefabs.PlayerPrefab, machine, false, seat);
+        Spawn(prefabs.ScooterPrefab, machine, false, seat);
+    }
+
+    // Host: a machine gives a seat back. Only its own, and never its last (a connected machine always has a player)
+    void FreeSeatOf(ulong machine, int seat)
+    {
+        if (!seats.Owns(machine, seat) || seats.CountOf(machine) <= 1)
+            return;
+
+        seats.Free(machine, seat);
+        Debug.Log("Online: player " + machine + " gave a seat back (" + seats.Count + " in)");
+        foreach (OnlinePlayer player in players.ToArray())
+        {
+            if (player.Seat == seat && player.OwnerClientId == machine && player.IsSpawned)
+                player.NetworkObject.Despawn(true);
+        }
+        foreach (OnlineScooter scooter in scooters.ToArray())
+        {
+            if (scooter.Seat == seat && scooter.OwnerClientId == machine && scooter.IsSpawned)
+                scooter.NetworkObject.Despawn(true);
+        }
+    }
+
+    // Client: the host refused this machine's ask for a seat
+    void OnSeatRefused(string reason)
+    {
+        SeatRefused?.Invoke(reason);
     }
 
     bool StartHost()
@@ -320,9 +425,9 @@ public class OnlineSession : MonoBehaviour
         IsRunning = true;
         SetRole(NetworkRole.Host);
         Debug.Log("Online: hosting version " + Version);
-        Spawn(prefabs.MatchPrefab, NetworkManager.ServerClientId, false);
-        Spawn(prefabs.PlayerPrefab, NetworkManager.ServerClientId, true); // seat 0
-        Spawn(prefabs.ScooterPrefab, NetworkManager.ServerClientId, false);
+        Spawn(prefabs.MatchPrefab, NetworkManager.ServerClientId, false, -1);
+        Spawn(prefabs.PlayerPrefab, NetworkManager.ServerClientId, true, 0);
+        Spawn(prefabs.ScooterPrefab, NetworkManager.ServerClientId, false, 0);
         return true;
     }
 
@@ -350,7 +455,7 @@ public class OnlineSession : MonoBehaviour
         response.CreatePlayerObject = false; // the match spawns the scooters (roadmap Task 3.3)
 
         if (response.Approved)
-            seats.Take(request.ClientNetworkId); // seated now: Netcode lists the player later in the frame
+            seats.Take(request.ClientNetworkId); // seated now: Netcode lists the player later in the frame. More seats: AskSeat
         else
             Debug.Log("Online: turned a player away: " + refusal);
     }
@@ -377,8 +482,13 @@ public class OnlineSession : MonoBehaviour
             if (clientId != NetworkManager.ServerClientId)
             {
                 Debug.Log("Online: player " + clientId + " joined (" + seats.Count + " in)");
-                Spawn(prefabs.PlayerPrefab, clientId, true);
-                Spawn(prefabs.ScooterPrefab, clientId, false);
+                bool first = true;
+                foreach (int seat in seats.SeatsOf(clientId))
+                {
+                    Spawn(prefabs.PlayerPrefab, clientId, first, seat); // Netcode's player object: the machine's first
+                    Spawn(prefabs.ScooterPrefab, clientId, false, seat);
+                    first = false;
+                }
             }
             return;
         }
@@ -388,10 +498,10 @@ public class OnlineSession : MonoBehaviour
         Debug.Log("Online: joined the host");
     }
 
-    // Host: a player left, so their seat is free (the host's own client only goes when the host stops: End clears it)
+    // Host: a machine left, so all its seats are free (the host's own client only goes when the host stops: End clears it)
     void OnDisconnected(ulong clientId)
     {
-        if (Network.IsServer && clientId != NetworkManager.ServerClientId && seats.Free(clientId) >= 0)
+        if (Network.IsServer && clientId != NetworkManager.ServerClientId && seats.FreeAll(clientId) > 0)
             Debug.Log("Online: player " + clientId + " left (" + seats.Count + " in)");
     }
 
@@ -446,10 +556,19 @@ public class OnlineSession : MonoBehaviour
     }
 
     // Host: spawns a network object on every machine (tied to this session's Netcode, which matters when several run in
-    // one process, as in tests). Netcode destroys a player's object when that player leaves
-    void Spawn(GameObject prefab, ulong owner, bool isPlayer)
+    // one process, as in tests), for a seat (a player or scooter takes it as it spawns: SpawningSeat). Netcode destroys a
+    // machine's objects when it leaves
+    void Spawn(GameObject prefab, ulong owner, bool isPlayer, int seat)
     {
-        Network.SpawnManager.InstantiateAndSpawn(prefab.GetComponent<NetworkObject>(), owner, false, isPlayer);
+        SpawningSeat = seat;
+        try
+        {
+            Network.SpawnManager.InstantiateAndSpawn(prefab.GetComponent<NetworkObject>(), owner, false, isPlayer);
+        }
+        finally
+        {
+            SpawningSeat = -1;
+        }
     }
 
     // OnlinePlayer and OnlineMatch report here as they arrive and go
@@ -483,13 +602,22 @@ public class OnlineSession : MonoBehaviour
         }
 
         Match = match;
+        // Seats a machine asks for or gives back (the host), and the host's refusals (a client)
+        match.SeatAsked += OnSeatAsked;
+        match.SeatFreed += FreeSeatOf;
+        match.SeatRefused += OnSeatRefused;
         MatchSpawned?.Invoke(match);
     }
 
     internal void ClearMatch(OnlineMatch match)
     {
-        if (Match == match)
-            Match = null;
+        if (Match != match)
+            return;
+
+        match.SeatAsked -= OnSeatAsked;
+        match.SeatFreed -= FreeSeatOf;
+        match.SeatRefused -= OnSeatRefused;
+        Match = null;
     }
 
     // OnlineScooter reports here as it arrives and goes
