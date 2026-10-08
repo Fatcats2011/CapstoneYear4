@@ -100,6 +100,49 @@ namespace DoA.Tests
             CollectionAssert.AreEqual(new[] { OnlineLobby.NO_STEAM }, notices);
         }
 
+        // The title screen's selector with this many entries (one above the other) and ghost sprites
+        void TitleEntriesOf(int entries, int ghostSprites)
+        {
+            menu.selectorObjects = new GameObject[entries];
+            for (int i = 0; i < entries; i++)
+            {
+                menu.selectorObjects[i] = objects.NewGameObject("Entry " + i);
+                menu.selectorObjects[i].transform.position = new Vector3(0f, -i, 0f);
+            }
+            menu.selectorGhostSprites = new Sprite[ghostSprites];
+            menu.selector = objects.NewGameObject("Selector");
+            menu.menuGhostImage = objects.Add<UnityEngine.UI.Image>();
+        }
+
+        [Test]
+        public void ScrollMenu_AnEntryWithoutItsGhostSprite_StillScrolls()
+        {
+            // Online Play's entry added to the scene before its ghost sprite
+            TitleEntriesOf(5, 4);
+
+            for (int i = 0; i < 4; i++)
+                menu.ScrollMenu(true);
+
+            Assert.AreEqual(-4f, menu.selector.transform.position.y, 0.001f);
+        }
+
+        [Test]
+        public void ConfirmMenu_TheSecondOfFiveEntries_IsOnlinePlay()
+        {
+            TitleEntriesOf(5, 5);
+            OnlinePlay play = objects.Add<OnlinePlay>();
+            play.UseDirect(new FakeLobbyService { Available = false }, "127.0.0.1", 7777);
+            OnlinePlay.Instance = play;
+            List<string> notices = new List<string>();
+            play.Lobby.Notice += notices.Add;
+
+            menu.ScrollMenu(true);
+            menu.ConfirmMenu();
+
+            CollectionAssert.AreEqual(new[] { OnlineLobby.NO_STEAM }, notices);
+            Assert.AreEqual(GameState.Menu, game.MainState);
+        }
+
         [Test]
         public void HasOnlineEntry_FollowsTheScenesEntries()
         {

@@ -44,12 +44,12 @@ public class LobbyPrompt : MonoBehaviour
         panel.SetActive(shown);
     }
 
-    ///<summary>
-    /// Builds the overlay canvas with the line, hidden
-    ///</summary>
     /// <summary>Above every menu and HUD canvas, below ControllerPrompts' hints (why a session ended must stay readable)</summary>
     internal const int SORTING_ORDER = 999;
 
+    ///<summary>
+    /// Builds the overlay canvas with the line, hidden
+    ///</summary>
     static LobbyPrompt Create()
     {
         GameObject root = new GameObject(nameof(LobbyPrompt), typeof(Canvas), typeof(CanvasScaler));

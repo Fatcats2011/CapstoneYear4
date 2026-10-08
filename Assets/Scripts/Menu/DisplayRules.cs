@@ -63,7 +63,6 @@ public static class DisplayRules
         return new ScreenSize(Mathf.Min(window.Width, desktop.Width), Mathf.Min(window.Height, desktop.Height));
     }
 
-    /// <summary>Unity's vSyncCount: 1 with VSync on, 0 with it off</summary>
     /// <summary>
     /// Whether the screen must change to show the wanted mode and size: setting them again as they are (each return to
     /// the menu applies the settings) would flicker in exclusive fullscreen
@@ -73,6 +72,7 @@ public static class DisplayRules
         return current != wanted || !currentSize.Equals(wantedSize);
     }
 
+    /// <summary>Unity's vSyncCount: 1 with VSync on, 0 with it off</summary>
     public static int VSyncCount(int vsync)
     {
         return vsync == 1 ? 1 : 0;

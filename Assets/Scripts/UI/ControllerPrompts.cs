@@ -124,12 +124,12 @@ public class ControllerPrompts : MonoBehaviour
             hintPanel.SetActive(false);
     }
 
-    ///<summary>
-    /// Builds the overlay canvas: one reconnect panel per player and the hint bar, all hidden
-    ///</summary>
     /// <summary>Above every menu and HUD canvas, and above the online line along the top (LobbyPrompt)</summary>
     internal const int SORTING_ORDER = 1000;
 
+    ///<summary>
+    /// Builds the overlay canvas: one reconnect panel per player and the hint bar, all hidden
+    ///</summary>
     static ControllerPrompts Create()
     {
         GameObject root = new GameObject(nameof(ControllerPrompts), typeof(Canvas), typeof(CanvasScaler));

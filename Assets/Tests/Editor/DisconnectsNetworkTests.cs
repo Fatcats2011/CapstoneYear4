@@ -492,6 +492,66 @@ namespace DoA.Tests
         }
 
         [UnityTest]
+        public IEnumerator Joining_TheHostReturnsWhileThisMachinesSceneComesUp_ThisMachineReachesTheMenu()
+        {
+            EditorSceneManager.playModeStartScene = AssetDatabase.LoadAssetAtPath<SceneAsset>(MENU_SCENE);
+            yield return new EnterPlayMode();
+            LogAssert.ignoreFailingMessages = true;
+            LogCollector log = new LogCollector();
+            yield return OnePlayerAtTheTitle();
+            Sessions sessions = new Sessions();
+            yield return JoinAHost(sessions, OnlineSession.DIRECT_DISCONNECT_MS);
+
+            // This machine loads the game and holds it for the host's show
+            ReportRecorder reports = new ReportRecorder(sessions.Host.Match);
+            sessions.Host.Match.RequestLoad(MatchScene.Game);
+            sessions.Host.Match.SendState(GameState.Loading);
+            float deadline = Time.realtimeSinceStartup + LOADING;
+            while (reports.Machines.Count == 0 && Time.realtimeSinceStartup < deadline)
+                yield return null;
+            Assert.IsNotEmpty(reports.Machines, "loaded, and held for the host's show");
+
+            // The host shows the match, then takes everyone back a few frames later, while this (slow) machine's scene is
+            // still coming up
+            sessions.Host.Match.RequestShow(MatchScene.Game);
+            sessions.Host.Match.SendState(GameState.StartingCutscene);
+            OnlineSceneFlow flow = (OnlineSceneFlow)SceneFlow.Current;
+            deadline = Time.realtimeSinceStartup + WAIT;
+            while (!flow.Changing && Time.realtimeSinceStartup < deadline)
+                yield return null;
+            yield return null;
+            yield return null;
+            Assert.IsTrue(flow.Changing, "the return reaches this machine while its scene still comes up");
+            sessions.Host.Match.RequestReturn();
+            sessions.Host.Match.SendState(GameState.PlayerSelect);
+
+            // The game scene comes up, then the menu follows (after the loading screen's delay)
+            deadline = Time.realtimeSinceStartup + LOADING;
+            while (flow.Changing && Time.realtimeSinceStartup < deadline)
+                yield return null;
+            Assert.IsFalse(flow.Changing, "the game scene came up");
+            Assert.AreNotEqual(MENU_SCENE, UnityEngine.SceneManagement.SceneManager.GetActiveScene().path, "the game scene shows first");
+            deadline = Time.realtimeSinceStartup + 30f;
+            while (UnityEngine.SceneManagement.SceneManager.GetActiveScene().path != MENU_SCENE && Time.realtimeSinceStartup < deadline)
+                yield return null;
+            for (float until = Time.realtimeSinceStartup + 1f; Time.realtimeSinceStartup < until;)
+                yield return null;
+
+            Assert.AreEqual(MENU_SCENE, UnityEngine.SceneManagement.SceneManager.GetActiveScene().path, "back in the menu scene");
+            Assert.IsTrue(LobbyRules.InTheMenus(State()), "in the menus: " + State());
+
+            log.MachinesLeave(); // Windows may report a leaving machine's closed port: see LogCollector.CLOSED_PORT
+            sessions.Mine.Leave();
+            deadline = Time.realtimeSinceStartup + WAIT;
+            while (sessions.Host.PlayersIn > 1 && Time.realtimeSinceStartup < deadline)
+                yield return null;
+            sessions.Host.Leave();
+            for (float until = Time.realtimeSinceStartup + 1f; Time.realtimeSinceStartup < until;)
+                yield return null;
+            log.Dispose();
+        }
+
+        [UnityTest]
         public IEnumerator Joining_TheHostReturnsWhileThisMachinesSceneComesUp_NoMatchStateShowsHere()
         {
             EditorSceneManager.playModeStartScene = AssetDatabase.LoadAssetAtPath<SceneAsset>(MENU_SCENE);

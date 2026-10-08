@@ -9,7 +9,8 @@ using UnityEngine.InputSystem.Users;
 /// PlayerInputManager for each join itself (its joins are set to manual), so another key makes no player at all, where
 /// Unity used to make one for any key and the game destroyed it. A key that doesn't join is reported (PlayerInstantiate
 /// says how to join). Joins wait while PlayerInputManager's joining is off (ReplacementControllerListener turns it off
-/// while a lost controller's player waits for a replacement). See docs/controls.md
+/// while a lost controller's player waits for a replacement), and while the game takes nobody new (Welcomes: mid-match,
+/// or a full player select), so no player is made only to be destroyed. See docs/controls.md
 /// </summary>
 public static class PlayerJoiner
 {
@@ -17,6 +18,7 @@ public static class PlayerJoiner
     public const string GAMEPAD_SCHEME = "Gamepad";
 
     static Action<InputDevice> turnedAway;
+    static Func<bool> welcomes;
 
     /// <summary>Whether the game joins players now (from PlayerInstantiate's OnEnable to its OnDisable)</summary>
     public static bool Enabled { get; private set; }
@@ -25,9 +27,11 @@ public static class PlayerJoiner
     /// Starts joining players, and sets PlayerInputManager's own joins to manual
     /// </summary>
     /// <param name="onTurnedAway">A key that doesn't join was pressed on a keyboard nobody uses</param>
-    public static void Enable(Action<InputDevice> onTurnedAway)
+    /// <param name="welcomesJoins">Whether the game takes a new player now (null: always)</param>
+    public static void Enable(Action<InputDevice> onTurnedAway, Func<bool> welcomesJoins = null)
     {
         turnedAway = onTurnedAway;
+        welcomes = welcomesJoins;
         UseManualJoins();
         if (Enabled)
             return;
@@ -45,8 +49,23 @@ public static class PlayerJoiner
 
         Enabled = false;
         turnedAway = null;
+        welcomes = null;
         InputUser.onUnpairedDeviceUsed -= OnUnpairedDeviceUsed;
         InputUser.listenForUnpairedDeviceActivity--;
+    }
+
+    /// <summary>
+    /// Whether the game takes a new player now. Offline: the first at any time, more while players may join (player select)
+    /// up to four. Online: this machine's first at any time, more only in player select (a full match is told so there,
+    /// by PlayerInstantiate). A player moving seats joins by itself, without this
+    /// </summary>
+    /// <param name="allowSpawn">PlayerInstantiate's allowPlayerSpawn: players may join (offline)</param>
+    public static bool Welcomes(bool online, bool allowSpawn, int playerCount, int localCount, bool inPlayerSelect)
+    {
+        if (online)
+            return localCount == 0 || inPlayerSelect;
+
+        return (allowSpawn || playerCount == 0) && playerCount < Constants.MAX_PLAYERS;
     }
 
     /// <summary>
@@ -86,7 +105,7 @@ public static class PlayerJoiner
     static void OnUnpairedDeviceUsed(InputControl control, InputEventPtr eventPtr)
     {
         PlayerInputManager manager = PlayerInputManager.instance;
-        if (manager == null || !manager.joiningEnabled)
+        if (manager == null || !manager.joiningEnabled || (welcomes != null && !welcomes()))
             return;
 
         string scheme = SchemeFor(control, eventPtr);

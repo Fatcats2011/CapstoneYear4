@@ -84,7 +84,7 @@ namespace DoA.Tests
             SteamFeatures.Instance.Use(achievements, new FakePresence());
             GameManager.Instance.ApplyGameState(GameState.MainLoop);
 
-            FeatSync.Deliver(0, false);
+            FeatSync.Deliver(0, Constants.OrderValue.Easy);
 
             CollectionAssert.AreEqual(new[] { Achievement.FirstDelivery }, achievements.Unlocked);
         }
@@ -102,7 +102,7 @@ namespace DoA.Tests
             GameManager.Instance.ApplyGameState(GameState.MainLoop);
             GameAuthority.Role = NetworkRole.Client;
 
-            FeatSync.Deliver(1, false);
+            FeatSync.Deliver(1, Constants.OrderValue.Easy);
 
             SteamFeatures.Earned -= earned.Heard;
             CollectionAssert.IsEmpty(achievements.Unlocked);
@@ -122,12 +122,85 @@ namespace DoA.Tests
             GameManager.Instance.ApplyGameState(GameState.MainLoop);
             GameAuthority.Role = NetworkRole.Host;
 
-            FeatSync.Deliver(2, false);
+            FeatSync.Deliver(2, Constants.OrderValue.Easy);
 
             SteamFeatures.Earned -= earned.Heard;
             CollectionAssert.AreEqual(new[] { 2 }, earned.Seats);
             CollectionAssert.AreEqual(new[] { Achievement.FirstDelivery }, earned.Achievements);
             CollectionAssert.IsEmpty(achievements.Unlocked, "online, OnlineAchievements unlocks");
+        }
+
+        [UnityTest]
+        public IEnumerator OfflineSteal_OfTheGoldenOrder_UnlocksStealAndGoldenSteal()
+        {
+            NewEmptyScene();
+            yield return new EnterPlayMode();
+            yield return AddAGameManager();
+            FakeAchievements achievements = new FakeAchievements();
+            SteamFeatures.Instance.Use(achievements, new FakePresence());
+            GameManager.Instance.ApplyGameState(GameState.FinalPackage);
+
+            FeatSync.Steal(0, true);
+
+            CollectionAssert.AreEqual(new[] { Achievement.Steal, Achievement.GoldenSteal }, achievements.Unlocked);
+        }
+
+        [UnityTest]
+        public IEnumerator OfflineTutorialFinished_UnlocksTutorialDone()
+        {
+            NewEmptyScene();
+            yield return new EnterPlayMode();
+            yield return AddAGameManager();
+            FakeAchievements achievements = new FakeAchievements();
+            SteamFeatures.Instance.Use(achievements, new FakePresence());
+            GameManager.Instance.ApplyGameState(GameState.Tutorial);
+
+            FeatSync.Learn(1);
+
+            CollectionAssert.AreEqual(new[] { Achievement.TutorialDone }, achievements.Unlocked);
+        }
+
+        [UnityTest]
+        public IEnumerator ClientStealAndTutorial_RaiseNoFeat()
+        {
+            NewEmptyScene();
+            yield return new EnterPlayMode();
+            yield return AddAGameManager();
+            FakeAchievements achievements = new FakeAchievements();
+            SteamFeatures.Instance.Use(achievements, new FakePresence());
+            EarnedRecorder earned = new EarnedRecorder();
+            SteamFeatures.Earned += earned.Heard;
+            GameManager.Instance.ApplyGameState(GameState.MainLoop);
+            GameAuthority.Role = NetworkRole.Client;
+
+            FeatSync.Steal(1, false);
+            FeatSync.Learn(1);
+
+            SteamFeatures.Earned -= earned.Heard;
+            CollectionAssert.IsEmpty(achievements.Unlocked);
+            CollectionAssert.IsEmpty(earned.Achievements, "a client never decides");
+        }
+
+        [UnityTest]
+        public IEnumerator Fall_UnlocksFellInWaterHere_OfflineAndOnline()
+        {
+            NewEmptyScene();
+            yield return new EnterPlayMode();
+            yield return AddAGameManager();
+            FakeAchievements achievements = new FakeAchievements();
+            SteamFeatures.Instance.Use(achievements, new FakePresence());
+            EarnedRecorder earned = new EarnedRecorder();
+            SteamFeatures.Earned += earned.Heard;
+            GameManager.Instance.ApplyGameState(GameState.MainLoop);
+
+            FeatSync.Fall();
+            GameAuthority.Role = NetworkRole.Client;
+            FeatSync.Fall();
+
+            SteamFeatures.Earned -= earned.Heard;
+            CollectionAssert.AreEqual(new[] { Achievement.FellInWater, Achievement.FellInWater }, achievements.Unlocked,
+                "the machine driving the player unlocks it, a client too");
+            CollectionAssert.IsEmpty(earned.Achievements, "nothing to send: it's this machine's own player");
         }
 
         [UnityTest]

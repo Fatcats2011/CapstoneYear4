@@ -8,6 +8,40 @@ namespace DoA.Tests
     /// </summary>
     public class SeatTableTests
     {
+        static bool ZeroAndOneReady(int seat)
+        {
+            return seat == 0 || seat == 1;
+        }
+
+        static bool NoneReady(int seat)
+        {
+            return false;
+        }
+
+        [Test]
+        public void UnreadyExtras_KeepsEachMachinesLastSeatAndItsReadyOnes()
+        {
+            // The match starts: a seat granted that moment has a player who never readied
+            SeatTable seats = new SeatTable();
+            seats.Take(1);
+            seats.Take(2);
+            seats.Take(1);
+            seats.Take(2);
+
+            CollectionAssert.AreEqual(new[] { (1UL, 2), (2UL, 3) }, seats.UnreadyExtras(ZeroAndOneReady));
+        }
+
+        [Test]
+        public void UnreadyExtras_NoneReady_EachMachineKeepsItsLowestSeat()
+        {
+            SeatTable seats = new SeatTable();
+            seats.Take(1);
+            seats.Take(1);
+            seats.Take(2);
+
+            CollectionAssert.AreEqual(new[] { (1UL, 1) }, seats.UnreadyExtras(NoneReady));
+        }
+
         [Test]
         public void Take_TheHost_GetsSeatZero()
         {

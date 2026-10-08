@@ -238,6 +238,16 @@ Online multiplayer is being built in steps (roadmap Phase 3: `docs/superpowers/p
   - **The menu return:** `OnlineGame` drops the host messages still waiting for this machine's scene when the host's return reaches it (`OnlineMatch.ReturnRequested`).
   - **`OnlineSession.Ended`** calls each listener on its own: one that throws is logged and the rest still hear it (the Steam lobby's leave).
 
+### Phase 5B: the last deferred fixes
+
+- **A hard bump right after a weak one counts.** A parked player's machine reports a weak bump as another scooter rams it; within the pair's half second, one harder report still goes through (`BumpRules.TooSoon`; only one, so rising reports can't add pushes up). A push from the host is never shown harder than a clash (`BumpRules.Shown`).
+- **No player is made mid-match** for Space on an unused keyboard or a fifth controller: `PlayerJoiner` asks `PlayerJoiner.Welcomes` before joining.
+- **Seats:**
+  - As the match starts, the host frees each machine's extra seats whose players aren't ready (`SeatTable.UnreadyExtras`, `OnlineSession.DropUnreadyExtras`, from `OnlineGame` as the host leaves the menus): a seat granted that moment no longer shows everywhere for a round trip.
+  - The host ignores a seat ask from a machine that holds no seat (it left).
+  - A controller joining while this machine's menu player moves seats isn't a second menu player, and a failed move leaves nothing behind for that controller's next join.
+- **A machine the host takes back to the menu while its match scene is still coming up** gets there once the loading screen's delay (8 s) is over. Phase 5A thought it stayed in the game scene; its checks gave up before the delay ended (`DisconnectsNetworkTests.…ThisMachineReachesTheMenu`).
+
 ### Local Play and Online Play on the title screen
 
 - **The title screen** has Local Play, Online Play, Options, Credits and Quit. The scene's entries are images, so `TitleEntries` decides what each place does from how many `MainMenu` holds: with 4 (before the Online Play art), it's the old title screen.
@@ -317,6 +327,7 @@ What stops a modified game from harming other players (strangers connecting, IP 
 - **Nobody joins mid-match.** A machine's extra players sit down only while the host is in the menus.
 - **A machine with more players than seats left** gets in with the seats there are; its other players are told "That match is full." and leave player select.
 - When the host leaves, clients see "The host left the match." and stay in player select with their own player, not ready: no countdown starts, and a running one stops. They ready up again to start one.
+- **No cap on seats per machine:** a modified game could take every free seat with players who never ready, holding up the match. Lobbies are friends-only, so it's left as is.
 - **Friends only:** no public lobbies or lobby list yet. Friends join through Steam's invites and "Join Game".
 - A Steam account can't join itself, so two editors on one computer play over the Online menu (by IP address), not Steam.
 - Until the game has its own App ID, it runs as Valve's test app (480): an invite accepted with the game closed starts Spacewar. Start the game first. A build also needs a copy of `steam_appid.txt` next to its `.exe`.

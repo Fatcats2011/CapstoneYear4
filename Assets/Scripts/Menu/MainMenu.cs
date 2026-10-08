@@ -9,10 +9,10 @@ public class MainMenu : SingletonMonobehaviour<MainMenu>
     GameManager gameManager;
 
     [Header("Selector Objects")]
-    [SerializeField] GameObject selector;
+    [SerializeField] internal GameObject selector;
     [SerializeField] internal GameObject[] selectorObjects;
-    [SerializeField] Image menuGhostImage;
-    [SerializeField] Sprite[] selectorGhostSprites;
+    [SerializeField] internal Image menuGhostImage;
+    [SerializeField] internal Sprite[] selectorGhostSprites;
     int selectorPos;
 
     [Header("Canvas Objects")]
@@ -93,7 +93,9 @@ public class MainMenu : SingletonMonobehaviour<MainMenu>
             }
         }
 
-        menuGhostImage.sprite = selectorGhostSprites[selectorPos];
+        // An entry added to the scene without its ghost sprite keeps the last one
+        if (selectorPos < selectorGhostSprites.Length)
+            menuGhostImage.sprite = selectorGhostSprites[selectorPos];
 
         // Updates selector for current slider selected
         selector.transform.position = new Vector3(selector.transform.position.x, selectorObjects[selectorPos].transform.position.y, selector.transform.position.z);

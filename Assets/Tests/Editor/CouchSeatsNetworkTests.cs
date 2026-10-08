@@ -35,6 +35,17 @@ namespace DoA.Tests
             }
         }
 
+        // The seats whose players are ready, for DropUnreadyExtras
+        class ReadySeats
+        {
+            public readonly HashSet<int> Seats = new HashSet<int>();
+
+            public bool IsReady(int seat)
+            {
+                return Seats.Contains(seat);
+            }
+        }
+
         [UnityTearDown]
         public IEnumerator TearDown()
         {
@@ -112,6 +123,55 @@ namespace DoA.Tests
             yield return null;
             log.Dispose();
             Assert.IsEmpty(log.Problems, "Errors while machines left:\n\n" + string.Join("\n\n", log.Problems));
+        }
+
+        [UnityTest]
+        public IEnumerator AMachineThatLeft_AsksForASeat_GetsNone()
+        {
+            EmptyScene();
+            yield return new EnterPlayMode();
+            OnlineSession[] sessions = new OnlineSession[2];
+            yield return HostAndClient(sessions);
+            OnlineSession host = sessions[0], client = sessions[1];
+
+            // An ask the host gets to only after its machine left (or from one it never let in)
+            host.OnSeatAsked(99);
+            yield return null;
+
+            Assert.AreEqual(0, host.SeatsHeldBy(99), "no seat for a machine that isn't here");
+            Assert.IsTrue(Sees(host, 2), "and no player or scooter for one");
+
+            yield return Leave(host, client);
+        }
+
+        [UnityTest]
+        public IEnumerator TheMatchStarting_DropsAnUnreadyExtraSeat()
+        {
+            EmptyScene();
+            yield return new EnterPlayMode();
+            OnlineSession[] sessions = new OnlineSession[2];
+            yield return HostAndClient(sessions);
+            OnlineSession host = sessions[0], client = sessions[1];
+            client.AskSeat();
+            float deadline = Time.realtimeSinceStartup + WAIT;
+            while (!(Sees(client, 3) && Sees(host, 3)) && Time.realtimeSinceStartup < deadline)
+                yield return null;
+            Assert.IsTrue(Sees(client, 3), "the client's second seat");
+
+            // The host and the client's first player readied; the second seat came as the match started
+            ReadySeats ready = new ReadySeats();
+            ready.Seats.Add(0);
+            ready.Seats.Add(1);
+            host.DropUnreadyExtras(ready.IsReady);
+            deadline = Time.realtimeSinceStartup + WAIT;
+            while (!(Sees(client, 2) && Sees(host, 2)) && Time.realtimeSinceStartup < deadline)
+                yield return null;
+
+            Assert.IsTrue(Sees(host, 2), "the unready seat's player and scooter go on the host");
+            Assert.IsTrue(Sees(client, 2), "and on the client");
+            CollectionAssert.AreEqual(new[] { 1 }, OwnSeats(client), "the client keeps its first");
+
+            yield return Leave(host, client);
         }
 
         [UnityTest]

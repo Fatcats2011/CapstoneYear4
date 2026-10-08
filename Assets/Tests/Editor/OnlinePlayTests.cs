@@ -124,6 +124,17 @@ namespace DoA.Tests
         }
 
         [Test]
+        public void PressY_LocalPlay_AsksForNoLobby()
+        {
+            FakeLobbyService lobbies = new FakeLobbyService();
+            OnlinePlay play = InPlayerSelect(lobbies, out GameManager game);
+
+            play.PressY(true);
+
+            Assert.AreEqual(0, lobbies.Creates.Count);
+        }
+
+        [Test]
         public void StartOnline_AsksSteamForALobby()
         {
             // The lobby isn't answered: a made lobby would host a real session. OnlineLobbyTests covers that

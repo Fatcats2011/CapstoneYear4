@@ -51,6 +51,7 @@ public class OnlineGame : MonoBehaviour
     OnlineRespawns respawns; // the host's respawn points, on this machine
     HostQueue hostMessages;  // client: the host's states, order changes, hits and respawn points, which wait while this machine's new scene comes up
     string pendingNotice;    // why the session ended, to say again once the menus are up
+    bool wasInMenus = true; // the last state applied was in the menus (the host drops unready seats leaving them)
 
     /// <summary>
     /// Plays the game over a session (adds an OnlineGame to its object)
@@ -397,8 +398,15 @@ public class OnlineGame : MonoBehaviour
     // itself, the player hears why again
     void OnStateApplied(GameState state)
     {
+        // Host, as the match starts: a seat granted that moment has a player who never readied. It goes now, before any
+        // machine shows it in the match
+        bool menus = LobbyRules.InTheMenus(state);
+        if (wasInMenus && !menus && session.Match != null && session.Match.IsServer && PlayerInstantiate.Instance != null)
+            session.DropUnreadyExtras(PlayerInstantiate.Instance.IsReady);
+        wasInMenus = menus;
+
         // The match starts: a player here without a seat can't follow it (the host never counted them)
-        if (!LobbyRules.InTheMenus(state) && PlayerInstantiate.Instance != null && PlayerInstantiate.Instance.IsOnline)
+        if (!menus && PlayerInstantiate.Instance != null && PlayerInstantiate.Instance.IsOnline)
             PlayerInstantiate.Instance.TurnAwayUnseated(JoinRules.STARTED, Constants.MAX_PLAYERS);
 
         if (pendingNotice != null && LobbyRules.InTheMenus(state))

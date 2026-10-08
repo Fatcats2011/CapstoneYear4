@@ -30,6 +30,7 @@ Code is done. Until this scene change, the title screen works as before (Play, a
   - B on editor 2's second player: its scooter goes in both editors. B on editor 2's first player leaves the match, as before.
   - Ready everyone up and play a wave: four views across the two editors, steals and orders as usual.
 - **Two PCs over Steam, optional:** two players on each PC, playing together.
+- **Phase 5B, in two editors:** start a match just as a client's second controller joins player select: its player never flashes up in the match on either editor.
 
 ## 3. Let both editors import Phases 4C and 4D (2 minutes)
 

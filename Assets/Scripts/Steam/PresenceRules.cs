@@ -36,9 +36,8 @@ public static class PresenceRules
                 return solo ? "#GoldenSolo" : "#Golden";
             case GameState.Results:
                 return "#Results";
-            case GameState.StartingCutscene:
-                return null; // every match opens with the tutorial: "Getting ready" stays until it begins
             default:
+                // Also the opening cutscene: every match opens with the tutorial, and "Getting ready" stays until it begins
                 return null;
         }
     }

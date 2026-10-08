@@ -879,6 +879,7 @@ public class BallDriving : MonoBehaviour
                 {
                     respawn.StartRespawnCoroutine();
                     dirtyTerrainRespawn = true;
+                    FeatSync.Fall();
                 }
             }
         }

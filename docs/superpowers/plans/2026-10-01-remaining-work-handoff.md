@@ -6,13 +6,13 @@
 > 3. Run it inline (superpowers:executing-plans), then self-review.
 > 4. Leave it uncommitted: the user commits.
 
-## Where things stand (2026-10-07)
+## Where things stand (2026-10-08)
 
-- **Branch `steam-phase1a`** is at `9e2870e4` "Small fixes" (Phase 5A, plus an early snapshot of a few Phase 3J files), with **Phase 3J (several players on one machine online) done on top, and Local Play / Online Play on the title screen (`docs/superpowers/plans/2026-10-07-local-and-online-menu.md`, `docs/online.md`), both uncommitted** (`docs/superpowers/plans/2026-10-06-phase3j-online-couch.md`, `docs/online.md` Phase 3J). The biggest remaining frame-rate gains are editor changes, listed in order in `docs/performance.md` (`EDITOR-TODO.md` section 4). All 718 tests pass.
+- **Branch `steam-phase1a`** is at `a1c8c76d` "Local Play and Online Play on the title screen" (Phases 3J and 5A, and the title screen), with **Phase 5B (the last deferred minors) done on top, uncommitted** (`docs/superpowers/plans/2026-10-08-phase5b-deferred-minors.md`, `docs/online.md` Phase 5B). Another session's achievements work (Steam feats files, `OrderHandler`, `BallDriving`, `Respawn`, `TutorialManager`) is uncommitted beside it. The biggest remaining frame-rate gains are editor changes, listed in order in `docs/performance.md` (`EDITOR-TODO.md` section 4). All 760 tests pass (with the achievements work in the tree).
 - The user allows Sonnet agents "as you see fit" for these phases (memory: `code-review-agents`); still one test run at a time.
 - **`main` holds the Steam API only** (the branch policy, below).
 - **Done:**
-  - Phase 1's code (1A, 1B, 1C), Phase 2 (2A–2C), Phase 3 (3A–3J; 3J is roadmap Task 3.9), Phases 4A, 4C and 4D, Phase 5A (the deferred minors), and Local Play / Online Play on the title screen (its scene art is `EDITOR-TODO.md` section 1).
+  - Phase 1's code (1A, 1B, 1C), Phase 2 (2A–2C), Phase 3 (3A–3J; 3J is roadmap Task 3.9), Phases 4A, 4C and 4D, Phase 5A (the deferred minors), Local Play / Online Play on the title screen (its scene art is `EDITOR-TODO.md` section 1), and Phase 5B (the last deferred minors).
   - Each has a plan in `docs/superpowers/plans/`.
   - `docs/online.md` explains the online code, phase by phase.
 
@@ -99,22 +99,10 @@
 
 ## Deferred minors still open
 
-Phase 5A (2026-10-07) closed the earlier list (its plan's item index says how each was closed). What's left, from Phase 5A's own work and its review. None blocks a release, except perhaps the first.
-- **Pre-existing, found in Phase 5A (worth its own look):** a machine the host takes back to the menu while its game scene is still coming up stays in the game scene. Traced: the menu scene's `SceneManager` (a per-scene singleton) starts the menu load on itself in its `sceneLoaded` callback, then is disabled as its scene unloads, so the load dies in its `WaitForSeconds(8)`; the new scene's `SceneManager` subscribes to `sceneLoaded` only in `Start`, so it never hears its own scene. Two attempted fixes (a shared flag with a hand-off in `RaiseSceneUp`, then in `Start`) still left it stuck: reverted. Leaving the session and joining again gets the player back. Also: the show and the return arriving in the same frame (a host can't send both in one tick).
-- **From Phase 5A's review (minor):**
-  - A modified host could send a huge push (`OnlineMatch.BumpClientRpc` takes any finite push): clamp it to the clash force in `OnlineBumps.Show`.
-  - A remote scooter ramming this machine's parked one makes this machine report a weak bump too; the pair's half-second cooldown can then drop the rammer's real one. Fix: the host keeps the hardest report within the window.
-  - `OwnerNetworkTransform`'s NaN hold doesn't cover a forged *teleport* state (Netcode applies it at once, before `Update`): a hostile client can still make one error per message.
-  - An `OrderHandler` destroyed mid-match (a machine leaving) stays hooked to `OnMainGameFinishes`: call `UnhookMatchEnd` in its `OnDestroy`.
-  - `PlayerCameraResizer`'s `[DefaultExecutionOrder(1000)]` moves its `Start` and `Update` too (nothing found that depends on the old order).
-  - Space on an unused keyboard, or any button on a fifth pad, during a match still makes and destroys a player (`PlayerJoiner` checks only `joiningEnabled`; `AddPlayerReference` turns it away).
-  - Doc comments now sit on the wrong member: `DisplayRules.VSyncCount`/`NeedsResize`, and the `SORTING_ORDER` constants in `ControllerPrompts`/`LobbyPrompt` (above `Create`).
-  - `PresenceRules`' `case StartingCutscene: return null` repeats the `default` (kept as documentation).
-- **From Phase 3J's review (minor):**
-  - A seat granted in the same frame the match starts shows on other machines for a round trip, then goes.
-  - `OnlineSession.OnSeatAsked` doesn't check the sender is still connected: a request processed after its disconnect would hold a seat nobody frees.
-  - Nothing caps the seats one machine takes: a modified client can fill the match with players that never ready.
-  - A pad joining in the one frame this machine's only player is mid-move becomes a second menu player (`roster.LocalCount == 0` there; also check `rejoinSeats`).
-  - A `rejoinSeats` entry outlives a rejoin that fails or is turned away: that pad's next join jumps into the old seat.
-  - A client's seat asks from inside a running game aren't integration-tested (two games can't run in one process): the two-editor check in `EDITOR-TODO.md` section 2 covers them.
-- **Not testable here:** the bump report from a real collision (`BumpReporter`), the kick reason's linger and the ban (Steam), the `SteamManager` guard: two-PC checks in `EDITOR-TODO.md` section 2.
+Phase 5B (2026-10-08, `docs/superpowers/plans/2026-10-08-phase5b-deferred-minors.md`) closed the list Phases 5A and 3J left. What's left:
+- **Known limits, left by choice:**
+  - No cap on seats per machine (the user, 2026-10-08): `docs/online.md` Known limits.
+  - A forged teleport pose isn't held back (Netcode applies it before any hook): `docs/online-safety.md`.
+  - `PlayerCameraResizer`'s `[DefaultExecutionOrder(1000)]` also moves its `Start` and `Update`; nothing depends on the old order.
+- **The "stuck scene" from Phase 5A wasn't a bug:** a machine the host takes back to the menu while its match scene comes up gets there after the loading screen's 8 s delay. Phase 5A's checks gave up before the delay ended. A regression test now covers it.
+- **Not testable here** (two-PC or two-editor checks in `EDITOR-TODO.md` section 2): the bump report from a real collision (`BumpReporter`), the kick reason's linger and the ban (Steam), the `SteamManager` guard, and a client's seat asks from inside a running game.

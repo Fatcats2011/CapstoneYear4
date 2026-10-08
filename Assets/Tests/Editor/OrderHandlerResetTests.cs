@@ -31,5 +31,27 @@ namespace DoA.Tests
 
             Assert.AreEqual(0, Reflect.HandlerCount(orders, nameof(OrderManager.OnMainGameFinishes), player), "nothing left after two matches");
         }
+
+        [Test]
+        public void Destroyed_LeavesNoMatchEndListener()
+        {
+            // A machine leaving mid-match takes its players' handlers with it, before the match ends
+            OrderManager orders = objects.Add<OrderManager>();
+            OrderManager.instance = orders;
+            try
+            {
+                OrderHandler player = objects.Add<OrderHandler>();
+                player.HookMatchEnd(orders);
+
+                // Unity calls OnDestroy itself only in Play Mode
+                player.OnDestroy();
+
+                Assert.AreEqual(0, Reflect.HandlerCount(orders, nameof(OrderManager.OnMainGameFinishes), player));
+            }
+            finally
+            {
+                OrderManager.instance = null;
+            }
+        }
     }
 }

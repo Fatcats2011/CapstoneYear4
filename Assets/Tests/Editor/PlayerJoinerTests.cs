@@ -28,6 +28,19 @@ namespace DoA.Tests
             InputSystem.RemoveDevice(keyboard);
         }
 
+        // online, allowSpawn (player select or the title screen offline), players, this machine's players, in player select
+        [TestCase(false, false, 0, 0, false, true, TestName = "Welcomes_Offline_TheFirstPlayerAtTheTitleScreen")]
+        [TestCase(false, false, 2, 2, false, false, TestName = "Welcomes_Offline_NobodyMidMatch")]
+        [TestCase(false, true, 4, 4, true, false, TestName = "Welcomes_Offline_NobodyInAFullPlayerSelect")]
+        [TestCase(false, true, 2, 2, true, true, TestName = "Welcomes_Offline_MoreInPlayerSelect")]
+        [TestCase(true, false, 1, 0, false, true, TestName = "Welcomes_Online_ThisMachinesFirstPlayerAnytime")]
+        [TestCase(true, false, 3, 1, false, false, TestName = "Welcomes_Online_NobodyMoreMidMatch")]
+        [TestCase(true, true, 2, 1, true, true, TestName = "Welcomes_Online_MoreInPlayerSelect")]
+        public void Welcomes(bool online, bool allowSpawn, int players, int localPlayers, bool inPlayerSelect, bool expected)
+        {
+            Assert.AreEqual(expected, PlayerJoiner.Welcomes(online, allowSpawn, players, localPlayers, inPlayerSelect));
+        }
+
         // The scheme a press of one control would join with
         static string SchemeForPress(InputDevice device, ButtonControl control)
         {

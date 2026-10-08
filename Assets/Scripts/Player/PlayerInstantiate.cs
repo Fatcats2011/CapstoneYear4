@@ -96,7 +96,14 @@ public class PlayerInstantiate : SingletonMonobehaviour<PlayerInstantiate>
         // The game joins players itself: controllers on any button, the keyboard on Space or Enter. Only the kept
         // instance: the menu scene's copy, which a return to the menu brings and destroys, mustn't switch joining off
         if (Instance == this)
-            PlayerJoiner.Enable(TurnAwayKey);
+            PlayerJoiner.Enable(TurnAwayKey, WelcomesJoins);
+    }
+
+    // Whether a new player may join now (PlayerJoiner.Welcomes): nobody is made mid-match only to be destroyed
+    private bool WelcomesJoins()
+    {
+        return PlayerJoiner.Welcomes(online, allowPlayerSpawn, PlayerCount, roster.LocalCount,
+            gameManager != null && gameManager.MainState == GameState.PlayerSelect);
     }
 
     private void Start()
@@ -197,7 +204,8 @@ public class PlayerInstantiate : SingletonMonobehaviour<PlayerInstantiate>
         }
 
 
-        bool isFirstPlayer = moving ? move.host : online ? roster.LocalCount == 0 : PlayerCount == 0;
+        // Online, the menu player moving seats is away for a frame: a controller joining then isn't a second one
+        bool isFirstPlayer = moving ? move.host : online ? roster.LocalCount == 0 && !MenuPlayerMoving() : PlayerCount == 0;
 
         // Takes the lowest free slot. Online: the seat it moves to, else an empty seat this machine holds, else the lowest
         // free slot, unseated
@@ -1090,6 +1098,23 @@ public class PlayerInstantiate : SingletonMonobehaviour<PlayerInstantiate>
         return ui != null && ui.menuInteractions.hostPlayer;
     }
 
+    /// <summary>Online: whether a controller's player is on its way to another seat</summary>
+    internal bool MovePending(InputDevice device)
+    {
+        return rejoinSeats.ContainsKey(device);
+    }
+
+    // Online: whether this machine's menu player is on its way to another seat
+    private bool MenuPlayerMoving()
+    {
+        foreach ((int seat, bool host) move in rejoinSeats.Values)
+        {
+            if (move.host)
+                return true;
+        }
+        return false;
+    }
+
     private IEnumerator MoveToSeat(PlayerInput player, int seat)
     {
         // The same controller, or the keyboard, with its own scheme
@@ -1105,7 +1130,10 @@ public class PlayerInstantiate : SingletonMonobehaviour<PlayerInstantiate>
 
         if (device != null && device.added)
             PlayerInputManager.instance.JoinPlayer(-1, -1, scheme, device);
-        else if (device != null)
+
+        // The join took the seat, or failed (PlayerInputManager refused it): either way, the controller's next join is
+        // an ordinary one
+        if (device != null)
             rejoinSeats.Remove(device);
     }
 

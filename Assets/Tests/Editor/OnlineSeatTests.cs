@@ -27,6 +27,19 @@ namespace DoA.Tests
 
             EditorSceneManager.playModeStartScene = null;
             TestPlayers.RemoveAll();
+            if (extraPad != null && extraPad.added)
+                InputSystem.RemoveDevice(extraPad);
+            extraPad = null;
+        }
+
+        // A controller a test joins by hand (TestPlayers' presses A as it plugs in)
+        static Gamepad extraPad;
+
+        // PlayerInputManager refuses joins past its maximum player count (-1: no maximum)
+        static void SetMaxPlayers(int max)
+        {
+            typeof(PlayerInputManager).GetField("m_MaxPlayerCount", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)
+                .SetValue(PlayerInputManager.instance, max);
         }
 
         static bool AtTitleScreen()
@@ -356,6 +369,68 @@ namespace DoA.Tests
             Assert.IsNull(players.Roster[0], "B left");
             Assert.AreEqual(JoinRules.FULL, ControllerPrompts.Instance.HintText, "and heard why");
             Assert.IsTrue(LocalWith(1, padA), "A stays");
+            players.GoOffline();
+        }
+
+        [UnityTest]
+        public IEnumerator APadJoiningWhileTheMenuPlayerMoves_IsNotASecondMenuPlayer()
+        {
+            EditorSceneManager.playModeStartScene = AssetDatabase.LoadAssetAtPath<SceneAsset>(MENU_SCENE);
+            yield return new EnterPlayMode();
+            float deadline = Time.realtimeSinceStartup + 60;
+            while (!AtTitleScreen() && Time.realtimeSinceStartup < deadline)
+                yield return null;
+            PlayerInstantiate players = PlayerInstantiate.Instance;
+            TestPlayers.Add();
+            deadline = Time.realtimeSinceStartup + 10;
+            while (!LocalIn(0) && Time.realtimeSinceStartup < deadline)
+                yield return null;
+            GameManager.Instance.SetGameState(GameState.PlayerSelect);
+
+            // This machine's only player moves seats; in that same frame another controller joins
+            players.GiveSeat(2);
+            extraPad = InputSystem.AddDevice<Gamepad>("DoA Seat Test Pad");
+            PlayerInputManager.instance.JoinPlayer(-1, -1, PlayerJoiner.GAMEPAD_SCHEME, extraPad);
+            deadline = Time.realtimeSinceStartup + 10;
+            while (!LocalIn(2) && Time.realtimeSinceStartup < deadline)
+                yield return null;
+
+            Assert.IsTrue(LocalIn(2), "the menu player sat down");
+            int menuPlayers = 0;
+            foreach (PlayerSlot slot in players.Roster.LocalPlayers)
+            {
+                if (slot.Input.GetComponent<PlayerUIHandler>().menuInteractions.hostPlayer)
+                    menuPlayers++;
+            }
+            Assert.AreEqual(2, players.Roster.LocalCount, "both are in");
+            Assert.AreEqual(1, menuPlayers, "one of them runs this machine's menus");
+            players.GoOffline();
+        }
+
+        [UnityTest]
+        public IEnumerator AFailedSeatMove_LeavesNoSeatForThePadsNextJoin()
+        {
+            EditorSceneManager.playModeStartScene = AssetDatabase.LoadAssetAtPath<SceneAsset>(MENU_SCENE);
+            yield return new EnterPlayMode();
+            LogAssert.ignoreFailingMessages = true;
+            float deadline = Time.realtimeSinceStartup + 60;
+            while (!AtTitleScreen() && Time.realtimeSinceStartup < deadline)
+                yield return null;
+            PlayerInstantiate players = PlayerInstantiate.Instance;
+            Gamepad pad = TestPlayers.Add();
+            deadline = Time.realtimeSinceStartup + 10;
+            while (!LocalIn(0) && Time.realtimeSinceStartup < deadline)
+                yield return null;
+
+            // The rejoin into the new seat fails: PlayerInputManager takes nobody that frame
+            players.GiveSeat(2);
+            SetMaxPlayers(0);
+            yield return null;
+            yield return null;
+            SetMaxPlayers(-1);
+
+            Assert.IsFalse(LocalIn(2), "the move failed");
+            Assert.IsFalse(players.MovePending(pad), "nothing left to send the pad's next join to the old seat");
             players.GoOffline();
         }
     }

@@ -85,6 +85,7 @@ public class TutorialManager : SingletonMonobehaviour<TutorialManager>
     public void SeatLearnt(int seat)
     {
         finished.Add(seat);
+        FeatSync.Learn(seat);
         RecheckAlumni();
     }
 

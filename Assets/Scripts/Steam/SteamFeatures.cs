@@ -4,9 +4,11 @@ using UnityEngine;
 
 /// <summary>
 /// The Steam features a player sees in the game. See docs/steam/in-game-features.md
-/// - Achievements: where the rules run (this PC offline, the host online), deliveries (FeatSync) and the results count
-///   towards them (MatchFeats), and each one earned is raised (Earned). Offline every seat is this PC's Steam user, so it
-///   unlocks here; online OnlineAchievements unlocks each on its player's own machine.
+/// - Achievements: where the rules run (this PC offline, the host online), deliveries, steals and tutorial finishes
+///   (FeatSync), the scores as the golden round starts and the results count towards them (MatchFeats), and each one
+///   earned is raised (Earned). Offline every seat is this PC's Steam user, so it unlocks here; online
+///   OnlineAchievements unlocks each on its player's own machine. A fall in the water unlocks on the machine driving
+///   the player, which is theirs.
 /// - Rich Presence: every game state sets what friends see (PresenceRules).
 /// Made once the first scene has loaded, so no scene needs to contain it. Steam is reached through IAchievementStore and
 /// IPresence, which tests replace (Use)
@@ -53,6 +55,9 @@ public class SteamFeatures : MonoBehaviour
         Instance = this;
         Use(new SteamAchievementStore(), new SteamPresence());
         FeatSync.Delivered += OnDelivered;
+        FeatSync.Stole += OnStole;
+        FeatSync.Learnt += OnLearnt;
+        FeatSync.Fell += OnFell;
     }
 
     /// <summary>
@@ -67,6 +72,9 @@ public class SteamFeatures : MonoBehaviour
     void OnDestroy()
     {
         FeatSync.Delivered -= OnDelivered;
+        FeatSync.Stole -= OnStole;
+        FeatSync.Learnt -= OnLearnt;
+        FeatSync.Fell -= OnFell;
         Watch(null);
         if (Instance == this)
             Instance = null;
@@ -97,26 +105,44 @@ public class SteamFeatures : MonoBehaviour
             achievements.Unlock(achievement);
     }
 
-    // Only the rules' machine counts deliveries: a client's are replays of the host's
-    void OnDelivered(int seat, bool golden)
+    // Only the rules' machine counts deliveries, steals and tutorial finishes: a client's are replays of the host's
+    void OnDelivered(int seat, Constants.OrderValue value)
     {
-        if (!GameAuthority.IsAuthority)
-            return;
+        if (GameAuthority.IsAuthority)
+            EarnAll(feats.Delivered(seat, value, MainState));
+    }
 
-        GameState state = GameManager.Instance != null ? GameManager.Instance.MainState : GameState.Default;
-        foreach (Feat feat in feats.Delivered(seat, golden, state))
-            Earn(feat);
+    void OnStole(int seat, bool golden)
+    {
+        if (GameAuthority.IsAuthority)
+            EarnAll(feats.Stole(seat, golden, MainState));
+    }
+
+    void OnLearnt(int seat)
+    {
+        if (GameAuthority.IsAuthority)
+            EarnAll(feats.Learnt(seat));
+    }
+
+    // The player who fell is driven here, so they're this PC's Steam user, online too
+    void OnFell()
+    {
+        Unlock(Achievement.FellInWater);
+    }
+
+    static GameState MainState
+    {
+        get { return GameManager.Instance != null ? GameManager.Instance.MainState : GameState.Default; }
     }
 
     void OnStateApplied(GameState state)
     {
         if (state == GameState.Menu || state == GameState.PlayerSelect)
             feats.NewMatch();
+        else if (state == GameState.GoldenCutscene && GameAuthority.IsAuthority)
+            feats.GoldenRound(Scores());
         else if (state == GameState.Results && GameAuthority.IsAuthority)
-        {
-            foreach (Feat feat in feats.Results(Scores()))
-                Earn(feat);
-        }
+            EarnAll(feats.Results(Scores()));
 
         ShowPresence(state);
     }
@@ -127,6 +153,12 @@ public class SteamFeatures : MonoBehaviour
     public static void RaiseEarned(int seat, Achievement achievement)
     {
         Earned?.Invoke(seat, achievement);
+    }
+
+    void EarnAll(List<Feat> earned)
+    {
+        foreach (Feat feat in earned)
+            Earn(feat);
     }
 
     void Earn(Feat feat)

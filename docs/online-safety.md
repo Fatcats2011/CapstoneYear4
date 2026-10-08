@@ -26,6 +26,8 @@ Online matches are peer to peer: one player's game hosts, and their friends' gam
 | Reaching a player's files or running code | Nothing that arrives over the network is used as a path, deserialised into objects, or run. The audit found no such use. | n/a |
 | A release build listening on an IP address | Direct (IP address) sessions exist only in the editor and development builds. | `#if UNITY_EDITOR \|\| DEVELOPMENT_BUILD` in `OnlineSession`, `OnlinePlay` |
 
+Known limit: a forged *teleport* pose isn't held back. Netcode applies a teleport the moment it arrives, before any hook the game can override (its state is internal to the package), so `PoseHold` can't skip it. Unity refuses a position that isn't numbers, so nothing moves: the cost is one error line per message, within the per-machine message limits above.
+
 Netcode's own settings (`OnlineSession.NewConfig`):
 - Network-variable lengths are checked as they're read.
 - A connection that isn't let in within 10 s is dropped (5 s until Phase 5A: a host hitch of a few seconds in the menus could drop a joining friend).

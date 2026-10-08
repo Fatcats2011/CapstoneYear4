@@ -365,13 +365,30 @@ public class OnlineSession : MonoBehaviour
     }
 
     // Host: a machine asked for another seat
-    void OnSeatAsked(ulong machine)
+    internal void OnSeatAsked(ulong machine)
     {
+        // Asked before its machine left, or by one never let in: a connected machine always holds a seat
+        if (seats.CountOf(machine) == 0)
+            return;
+
         string refusal = SeatRefusal();
         if (refusal != null)
             Match.RefuseSeat(machine, refusal == JoinRules.FULL);
         else
             AddSeat(machine);
+    }
+
+    /// <summary>
+    /// Host, as the match starts: frees each machine's extra seats whose players aren't ready (SeatTable.UnreadyExtras),
+    /// so a seat granted that moment doesn't show on every machine until it's given back
+    /// </summary>
+    public void DropUnreadyExtras(Func<int, bool> ready)
+    {
+        if (Match == null || !Match.IsServer)
+            return;
+
+        foreach ((ulong machine, int seat) extra in seats.UnreadyExtras(ready))
+            FreeSeatOf(extra.machine, extra.seat);
     }
 
     // Host: seats another of a machine's players and spawns them on every machine

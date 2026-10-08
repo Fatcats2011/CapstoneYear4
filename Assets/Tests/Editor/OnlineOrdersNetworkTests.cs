@@ -30,18 +30,18 @@ namespace DoA.Tests
         const float LOADING = 180f; // loading the game scene in batch mode
 
         /// <summary>
-        /// Remembers the deliveries the rules' machine counted for achievements (FeatSync): each one's seat and whether it
-        /// was golden
+        /// Remembers the deliveries the rules' machine counted for achievements (FeatSync): each one's seat and what it
+        /// was worth
         /// </summary>
         class FeatRecorder
         {
             public readonly List<int> Seats = new List<int>();
-            public readonly List<bool> Golden = new List<bool>();
+            public readonly List<Constants.OrderValue> Values = new List<Constants.OrderValue>();
 
-            public void Heard(int seat, bool golden)
+            public void Heard(int seat, Constants.OrderValue value)
             {
                 Seats.Add(seat);
-                Golden.Add(golden);
+                Values.Add(value);
             }
         }
 
@@ -395,7 +395,7 @@ namespace DoA.Tests
             Assert.AreEqual((int)first.Value, PlayerInSeat(other, 1).Score, "their score, from the host");
             FeatSync.Delivered -= feats.Heard;
             Assert.IsTrue(feats.Seats.Contains(1), "the host counts the other machine's delivery for its achievements");
-            Assert.IsFalse(feats.Golden[feats.Seats.IndexOf(1)], "an ordinary order");
+            Assert.AreNotEqual(Constants.OrderValue.Golden, feats.Values[feats.Seats.IndexOf(1)], "an ordinary order");
 
             // Another order: its player falls in the water holding it. The other machine asks, and the host drops it where asked
             deadline = Time.realtimeSinceStartup + WAIT;

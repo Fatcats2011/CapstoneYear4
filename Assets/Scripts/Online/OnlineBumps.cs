@@ -8,7 +8,7 @@ using UnityEngine;
 /// - Host: checks each bump with its own view (BumpRules), and takes a machine's request only for that machine's own
 ///   seat. Then every machine hears it (PlayerBump).
 /// - Every machine: pushes its own bumped player away from the bumper (Show). A pair's bumps show no closer together
-///   than BumpRules.PAIR_COOLDOWN.
+///   than BumpRules.PAIR_COOLDOWN, unless a harder one comes, and never harder than a clash.
 /// Bumps don't wait with the host's other messages: like one-shots, a bump is about the moment. OnlineGame adds it next to
 /// OnlineSteals. See docs/online.md
 /// </summary>
@@ -87,7 +87,7 @@ public class OnlineBumps : MonoBehaviour
     void OnReported(int bumper, int victim, float speed)
     {
         OnlineMatch match = session.Match;
-        if (match == null || reported.TooSoon(bumper, victim, Time.realtimeSinceStartup))
+        if (match == null || reported.TooSoon(bumper, victim, Time.realtimeSinceStartup, speed))
             return;
 
         if (match.IsServer)
@@ -118,7 +118,7 @@ public class OnlineBumps : MonoBehaviour
         float push = BumpRules.Push(BumpRules.Credible(speed, fromBall.CurrentVelocity, toBall.CurrentVelocity), toBall.ClashForce);
         float distance = Vector3.Distance(BallOf(from), BallOf(to));
         if (push <= 0f || !BumpRules.Counts(bumper, victim, distance, Respawning(from) || Respawning(to))
-            || judged.TooSoon(bumper, victim, Time.realtimeSinceStartup))
+            || judged.TooSoon(bumper, victim, Time.realtimeSinceStartup, push))
             return;
 
         PlayerBump bump = new PlayerBump { Bumper = bumper, Victim = victim, Push = push };
@@ -129,7 +129,7 @@ public class OnlineBumps : MonoBehaviour
     // Client: the host passed a bump on
     void OnReceived(PlayerBump bump)
     {
-        if (!shown.TooSoon(bump.Bumper, bump.Victim, Time.realtimeSinceStartup))
+        if (!shown.TooSoon(bump.Bumper, bump.Victim, Time.realtimeSinceStartup, bump.Push))
             Show(bump);
     }
 
@@ -143,7 +143,8 @@ public class OnlineBumps : MonoBehaviour
         if (from == null || to == null || RemoteAvatar.IsRemote(to))
             return;
 
-        to.GetComponent<BallDriving>().PushFrom(BallOf(from), bump.Push);
+        BallDriving ball = to.GetComponent<BallDriving>();
+        ball.PushFrom(BallOf(from), BumpRules.Shown(bump.Push, ball.ClashForce));
     }
 
     static bool IsGone(GameObject player)

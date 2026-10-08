@@ -330,6 +330,7 @@ public class Respawn : MonoBehaviour
         if (other.tag == "Water")
         {
             StartRespawnCoroutine();
+            FeatSync.Fall();
         }
     }
 

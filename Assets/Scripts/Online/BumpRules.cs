@@ -8,8 +8,10 @@ using UnityEngine;
 /// - How hard: Push, from the closing speed, never more than a clash.
 /// - The host's checks (Counts): two players, both here, close enough to have touched, neither respawning; and a closing
 ///   speed no faster than the two are going (Credible).
-/// - How often: a pair bumps at most once per PAIR_COOLDOWN, either way round (TooSoon), on the reporting machine and
-///   the host.
+/// - How often: a pair bumps at most once per PAIR_COOLDOWN, either way round, plus one harder one within it (TooSoon),
+///   on the reporting machine, the host and the other machines. A parked player's machine reports a weak bump as a
+///   scooter rams it, and the rammer's real one must still count; only one, so rising reports can't add pushes up.
+/// - How hard a push from the host is shown: never more than a clash (Shown).
 /// Boosting into someone is a steal or a clash (StealRules), not a bump. OnlineBumps applies these. See docs/online.md
 /// </summary>
 public class BumpRules
@@ -46,7 +48,7 @@ public class BumpRules
         return Mathf.Min(reported, Mathf.Max(0f, bumperSpeed) + Mathf.Max(0f, victimSpeed) + SPEED_SLACK);
     }
 
-    readonly Dictionary<int, float> lastBump = new Dictionary<int, float>(); // each pair's last bump, whichever way round
+    readonly Dictionary<int, (float time, float strength, bool harder)> lastBump = new Dictionary<int, (float time, float strength, bool harder)>(); // each pair's window: when it opened, the strongest bump that counted, and whether a harder one came
 
     /// <summary>
     /// The push a bump at a closing speed gives the bumped player: a share of a clash's (maxPush), MAX_SPEED's bump the
@@ -69,16 +71,36 @@ public class BumpRules
     }
 
     /// <summary>
-    /// Whether this pair (either way round) bumped within PAIR_COOLDOWN; if not, their bump counts from now
+    /// Whether this pair (either way round) bumped within PAIR_COOLDOWN. One harder bump in that time still counts (it
+    /// doesn't restart the cooldown); anything after it waits. If it counts, it's recorded
     /// </summary>
-    public bool TooSoon(int a, int b, float now)
+    /// <param name="strength">How hard: the closing speed before the host judges it, the push after</param>
+    public bool TooSoon(int a, int b, float now, float strength)
     {
         int pair = Math.Min(a, b) * Constants.MAX_PLAYERS + Math.Max(a, b);
-        if (lastBump.TryGetValue(pair, out float last) && now - last < PAIR_COOLDOWN)
-            return true;
+        if (lastBump.TryGetValue(pair, out (float time, float strength, bool harder) last) && now - last.time < PAIR_COOLDOWN)
+        {
+            if (last.harder || strength <= last.strength)
+                return true;
 
-        lastBump[pair] = now;
+            lastBump[pair] = (last.time, strength, true);
+            return false;
+        }
+
+        lastBump[pair] = (now, strength, false);
         return false;
+    }
+
+    /// <summary>
+    /// The push this machine gives for a bump the host sent: never more than a clash (maxPush), and nothing for a value
+    /// that isn't a number. A modified host can't fling a player
+    /// </summary>
+    public static float Shown(float push, float maxPush)
+    {
+        if (!NetChecks.Finite(push))
+            return 0f;
+
+        return Mathf.Clamp(push, 0f, maxPush);
     }
 
     static bool IsSeat(int seat)

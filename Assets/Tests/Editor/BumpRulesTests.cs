@@ -50,10 +50,70 @@ namespace DoA.Tests
         public void TooSoon_APairWithinHalfASecond_EitherWayRound()
         {
             BumpRules rules = new BumpRules();
-            Assert.IsFalse(rules.TooSoon(1, 0, 10f));
-            Assert.IsTrue(rules.TooSoon(0, 1, 10.2f), "the same pair, the other way round");
-            Assert.IsFalse(rules.TooSoon(2, 0, 10.2f), "another pair");
-            Assert.IsFalse(rules.TooSoon(1, 0, 10f + BumpRules.PAIR_COOLDOWN), "half a second later");
+            Assert.IsFalse(rules.TooSoon(1, 0, 10f, 5f));
+            Assert.IsTrue(rules.TooSoon(0, 1, 10.2f, 5f), "the same pair, the other way round");
+            Assert.IsFalse(rules.TooSoon(2, 0, 10.2f, 5f), "another pair");
+            Assert.IsFalse(rules.TooSoon(1, 0, 10f + BumpRules.PAIR_COOLDOWN, 5f), "half a second later");
+        }
+
+        [Test]
+        public void TooSoon_AHarderBumpWithinTheCooldown_GoesThrough()
+        {
+            // A parked player's machine reports a weak bump as a scooter rams it; the rammer's real one follows
+            BumpRules rules = new BumpRules();
+            Assert.IsFalse(rules.TooSoon(1, 0, 0f, 3f));
+            Assert.IsFalse(rules.TooSoon(0, 1, 0.1f, 10f));
+        }
+
+        [Test]
+        public void TooSoon_RisingReportsWithinTheCooldown_OnlyOneHarderGoesThrough()
+        {
+            // A modified game sending ever so slightly harder bumps can't add pushes up past a clash
+            BumpRules rules = new BumpRules();
+            int through = 0;
+            for (int i = 0; i < 20; i++)
+            {
+                if (!rules.TooSoon(1, 0, i * 0.02f, 1f + i * 0.01f))
+                    through++;
+            }
+
+            Assert.AreEqual(2, through, "the first, and one harder");
+        }
+
+        [Test]
+        public void TooSoon_AHarderOne_DoesntRestartTheCooldown()
+        {
+            BumpRules rules = new BumpRules();
+            Assert.IsFalse(rules.TooSoon(1, 0, 0f, 3f));
+            Assert.IsFalse(rules.TooSoon(1, 0, 0.4f, 10f), "harder");
+            Assert.IsFalse(rules.TooSoon(1, 0, 0.55f, 1f), "half a second after the first: a new window");
+        }
+
+        [Test]
+        public void TooSoon_AnEqualOrWeakerOneWithinTheCooldown_IsTooSoon()
+        {
+            BumpRules rules = new BumpRules();
+            Assert.IsFalse(rules.TooSoon(1, 0, 0f, 10f));
+            Assert.IsTrue(rules.TooSoon(1, 0, 0.1f, 10f), "as hard");
+            Assert.IsTrue(rules.TooSoon(0, 1, 0.2f, 3f), "weaker");
+        }
+
+        [Test]
+        public void TooSoon_AfterTheCooldown_AnyBumpGoesThrough()
+        {
+            BumpRules rules = new BumpRules();
+            Assert.IsFalse(rules.TooSoon(1, 0, 0f, 10f));
+            Assert.IsFalse(rules.TooSoon(1, 0, 0.6f, 1f));
+        }
+
+        [Test]
+        public void Shown_NeverMoreThanAClash()
+        {
+            // A modified host could send any push
+            Assert.AreEqual(4000f, BumpRules.Shown(1e9f, 4000f));
+            Assert.AreEqual(0f, BumpRules.Shown(-5f, 4000f));
+            Assert.AreEqual(0f, BumpRules.Shown(float.NaN, 4000f));
+            Assert.AreEqual(100f, BumpRules.Shown(100f, 4000f));
         }
     }
 }

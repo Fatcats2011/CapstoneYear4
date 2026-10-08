@@ -84,6 +84,30 @@ public class SeatTable
         return seats;
     }
 
+    /// <summary>
+    /// The seats to free as the match starts, lowest first: each machine's seats whose players aren't ready, except one
+    /// kept per machine (a machine with nobody ready keeps its lowest). A seat granted as the match started has a player
+    /// who never readied, and would otherwise show on every machine until it was given back
+    /// </summary>
+    public List<(ulong machine, int seat)> UnreadyExtras(System.Func<int, bool> ready)
+    {
+        List<(ulong machine, int seat)> extras = new List<(ulong machine, int seat)>();
+        for (int i = 0; i < taken.Length; i++)
+        {
+            if (!taken[i] || ready(i))
+                continue;
+
+            // Kept: the machine's only ready-less seat left (its lowest, when none of its seats is ready)
+            List<int> own = SeatsOf(clients[i]);
+            bool anyReady = own.Exists(ready.Invoke);
+            if (!anyReady && own[0] == i)
+                continue;
+
+            extras.Add((clients[i], i));
+        }
+        return extras;
+    }
+
     /// <summary>Frees every seat</summary>
     public void Clear()
     {

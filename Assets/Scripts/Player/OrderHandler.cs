@@ -156,7 +156,7 @@ public class OrderHandler : MonoBehaviour
             if (GameAuthority.IsAuthority)
             {
                 score += (int)order1.Value;
-                FeatSync.Deliver(OrderSync.SeatOf(this), rightOrder.Value == Constants.OrderValue.Golden);
+                FeatSync.Deliver(OrderSync.SeatOf(this), rightOrder.Value);
             }
             order1.DeliverOrder();
             order1 = null;
@@ -170,7 +170,7 @@ public class OrderHandler : MonoBehaviour
             if (GameAuthority.IsAuthority)
             {
                 score += (int)order2.Value;
-                FeatSync.Deliver(OrderSync.SeatOf(this), rightOrder.Value == Constants.OrderValue.Golden);
+                FeatSync.Deliver(OrderSync.SeatOf(this), rightOrder.Value);
             }
             order2.DeliverOrder();
             order2 = null;
@@ -393,7 +393,10 @@ public class OrderHandler : MonoBehaviour
 
         Order newOrder = victim.GetBestOrder();
         if (newOrder != null && (order1 == null || order2 == null))
+        {
             TakeOrderFrom(victim, newOrder);
+            FeatSync.Steal(OrderSync.SeatOf(this), newOrder.Value == Constants.OrderValue.Golden);
+        }
         victim.DropEverything(victim.order1Position.position, victim.order2Position.position);
 
         SetDrivingIndicators();
@@ -460,6 +463,13 @@ public class OrderHandler : MonoBehaviour
     internal void UnhookMatchEnd(OrderManager orders)
     {
         orders.OnMainGameFinishes -= FreezeAtMatchEnd;
+    }
+
+    // A player leaving mid-match (online, their machine left) takes this handler before the match ends
+    internal void OnDestroy()
+    {
+        if (OrderManager.Instance != null)
+            UnhookMatchEnd(OrderManager.Instance);
     }
 
     void FreezeAtMatchEnd()
