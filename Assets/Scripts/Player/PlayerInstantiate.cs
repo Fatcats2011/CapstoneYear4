@@ -206,7 +206,7 @@ public class PlayerInstantiate : SingletonMonobehaviour<PlayerInstantiate>
             slot = roster.JoinLocal(playerInput);
         else
         {
-            int seat = moving ? move.seat : EmptyHeldSeat();
+            int seat = !moving ? EmptyHeldSeat() : move.seat >= 0 ? move.seat : FreeUnheldSlot();
             slot = (seat >= 0 ? roster.JoinLocalAt(playerInput, seat) : null) ?? roster.JoinLocal(playerInput);
         }
         if (slot == null)
@@ -1021,6 +1021,17 @@ public class PlayerInstantiate : SingletonMonobehaviour<PlayerInstantiate>
         return -1;
     }
 
+    // Online: a free slot that isn't one of this machine's seats (where a player without a seat waits), or -1
+    int FreeUnheldSlot()
+    {
+        for (int slot = 0; slot < Constants.MAX_PLAYERS; slot++)
+        {
+            if (roster[slot] == null && !onlineSeats.Contains(slot) && !Moving(slot))
+                return slot;
+        }
+        return -1;
+    }
+
     // Whether a player is on their way into a seat
     bool Moving(int seat)
     {
@@ -1058,6 +1069,9 @@ public class PlayerInstantiate : SingletonMonobehaviour<PlayerInstantiate>
                 taken = true;
             if (targets[i] >= 0 && targets[i] != locals[i].Index)
                 StartCoroutine(MoveToSeat(locals[i].Input, targets[i]));
+            // A player standing in a seat the menu player takes moves out of it, to wait for their own (-1: unseated)
+            else if (targets[i] < 0 && onlineSeats.Contains(locals[i].Index))
+                StartCoroutine(MoveToSeat(locals[i].Input, -1));
         }
         return taken;
     }

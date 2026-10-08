@@ -77,6 +77,21 @@ public class OnlineGame : MonoBehaviour
     /// isn't the machine leaving)
     /// </summary>
     /// <param name="ownersLeft">The machines of the players still in the session</param>
+    /// <summary>
+    /// The seats the host still has this machine's players in, though this machine gave them back: a give-back the
+    /// host's rate limit dropped. They're given back again
+    /// </summary>
+    public static List<int> SeatsToGiveBack(IEnumerable<int> ownedSeats, ICollection<int> heldSeats)
+    {
+        List<int> back = new List<int>();
+        foreach (int seat in ownedSeats)
+        {
+            if (!heldSeats.Contains(seat))
+                back.Add(seat);
+        }
+        return back;
+    }
+
     public static bool MachineGone(IEnumerable<ulong> ownersLeft, ulong machine)
     {
         foreach (ulong owner in ownersLeft)
@@ -316,9 +331,26 @@ public class OnlineGame : MonoBehaviour
         if (session.Match == null || !players.IsOnline || !session.IsRunning)
             return;
 
-        for (int ask = asker.ToAsk(players.UnseatedLocalCount); ask > 0; ask--)
+        for (int ask = asker.ToAsk(players.UnseatedLocalCount, Time.realtimeSinceStartup); ask > 0; ask--)
             session.AskSeat();
+
+        // Every couple of seconds, a seat given back that the host still holds goes back again
+        if (Time.realtimeSinceStartup < nextGiveBackCheck)
+            return;
+        nextGiveBackCheck = Time.realtimeSinceStartup + GIVE_BACK_CHECK;
+        ownedSeats.Clear();
+        foreach (OnlinePlayer player in localPlayers)
+        {
+            if (player != null)
+                ownedSeats.Add(player.Seat);
+        }
+        foreach (int seat in SeatsToGiveBack(ownedSeats, new HashSet<int>(players.OnlineSeats)))
+            session.FreeSeat(seat);
     }
+
+    const float GIVE_BACK_CHECK = 2f;
+    float nextGiveBackCheck;
+    readonly List<int> ownedSeats = new List<int>();
 
     // A player left (or this machine went offline): everyone left may have finished the tutorial
     static void RecheckTutorial()

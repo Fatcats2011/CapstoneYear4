@@ -35,6 +35,14 @@ namespace DoA.Tests
         }
 
         [Test]
+        public void Plan_TheMenuPlayer_NeverWaitsWhileAnotherPlayerHasASeat()
+        {
+            // Two players joined offline (the menu player in slot 0, another in 1); the host gives this machine seat 1. The
+            // menu player takes it, and the other waits: a machine's menus need their player
+            CollectionAssert.AreEqual(new[] { 1, -1 }, CouchSeats.Plan(new[] { 0, 1 }, new[] { 1 }));
+        }
+
+        [Test]
         public void Plan_NoPlayers_OrNoSeats()
         {
             CollectionAssert.IsEmpty(CouchSeats.Plan(new int[0], new[] { 1 }));

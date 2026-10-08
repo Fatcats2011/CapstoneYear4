@@ -1,6 +1,6 @@
 # Online play
 
-Online multiplayer is being built in steps (roadmap Phase 3: `docs/superpowers/plans/2026-09-22-steam-split-screen-and-online.md`). Local split-screen doesn't touch any of it: nothing online runs unless a player presses Y in player select or accepts a Steam friend's invite.
+Online multiplayer is being built in steps (roadmap Phase 3: `docs/superpowers/plans/2026-09-22-steam-split-screen-and-online.md`). Local split-screen doesn't touch any of it: nothing online runs unless a player picks Online Play on the title screen or accepts a Steam friend's invite (Local Play and Online Play, below).
 
 ## What's there so far
 
@@ -238,6 +238,18 @@ Online multiplayer is being built in steps (roadmap Phase 3: `docs/superpowers/p
   - **The menu return:** `OnlineGame` drops the host messages still waiting for this machine's scene when the host's return reaches it (`OnlineMatch.ReturnRequested`).
   - **`OnlineSession.Ended`** calls each listener on its own: one that throws is logged and the rest still hear it (the Steam lobby's leave).
 
+### Local Play and Online Play on the title screen
+
+- **The title screen** has Local Play, Online Play, Options, Credits and Quit. The scene's entries are images, so `TitleEntries` decides what each place does from how many `MainMenu` holds: with 4 (before the Online Play art), it's the old title screen.
+- **Local Play** goes to player select as Play did: split screen, with nothing online. Y does nothing and there's no line along the top.
+- **Online Play** (`MainMenu.SwapToOnline`) goes to player select, then `OnlinePlay.StartOnline` hosts a lobby (`OnlineLobby.Host`), which opens Steam's invite window. Player select comes first: a lobby still being made is kept only there.
+- **Failure:** no Steam, no lobby, or a session that won't start. `OnlineLobby.HostFailed` fires; the reason shows in the hint bar, and for a host attempt from Online Play, OnlinePlay unreadies this machine's players and goes back to the title screen while the game is still in offline player select (`OnlinePlay.BackToTitle`). A player who moved on is left alone, and Y on the old title screen only says why, as before.
+- **Y** (`OnlinePlay.YAction`):
+  - online: reopens the invite window;
+  - offline: nothing, or, on the old 4-entry title screen, it goes online.
+- **B** is unchanged.
+- **Accepting a friend's invite** works as before, from Local Play's player select too.
+
 ## Two editors on one computer (ParrelSync)
 
 - **ParrelSync → Clones Manager → Create new clone** (once). The clone shares this project's Assets and ProjectSettings. Unity imports the project the first time the clone opens, which takes a while.
@@ -269,7 +281,7 @@ Online multiplayer is being built in steps (roadmap Phase 3: `docs/superpowers/p
 
 - Two PCs, each running Steam, signed in to two accounts that are friends. An account can't join itself, so one PC can't test Steam.
 - A build on each, with a copy of `steam_appid.txt` next to the `.exe`. Start the game on both before inviting (the test App ID: Known limits).
-- PC 1: Play → A → player select. The line along the top says "Y / Triangle: play online with Steam friends". Press Y, then invite the friend in Steam's overlay.
+- PC 1: Online Play → player select, and Steam's invite window opens: invite the friend (Y reopens it). Before the Online Play entry is in the scene: Play → player select, then Y.
 - PC 2: accept the invite (or pick "Join Game" on PC 1's player in the friends list). It lands in PC 1's player select, in the second seat.
 - Ready up on both: the match starts. After it, both are back in player select.
 - PC 1: B. PC 2 shows "The host left the match." and stays in player select.
@@ -308,4 +320,4 @@ What stops a modified game from harming other players (strangers connecting, IP 
 - **Friends only:** no public lobbies or lobby list yet. Friends join through Steam's invites and "Join Game".
 - A Steam account can't join itself, so two editors on one computer play over the Online menu (by IP address), not Steam.
 - Until the game has its own App ID, it runs as Valve's test app (480): an invite accepted with the game closed starts Spacewar. Start the game first. A build also needs a copy of `steam_appid.txt` next to its `.exe`.
-- The title screen has no "Play Online" row until there's art for one: Y in player select is the way in.
+- Online Play on the title screen needs its art in the scene (`EDITOR-TODO.md` section 1). Until then the title screen has 4 entries, and Y in player select is the way in.

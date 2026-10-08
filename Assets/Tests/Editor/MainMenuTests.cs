@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using NUnit.Framework;
 using UnityEngine;
 
@@ -33,6 +34,7 @@ namespace DoA.Tests
         public void TearDown()
         {
             GameManager.instance = null;
+            OnlinePlay.Instance = null;
             objects.DestroyAll();
             GameAuthority.Role = NetworkRole.Offline;
         }
@@ -73,6 +75,39 @@ namespace DoA.Tests
             Assert.IsFalse(playerSelect.enabled, "player select");
             Assert.IsFalse(options.enabled, "options");
             Assert.IsFalse(credits.enabled, "credits");
+        }
+
+        [Test]
+        public void Choose_Local_GoesToPlayerSelect()
+        {
+            menu.Choose(TitleEntry.Local);
+
+            Assert.AreEqual(GameState.PlayerSelect, game.MainState);
+        }
+
+        [Test]
+        public void Choose_Online_StartsOnline_AndAFailureComesBackToTheTitleScreen()
+        {
+            OnlinePlay play = objects.Add<OnlinePlay>();
+            play.UseDirect(new FakeLobbyService { Available = false }, "127.0.0.1", 7777);
+            OnlinePlay.Instance = play;
+            List<string> notices = new List<string>();
+            play.Lobby.Notice += notices.Add;
+
+            menu.Choose(TitleEntry.Online);
+
+            Assert.AreEqual(GameState.Menu, game.MainState);
+            CollectionAssert.AreEqual(new[] { OnlineLobby.NO_STEAM }, notices);
+        }
+
+        [Test]
+        public void HasOnlineEntry_FollowsTheScenesEntries()
+        {
+            menu.selectorObjects = new GameObject[5];
+            Assert.IsTrue(menu.HasOnlineEntry);
+
+            menu.selectorObjects = new GameObject[4];
+            Assert.IsFalse(menu.HasOnlineEntry);
         }
 
         [Test]

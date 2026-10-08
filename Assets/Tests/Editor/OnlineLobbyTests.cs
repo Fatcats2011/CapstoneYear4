@@ -12,6 +12,7 @@ namespace DoA.Tests
         FakeSessionControl session;
         OnlineLobby lobby;
         List<string> notices;
+        List<string> failures;
 
         [SetUp]
         public void SetUp()
@@ -21,12 +22,19 @@ namespace DoA.Tests
             lobby = new OnlineLobby(lobbies, session, "1.2");
             notices = new List<string>();
             lobby.Notice += Noticed;
+            failures = new List<string>();
+            lobby.HostFailed += Failed;
             lobby.ShowState(GameState.PlayerSelect);
         }
 
         void Noticed(string notice)
         {
             notices.Add(notice);
+        }
+
+        void Failed(string reason)
+        {
+            failures.Add(reason);
         }
 
         // Y in player select, and Steam makes lobby 42
@@ -105,6 +113,50 @@ namespace DoA.Tests
             CollectionAssert.AreEqual(new[] { 42UL }, lobbies.Left);
             CollectionAssert.AreEqual(new[] { OnlineLobby.HOST_FAILED }, notices);
             Assert.AreEqual(0UL, lobby.Current);
+        }
+
+        [Test]
+        public void HostFailed_WithoutSteam_GivesTheReason()
+        {
+            lobbies.Available = false;
+
+            lobby.Host();
+
+            CollectionAssert.AreEqual(new[] { OnlineLobby.NO_STEAM }, failures);
+        }
+
+        [Test]
+        public void HostFailed_LobbyCantBeMade_GivesTheReason()
+        {
+            lobby.Host();
+            lobbies.RaiseCreated(0);
+
+            CollectionAssert.AreEqual(new[] { OnlineLobby.LOBBY_FAILED }, failures);
+        }
+
+        [Test]
+        public void HostFailed_SessionWontStart_GivesTheReason()
+        {
+            session.HostWorks = false;
+
+            Hosting();
+
+            CollectionAssert.AreEqual(new[] { OnlineLobby.HOST_FAILED }, failures);
+        }
+
+        [Test]
+        public void HostFailed_NotRaised_OnSuccess_OrWhenThePlayerMovedOn()
+        {
+            Hosting();
+            // A session ending isn't a host failure
+            session.Stop(null);
+
+            // B before the next lobby is made
+            lobby.Host();
+            lobby.ShowState(GameState.Menu);
+            lobbies.RaiseCreated(43);
+
+            CollectionAssert.IsEmpty(failures);
         }
 
         [Test]

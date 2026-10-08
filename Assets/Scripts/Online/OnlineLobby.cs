@@ -32,6 +32,12 @@ public class OnlineLobby
     /// <summary>A message for the player. Session ends aren't told here: the online game shows those</summary>
     public event Action<string> Notice;
 
+    /// <summary>
+    /// Hosting failed, with the reason (also told through Notice): no Steam, no lobby, or the session wouldn't start. Not
+    /// raised when the player moved on before the lobby was made (OnlinePlay takes the player back to the title screen)
+    /// </summary>
+    public event Action<string> HostFailed;
+
     /// <param name="build">This build's tag (LobbyRules.BuildTag): the host's lobby carries it, and a friend's lobby must match it</param>
     public OnlineLobby(ILobbyService lobbies, ISessionControl session, string build)
     {
@@ -67,7 +73,7 @@ public class OnlineLobby
 
         if (!lobbies.Available)
         {
-            Tell(NO_STEAM);
+            FailHost(NO_STEAM);
             return;
         }
 
@@ -133,7 +139,7 @@ public class OnlineLobby
         if (lobby == 0)
         {
             if (wanted)
-                Tell(LOBBY_FAILED);
+                FailHost(LOBBY_FAILED);
             return;
         }
 
@@ -152,7 +158,7 @@ public class OnlineLobby
         if (!session.Host())
         {
             LeaveLobby();
-            Tell(HOST_FAILED);
+            FailHost(HOST_FAILED);
             return;
         }
 
@@ -232,5 +238,11 @@ public class OnlineLobby
     void Tell(string message)
     {
         Notice?.Invoke(message);
+    }
+
+    void FailHost(string reason)
+    {
+        Tell(reason);
+        HostFailed?.Invoke(reason);
     }
 }

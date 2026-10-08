@@ -245,12 +245,13 @@ public class MenuInteractions : MonoBehaviour
     }
 
     ///<summary>
-    /// Y in player select: plays online with Steam friends (OnlinePlay)
+    /// Y in player select: online, invites friends (Steam's invite window). In a title screen without Online Play,
+    /// offline, it goes online (OnlinePlay.YAction)
     ///</summary>
     private void PlayOnline(bool button)
     {
         if (OnlinePlay.Instance != null)
-            OnlinePlay.Instance.PlayOnline();
+            OnlinePlay.Instance.PressY(MainMenu.Instance != null && MainMenu.Instance.HasOnlineEntry);
     }
 
     ///<summary>

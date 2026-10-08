@@ -67,6 +67,15 @@ namespace DoA.Tests
         }
 
         [Test]
+        public void SeatsToGiveBack_OnlyThoseThisMachineNoLongerHolds()
+        {
+            // The host still has players for seats 1 and 3 here, but this machine gave 3 back: its ask may have been
+            // dropped (the host's rate limit), so it's asked again
+            CollectionAssert.AreEqual(new[] { 3 }, OnlineGame.SeatsToGiveBack(new[] { 1, 3 }, new[] { 1 }));
+            CollectionAssert.IsEmpty(OnlineGame.SeatsToGiveBack(new[] { 1 }, new[] { 1 }));
+        }
+
+        [Test]
         public void MachineGone_OnlyWhenNoneOfItsPlayersRemain()
         {
             // A machine giving one of its seats back (a player left player select) hasn't left

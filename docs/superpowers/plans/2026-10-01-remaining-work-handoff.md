@@ -8,11 +8,11 @@
 
 ## Where things stand (2026-10-07)
 
-- **Branch `steam-phase1a`** is at `19d0e596` (cleanup and heat maps removed, committed), with **Phase 5A (the deferred minors, and bumps online) done on top, uncommitted** (`docs/superpowers/plans/2026-10-07-phase5a-deferred-minors.md`). Phases 4C and 4D are committed (`fc08c4c6`). One plan waits for the user's review before any code: **Phase 3J** (online plus couch, `2026-10-06-phase3j-online-couch.md`; do it after 5A is committed, since it changes the same online files). All 664 tests pass. The biggest remaining frame-rate gains are editor changes, listed in order in `docs/performance.md` (`EDITOR-TODO.md` section 3).
+- **Branch `steam-phase1a`** is at `9e2870e4` "Small fixes" (Phase 5A, plus an early snapshot of a few Phase 3J files), with **Phase 3J (several players on one machine online) done on top, and Local Play / Online Play on the title screen (`docs/superpowers/plans/2026-10-07-local-and-online-menu.md`, `docs/online.md`), both uncommitted** (`docs/superpowers/plans/2026-10-06-phase3j-online-couch.md`, `docs/online.md` Phase 3J). The biggest remaining frame-rate gains are editor changes, listed in order in `docs/performance.md` (`EDITOR-TODO.md` section 4). All 718 tests pass.
 - The user allows Sonnet agents "as you see fit" for these phases (memory: `code-review-agents`); still one test run at a time.
 - **`main` holds the Steam API only** (the branch policy, below).
 - **Done:**
-  - Phase 1's code (1A, 1B, 1C), Phase 2 (2A–2C), Phase 3 (3A–3I) apart from the optional Task 3.9 (planned as 3J), Phases 4A, 4C and 4D, and Phase 5A (the deferred minors).
+  - Phase 1's code (1A, 1B, 1C), Phase 2 (2A–2C), Phase 3 (3A–3J; 3J is roadmap Task 3.9), Phases 4A, 4C and 4D, Phase 5A (the deferred minors), and Local Play / Online Play on the title screen (its scene art is `EDITOR-TODO.md` section 1).
   - Each has a plan in `docs/superpowers/plans/`.
   - `docs/online.md` explains the online code, phase by phase.
 
@@ -52,7 +52,7 @@
 
 ## What's left, in order
 
-### 1. Art, then its small code tasks (`EDITOR-TODO.md` section 15)
+### 1. Art, then its small code tasks (`EDITOR-TODO.md` section 16)
 
 - Phase 4A (`03818e1c`) and Phase 1C (`8ce31e85`) are committed. Phase 4A's dashboard half is in Phase 4B below.
 - Still waiting on art:
@@ -67,7 +67,7 @@
   - Remote Play Together, and the Shared/Split Screen tags.
   - Steam Input: Gamepad as the default config. Then test that one PlayStation pad doesn't join as two players.
   - Steam Cloud (Auto-Cloud: `WinAppDataLocalLow`, `The Boo Crew/Dead on Arrival`, `settings.cfg`).
-  - The achievements (`FIRST_DELIVERY`, `GOLDEN_WIN`: names, texts and icons in `docs/steam/in-game-features.md`), and the Rich Presence file (`docs/steam/rich-presence-english.vdf`). `EDITOR-TODO.md` section 14.
+  - The achievements (`FIRST_DELIVERY`, `GOLDEN_WIN`: names, texts and icons in `docs/steam/in-game-features.md`), and the Rich Presence file (`docs/steam/rich-presence-english.vdf`). `EDITOR-TODO.md` section 15.
 - **Builds:** SteamPipe (`docs/steam/steampipe/README.md`), a `beta` branch for testers, the Steam Deck review, and Steam Playtest for open testing.
 - **The store page:**
   - The art sizes are in roadmap Task 1.6, plus screenshots and a trailer.
@@ -77,10 +77,6 @@
   - A written agreement from every contributor (IP, revenue split, credits), and the school's student-IP policy.
   - `LICENSES.md` still has 13 ⚠️/❌ items. The urgent ones are the two fonts in use (Sobiscuit, jcandlestick), DOTween, Udar SceneField, OToon, which audio is original, and unused files to delete.
 - **Valve's review** of the store page and the build (a few business days each).
-
-### 3. Optional, after launch: Task 3.9, online plus couch
-
-Several local players per machine online. Each local `PlayerInput` gets its own online player, and each machine split-screens only its own players.
 
 ## The user's checklist (no code)
 
@@ -114,4 +110,11 @@ Phase 5A (2026-10-07) closed the earlier list (its plan's item index says how ea
   - Space on an unused keyboard, or any button on a fifth pad, during a match still makes and destroys a player (`PlayerJoiner` checks only `joiningEnabled`; `AddPlayerReference` turns it away).
   - Doc comments now sit on the wrong member: `DisplayRules.VSyncCount`/`NeedsResize`, and the `SORTING_ORDER` constants in `ControllerPrompts`/`LobbyPrompt` (above `Create`).
   - `PresenceRules`' `case StartingCutscene: return null` repeats the `default` (kept as documentation).
-- **Not testable here:** the bump report from a real collision (`BumpReporter`), the kick reason's linger and the ban (Steam), the `SteamManager` guard: two-PC checks in `EDITOR-TODO.md` section 1.
+- **From Phase 3J's review (minor):**
+  - A seat granted in the same frame the match starts shows on other machines for a round trip, then goes.
+  - `OnlineSession.OnSeatAsked` doesn't check the sender is still connected: a request processed after its disconnect would hold a seat nobody frees.
+  - Nothing caps the seats one machine takes: a modified client can fill the match with players that never ready.
+  - A pad joining in the one frame this machine's only player is mid-move becomes a second menu player (`roster.LocalCount == 0` there; also check `rejoinSeats`).
+  - A `rejoinSeats` entry outlives a rejoin that fails or is turned away: that pad's next join jumps into the old seat.
+  - A client's seat asks from inside a running game aren't integration-tested (two games can't run in one process): the two-editor check in `EDITOR-TODO.md` section 2 covers them.
+- **Not testable here:** the bump report from a real collision (`BumpReporter`), the kick reason's linger and the ban (Steam), the `SteamManager` guard: two-PC checks in `EDITOR-TODO.md` section 2.

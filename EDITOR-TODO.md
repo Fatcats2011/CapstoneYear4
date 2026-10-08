@@ -1,8 +1,22 @@
 # Editor to-do (master list)
 
-Things only you can do in the Unity editor (and on two PCs), top to bottom. Updated 2026-10-07 (Phase 5A: the deferred fixes and bumps online; Phase 3J: several players on one machine online).
+Things only you can do in the Unity editor (and on two PCs), top to bottom. Updated 2026-10-07 (Local Play and Online Play on the title screen; Phase 5A: the deferred fixes and bumps online; Phase 3J: several players on one machine online).
 
-## 1. Phases 5A and 3J: import, then check (40 minutes)
+## 1. Local Play and Online Play on the title screen (15 minutes, main editor)
+
+Code is done. Until this scene change, the title screen works as before (Play, and Y in player select goes online).
+- **The art:** draw an "Online Play" title-screen entry and its ghost sprite, in the style of the others. Optional: relabel Play as "Local Play".
+- **The scene** (the menu scene's MainMenu object):
+  - Duplicate the Play entry and place the copy under Play, then swap in the Online Play image.
+  - In MainMenu's **Selector Objects**, add it at position 1 (second). The list then holds 5: Play, Online Play, Options, Credits, Quit.
+  - In **Selector Ghost Sprites**, add its ghost sprite at position 1 too. That list holds 5 as well.
+  - Move Options, Credits and Quit down to make room.
+- **Check, with Steam running:**
+  - Local Play: player select; Y does nothing, and no line along the top.
+  - Online Play: player select, and Steam's invite window opens. The top line says "Y / Triangle: invite friends      B / Circle: leave"; Y reopens the window; B goes back to the title screen.
+- **Check, with Steam closed:** Online Play shows "Start Steam to play online." and goes back to the title screen.
+
+## 2. Phases 5A and 3J: import, then check (40 minutes)
 
 - **Import:** click into the main editor, then the ParrelSync clone. The patched Steam transport changed again (`Packages/.../CHANGES-DOA.md` items 6 and 7). No scene or prefab changes. The Console should end with no red errors.
 - **Joining:** in player select, press keys other than Space and Enter: no player appears, and the hint says to press Space. A controller still joins on any button, the keyboard on Space or Enter.
@@ -17,12 +31,12 @@ Things only you can do in the Unity editor (and on two PCs), top to bottom. Upda
   - Ready everyone up and play a wave: four views across the two editors, steals and orders as usual.
 - **Two PCs over Steam, optional:** two players on each PC, playing together.
 
-## 2. Let both editors import Phases 4C and 4D (2 minutes)
+## 3. Let both editors import Phases 4C and 4D (2 minutes)
 
 - Click into the **main editor**, then into the **ParrelSync clone**. The Package Manager re-resolves once: the Steam transport is now a copy inside the project (`Packages/com.community.netcode.transport.steamnetworkingsockets`, patched; see `docs/online-safety.md`). No scene or prefab changes.
 - The Console should end with no red errors.
 
-## 3. Measure the frame rate, then the editor changes (30–60 minutes)
+## 4. Measure the frame rate, then the editor changes (30–60 minutes)
 
 - **A first number:** play a 4-player match (F1 three times in player select), press F6, drive for a minute, and note the FPS and 1% low at High, then at Medium (F4). In a build, the same numbers are in `Player.log` as `Perf:` lines every 30 s.
 - **Then the editor list in `docs/performance.md`, one change at a time,** measuring after each:
@@ -34,7 +48,7 @@ Things only you can do in the Unity editor (and on two PCs), top to bottom. Upda
   - Prefabs: animator culling; the compass on its own Canvas; static scenery and an occlusion rebake per scene.
 - **For 120 FPS** you need a 120 Hz+ monitor, or `vsync=0` in `settings.cfg`.
 
-## 4. Online safety checks (15 minutes)
+## 5. Online safety checks (15 minutes)
 
 - **Unity Hub:** confirm the editor is 2022.3.62f3 or later (Unity's October 2025 runtime advisory, CVE-2025-59489, is fixed from 62f2). Rebuild any build made before.
 - **Two PCs over Steam** (`docs/online.md`, Two PCs over Steam):
@@ -42,7 +56,7 @@ Things only you can do in the Unity editor (and on two PCs), top to bottom. Upda
   - Steam's overlay network view (Shift+Tab, then the connection info) shows the connection as relayed, not direct.
   - Optional: a third Steam account that isn't in the lobby can't connect.
 
-## 5. Let both editors import Phase 1C (1 minute)
+## 6. Let both editors import Phase 1C (1 minute)
 
 - Click into the **main editor**, then into the **ParrelSync clone**. No scene or prefab changes:
   - New scripts: `DisplayRules`, `DisplaySettings`, `KeyboardControls`.
@@ -50,7 +64,7 @@ Things only you can do in the Unity editor (and on two PCs), top to bottom. Upda
   - New tests: `DisplayRulesTests`, `KeyboardControlsTests`, `KeyboardPlayerTests`.
 - The Console should end with no red errors.
 
-## 6. Keyboard and display settings (15 minutes)
+## 7. Keyboard and display settings (15 minutes)
 
 - **Keyboard (editor):** click into the Game view first, since keys reach the game only while it has focus.
   - On the title screen, press F1: a test pad joins, and the keyboard doesn't. Press X: the hint says "Press Space to play with the keyboard…".
@@ -62,13 +76,13 @@ Things only you can do in the Unity editor (and on two PCs), top to bottom. Upda
   - `fullscreen=1`, `exclusive=1`: exclusive fullscreen. Alt-Tab is slower than borderless.
   - Delete the lines afterwards to go back to the defaults.
 
-## 7. From Phase 4A, optional: with Steam running (10 minutes)
+## 8. From Phase 4A, optional: with Steam running (10 minutes)
 
-- Steam running, one offline match in the editor. A friend's Steam friends list shows you in Spacewar, with the raw token (`#DeliveringSolo`) or nothing: the texts arrive with the `.vdf` upload (section 13).
+- Steam running, one offline match in the editor. A friend's Steam friends list shows you in Spacewar, with the raw token (`#DeliveringSolo`) or nothing: the texts arrive with the `.vdf` upload (section 15).
 - The first delivery logs `Steam: this app has no achievement FIRST_DELIVERY` once: normal on app 480.
 - A build launched with `-sessionlog`: open `%USERPROFILE%\AppData\LocalLow\The Boo Crew\Dead on Arrival\logs\`. There's a `session-….log` with a header, and the `Online:` lines of any online match.
 
-## 8. From Phase 3I, if not done yet: disconnects in two editors (15 minutes)
+## 9. From Phase 3I, if not done yet: disconnects in two editors (15 minutes)
 
 - Play in both editors. Editor 1: **Tools → Dead on Arrival → Online → Host**. The clone: **Join This Computer** (`docs/online.md`, Two editors).
 - Each editor's Console shows an `Online: the Game scene was ready here after …` line once the match is up.
@@ -81,13 +95,13 @@ Things only you can do in the Unity editor (and on two PCs), top to bottom. Upda
 - In the golden round, pick up the golden order in the clone, then stop Play in the clone: in editor 1 the golden order is back at its start, worth its starting value, and the round goes on. Pick it up in editor 1: its value climbs.
 - Anything odd? Note it, plus each editor's Console lines starting `Online:`.
 
-## 9. From Phase 3I, if not done yet: two PCs over Steam, time a load (10 minutes)
+## 10. From Phase 3I, if not done yet: two PCs over Steam, time a load (10 minutes)
 
 - On the slowest PC, start an online match in a build (`docs/online.md`, Two PCs over Steam).
 - Open `%USERPROFILE%\AppData\LocalLow\The Boo Crew\Dead on Arrival\Player.log` and find `Online: the Game scene was ready here after … s; its longest frame took … s`.
 - Note both numbers, and whether the other PC stayed in the match.
 
-## 10. From Phase 3H, if not done yet: one-shots, cutscenes and pause in two editors (20 minutes)
+## 11. From Phase 3H, if not done yet: one-shots, cutscenes and pause in two editors (20 minutes)
 
 - Host in editor 1, join in the clone, and ready up in both. During the opening cutscene, press **L** in the clone: nothing happens. Press **L** in editor 1: both skip to the tutorial.
 - Drive out of the tutorial into the first wave in both, then:
@@ -100,7 +114,7 @@ Things only you can do in the Unity editor (and on two PCs), top to bottom. Upda
 - Pause in the clone: editor 1 drives on, and the clone's hint says Main Menu leaves the match. Pause in editor 1: its hint says Main Menu ends it for everyone.
 - Then again with **Tools → Dead on Arrival → Online → Bad Connection (150 ms, 1% Loss)** ticked in the clone before **Join**.
 
-## 11. From Phases 3F and 3G, if not done yet: the tutorial, orders, steals and respawns in two editors (20 minutes)
+## 12. From Phases 3F and 3G, if not done yet: the tutorial, orders, steals and respawns in two editors (20 minutes)
 
 - Host in editor 1, join in the clone, and ready up in both. After the opening cutscene, each player is at the start of their own tutorial lane.
 - In the clone: pick up the tutorial order, then boost into the cardboard cutout. Its barrier drops at once, and the order rides on the clone's scooter in both editors.
@@ -111,27 +125,27 @@ Things only you can do in the Unity editor (and on two PCs), top to bottom. Upda
 - In the golden round, steal the golden order: the robbed player isn't slower afterwards.
 - Drive both scooters into the water at one spot: they rise on different respawn points.
 
-## 12. Optional: tidy the game scene (2 minutes, main editor only)
+## 13. Optional: tidy the game scene (2 minutes, main editor only)
 
 - Not in Play Mode: open `Design Scene(Main)`, delete **Spawning Manager → Normal Positions** (the four city `Spawn 1-4` objects), and save the scene.
 - Nothing refers to them any more: players start in their tutorial lanes.
 
-## 13. From Phase 3D, if not done yet: Steam (20 minutes)
+## 14. From Phase 3D, if not done yet: Steam (20 minutes)
 
 - One PC, Steam running: **Play**, A, **Play** → player select. **Y** hosts (the line along the top changes). **B** goes back offline.
 - Two PCs, two Steam accounts that are friends: follow `docs/online.md`, Two PCs over Steam.
 
-## 14. At Phase 4B, when the App ID exists: the Steamworks dashboard
+## 15. At Phase 4B, when the App ID exists: the Steamworks dashboard
 
 - Stats & Achievements: create `FIRST_DELIVERY` ("First Delivery") and `GOLDEN_WIN` ("Golden Finish"), with the descriptions in `docs/steam/in-game-features.md`. Each needs two 256×256 JPG icons (unlocked and locked).
 - Community → Rich Presence: upload `docs/steam/rich-presence-english.vdf`.
 
-## 15. When there's art
+## 16. When there's art
 
 - Options rows for the display settings (screen size, borderless or exclusive, VSync, frame cap), and for Quality. The code reads and saves them already: wire each row's selector like the existing rows (`OptionsMenu`).
 - Keyboard button prompts (Space, Backspace, Escape), and PlayStation/Nintendo button prompts.
 
-## 16. Reference
+## 17. Reference
 
 - Committed on `steam-phase1a` up to Phase 1C (`8ce31e85`). Not committed: Phase 4C (online safety) and Phase 4D (frame rate). Suggested titles: "Phase 4C: online safety", "Phase 4D: frame rate" (or one commit for both).
 - Frame rate: `docs/performance.md`.

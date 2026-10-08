@@ -237,6 +237,29 @@ namespace DoA.Tests
         }
 
         [UnityTest]
+        public IEnumerator TheSeatAnotherPlayerStandsIn_GoesToTheMenuPlayer()
+        {
+            EditorSceneManager.playModeStartScene = AssetDatabase.LoadAssetAtPath<SceneAsset>(MENU_SCENE);
+            yield return new EnterPlayMode();
+            LogAssert.ignoreFailingMessages = true;
+            Gamepad[] pads = new Gamepad[2];
+            yield return TwoPlayersInPlayerSelect(pads);
+            PlayerInstantiate players = PlayerInstantiate.Instance;
+            Assert.IsTrue(LocalWith(1, pads[1]), "the second player stands in slot 2");
+
+            players.GiveSeat(1); // the host gives this machine seat 2, where the second player stands
+            float deadline = Time.realtimeSinceStartup + 10;
+            while (!(LocalWith(1, pads[0]) && players.Roster.LocalCount == 2) && Time.realtimeSinceStartup < deadline)
+                yield return null;
+
+            Assert.IsTrue(LocalWith(1, pads[0]), "the menu player takes it: this machine's menus need their player");
+            Assert.IsTrue(MenuPlayer(1));
+            Assert.AreEqual(2, players.Roster.LocalCount, "the second player is still here");
+            Assert.AreEqual(1, players.UnseatedLocalCount, "waiting for a seat of their own");
+            players.GoOffline();
+        }
+
+        [UnityTest]
         public IEnumerator Online_ASecondPlayerLeaving_GivesTheirSeatBack()
         {
             EditorSceneManager.playModeStartScene = AssetDatabase.LoadAssetAtPath<SceneAsset>(MENU_SCENE);

@@ -10,7 +10,7 @@ public class MainMenu : SingletonMonobehaviour<MainMenu>
 
     [Header("Selector Objects")]
     [SerializeField] GameObject selector;
-    [SerializeField] GameObject[] selectorObjects;
+    [SerializeField] internal GameObject[] selectorObjects;
     [SerializeField] Image menuGhostImage;
     [SerializeField] Sprite[] selectorGhostSprites;
     int selectorPos;
@@ -47,7 +47,7 @@ public class MainMenu : SingletonMonobehaviour<MainMenu>
     public void Start()
     {
         // The menu scene opens on the title screen. Online (after a match) it opens on player select, the lobby, where Y
-        // and B work; on a client the host's state follows instead
+        // invites and B leaves; on a client the host's state follows instead
         gameManager.SetGameState(GameAuthority.IsOnline ? GameState.PlayerSelect : GameState.Menu);
     }
 
@@ -99,23 +99,33 @@ public class MainMenu : SingletonMonobehaviour<MainMenu>
         selector.transform.position = new Vector3(selector.transform.position.x, selectorObjects[selectorPos].transform.position.y, selector.transform.position.z);
     }
 
+    /// <summary>
+    /// Whether the title screen has Online Play: the scene's entries decide it (TitleEntries)
+    /// </summary>
+    public bool HasOnlineEntry => selectorObjects != null && TitleEntries.HasOnline(selectorObjects.Length);
+
     public void ConfirmMenu()
     {
-        switch (selectorPos)
+        Choose(TitleEntries.At(selectorPos, selectorObjects.Length));
+    }
+
+    internal void Choose(TitleEntry entry)
+    {
+        switch (entry)
         {
-            // Play
-            case 0:
+            case TitleEntry.Local:
                 SwapToPlayerSelect();
                 break;
-            // Options
-            case 1:
+            case TitleEntry.Online:
+                SwapToOnline();
+                break;
+            case TitleEntry.Options:
                 SwapToOptions();
                 break;
-            case 2:
+            case TitleEntry.Credits:
                 SwapToCredits();
                 break;
-            // Quit
-            case 3:
+            case TitleEntry.Quit:
 
             #if UNITY_EDITOR
                 UnityEditor.EditorApplication.isPlaying = false;
@@ -128,6 +138,18 @@ public class MainMenu : SingletonMonobehaviour<MainMenu>
     public void SwapToPlayerSelect()
     {
         GameManager.Instance.SetGameState(GameState.PlayerSelect);
+    }
+
+    /// <summary>
+    /// Online Play: player select, then a lobby with Steam's invite window (OnlinePlay). Player select comes first: a
+    /// lobby still being made is kept only there. A failure comes back to the title screen
+    /// </summary>
+    public void SwapToOnline()
+    {
+        SwapToPlayerSelect();
+
+        if (OnlinePlay.Instance != null)
+            OnlinePlay.Instance.StartOnline();
     }
 
     public void SwapToOptions()
