@@ -40,6 +40,7 @@ public class OnlinePlay : MonoBehaviour, ISessionControl
     ulong requested;      // a lobby to join once the title is up (0 = none)
     bool joinWaiting;     // a join asked for as the last session stopped (a lobby switch): it starts once it has
     ulong joinWaitingFor; // that join's host
+    bool leavingForLobby; // the lobby flow is leaving the session itself (ISessionControl.Leave)
     bool startingOnline;  // the host attempt came from Online Play: a failure goes back to the title screen
     bool stateShown;
     GameState shownState;
@@ -67,6 +68,7 @@ public class OnlinePlay : MonoBehaviour, ISessionControl
                 OnlineGame.Attach(session);
                 session.RoleChanged += ForwardRole;
                 session.Ended += ForwardEnd;
+                session.Left += OnLeft;
                 session.AcceptsPeer = LetsIn;
             }
             return session;
@@ -145,7 +147,7 @@ public class OnlinePlay : MonoBehaviour, ISessionControl
         Lobby = new OnlineLobby(lobbies, this, build, Clock, OtherMachines);
         Lobby.Notice += Tell;
         Lobby.HostFailed += OnHostFailed;
-        Match = new Matchmaker(lobbies, Lobby, build, Clock, OtherMachines);
+        Match = new Matchmaker(lobbies, Lobby, build, Clock, OtherMachines, InMenus);
         Match.Notice += Tell;
         startingOnline = false;
         stateShown = false;
@@ -154,6 +156,12 @@ public class OnlinePlay : MonoBehaviour, ISessionControl
     static double Clock()
     {
         return Time.realtimeSinceStartupAsDouble;
+    }
+
+    static bool InMenus()
+    {
+        GameManager game = GameManager.Instance;
+        return game != null && LobbyRules.InTheMenus(game.MainState);
     }
 
     // Machines besides this host's in the session it hosts (none when it isn't hosting)
@@ -295,6 +303,9 @@ public class OnlinePlay : MonoBehaviour, ISessionControl
             stateShown = true;
             shownState = game.MainState;
             Lobby.ShowState(shownState);
+            // Find is for Dispatch: going anywhere else (B to the title screen) drops it
+            if (shownState != GameState.PlayerSelect)
+                Match.Cancel();
         }
 
         // Not before the host's own player is seated: a new lobby would show every seat free
@@ -380,8 +391,27 @@ public class OnlinePlay : MonoBehaviour, ISessionControl
     void ISessionControl.Leave()
     {
         joinWaiting = false;
-        if (session != null)
+        if (session == null)
+            return;
+
+        leavingForLobby = true;
+        try
+        {
             session.Leave();
+        }
+        finally
+        {
+            leavingForLobby = false;
+        }
+    }
+
+    // The session was left: a join held for it never starts, and a Find under way stops (the player left, B). The lobby
+    // flow's own leave (a switch) is part of the Find
+    void OnLeft()
+    {
+        joinWaiting = false;
+        if (!leavingForLobby)
+            Match.Cancel();
     }
 
     bool StartJoin(ulong hostId)

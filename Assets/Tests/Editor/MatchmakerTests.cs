@@ -18,6 +18,7 @@ namespace DoA.Tests
         Matchmaker match;
         double now;
         int others;
+        bool menus;
         List<string> notices;
         List<(ulong lobby, OnlineLobby.SwitchFailure why)> failures;
 
@@ -29,6 +30,11 @@ namespace DoA.Tests
         int OtherMachines()
         {
             return others;
+        }
+
+        bool InMenus()
+        {
+            return menus;
         }
 
         void Noticed(string notice)
@@ -46,11 +52,12 @@ namespace DoA.Tests
         {
             now = 100;
             others = 0;
+            menus = true;
             lobbies = new FakeLobbyService { Me = 500 };
             session = new FakeSessionControl();
             lobby = new OnlineLobby(lobbies, session, BUILD, Clock, OtherMachines);
             lobby.ShowState(GameState.PlayerSelect);
-            match = new Matchmaker(lobbies, lobby, BUILD, Clock, OtherMachines);
+            match = new Matchmaker(lobbies, lobby, BUILD, Clock, OtherMachines, InMenus);
             notices = new List<string>();
             match.Notice += Noticed;
             failures = new List<(ulong lobby, OnlineLobby.SwitchFailure why)>();
@@ -337,6 +344,168 @@ namespace DoA.Tests
             Assert.AreEqual(OWN, lobby.Current);
             Assert.IsTrue(lobby.IsHost);
             Assert.IsEmpty(session.JoinedHosts);
+        }
+
+        // Finding 1: the player leaving once the old lobby was left
+        [Test]
+        public void Cancel_AfterLeavingOwnLobby_LeavesTheNewLobbyAndSession()
+        {
+            Open(70, 170, 1);
+
+            match.Find();
+            lobbies.AnswerSearch(70);
+            lobbies.RaiseEntered(70, true);
+            Assert.AreEqual(70UL, lobby.Current, "joining the new host");
+
+            match.Cancel();
+            Assert.IsFalse(match.Searching);
+            Assert.AreEqual(0UL, lobby.Current, "no lobby held");
+            CollectionAssert.Contains(lobbies.Left, 70UL);
+            Assert.AreEqual(2, session.Leaves, "the joining session is left too");
+            Assert.IsFalse(session.IsRunning);
+
+            session.LetIn(); // too late
+            match.Tick();
+            Assert.IsEmpty(notices, "quietly");
+            Assert.AreEqual(1, lobbies.Creates.Count, "no fallback");
+            Assert.IsTrue(match.Find() == false, "not hosting any more");
+        }
+
+        // Finding 2: leaving the menus while a lobby is being entered
+        [Test]
+        public void LeavingTheMenusWhileEntering_StopsQuietly()
+        {
+            Open(70, 170, 1);
+            Open(71, 171, 2);
+
+            match.Find();
+            lobbies.AnswerSearch(70, 71);
+            lobby.ShowState(GameState.Loading);
+            menus = false;
+            CollectionAssert.AreEqual(new[] { (70UL, OnlineLobby.SwitchFailure.CouldNotEnter) }, failures, "Find hears it");
+
+            match.Tick();
+            Assert.IsFalse(match.Searching);
+            lobbies.RaiseEntered(70, true);
+            CollectionAssert.AreEqual(new[] { 70UL }, lobbies.Joins, "the next lobby isn't tried");
+            CollectionAssert.AreEqual(new[] { 70UL }, lobbies.Left, "the late answer is left");
+            Assert.AreEqual(OWN, lobby.Current);
+            Assert.IsFalse(lobby.Filling, "no fallback");
+            Assert.IsEmpty(notices);
+        }
+
+        // Finding 2: Steam never answers the search
+        [Test]
+        public void SearchNeverAnswered_TimesOut_AsNoneFound()
+        {
+            Open(70, 170, 1);
+            match.Find();
+
+            now += MatchRules.SEARCH_TIMEOUT - 1;
+            match.Tick();
+            Assert.IsTrue(match.Searching);
+
+            now += 1;
+            match.Tick();
+            Assert.IsFalse(match.Searching);
+            CollectionAssert.AreEqual(new[] { MatchRules.NONE_FOUND }, notices);
+            Assert.IsTrue(lobby.Filling);
+
+            lobbies.AnswerSearch(70);
+            Assert.IsEmpty(lobbies.Joins, "a late answer is ignored");
+        }
+
+        // Finding 3: a lone Fill host outside the menus (in a match) doesn't search or move
+        [Test]
+        public void NotInMenus_NoFindAndNoResearch()
+        {
+            lobby.SetFill(true);
+            menus = false;
+
+            Assert.IsFalse(match.Find());
+            now += MatchRules.RESEARCH * 2;
+            match.Tick();
+            Assert.IsEmpty(lobbies.Searches);
+        }
+
+        // Finding 3: a search answering after the player left the menus
+        [Test]
+        public void FoundAfterLeavingTheMenus_Ignored()
+        {
+            Open(70, 170, 1);
+            lobby.SetFill(true);
+            now += MatchRules.RESEARCH;
+            match.Tick();
+            Assert.AreEqual(1, lobbies.Searches.Count);
+
+            menus = false;
+            lobbies.AnswerSearch(70);
+            Assert.IsEmpty(lobbies.Joins);
+            Assert.IsFalse(match.Searching);
+        }
+
+        // Finding 4: no retry or fallback once the player left the menus
+        [Test]
+        public void RetryAfterLeaving_NotInMenus_StopsQuietly()
+        {
+            Open(70, 170, 1);
+            Open(71, 171, 2);
+            session.JoinWorks = false;
+
+            match.Find();
+            lobbies.AnswerSearch(70, 71);
+            lobbies.RaiseEntered(70, true); // JoinFailed after leaving
+            menus = false;
+            match.Tick();
+
+            Assert.IsFalse(match.Searching);
+            CollectionAssert.AreEqual(new[] { 70UL }, lobbies.Joins, "the next lobby isn't tried");
+            Assert.AreEqual(1, lobbies.Creates.Count, "no lobby hosted again");
+            Assert.IsEmpty(notices);
+        }
+
+        // Finding 4: a candidate that can't be tried yet isn't skipped
+        [Test]
+        public void Retry_WhileTheLastSessionStops_WaitsInsteadOfSkipping()
+        {
+            Open(70, 170, 1);
+            Open(71, 171, 2);
+
+            match.Find();
+            lobbies.AnswerSearch(70, 71);
+            lobbies.RaiseEntered(70, true);
+            session.TurnAway(JoinRules.FULL);
+            session.IsRunning = true; // still stopping
+
+            match.Tick();
+            match.Tick();
+            CollectionAssert.AreEqual(new[] { 70UL }, lobbies.Joins, "not yet");
+            Assert.IsTrue(match.Searching);
+            Assert.IsEmpty(notices, "no false \"no open matches\"");
+
+            session.IsRunning = false;
+            match.Tick();
+            CollectionAssert.AreEqual(new[] { 70UL, 71UL }, lobbies.Joins, "then the next lobby");
+        }
+
+        // Finding 4: a session that never stops doesn't keep Find waiting forever
+        [Test]
+        public void Retry_SessionNeverStops_GivesUpAsNoneFound()
+        {
+            Open(70, 170, 1);
+            Open(71, 171, 2);
+
+            match.Find();
+            lobbies.AnswerSearch(70, 71);
+            lobbies.RaiseEntered(70, true);
+            session.TurnAway(JoinRules.FULL);
+            session.IsRunning = true;
+            match.Tick();
+            now += MatchRules.SEARCH_TIMEOUT;
+            match.Tick();
+
+            Assert.IsFalse(match.Searching);
+            CollectionAssert.AreEqual(new[] { MatchRules.NONE_FOUND }, notices);
         }
     }
 }

@@ -220,12 +220,19 @@ public class OnlineLobby
     }
 
     /// <summary>
-    /// Drops a switch whose lobby hasn't answered yet (Find cancelled): it's left when it answers. A switch that has left
-    /// the old lobby carries on
+    /// Drops a switch (Find cancelled): a lobby that hasn't answered yet is left when it answers. Once the old lobby was
+    /// left, the new lobby and the session joining its host are left too, and this machine is offline with no lobby
     /// </summary>
     public void CancelSwitch()
     {
         switchEntering = 0;
+        if (switchingTo == 0)
+            return;
+
+        switchingTo = 0;
+        LeaveLobby();
+        if (session.IsRunning)
+            session.Leave();
     }
 
     /// <summary>
@@ -252,7 +259,11 @@ public class OnlineLobby
         if (!LobbyRules.InTheMenus(state))
         {
             joining = 0;
+            // A switch's lobby answering later is left; Find hears it failed
+            ulong entering = switchEntering;
             switchEntering = 0;
+            if (entering != 0)
+                FailSwitch(entering, SwitchFailure.CouldNotEnter);
         }
 
         if (IsHost && Current != 0)
@@ -365,7 +376,8 @@ public class OnlineLobby
             return;
         }
 
-        // Set first: the old session going offline leaves only the old lobby
+        // The old lobby is left before the old session, so its going offline leaves nothing more. From here an end of
+        // the session (or Offline) with Current == switchingTo is the new host's join failing
         switchingTo = lobby;
         LeaveLobby();
         session.Leave();

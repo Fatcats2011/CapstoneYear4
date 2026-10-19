@@ -102,6 +102,12 @@ public class OnlineSession : MonoBehaviour
     public event Action<string> Ended;
 
     /// <summary>
+    /// Raised by every Leave, running or not: a session left on purpose raises no Ended, and one still joining no
+    /// RoleChanged (OnlinePlay drops a lobby switch under way)
+    /// </summary>
+    public event Action Left;
+
+    /// <summary>
     /// Builds a session on its own object (Netcode keeps it across scene loads)
     /// </summary>
     /// <param name="version">This build's version: the game passes Application.version</param>
@@ -279,12 +285,14 @@ public class OnlineSession : MonoBehaviour
     /// </summary>
     public void Leave()
     {
-        if (!IsRunning)
-            return;
+        if (IsRunning)
+        {
+            leaving = true;
+            Network.Shutdown(); // Netcode finishes stopping at the end of the frame, then End tidies up
+            SetRole(NetworkRole.Offline);
+        }
 
-        leaving = true;
-        Network.Shutdown(); // Netcode finishes stopping at the end of the frame, then End tidies up
-        SetRole(NetworkRole.Offline);
+        Left?.Invoke();
     }
 
     /// <summary>

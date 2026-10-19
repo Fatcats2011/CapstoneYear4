@@ -150,7 +150,8 @@ namespace DoA.Tests
         public int Hosts;
         public readonly List<ulong> JoinedHosts = new List<ulong>();
 
-        public bool IsRunning { get; private set; }
+        /// <summary>Settable: a test holds a session that is still stopping</summary>
+        public bool IsRunning { get; set; }
         public event Action<NetworkRole> RoleChanged;
         public event Action<string> Ended;
 

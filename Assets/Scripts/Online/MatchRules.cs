@@ -14,6 +14,8 @@ public static class MatchRules
     public const int MAX_RESULTS = 50;
     public const int MAX_TAG = 64;
     public const double SEARCH_GAP = 5.0;
+    /// <summary>How long a search waits for Steam's answer before it counts as none found</summary>
+    public const double SEARCH_TIMEOUT = 10.0;
     public const int MAX_TRIES = 3;
     public const double RESEARCH = 15.0;
     public const double AUTO_START = 60.0;

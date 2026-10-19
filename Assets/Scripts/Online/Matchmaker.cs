@@ -7,7 +7,8 @@ using System.Collections.Generic;
 ///   into the fullest (OnlineLobby.Switch). A lobby that fails is passed for the next: a host with no free seat left
 ///   doesn't count against the MAX_TRIES, anything else does;
 /// - with none left, the player's lobby opens to anyone (Fill), hosted again if it was left on the way;
-/// - a friend joining while it searches cancels it, and so does the player (B);
+/// - a friend joining while it searches cancels it, and so does the player (B) or leaving the menus, at any step;
+/// - a search Steam doesn't answer within SEARCH_TIMEOUT counts as none found;
 /// - a lone Fill host searches again every RESEARCH seconds, and moves only to a lobby whose owner has the lower Steam
 ///   ID, so two such hosts never both leave.
 /// Plain C# over ILobbyService and OnlineLobby, so it's tested without Steam. OnlinePlay runs it. See docs/online.md
@@ -19,6 +20,7 @@ public class Matchmaker
     readonly string build;
     readonly Func<double> clock;
     readonly Func<int> otherMachines;
+    readonly Func<bool> inMenus;
 
     double lastSearchAt = double.NegativeInfinity;
     double fillSince = double.NegativeInfinity;   // when Fill last turned on
@@ -29,6 +31,7 @@ public class Matchmaker
     int tries;   // the candidates that failed, a host with no free seat not counted
     ulong trying;   // the lobby being switched to (0 = none)
     bool tryNext;   // a switch failed: the next candidate is tried on the next Tick, once the failed session has stopped
+    double blockedSince = double.NaN;   // when the next candidate couldn't be tried yet (NaN = it could)
 
     /// <summary>Whether a search or a move into a found lobby is under way</summary>
     public bool Searching { get; private set; }
@@ -39,13 +42,16 @@ public class Matchmaker
     /// <param name="build">This build's tag (LobbyRules.BuildTag): only lobbies with it are joined</param>
     /// <param name="clock">Seconds (OnlinePlay passes realtime since startup); tests pass a fake</param>
     /// <param name="otherMachines">How many machines besides the host's are in the hosted session</param>
-    public Matchmaker(ILobbyService lobbies, OnlineLobby lobby, string build, Func<double> clock, Func<int> otherMachines)
+    /// <param name="inMenus">Whether the game is in its menus (LobbyRules.InTheMenus): Find runs only there</param>
+    public Matchmaker(ILobbyService lobbies, OnlineLobby lobby, string build, Func<double> clock, Func<int> otherMachines,
+        Func<bool> inMenus)
     {
         this.lobbies = lobbies;
         this.lobby = lobby;
         this.build = build;
         this.clock = clock;
         this.otherMachines = otherMachines;
+        this.inMenus = inMenus;
 
         lobbies.Found += OnFound;
         lobby.SwitchFailed += OnSwitchFailed;
@@ -65,12 +71,12 @@ public class Matchmaker
     }
 
     /// <summary>
-    /// Looks for a match to move into. False (and nothing happens) while searching, for a player not hosting, within
-    /// SEARCH_GAP of the last search, or for a host with others in its lobby (who is told so)
+    /// Looks for a match to move into. False (and nothing happens) while searching, outside the menus, for a player not
+    /// hosting, within SEARCH_GAP of the last search, or for a host with others in its lobby (who is told so)
     /// </summary>
     public bool Find()
     {
-        if (Searching || !lobby.IsHost || lobby.Current == 0)
+        if (Searching || !inMenus() || !lobby.IsHost || lobby.Current == 0)
             return false;
 
         if (otherMachines() > 0)
@@ -87,11 +93,12 @@ public class Matchmaker
     }
 
     /// <summary>
-    /// Stops a search, and drops a lobby it's entering. Nothing once the player's own lobby was left: that move carries on
+    /// Stops a search at any step, quietly (B, a friend joining, the player leaving): a lobby being entered is left when
+    /// it answers, and once the player's own lobby was left, the new lobby and its host's session are left too
     /// </summary>
     public void Cancel()
     {
-        if (!Searching || !lobby.IsHost)
+        if (!Searching)
             return;
 
         Stop();
@@ -99,14 +106,22 @@ public class Matchmaker
     }
 
     /// <summary>
-    /// Every frame: a friend joining cancels the search, a failed move tries the next lobby, and a lone Fill host searches
-    /// again every RESEARCH seconds
+    /// Every frame: leaving the menus or a friend joining cancels the search, a search Steam doesn't answer times out, a
+    /// failed move tries the next lobby, and a lone Fill host searches again every RESEARCH seconds
     /// </summary>
     public void Tick()
     {
-        if (Searching && lobby.IsHost && otherMachines() > 0)
+        if (Searching && (!inMenus() || (lobby.IsHost && otherMachines() > 0)))
         {
             Cancel();
+            return;
+        }
+
+        double now = clock();
+        if (awaitingFound && now - lastSearchAt >= MatchRules.SEARCH_TIMEOUT)
+        {
+            awaitingFound = false;
+            NothingFound();
             return;
         }
 
@@ -117,8 +132,7 @@ public class Matchmaker
             return;
         }
 
-        double now = clock();
-        if (!Searching && lobby.IsHost && lobby.Current != 0 && lobby.Filling && otherMachines() == 0
+        if (!Searching && inMenus() && lobby.IsHost && lobby.Current != 0 && lobby.Filling && otherMachines() == 0
             && now - Math.Max(lastSearchAt, fillSince) >= MatchRules.RESEARCH)
             Search(true);
     }
@@ -138,6 +152,11 @@ public class Matchmaker
         if (!awaitingFound)
             return;
         awaitingFound = false;
+        if (!inMenus())
+        {
+            Cancel();
+            return;
+        }
 
         List<(ulong lobby, ulong owner, string game, string build, string mm, string open)> tagged =
             new List<(ulong lobby, ulong owner, string game, string build, string mm, string open)>();
@@ -157,20 +176,44 @@ public class Matchmaker
             candidates.RemoveAll(c => !MatchRules.MayYieldTo(lobbies.Me, c.Owner));
         next = 0;
         tries = 0;
+        blockedSince = double.NaN;
         TryNext();
     }
 
     void TryNext()
     {
-        while (next < candidates.Count && tries < MatchRules.MAX_TRIES)
+        if (next >= candidates.Count || tries >= MatchRules.MAX_TRIES)
         {
-            MatchRules.Candidate candidate = candidates[next++];
-            trying = candidate.Lobby;
-            if (lobby.Switch(candidate.Lobby))
-                return;
+            NothingFound();
+            return;
         }
 
-        NothingFound();
+        trying = candidates[next].Lobby;
+        if (lobby.Switch(trying))
+        {
+            next++;
+            blockedSince = double.NaN;
+            return;
+        }
+        trying = 0;
+
+        // The last try's session is still stopping: the same lobby next Tick, for at most SEARCH_TIMEOUT
+        if (!lobby.IsHost && lobby.Current == 0)
+        {
+            double now = clock();
+            if (double.IsNaN(blockedSince))
+                blockedSince = now;
+            if (now - blockedSince < MatchRules.SEARCH_TIMEOUT)
+            {
+                tryNext = true;
+                return;
+            }
+            NothingFound();
+            return;
+        }
+
+        // The player moved on (into another lobby), or friends joined: nobody is dragged out
+        Stop();
     }
 
     // No lobby worked out: the player's lobby opens to anyone, hosted again if the last try left it
@@ -218,6 +261,7 @@ public class Matchmaker
         awaitingFound = false;
         tryNext = false;
         trying = 0;
+        blockedSince = double.NaN;
         candidates.Clear();
     }
 

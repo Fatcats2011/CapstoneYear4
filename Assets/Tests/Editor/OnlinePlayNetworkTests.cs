@@ -404,5 +404,42 @@ namespace DoA.Tests
             after.Dispose();
             Assert.IsEmpty(after.Problems, "Errors:\n\n" + string.Join("\n\n", after.Problems));
         }
+
+        [UnityTest]
+        public IEnumerator Find_LeftWhileJoining_HoldsNoLobbyAndJoinsNobody()
+        {
+            EditorSceneManager.playModeStartScene = AssetDatabase.LoadAssetAtPath<SceneAsset>(MENU_SCENE);
+            yield return new EnterPlayMode();
+            LogAssert.ignoreFailingMessages = true;
+            LogCollector log = new LogCollector();
+            yield return WaitForOnlinePlay();
+            FakeLobbyService lobbies = new FakeLobbyService { AutoAnswer = true };
+            yield return HostAloneWithAnOpenLobbyAround(lobbies);
+
+            OnlineSession other = OnlineSession.Create(Application.version);
+            Assert.IsTrue(other.HostDirect(THIS_COMPUTER, PORT_FOUND_HOST), "another host, open to anyone");
+
+            log.MachinesLeave(); // Find leaves this machine's own session: see LogCollector.CLOSED_PORT
+            Assert.IsTrue(OnlinePlay.Instance.Match.Find(), "Find");
+            lobbies.AnswerSearch(FOUND_LOBBY);
+            Assert.AreEqual(FOUND_LOBBY, OnlinePlay.Instance.Lobby.Current, "switching, the join held while the old session stops");
+
+            // The player leaves in that same frame
+            OnlinePlay.Instance.Session.Leave();
+            Assert.IsFalse(OnlinePlay.Instance.Match.Searching, "Find stops");
+            Assert.AreEqual(0UL, OnlinePlay.Instance.Lobby.Current, "no lobby held");
+            CollectionAssert.Contains(lobbies.Left, FOUND_LOBBY);
+
+            yield return WaitSeconds(3f);
+            Assert.AreEqual(NetworkRole.Offline, GameAuthority.Role, "the held join never started");
+            Assert.IsFalse(OnlinePlay.Instance.Session.IsRunning);
+            Assert.AreEqual(1, other.Network.ConnectedClientsIds.Count, "nobody joined the other host");
+            Assert.AreEqual(GameState.PlayerSelect, State());
+
+            other.Leave();
+            yield return null;
+            log.Dispose();
+            Assert.IsEmpty(log.Problems, "Errors:\n\n" + string.Join("\n\n", log.Problems));
+        }
     }
 }
