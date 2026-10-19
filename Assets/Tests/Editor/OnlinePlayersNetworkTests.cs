@@ -22,6 +22,7 @@ namespace DoA.Tests
         const ushort PORT = 7792;
         const ushort PORT_NAME = 7818;
         const ushort PORT_AUTO_START = 7821;
+        const ushort PORT_SEAT_AFTER_FORCE = 7822;
         const float WAIT = 10f;
         const double AUTO_START = 2; // MatchRules.AutoStartSecondsOverride, for these tests
         const float COUNTDOWN = 3f; // Dispatch's countdown once everyone is ready (PlayerInstantiate)
@@ -344,7 +345,7 @@ namespace DoA.Tests
         }
 
         // One player here hosts on Dispatch through Online Play (a fake Steam), open to anyone with fill
-        static IEnumerator HostOnDispatch(bool fill)
+        static IEnumerator HostOnDispatch(bool fill, ushort port = PORT_AUTO_START)
         {
             float deadline = Time.realtimeSinceStartup + 60;
             while (OnlinePlay.Instance == null && Time.realtimeSinceStartup < deadline)
@@ -358,7 +359,7 @@ namespace DoA.Tests
                 yield return null;
             GameManager.Instance.SetGameState(GameState.PlayerSelect);
 
-            OnlinePlay.Instance.UseDirect(new FakeLobbyService { AutoAnswer = true }, THIS_COMPUTER, PORT_AUTO_START);
+            OnlinePlay.Instance.UseDirect(new FakeLobbyService { AutoAnswer = true }, THIS_COMPUTER, port);
             MainMenu.Instance.Choose(TitleEntry.Online);
             deadline = Time.realtimeSinceStartup + WAIT;
             while (!(GameAuthority.Role == NetworkRole.Host && PlayerInstantiate.Instance.UnseatedLocalCount == 0
@@ -376,10 +377,10 @@ namespace DoA.Tests
         static OnlineSession joiner;
 
         // Another machine (a session without the game, which never readies) joins the host and is seated there
-        static IEnumerator JoinTheHost()
+        static IEnumerator JoinTheHost(ushort port = PORT_AUTO_START)
         {
             joiner = OnlineSession.Create(Application.version);
-            Assert.IsTrue(joiner.JoinDirect(THIS_COMPUTER, PORT_AUTO_START), "the other machine joins");
+            Assert.IsTrue(joiner.JoinDirect(THIS_COMPUTER, port), "the other machine joins");
             float deadline = Time.realtimeSinceStartup + WAIT;
             while (!(joiner.Match != null && PlayerInstantiate.Instance.Roster[1] != null) && Time.realtimeSinceStartup < deadline)
                 yield return null;
@@ -481,6 +482,49 @@ namespace DoA.Tests
             yield return LeaveBoth();
             log.Dispose();
             Assert.IsEmpty(log.Problems, "Errors:\n\n" + string.Join("\n\n", log.Problems));
+        }
+
+        // R2: a seat taken once the host has forced the start (a machine already seen: here it asks for another seat, as a
+        // modified game could; over Steam a machine leaving and coming back is the same) joins that start. It sits down
+        // ready, the countdown runs on, and the match starts
+        [UnityTest]
+        public IEnumerator AutoStart_SeatAfterTheForce_JoinsTheStart()
+        {
+            EditorSceneManager.playModeStartScene = AssetDatabase.LoadAssetAtPath<SceneAsset>(MENU_SCENE);
+            yield return new EnterPlayMode();
+            LogAssert.ignoreFailingMessages = true;
+            LogCollector log = new LogCollector();
+            yield return HostOnDispatch(true, PORT_SEAT_AFTER_FORCE);
+            yield return JoinTheHost(PORT_SEAT_AFTER_FORCE);
+
+            // FORCE_GRACE after the deadline the host makes the other machine's player ready: Dispatch counts down
+            float deadline = Time.realtimeSinceStartup + (float)(AUTO_START + MatchRules.FORCE_GRACE) + SLACK;
+            while (!CountingDown() && Time.realtimeSinceStartup < deadline)
+                yield return null;
+            Assert.IsTrue(CountingDown(), "counting down");
+            Coroutine forcedCountdown = PlayerInstantiate.Instance.readyUpCountdown;
+            double start = OnlinePlay.Instance.Session.Match.AutoStartAt;
+
+            // The same machine takes another seat (this build keeps one player per machine, so only a modified one asks)
+            joiner.AskSeat();
+            deadline = Time.realtimeSinceStartup + WAIT;
+            while (PlayerInstantiate.Instance.Roster[2] == null && State() == GameState.PlayerSelect
+                && Time.realtimeSinceStartup < deadline)
+                yield return null;
+            Assert.IsNotNull(PlayerInstantiate.Instance.Roster[2], "seated on the host during the countdown");
+            Assert.IsTrue(PlayerInstantiate.Instance.IsReady(2), "ready as it sits: it joins the start the host forced");
+            Assert.AreSame(forcedCountdown, PlayerInstantiate.Instance.readyUpCountdown, "the countdown runs on");
+            Assert.AreEqual(start, OnlinePlay.Instance.Session.Match.AutoStartAt, "a machine already seen doesn't move the start");
+
+            deadline = Time.realtimeSinceStartup + COUNTDOWN + SLACK;
+            while (State() == GameState.PlayerSelect && Time.realtimeSinceStartup < deadline)
+                yield return null;
+            Assert.AreNotEqual(GameState.PlayerSelect, State(), "the match starts");
+
+            // The host is loading a match scene: leaving now isn't what this test checks
+            log.Dispose();
+            Assert.IsEmpty(log.Problems, "Errors:\n\n" + string.Join("\n\n", log.Problems));
+            yield return LeaveBoth();
         }
 
         [UnityTest]

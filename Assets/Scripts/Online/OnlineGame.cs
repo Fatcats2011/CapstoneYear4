@@ -545,17 +545,19 @@ public class OnlineGame : MonoBehaviour
             return;
 
         AskForSeats(players);
+        // Before seating: a machine's first seat moves the automatic start first, so only a machine already seen joins a
+        // start that was forced (SeatWaitingPlayers)
+        AutoStart(players);
         SeatWaitingPlayers(players);
         ShareLocalChoices(players);
         ShowRemoteChoices(players);
         ShareOrFollowClock();
-        AutoStart(players);
     }
 
     // An open lobby (Fill) starts by itself AUTO_START after a machine last sat down for the first time, with at least
     // two machines in it (AutoStartClock). The host shares when (0 = it doesn't); then every machine readies its own
     // players as A does, and FORCE_GRACE later the host makes every other machine's player ready, so Dispatch's all-ready
-    // start runs
+    // start runs. A seat taken after that sits down ready (SeatWaitingPlayers)
     void AutoStart(PlayerInstantiate players)
     {
         OnlineMatch match = session.Match;
@@ -633,7 +635,9 @@ public class OnlineGame : MonoBehaviour
         return forcedFor != 0 && match != null && match.IsServer && match.AutoStartAt == forcedFor;
     }
 
-    // Other machines' players take their seats here once they're free (this machine's player may be moving out of one)
+    // Other machines' players take their seats here once they're free (this machine's player may be moving out of one).
+    // Host: a seat taken once the automatic start has made the others ready (a machine already seen: its seat asked
+    // again, or the machine back in) joins that start, ready as it sits, and the countdown runs on. Neither can stop it
     void SeatWaitingPlayers(PlayerInstantiate players)
     {
         for (int i = waiting.Count - 1; i >= 0; i--)
@@ -643,14 +647,15 @@ public class OnlineGame : MonoBehaviour
             if (seat < 0 || seat >= Constants.MAX_PLAYERS || players.Roster[seat] != null)
                 continue;
 
+            bool forced = ForcedReady();
             RemoteAvatar avatar = RemoteAvatar.Create(prefabs.RemoteAvatarPrefab, null);
-            if (players.AddRemotePlayer(avatar.gameObject, seat, player.OwnerClientId) == null)
+            if (players.AddRemotePlayer(avatar.gameObject, seat, player.OwnerClientId, forced) == null)
             {
                 Destroy(avatar.gameObject);
                 continue;
             }
 
-            remotes[player] = new RemotePlayer { Avatar = avatar, Seat = seat };
+            remotes[player] = new RemotePlayer { Avatar = avatar, Seat = seat, Forced = forced, Ready = forced };
             waiting.RemoveAt(i);
         }
     }

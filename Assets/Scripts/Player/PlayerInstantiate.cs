@@ -445,7 +445,9 @@ public class PlayerInstantiate : SingletonMonobehaviour<PlayerInstantiate>
     /// seat's podium in the seat's company colours, named like a local player. Returns their slot, or null when the seat
     /// is taken
     ///</summary>
-    public PlayerSlot AddRemotePlayer(GameObject avatar, int seat, ulong ownerClientId)
+    /// <param name="ready">Whether they sit down ready (the host made them ready for an automatic start already under
+    /// way): a countdown running goes on</param>
+    public PlayerSlot AddRemotePlayer(GameObject avatar, int seat, ulong ownerClientId, bool ready = false)
     {
         PlayerSlot slot = roster.JoinRemoteAt(avatar, ownerClientId, seat);
         if (slot == null)
@@ -461,8 +463,8 @@ public class PlayerInstantiate : SingletonMonobehaviour<PlayerInstantiate>
         ScooterLook.ShowCompany(avatar, slot.Company);
         PlaceOnPodium(slot);
 
-        // Like a local player joining: their seat isn't ready, which stops the countdown
-        SetRemoteReady(seat, false);
+        // Like a local player joining: their seat isn't ready, which stops the countdown. One made ready already keeps it
+        SetRemoteReady(seat, ready);
         PlayerSelectCanvas.Instance.TogglePressButtonTexts(seat, false);
         return slot;
     }

@@ -76,8 +76,8 @@ public class DispatchBoard : MonoBehaviour
     }
 
     /// <summary>
-    /// Whether the board is up: in player select, online or between sessions in a lobby switch (Matchmaker.Switching), so
-    /// Local Play's player select never shows through for that moment
+    /// Whether the board is up: in player select, online or between sessions in a lobby switch (Matchmaker.Switching, which
+    /// lasts until B's lobby hosts again), so Local Play's player select never shows through for that moment
     /// </summary>
     public static bool ShowsFor(bool online, bool switching, GameState state)
     {
@@ -155,7 +155,10 @@ public class DispatchBoard : MonoBehaviour
         {
             SetBanner(false);
             statusShown = null;
+            // Hidden with the board even when the scene wires it outside root; set again once the board is up
             fillPromptSet = false;
+            if (fillPrompt != null)
+                fillPrompt.gameObject.SetActive(false);
         }
 
         // The sliders follow Dispatch's rule while it is up, and come back when it is down

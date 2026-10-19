@@ -228,8 +228,8 @@ public class MenuInteractions : MonoBehaviour
 
     ///<summary>
     /// Whether a lobby switch (Find) has this machine between sessions: offline for a moment, but still in Dispatch. Its
-    /// buttons wait meanwhile (X and the shoulders do nothing offline anyway), and B cancels the switch, so nothing falls
-    /// through to Local Play
+    /// buttons wait meanwhile (X and the shoulders do nothing offline anyway), and B cancels the switch, back to the
+    /// player's own lobby or the title screen, so nothing falls through to Local Play
     ///</summary>
     private static bool Switching()
     {
@@ -339,15 +339,18 @@ public class MenuInteractions : MonoBehaviour
 
     ///<summary>
     /// B in player select. Online, it closes the sliders first, then unreadies, then leaves. During a lobby switch it
-    /// cancels the switch (not back to the title screen)
+    /// cancels the switch: the player's Find lands them back in their own lobby, hosted again, and a quiet search again
+    /// (B says LEAVE) leaves, back to the title screen as a lone host's B does. Never into Local Play
     ///</summary>
     private void PlayerUnreadyDespawnButton(bool button)
     {
         OnlinePlay play = OnlinePlay.Instance;
         if (Switching())
         {
-            play.Match.Cancel();
-            PlayDispatchSound(false);
+            if (play.Match.BackBetweenSessions())
+                PlayDispatchSound(false);
+            else if (MainMenu.Instance != null)
+                MainMenu.Instance.SwapToMainMenu();
             return;
         }
 

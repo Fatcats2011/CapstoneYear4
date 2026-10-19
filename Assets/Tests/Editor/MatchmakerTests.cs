@@ -784,5 +784,187 @@ namespace DoA.Tests
             lobbies.RaiseEntered(70, true);
             CollectionAssert.AreEqual(new[] { 170UL }, session.JoinedHosts, "the switch carries on");
         }
+
+        // The player's Find has left lobby 42 for lobby 70's host, who hasn't let this machine in yet
+        void FindLeavesForSeventy()
+        {
+            Open(70, 170, 1);
+            Assert.IsTrue(match.Find());
+            lobbies.AnswerSearch(70);
+            lobbies.RaiseEntered(70, true);
+            Assert.IsTrue(match.Switching, "between sessions");
+        }
+
+        // R1: B between sessions on the player's Find hosts their lobby again, friends only as it was and without the
+        // invite dialog. Dispatch stays up (Switching) until it hosts
+        [Test]
+        public void BackBetweenSessions_Find_HostsTheLobbyAgain_AsItWas()
+        {
+            FindLeavesForSeventy();
+
+            Assert.IsTrue(match.BackBetweenSessions(), "the player stays in Dispatch");
+            Assert.IsFalse(match.Searching, "Find stops");
+            CollectionAssert.Contains(lobbies.Left, 70UL, "the switch's lobby is left");
+            Assert.AreEqual(2, session.Leaves, "and the session joining its host");
+            Assert.AreEqual(2, lobbies.Creates.Count, "a lobby is made to host in again");
+            Assert.IsTrue(match.Switching, "Dispatch stays up while it's made");
+
+            lobbies.RaiseCreated(43);
+            Assert.AreEqual(43UL, lobby.Current);
+            Assert.IsTrue(lobby.IsHost, "hosting again");
+            Assert.IsFalse(lobby.Filling, "friends only, as it was");
+            CollectionAssert.DoesNotContain(lobbies.PublicCalls, (43UL, true));
+            Assert.IsEmpty(lobbies.Invites, "without the invite dialog");
+            Assert.IsFalse(match.Switching);
+            Assert.IsEmpty(notices);
+        }
+
+        // R1: an open lobby is hosted again open (Fill as it was when the search began)
+        [Test]
+        public void BackBetweenSessions_FindFromAnOpenLobby_HostsItAgainOpen()
+        {
+            lobby.SetFill(true);
+            FindLeavesForSeventy();
+
+            Assert.IsTrue(match.BackBetweenSessions());
+            lobbies.RaiseCreated(43);
+
+            Assert.IsTrue(lobby.Filling, "open to anyone, as it was");
+            CollectionAssert.Contains(lobbies.PublicCalls, (43UL, true));
+            Assert.IsEmpty(lobbies.Invites);
+        }
+
+        // R1: Fill turned on while the search still held the lobby is the state it had before the switch
+        [Test]
+        public void BackBetweenSessions_FillTurnedOnMidSearch_HostsItAgainOpen()
+        {
+            Open(70, 170, 1);
+            Assert.IsTrue(match.Find());
+            lobby.SetFill(true);
+            lobbies.AnswerSearch(70);
+            lobbies.RaiseEntered(70, true);
+
+            Assert.IsTrue(match.BackBetweenSessions());
+            lobbies.RaiseCreated(43);
+
+            Assert.IsTrue(lobby.Filling);
+        }
+
+        // R1: between two tries the last session may still be stopping: the lobby is hosted again once it has
+        [Test]
+        public void BackBetweenTries_WhileTheLastSessionStops_HostsOnceItHasStopped()
+        {
+            Open(70, 170, 1);
+            Open(71, 171, 2);
+            match.Find();
+            lobbies.AnswerSearch(70, 71);
+            lobbies.RaiseEntered(70, true);
+            session.TurnAway(JoinRules.FULL);
+            session.IsRunning = true; // still stopping
+            Assert.IsTrue(match.Switching, "no lobby and no session: between tries");
+
+            Assert.IsTrue(match.BackBetweenSessions());
+            match.Tick();
+            Assert.AreEqual(1, lobbies.Creates.Count, "not while the session stops");
+            Assert.IsTrue(match.Switching, "Dispatch stays up meanwhile");
+            CollectionAssert.AreEqual(new[] { 70UL }, lobbies.Joins, "the next lobby isn't tried");
+
+            session.IsRunning = false;
+            match.Tick();
+            Assert.AreEqual(2, lobbies.Creates.Count, "then it's hosted again");
+            lobbies.RaiseCreated(43);
+            Assert.IsTrue(lobby.IsHost);
+            Assert.IsFalse(match.Switching);
+        }
+
+        // R1: B on a quiet search again between sessions is the leave its ticket's prompt says: nothing is hosted again,
+        // and false sends the player to the title screen
+        [Test]
+        public void BackBetweenSessions_QuietSearch_Leaves()
+        {
+            Open(70, 400, 1);
+            lobby.SetFill(true);
+            now += MatchRules.RESEARCH;
+            match.Tick();
+            lobbies.AnswerSearch(70);
+            lobbies.RaiseEntered(70, true);
+            Assert.IsTrue(match.Switching);
+
+            Assert.IsFalse(match.BackBetweenSessions(), "the player leaves");
+            Assert.IsFalse(match.ResearchingQuietly);
+            Assert.IsFalse(match.Switching);
+            CollectionAssert.Contains(lobbies.Left, 70UL);
+            match.Tick();
+            Assert.AreEqual(1, lobbies.Creates.Count, "no lobby hosted again");
+        }
+
+        // R1: B again while the lobby is being made is the leave B is for a lone host
+        [Test]
+        public void BackAgain_WhileTheLobbyIsMade_Leaves()
+        {
+            FindLeavesForSeventy();
+            match.BackBetweenSessions();
+
+            Assert.IsFalse(match.BackBetweenSessions(), "the player leaves");
+            Assert.IsFalse(match.Switching);
+            lobby.ShowState(GameState.Menu); // the title screen
+            lobbies.RaiseCreated(43);
+            CollectionAssert.Contains(lobbies.Left, 43UL, "the lobby made late is left");
+            Assert.IsFalse(lobby.IsHost);
+            match.Tick();
+            Assert.AreEqual(2, lobbies.Creates.Count, "and not made again");
+        }
+
+        // R1: hosting again can fail like any hosting (OnlinePlay says why): Dispatch stops waiting for it
+        [Test]
+        public void BackBetweenSessions_HostingAgainFails_StopsWaiting()
+        {
+            FindLeavesForSeventy();
+            match.BackBetweenSessions();
+
+            lobbies.RaiseCreated(0); // Steam couldn't make the lobby
+            Assert.IsFalse(match.Switching);
+            match.Tick();
+            Assert.AreEqual(2, lobbies.Creates.Count, "not tried again");
+        }
+
+        // R1 with M-4: a friend's invite answered while the lobby is being made still joins the friend
+        [Test]
+        public void BackBetweenSessions_ThenAnInvite_JoinsTheFriend()
+        {
+            lobbies.AddLobby(9, LobbyRules.GAME, BUILD, 99);
+            FindLeavesForSeventy();
+            match.BackBetweenSessions();
+            Assert.AreEqual(2, lobbies.Creates.Count, "a lobby is being made");
+
+            lobby.Answer(9, null); // offline for the moment, so not busy
+            Assert.IsFalse(match.Switching, "the invite wins");
+            Assert.AreEqual(9UL, lobbies.Joins[lobbies.Joins.Count - 1], "the friend's lobby is entered");
+            lobbies.RaiseCreated(43);
+            CollectionAssert.Contains(lobbies.Left, 43UL, "the lobby made meanwhile is left");
+            lobbies.RaiseEntered(9, true);
+            Assert.AreEqual(9UL, lobby.Current);
+            Assert.IsFalse(lobby.IsHost);
+            Assert.AreEqual(99UL, session.JoinedHosts[session.JoinedHosts.Count - 1], "joins the friend");
+
+            match.Tick();
+            Assert.AreEqual(2, lobbies.Creates.Count, "nothing hosted again");
+            Assert.AreEqual(9UL, lobby.Current);
+        }
+
+        // R1: only B hosts again. Leaving the menus between sessions still stops quietly
+        [Test]
+        public void LeavingTheMenusBetweenSessions_StopsQuietly_NothingHostedAgain()
+        {
+            FindLeavesForSeventy();
+
+            menus = false;
+            match.Tick();
+
+            Assert.IsFalse(match.Switching);
+            Assert.AreEqual(0UL, lobby.Current);
+            Assert.AreEqual(1, lobbies.Creates.Count, "no lobby hosted again");
+            Assert.IsEmpty(notices);
+        }
     }
 }

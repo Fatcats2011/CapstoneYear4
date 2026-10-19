@@ -9,7 +9,8 @@ using System.Collections.Generic;
 /// - with none left, the player's lobby opens to anyone (Fill), hosted again if it was left on the way, and the player
 ///   hears whether it did;
 /// - a friend joining while it searches cancels it, and so does the player (B, Fill turned off, a friend's invite
-///   answered) or leaving the menus, at any step;
+///   answered) or leaving the menus, at any step. B once the player's lobby was left hosts it again as it was
+///   (BackBetweenSessions), or, for a quiet search, is the player leaving;
 /// - a search Steam doesn't answer within SEARCH_TIMEOUT counts as none found, and a found lobby Steam doesn't answer
 ///   within it as one that couldn't be entered;
 /// - a lone Fill host searches again every RESEARCH seconds, quietly (nothing shown, its own lobby left as it is), and
@@ -38,6 +39,9 @@ public class Matchmaker
     double triedAt;   // when the switch to it began
     bool tryNext;   // a switch failed: the next candidate is tried on the next Tick, once the failed session has stopped
     double blockedSince = double.NaN;   // when the next candidate couldn't be tried yet (NaN = it could)
+    bool fillBefore;   // whether the player's lobby was open to anyone before the switch left it
+    bool rehosting;   // B dropped the player's Find between sessions: their lobby is being hosted again
+    bool rehostAsked;   // that lobby was asked for (OnlineLobby.Host): it's being made
 
     /// <summary>
     /// Whether the player's Find is under way: searching, or moving into a found lobby. The status line shows it and B
@@ -50,10 +54,10 @@ public class Matchmaker
 
     /// <summary>
     /// Whether a search, the player's or a quiet one, has this machine between sessions: its own lobby and session left
-    /// for a found lobby's host, who hasn't let it in yet (or between two tries). The machine is offline meanwhile, so
-    /// Dispatch stays up and its buttons wait (B cancels)
+    /// for a found lobby's host, who hasn't let it in yet (or between two tries), or, after B, its lobby not hosted again
+    /// yet. The machine is offline meanwhile, so Dispatch stays up and its buttons wait (B: BackBetweenSessions)
     /// </summary>
-    public bool Switching { get { return running && !lobby.IsHost; } }
+    public bool Switching { get { return (running || rehosting) && !lobby.IsHost; } }
 
     /// <summary>A message for the player: nothing found, or Find refused</summary>
     public event Action<string> Notice;
@@ -77,6 +81,7 @@ public class Matchmaker
         lobby.Switched += OnSwitched;
         lobby.FillChanged += OnFillChanged;
         lobby.Answering += Cancel;
+        lobby.HostFailed += OnHostFailed;
     }
 
     /// <summary>
@@ -89,6 +94,7 @@ public class Matchmaker
         lobby.Switched -= OnSwitched;
         lobby.FillChanged -= OnFillChanged;
         lobby.Answering -= Cancel;
+        lobby.HostFailed -= OnHostFailed;
     }
 
     /// <summary>
@@ -117,15 +123,41 @@ public class Matchmaker
     /// <summary>
     /// Stops a search at any step, the player's or a quiet one, quietly (B, a friend joining or inviting, Fill turned
     /// off, the player leaving): a lobby being entered is left when it answers, and once the player's own lobby was left,
-    /// the new lobby and its host's session are left too
+    /// the new lobby and its host's session are left too. A lobby being hosted again after B (BackBetweenSessions) isn't
+    /// waited for any more
     /// </summary>
     public void Cancel()
     {
+        rehosting = false;
         if (!running)
             return;
 
         Stop();
         lobby.CancelSwitch();
+    }
+
+    /// <summary>
+    /// B while a search has this machine between sessions (Switching). The search stops. The player's Find hosts their
+    /// lobby again, friends only or open as it was before the switch and without the invite dialog, once the session it
+    /// left has stopped, and they stay in Dispatch (true). A quiet search again, whose B says LEAVE, or B again while that
+    /// lobby is still being made, is the player leaving: false, and they go back to the title screen. Outside that moment
+    /// it stops a search as Cancel does (true)
+    /// </summary>
+    /// <returns>Whether the player stays in Dispatch</returns>
+    public bool BackBetweenSessions()
+    {
+        bool betweenSessions = Switching;
+        bool find = running && !quiet;
+        Cancel();
+        if (!betweenSessions)
+            return true;
+        if (!find)
+            return false;
+
+        rehosting = true;
+        rehostAsked = false;
+        Rehost();
+        return true;
     }
 
     /// <summary>
@@ -137,6 +169,15 @@ public class Matchmaker
         if (running && (!inMenus() || (lobby.IsHost && otherMachines() > 0)))
         {
             Cancel();
+            return;
+        }
+
+        if (rehosting)
+        {
+            if (inMenus())
+                Rehost();
+            else
+                Cancel();
             return;
         }
 
@@ -168,9 +209,30 @@ public class Matchmaker
     {
         running = true;
         quiet = again;
+        fillBefore = lobby.Filling;
         awaitingFound = true;
         lastSearchAt = clock();
         lobbies.Search(build, 1);
+    }
+
+    // B dropped the player's Find between sessions: their lobby is hosted again, as it was before the switch. Host waits
+    // (does nothing) while the session left is still stopping, and once asked, a failure ends the wait (OnHostFailed)
+    void Rehost()
+    {
+        // Hosting again, or in a lobby some other way
+        if (lobby.IsHost || lobby.Current != 0)
+        {
+            rehosting = false;
+            return;
+        }
+
+        if (!rehostAsked && lobby.Host(invite: false, fill: fillBefore))
+            rehostAsked = true;
+    }
+
+    void OnHostFailed(string reason)
+    {
+        rehosting = false;
     }
 
     void OnFound(ulong[] found)
@@ -292,13 +354,18 @@ public class Matchmaker
             Stop();
     }
 
-    // Fill on: a lone host's quiet search waits RESEARCH from now. The host turning it off stops any search, so its
-    // fallback can't open the lobby again and it can't move them into a stranger's. A lobby left by a switch also reads
-    // as Fill off, once it's gone: that isn't the host's choice, and the switch goes on
+    // Fill on: a lone host's quiet search waits RESEARCH from now, and a search still holding the lobby will host it
+    // again open after B. The host turning it off stops any search, so its fallback can't open the lobby again and it
+    // can't move them into a stranger's. A lobby left by a switch also reads as Fill off, once it's gone: that isn't the
+    // host's choice, and the switch goes on
     void OnFillChanged(bool on)
     {
         if (on)
+        {
             fillSince = clock();
+            if (running && lobby.IsHost)
+                fillBefore = true;
+        }
         else if (lobby.IsHost)
             Cancel();
     }

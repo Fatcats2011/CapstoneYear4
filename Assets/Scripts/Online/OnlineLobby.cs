@@ -184,7 +184,8 @@ public class OnlineLobby
 
     /// <summary>
     /// A lobby to join (a friend's invite). busy is why this machine can't join now (LobbyRules.Busy), or null. The
-    /// latest request wins, over a lobby switch too: Find stops (Answering) and the switch is dropped first
+    /// latest request wins, over a lobby switch or a lobby being made too: Find stops (Answering), the switch is dropped
+    /// first, and a lobby made late is left
     /// </summary>
     public void Answer(ulong lobby, string busy)
     {
@@ -199,9 +200,11 @@ public class OnlineLobby
             return;
         }
 
-        // A switch between sessions (this machine is offline, so not busy): its lobbies and session are left
+        // A switch between sessions (this machine is offline, so not busy): its lobbies and session are left. A lobby
+        // still being made to host in (Online Play, or Find's after B) is left when it comes
         Answering?.Invoke();
         CancelSwitch();
+        creating = false;
 
         // Set first: the lobby may answer before Join returns
         joining = lobby;

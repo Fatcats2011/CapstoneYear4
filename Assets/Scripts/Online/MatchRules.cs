@@ -123,11 +123,12 @@ public static class MatchRules
     }
 
     /// <summary>
-    /// When an open lobby starts by itself: AUTO_START after its last seat was taken
+    /// When an open lobby starts by itself: AUTO_START after its count began (AutoStartClock: a machine's first seat in
+    /// the session, or the count beginning)
     /// </summary>
-    public static double AutoStartAt(double lastSeatedAt)
+    public static double AutoStartAt(double countFrom)
     {
-        return lastSeatedAt + AutoStartSeconds;
+        return countFrom + AutoStartSeconds;
     }
 
     /// <summary>

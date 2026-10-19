@@ -205,59 +205,176 @@ namespace DoA.Tests
             }
         }
 
-        // I-2: a lobby switch has this machine offline for a moment, between sessions. Dispatch's buttons mustn't fall
-        // through to Local Play: A doesn't ready (a solo local match), B cancels the switch (not the title screen), and the
-        // sliders stay as Dispatch has them
-        [Test]
-        public void Switching_Offline_ADoesNothing_BCancels()
+        // A clock the switching tests move (a quiet search waits RESEARCH)
+        class Clock
         {
-            TestObjects objects = new TestObjects();
+            public double Now = 100;
+
+            public double Read()
+            {
+                return Now;
+            }
+        }
+
+        static int NoOtherMachines()
+        {
+            return 0;
+        }
+
+        static bool InTheMenus()
+        {
+            return true;
+        }
+
+        // Set by SwitchAway
+        TestObjects switching;
+        FakeLobbyService lobbies;
+        FakeSessionControl session;
+        OnlineLobby lobby;
+        Matchmaker match;
+        GameManager game;
+        MenuInteractions menu;
+        PlayerUIHandler ui;
+        CustomizationSelector sliders;
+
+        // A host alone in lobby 42, in player select with Fill on or off, whose search (the player's Find, or a lone Fill
+        // host's quiet one) has left it for lobby 70's host: offline meanwhile. Its menu player's buttons are wired
+        void SwitchAway(bool fill, bool quiet)
+        {
+            switching = new TestObjects();
+            game = switching.Add<GameManager>();
+            GameManager.instance = game;
+            game.SetGameState(GameState.PlayerSelect);
+            MainMenu.instance = switching.Add<MainMenu>();
+
+            Clock clock = new Clock();
+            lobbies = new FakeLobbyService { Me = 500 };
+            session = new FakeSessionControl();
+            lobby = new OnlineLobby(lobbies, session, "1.2", clock.Read);
+            lobby.ShowState(GameState.PlayerSelect);
+            match = new Matchmaker(lobbies, lobby, "1.2", clock.Read, NoOtherMachines, InTheMenus);
+            lobby.Host(invite: false);
+            lobbies.RaiseCreated(42);
+            lobby.SetFill(fill);
+            lobbies.AddLobby(70, LobbyRules.GAME, "1.2", 170);
+            lobbies.SetData(70, MatchRules.MM_KEY, MatchRules.MM_ON);
+            lobbies.SetData(70, MatchRules.OPEN_KEY, "3");
+            if (quiet)
+            {
+                clock.Now += MatchRules.RESEARCH;
+                match.Tick();
+                Assert.IsTrue(match.ResearchingQuietly, "a quiet search again");
+            }
+            else
+                Assert.IsTrue(match.Find());
+            lobbies.AnswerSearch(70);
+            lobbies.RaiseEntered(70, true);
+            Assert.IsTrue(match.Switching, "between sessions");
+            Assert.IsFalse(GameAuthority.IsOnline, "offline meanwhile");
+
+            OnlinePlay play = switching.Add<OnlinePlay>();
+            play.Match = match;
+            OnlinePlay.Instance = play;
+            menu = switching.Add<MenuInteractions>();
+            ui = switching.Add<PlayerUIHandler>();
+            InputManager driving = switching.Add<InputManager>();
+            sliders = switching.Add<CustomizationSelector>();
+            Set(menu, "uiHandler", ui);
+            Set(menu, "drivingHandler", driving);
+            Set(menu, "customizationSelector", sliders);
+            GiveEvents(ui, driving);
+            menu.SwapMenuType(MenuType.PlayerSelect);
+            Assert.IsFalse(sliders.gameObject.activeSelf, "Dispatch's sliders, closed (offline they'd show)");
+        }
+
+        void EndSwitching()
+        {
+            OnlinePlay.Instance = null;
+            GameManager.instance = null;
+            MainMenu.instance = null;
+            if (switching != null)
+                switching.DestroyAll();
+            switching = null;
+        }
+
+        // I-2 and R1: a lobby switch has this machine offline for a moment, between sessions. Dispatch's buttons mustn't
+        // fall through to Local Play: A doesn't ready (a solo local match). B cancels the player's Find and lands them
+        // back in their own lobby, hosted again friends only as it was, still in Dispatch
+        [Test]
+        public void Switching_Offline_ADoesNothing_BHostsTheLobbyAgain()
+        {
             try
             {
-                // A host alone in lobby 42, whose Find has left it for lobby 70's host
-                FakeLobbyService lobbies = new FakeLobbyService();
-                FakeSessionControl session = new FakeSessionControl();
-                OnlineLobby lobby = new OnlineLobby(lobbies, session, "1.2", () => 0);
-                lobby.ShowState(GameState.PlayerSelect);
-                Matchmaker match = new Matchmaker(lobbies, lobby, "1.2", () => 0, () => 0, () => true);
-                lobby.Host(invite: false);
-                lobbies.RaiseCreated(42);
-                lobbies.AddLobby(70, LobbyRules.GAME, "1.2", 170);
-                lobbies.SetData(70, MatchRules.MM_KEY, MatchRules.MM_ON);
-                lobbies.SetData(70, MatchRules.OPEN_KEY, "3");
-                Assert.IsTrue(match.Find());
-                lobbies.AnswerSearch(70);
-                lobbies.RaiseEntered(70, true);
-                Assert.IsTrue(match.Switching, "between sessions");
-                Assert.IsFalse(GameAuthority.IsOnline, "offline meanwhile");
-
-                OnlinePlay play = objects.Add<OnlinePlay>();
-                play.Match = match;
-                OnlinePlay.Instance = play;
-                MenuInteractions menu = objects.Add<MenuInteractions>();
-                PlayerUIHandler ui = objects.Add<PlayerUIHandler>();
-                InputManager driving = objects.Add<InputManager>();
-                CustomizationSelector sliders = objects.Add<CustomizationSelector>();
-                Set(menu, "uiHandler", ui);
-                Set(menu, "drivingHandler", driving);
-                Set(menu, "customizationSelector", sliders);
-                GiveEvents(ui, driving);
-                menu.SwapMenuType(MenuType.PlayerSelect);
-                Assert.IsFalse(sliders.gameObject.activeSelf, "Dispatch's sliders, closed (offline they'd show)");
+                SwitchAway(fill: false, quiet: false);
 
                 ui.SouthFaceEvent.Invoke(true);
                 Assert.IsFalse((bool)Get(menu, "readiedUp"), "A doesn't ready");
 
                 ui.EastFaceEvent.Invoke(true);
                 Assert.IsFalse(match.Searching, "B cancels Find");
-                Assert.IsFalse(match.Switching);
-                Assert.AreEqual(0UL, lobby.Current, "the switch's lobby is left");
+                CollectionAssert.Contains(lobbies.Left, 70UL, "the switch's lobby is left");
                 Assert.AreEqual(2, session.Leaves, "and the session joining its host");
+                Assert.AreEqual(2, lobbies.Creates.Count, "the player's lobby is made again");
+                Assert.IsTrue(match.Switching, "Dispatch stays up while it's made");
+                ui.SouthFaceEvent.Invoke(true);
+                Assert.IsFalse((bool)Get(menu, "readiedUp"), "A still waits");
+                Assert.IsFalse(sliders.gameObject.activeSelf);
+
+                lobbies.RaiseCreated(43);
+                Assert.IsTrue(lobby.IsHost, "hosting again");
+                Assert.AreEqual(43UL, lobby.Current);
+                Assert.IsFalse(lobby.Filling, "friends only, as it was");
+                Assert.IsEmpty(lobbies.Invites, "without the invite dialog");
+                Assert.AreEqual(GameState.PlayerSelect, game.MainState, "still in player select");
             }
             finally
             {
-                OnlinePlay.Instance = null;
-                objects.DestroyAll();
+                EndSwitching();
+            }
+        }
+
+        // R1: a lobby open to anyone before the player's Find is hosted again open
+        [Test]
+        public void Switching_FindFromAnOpenLobby_BHostsItAgainOpen()
+        {
+            try
+            {
+                SwitchAway(fill: true, quiet: false);
+
+                ui.EastFaceEvent.Invoke(true);
+                lobbies.RaiseCreated(43);
+
+                Assert.IsTrue(lobby.IsHost, "hosting again");
+                Assert.IsTrue(lobby.Filling, "open to anyone, as it was");
+                CollectionAssert.Contains(lobbies.PublicCalls, (43UL, true));
+                Assert.AreEqual(GameState.PlayerSelect, game.MainState, "still in player select");
+            }
+            finally
+            {
+                EndSwitching();
+            }
+        }
+
+        // R1: B on a lone Fill host's quiet search again (its ticket's B says LEAVE) is the leave it meant: the title
+        // screen, as a lone host's B always went, and no lobby is hosted again
+        [Test]
+        public void Switching_QuietSearch_BGoesToTheTitleScreen()
+        {
+            try
+            {
+                SwitchAway(fill: true, quiet: true);
+
+                ui.EastFaceEvent.Invoke(true);
+
+                Assert.AreEqual(GameState.Menu, game.MainState, "the title screen");
+                Assert.IsFalse(match.ResearchingQuietly);
+                Assert.IsFalse(match.Switching);
+                CollectionAssert.Contains(lobbies.Left, 70UL, "the switch's lobby is left");
+                Assert.AreEqual(1, lobbies.Creates.Count, "no lobby hosted again");
+            }
+            finally
+            {
+                EndSwitching();
             }
         }
 

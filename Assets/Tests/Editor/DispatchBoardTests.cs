@@ -252,6 +252,21 @@ namespace DoA.Tests
             Assert.DoesNotThrow(() => board.ShowFillPrompt(true, true));
         }
 
+        // The Fill prompt goes with the board, even wired outside its root, and comes back with it
+        [Test]
+        public void FillPrompt_HiddenWithTheBoard()
+        {
+            TMP_Text prompt = objects.Add<TextMeshProUGUI>();
+            Set(board, "fillPrompt", prompt);
+            board.ShowFillPrompt(true, false);
+
+            Reflect.Invoke(board, "SetShowing", false);
+            Assert.IsFalse(prompt.gameObject.activeSelf, "hidden with the board");
+
+            board.ShowFillPrompt(true, false);
+            Assert.IsTrue(prompt.gameObject.activeSelf, "shown again once the board is up");
+        }
+
         [Test]
         public void TicketView_FlashWithoutAnAnimator_JustCounts()
         {
