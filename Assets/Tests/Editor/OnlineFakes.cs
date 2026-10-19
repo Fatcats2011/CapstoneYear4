@@ -172,6 +172,24 @@ namespace DoA.Tests
             return JoinWorks;
         }
 
+        public int Leaves;
+
+        public void Leave()
+        {
+            Leaves++;
+            if (!IsRunning)
+                return;
+
+            IsRunning = false;
+            RoleChanged?.Invoke(NetworkRole.Offline);
+        }
+
+        /// <summary>The host lets this machine in: it's a client</summary>
+        public void LetIn()
+        {
+            RoleChanged?.Invoke(NetworkRole.Client);
+        }
+
         /// <summary>The session stops: this machine is offline again, and says why when there's a reason</summary>
         public void Stop(string reason)
         {

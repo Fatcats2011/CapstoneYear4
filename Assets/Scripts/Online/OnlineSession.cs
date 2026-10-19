@@ -288,6 +288,12 @@ public class OnlineSession : MonoBehaviour
     }
 
     /// <summary>
+    /// Whether Leave ended the session and Netcode hasn't finished stopping (at the end of the frame): no new session can
+    /// start until it has
+    /// </summary>
+    public bool Stopping { get { return leaving; } }
+
+    /// <summary>
     /// What to tell a client whose session ended: the host left (after letting it in), the host's own reason (it turned
     /// the player away), or that the host couldn't be reached
     /// </summary>

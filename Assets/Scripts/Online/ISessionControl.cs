@@ -14,6 +14,9 @@ public interface ISessionControl
     /// <summary>Joins the session of a lobby's owner (their Steam ID over Steam). False when it can't start</summary>
     bool Join(ulong hostId);
 
+    /// <summary>Ends the session on purpose, as OnlineSession.Leave (a lobby switch). A Join may follow at once</summary>
+    void Leave();
+
     /// <summary>As OnlineSession.RoleChanged</summary>
     event Action<NetworkRole> RoleChanged;
 

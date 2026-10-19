@@ -35,8 +35,11 @@ public class OnlinePlay : MonoBehaviour, ISessionControl
 #if UNITY_EDITOR || DEVELOPMENT_BUILD
     string directAddress; // tests and editor tools: sessions by IP address instead of over Steam
     ushort directPort;
+    ushort directJoinPort; // the port joined (0 = directPort): tests with two hosts on this computer
 #endif
     ulong requested;      // a lobby to join once the title is up (0 = none)
+    bool joinWaiting;     // a join asked for as the last session stopped (a lobby switch): it starts once it has
+    ulong joinWaitingFor; // that join's host
     bool startingOnline;  // the host attempt came from Online Play: a failure goes back to the title screen
     bool stateShown;
     GameState shownState;
@@ -47,6 +50,9 @@ public class OnlinePlay : MonoBehaviour, ISessionControl
 
     /// <summary>The lobby flow: Steam's lobbies, or the ones UseDirect gave</summary>
     public OnlineLobby Lobby { get; private set; }
+
+    /// <summary>Find in Dispatch: moving into another open lobby (over the same lobbies as Lobby)</summary>
+    public Matchmaker Match { get; private set; }
 
     /// <summary>
     /// The session this machine plays online (made on first use; OnlineGame plays it)
@@ -100,10 +106,12 @@ public class OnlinePlay : MonoBehaviour, ISessionControl
     /// <summary>
     /// Tests and editor tools: sessions by IP address (a Steam account can't join itself), with these lobbies
     /// </summary>
-    public void UseDirect(ILobbyService lobbyService, string address, ushort port)
+    /// <param name="joinPort">The port joins go to (0 = port): a test hosting another session on this computer</param>
+    public void UseDirect(ILobbyService lobbyService, string address, ushort port, ushort joinPort = 0)
     {
         directAddress = address;
         directPort = port;
+        directJoinPort = joinPort;
         Use(lobbyService);
     }
 #endif
@@ -125,14 +133,36 @@ public class OnlinePlay : MonoBehaviour, ISessionControl
             Lobby.HostFailed -= OnHostFailed;
             Lobby.Detach();
         }
+        if (Match != null)
+        {
+            Match.Notice -= Tell;
+            Match.Detach();
+        }
 
         lobbies = lobbyService;
         lobbies.JoinRequested += RequestJoin;
-        Lobby = new OnlineLobby(lobbies, this, BuildTag());
+        string build = BuildTag();
+        Lobby = new OnlineLobby(lobbies, this, build, Clock, OtherMachines);
         Lobby.Notice += Tell;
         Lobby.HostFailed += OnHostFailed;
+        Match = new Matchmaker(lobbies, Lobby, build, Clock, OtherMachines);
+        Match.Notice += Tell;
         startingOnline = false;
         stateShown = false;
+    }
+
+    static double Clock()
+    {
+        return Time.realtimeSinceStartupAsDouble;
+    }
+
+    // Machines besides this host's in the session it hosts (none when it isn't hosting)
+    int OtherMachines()
+    {
+        if (session == null || !session.IsRunning || !session.Network.IsServer)
+            return 0;
+
+        return Math.Max(0, session.Network.ConnectedClientsIds.Count - 1);
     }
 
     /// <summary>
@@ -244,6 +274,14 @@ public class OnlinePlay : MonoBehaviour, ISessionControl
 
     void Update()
     {
+        // A switch's join, once the session it left has stopped
+        if (joinWaiting && !session.IsRunning)
+        {
+            joinWaiting = false;
+            if (!StartJoin(joinWaitingFor))
+                ForwardEnd(OnlineLobby.JOIN_FAILED);
+        }
+
         // The title screen is up once the game has a state
         GameManager game = GameManager.Instance;
         if (game == null || game.MainState == GameState.Default)
@@ -259,8 +297,12 @@ public class OnlinePlay : MonoBehaviour, ISessionControl
             Lobby.ShowState(shownState);
         }
 
-        if (Lobby.IsHost)
-            Lobby.ShowOpenSeats(Constants.MAX_PLAYERS - SeatedCount());
+        // Not before the host's own player is seated: a new lobby would show every seat free
+        int seated = Lobby.IsHost ? SeatedCount() : 0;
+        if (seated > 0)
+            Lobby.ShowOpenSeats(Constants.MAX_PLAYERS - seated);
+
+        Match.Tick();
 
         bool hasOnlineEntry = MainMenu.Instance != null && MainMenu.Instance.HasOnlineEntry;
         string hint = HintFor(game.MainState, GameAuthority.IsOnline, Lobby.Current != 0, lobbies.Available, hasOnlineEntry, DispatchBoard.Showing);
@@ -307,7 +349,7 @@ public class OnlinePlay : MonoBehaviour, ISessionControl
     }
 
     // The lobby flow starts the session through here, so nothing else hosts or joins around it
-    bool ISessionControl.IsRunning { get { return session != null && session.IsRunning; } }
+    bool ISessionControl.IsRunning { get { return joinWaiting || (session != null && session.IsRunning); } }
 
     bool ISessionControl.Host()
     {
@@ -324,9 +366,29 @@ public class OnlinePlay : MonoBehaviour, ISessionControl
 
     bool ISessionControl.Join(ulong hostId)
     {
+        // The session just left (a lobby switch) stops at the end of the frame: the join starts once it has (Update)
+        if (session != null && session.Stopping)
+        {
+            joinWaiting = true;
+            joinWaitingFor = hostId;
+            return true;
+        }
+
+        return StartJoin(hostId);
+    }
+
+    void ISessionControl.Leave()
+    {
+        joinWaiting = false;
+        if (session != null)
+            session.Leave();
+    }
+
+    bool StartJoin(ulong hostId)
+    {
 #if UNITY_EDITOR || DEVELOPMENT_BUILD
         if (directAddress != null)
-            return Session.JoinDirect(directAddress, directPort);
+            return Session.JoinDirect(directAddress, directJoinPort != 0 ? directJoinPort : directPort);
 #endif
 #if !DISABLESTEAMWORKS
         return Session.JoinSteam(hostId);

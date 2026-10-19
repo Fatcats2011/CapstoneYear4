@@ -23,6 +23,9 @@ namespace DoA.Tests
         const string THIS_COMPUTER = "127.0.0.1";
         const ushort PORT = 7797;
         const ushort PORT_ONE_PLAYER = 7817;
+        const ushort PORT_FIND = 7819;
+        const ushort PORT_FOUND_HOST = 7820; // the other host Find moves to: two hosts on this computer need two ports
+        const ulong FOUND_LOBBY = 77;
         const float WAIT = 15f;
 
         // Why the other machine's session ended
@@ -275,6 +278,131 @@ namespace DoA.Tests
             yield return null;
             log.Dispose();
             Assert.IsEmpty(log.Problems, "Errors:\n\n" + string.Join("\n\n", log.Problems));
+        }
+
+        // The seats the other host gave this machine
+        static int SeatsOnOtherHost(OnlineSession other)
+        {
+            return other.SeatsHeldBy(OnlinePlay.Instance.Session.Network.LocalClientId);
+        }
+
+        // One player here hosts alone on Dispatch (Online Play), and another host's open lobby is what Find will find
+        static IEnumerator HostAloneWithAnOpenLobbyAround(FakeLobbyService lobbies)
+        {
+            float deadline = Time.realtimeSinceStartup + 60;
+            while (!AtTitleScreen() && Time.realtimeSinceStartup < deadline)
+                yield return null;
+            TestPlayers.Add();
+            deadline = Time.realtimeSinceStartup + 10;
+            while (LocalCount() < 1 && Time.realtimeSinceStartup < deadline)
+                yield return null;
+            GameManager.Instance.SetGameState(GameState.PlayerSelect);
+
+            lobbies.AddLobby(FOUND_LOBBY, LobbyRules.GAME, OnlinePlay.BuildTag(), 99);
+            lobbies.SetData(FOUND_LOBBY, MatchRules.MM_KEY, MatchRules.MM_ON);
+            lobbies.SetData(FOUND_LOBBY, MatchRules.OPEN_KEY, "3");
+            OnlinePlay.Instance.UseDirect(lobbies, THIS_COMPUTER, PORT_FIND, PORT_FOUND_HOST);
+            MainMenu.Instance.Choose(TitleEntry.Online);
+            deadline = Time.realtimeSinceStartup + WAIT;
+            while (!(GameAuthority.Role == NetworkRole.Host && PlayerInstantiate.Instance.UnseatedLocalCount == 0
+                && OnlinePlay.Instance.Session.Players.Count == 1) && Time.realtimeSinceStartup < deadline)
+                yield return null;
+            Assert.AreEqual(NetworkRole.Host, GameAuthority.Role, "Online Play hosts");
+            Assert.AreEqual(0, PlayerInstantiate.Instance.UnseatedLocalCount, "seated");
+        }
+
+        [UnityTest]
+        public IEnumerator Find_SwitchesToAnotherHost_StaysOnDispatch()
+        {
+            EditorSceneManager.playModeStartScene = AssetDatabase.LoadAssetAtPath<SceneAsset>(MENU_SCENE);
+            yield return new EnterPlayMode();
+            LogAssert.ignoreFailingMessages = true;
+            LogCollector log = new LogCollector();
+            yield return WaitForOnlinePlay();
+            FakeLobbyService lobbies = new FakeLobbyService { AutoAnswer = true };
+            yield return HostAloneWithAnOpenLobbyAround(lobbies);
+
+            OnlineSession other = OnlineSession.Create(Application.version);
+            Assert.IsTrue(other.HostDirect(THIS_COMPUTER, PORT_FOUND_HOST), "another host, open to anyone");
+
+            log.MachinesLeave(); // Find leaves this machine's own session: see LogCollector.CLOSED_PORT
+            Assert.IsTrue(OnlinePlay.Instance.Match.Find(), "Find");
+            lobbies.AnswerSearch(FOUND_LOBBY);
+            float deadline = Time.realtimeSinceStartup + WAIT;
+            while (!(GameAuthority.Role == NetworkRole.Client && SeatsOnOtherHost(other) == 1
+                && PlayerInstantiate.Instance.UnseatedLocalCount == 0) && Time.realtimeSinceStartup < deadline)
+                yield return null;
+
+            Assert.AreEqual(NetworkRole.Client, GameAuthority.Role, "a client of the other host");
+            Assert.AreEqual(FOUND_LOBBY, OnlinePlay.Instance.Lobby.Current, "in its lobby");
+            Assert.IsFalse(OnlinePlay.Instance.Lobby.IsHost);
+            CollectionAssert.Contains(lobbies.Left, 42UL, "its own lobby is left");
+            Assert.AreEqual(1, SeatsOnOtherHost(other), "seated on the other host");
+            Assert.AreEqual(0, PlayerInstantiate.Instance.UnseatedLocalCount, "and here");
+            Assert.IsFalse(OnlinePlay.Instance.Match.Searching, "Find is done");
+
+            yield return WaitSeconds(1f);
+            Assert.AreEqual(GameState.PlayerSelect, State(), "still on Dispatch");
+            Assert.AreEqual(NetworkRole.Client, GameAuthority.Role);
+
+            log.MachinesLeave(); // Windows may report a leaving machine's closed port: see LogCollector.CLOSED_PORT
+            other.Leave();
+            deadline = Time.realtimeSinceStartup + WAIT;
+            while (GameAuthority.Role != NetworkRole.Offline && Time.realtimeSinceStartup < deadline)
+                yield return null;
+            yield return null;
+            log.Dispose();
+            Assert.IsEmpty(log.Problems, "Errors:\n\n" + string.Join("\n\n", log.Problems));
+        }
+
+        [UnityTest]
+        public IEnumerator Find_HostGoneAfterSwitch_RehostsOnDispatch()
+        {
+            EditorSceneManager.playModeStartScene = AssetDatabase.LoadAssetAtPath<SceneAsset>(MENU_SCENE);
+            yield return new EnterPlayMode();
+            LogAssert.ignoreFailingMessages = true;
+            LogCollector log = new LogCollector();
+            yield return WaitForOnlinePlay();
+            FakeLobbyService lobbies = new FakeLobbyService { AutoAnswer = true };
+            yield return HostAloneWithAnOpenLobbyAround(lobbies);
+            OnlinePlay.Instance.Session.Direct.MaxConnectAttempts = 2; // give up on the gone host after about 2 s
+
+            OnlineSession other = OnlineSession.Create(Application.version);
+            Assert.IsTrue(other.HostDirect(THIS_COMPUTER, PORT_FOUND_HOST), "another host, open to anyone");
+
+            log.MachinesLeave(); // Find leaves this machine's own session: see LogCollector.CLOSED_PORT
+            Assert.IsTrue(OnlinePlay.Instance.Match.Find(), "Find");
+            lobbies.AnswerSearch(FOUND_LOBBY);
+            Assert.AreEqual(NetworkRole.Offline, GameAuthority.Role, "its own session is left");
+
+            // The other host stops before this machine reaches it. Unity Transport logs a socket error per attempt
+            log.Dispose();
+            other.Leave();
+            float deadline = Time.realtimeSinceStartup + 30;
+            while (!(GameAuthority.Role == NetworkRole.Host && OnlinePlay.Instance.Lobby.Filling)
+                && Time.realtimeSinceStartup < deadline)
+                yield return null;
+
+            Assert.AreEqual(NetworkRole.Host, GameAuthority.Role, "hosts again");
+            Assert.IsTrue(OnlinePlay.Instance.Lobby.IsHost);
+            Assert.IsTrue(OnlinePlay.Instance.Lobby.Filling, "open to anyone");
+            Assert.AreEqual(2, lobbies.Creates.Count, "in a new lobby");
+            Assert.AreEqual(1, lobbies.Invites.Count, "without opening the invite dialog again");
+            Assert.IsFalse(OnlinePlay.Instance.Match.Searching);
+            Assert.AreEqual(GameState.PlayerSelect, State(), "still on Dispatch");
+
+            LogCollector after = new LogCollector();
+            deadline = Time.realtimeSinceStartup + WAIT;
+            while (PlayerInstantiate.Instance.UnseatedLocalCount != 0 && Time.realtimeSinceStartup < deadline)
+                yield return null;
+            Assert.AreEqual(0, PlayerInstantiate.Instance.UnseatedLocalCount, "seated in it");
+            Assert.AreEqual(GameState.PlayerSelect, State());
+
+            after.MachinesLeave();
+            OnlinePlay.Instance.Session.Leave();
+            yield return null;
+            after.Dispose();
+            Assert.IsEmpty(after.Problems, "Errors:\n\n" + string.Join("\n\n", after.Problems));
         }
     }
 }
