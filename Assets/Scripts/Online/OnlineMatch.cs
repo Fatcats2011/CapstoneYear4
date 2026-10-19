@@ -11,6 +11,7 @@ using UnityEngine;
 /// - The scene flow's messages (IMatchLink). The host asks every client to load a match scene, show it, or go back to
 ///   the menu, and each client says when it has a scene loaded (OnlineSceneFlow).
 /// - The host's match clock (MatchClock).
+/// - When the host's open lobby starts by itself (MatchRules.AutoStartRemaining).
 /// - The host's order changes, clients' drop requests and the golden order's value (OnlineOrders).
 /// - Clients' tutorial reports and cutout requests (OnlineTutorial).
 /// - Steals, clashes and respawn points: clients' requests and the host's answers (OnlineSteals, OnlineRespawns).
@@ -24,6 +25,7 @@ public class OnlineMatch : NetworkBehaviour, IMatchLink
     readonly NetworkVariable<double> clockEnd = new NetworkVariable<double>(0);
     readonly NetworkVariable<bool> clockStarted = new NetworkVariable<bool>(false);
     readonly NetworkVariable<bool> finalOrder = new NetworkVariable<bool>(false);
+    readonly NetworkVariable<double> autoStartAt = new NetworkVariable<double>(0);
     readonly NetworkVariable<int> goldenValue = new NetworkVariable<int>((int)Constants.OrderValue.Golden);
 
     OnlineSession session;
@@ -33,6 +35,12 @@ public class OnlineMatch : NetworkBehaviour, IMatchLink
 
     /// <summary>When the host's match clock runs out, in Netcode's server time (MatchClock)</summary>
     public double ClockEnd { get { return clockEnd.Value; } }
+
+    /// <summary>
+    /// When the host's open lobby starts by itself, in Netcode's server time (0 = it doesn't). Another machine's host could
+    /// send anything: read it only through MatchRules.AutoStartRemaining
+    /// </summary>
+    public double AutoStartAt { get { return autoStartAt.Value; } }
 
     /// <summary>Whether the host's waves have started</summary>
     public bool ClockStarted { get { return clockStarted.Value; } }
@@ -198,6 +206,15 @@ public class OnlineMatch : NetworkBehaviour, IMatchLink
             clockStarted.Value = started;
         if (finalOrder.Value != final)
             finalOrder.Value = final;
+    }
+
+    /// <summary>
+    /// Host: shares when its open lobby starts by itself (0 = it doesn't; only a change goes out). Does nothing on a client
+    /// </summary>
+    internal void SetAutoStart(double at)
+    {
+        if (IsServer && !autoStartAt.Value.Equals(at))
+            autoStartAt.Value = at;
     }
 
     /// <summary>Host: asks every client to load a match scene. Does nothing on a client</summary>

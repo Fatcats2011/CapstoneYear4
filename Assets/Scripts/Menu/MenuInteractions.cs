@@ -273,6 +273,14 @@ public class MenuInteractions : MonoBehaviour
     }
 
     ///<summary>
+    /// Online: readies this player as A in Dispatch does (closing the sliders), when an open lobby starts by itself
+    ///</summary>
+    public void ReadyAsA()
+    {
+        PlayerReadyButton(true);
+    }
+
+    ///<summary>
     /// B in player select. Online, it closes the sliders first, then unreadies, then leaves
     ///</summary>
     private void PlayerUnreadyDespawnButton(bool button)

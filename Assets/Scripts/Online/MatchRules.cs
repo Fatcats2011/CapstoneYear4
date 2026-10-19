@@ -21,6 +21,12 @@ public static class MatchRules
     public const double AUTO_START = 60.0;
     public const double FORCE_GRACE = 5.0;
 
+    /// <summary>Tests: how long an open lobby waits before it starts by itself, instead of AUTO_START (0 = AUTO_START)</summary>
+    internal static double AutoStartSecondsOverride;
+
+    // How long an open lobby waits before it starts by itself
+    static double AutoStartSeconds { get { return AutoStartSecondsOverride > 0 ? AutoStartSecondsOverride : AUTO_START; } }
+
     public const string SEARCHING = "LOOKING FOR A MATCH…";
     public const string NONE_FOUND = "No open matches right now. Your lobby is open to anyone.";
     public const string OPEN_TO_ANYONE = "OPEN TO ANYONE";
@@ -117,7 +123,7 @@ public static class MatchRules
     /// </summary>
     public static double AutoStartAt(double lastSeatedAt)
     {
-        return lastSeatedAt + AUTO_START;
+        return lastSeatedAt + AutoStartSeconds;
     }
 
     /// <summary>
@@ -132,7 +138,8 @@ public static class MatchRules
         if (double.IsNaN(left) || left < 0)
             return 0;
 
-        return (float)(left > AUTO_START ? AUTO_START : left);
+        double most = AutoStartSeconds;
+        return (float)(left > most ? most : left);
     }
 
     /// <summary>

@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using NUnit.Framework;
+using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
 using UnityEngine.TestTools;
@@ -11,14 +12,38 @@ namespace DoA.Tests
     /// Hosts and clients on this computer (127.0.0.1), in one empty Play Mode scene: the host spawns the match and one
     /// OnlinePlayer per machine in its seat, players' choices reach the other machines, the host's states reach clients in
     /// order, and a player who leaves takes their OnlinePlayer with them. Each test enters Play Mode (a few seconds).
+    /// The auto-start tests host from the real menu scene (OnlinePlay with a fake Steam) and take about 15 s each.
     /// No lambda here captures a local: after EnterPlayMode even assigning a captured local throws
     /// </summary>
     public class OnlinePlayersNetworkTests
     {
+        const string MENU_SCENE = "Assets/Scenes/Alex Player Testing.unity";
         const string THIS_COMPUTER = "127.0.0.1";
         const ushort PORT = 7792;
         const ushort PORT_NAME = 7818;
+        const ushort PORT_AUTO_START = 7821;
         const float WAIT = 10f;
+        const double AUTO_START = 2; // MatchRules.AutoStartSecondsOverride, for these tests
+        const float COUNTDOWN = 3f; // Dispatch's countdown once everyone is ready (PlayerInstantiate)
+        const float SLACK = 3f;
+
+        /// <summary>
+        /// Remembers the match scenes the host asked a client to load
+        /// </summary>
+        class LoadRecorder
+        {
+            public readonly List<MatchScene> Loads = new List<MatchScene>();
+
+            public LoadRecorder(OnlineMatch match)
+            {
+                match.LoadRequested += OnLoad;
+            }
+
+            void OnLoad(MatchScene scene)
+            {
+                Loads.Add(scene);
+            }
+        }
 
         /// <summary>
         /// Remembers the states a client heard from the host
@@ -38,13 +63,23 @@ namespace DoA.Tests
             }
         }
 
+        [SetUp]
+        public void SetUp()
+        {
+            MatchRules.AutoStartSecondsOverride = AUTO_START;
+        }
+
         [UnityTearDown]
         public IEnumerator TearDown()
         {
             if (Application.isPlaying)
                 yield return new ExitPlayMode();
 
+            MatchRules.AutoStartSecondsOverride = 0;
+            EditorSceneManager.playModeStartScene = null;
+            TestPlayers.RemoveAll();
             GameAuthority.Role = NetworkRole.Offline;
+            SceneFlow.Current = null;
         }
 
         static OnlinePlayer PlayerInSeat(OnlineSession session, int seat)
@@ -290,6 +325,152 @@ namespace DoA.Tests
             yield return null;
             log.Dispose();
             Assert.IsEmpty(log.Problems, "Errors while machines left:\n\n" + string.Join("\n\n", log.Problems));
+        }
+
+        static GameState State()
+        {
+            return GameManager.Instance == null ? GameState.Default : GameManager.Instance.MainState;
+        }
+
+        static bool CountingDown()
+        {
+            return PlayerInstantiate.Instance.readyUpCountdown != null;
+        }
+
+        static IEnumerator WaitSeconds(float seconds)
+        {
+            for (float until = Time.realtimeSinceStartup + seconds; Time.realtimeSinceStartup < until;)
+                yield return null;
+        }
+
+        // One player here hosts on Dispatch through Online Play (a fake Steam), open to anyone with fill
+        static IEnumerator HostOnDispatch(bool fill)
+        {
+            float deadline = Time.realtimeSinceStartup + 60;
+            while (OnlinePlay.Instance == null && Time.realtimeSinceStartup < deadline)
+                yield return null;
+            Assert.IsNotNull(OnlinePlay.Instance, "made at launch");
+            while (State() != GameState.Menu && Time.realtimeSinceStartup < deadline)
+                yield return null;
+            TestPlayers.Add();
+            deadline = Time.realtimeSinceStartup + WAIT;
+            while (PlayerInstantiate.Instance.Roster.LocalCount < 1 && Time.realtimeSinceStartup < deadline)
+                yield return null;
+            GameManager.Instance.SetGameState(GameState.PlayerSelect);
+
+            OnlinePlay.Instance.UseDirect(new FakeLobbyService { AutoAnswer = true }, THIS_COMPUTER, PORT_AUTO_START);
+            MainMenu.Instance.Choose(TitleEntry.Online);
+            deadline = Time.realtimeSinceStartup + WAIT;
+            while (!(GameAuthority.Role == NetworkRole.Host && PlayerInstantiate.Instance.UnseatedLocalCount == 0
+                && OnlinePlay.Instance.Session.Players.Count == 1) && Time.realtimeSinceStartup < deadline)
+                yield return null;
+            Assert.AreEqual(NetworkRole.Host, GameAuthority.Role, "Online Play hosts");
+            Assert.AreEqual(0, PlayerInstantiate.Instance.UnseatedLocalCount, "seated");
+
+            if (fill)
+                OnlinePlay.Instance.Lobby.SetFill(true);
+            Assert.AreEqual(fill, OnlinePlay.Instance.Lobby.Filling, "open to anyone");
+        }
+
+        // Set by JoinTheHost
+        static OnlineSession joiner;
+
+        // Another machine (a session without the game, which never readies) joins the host and is seated there
+        static IEnumerator JoinTheHost()
+        {
+            joiner = OnlineSession.Create(Application.version);
+            Assert.IsTrue(joiner.JoinDirect(THIS_COMPUTER, PORT_AUTO_START), "the other machine joins");
+            float deadline = Time.realtimeSinceStartup + WAIT;
+            while (!(joiner.Match != null && PlayerInstantiate.Instance.Roster[1] != null) && Time.realtimeSinceStartup < deadline)
+                yield return null;
+            Assert.IsNotNull(PlayerInstantiate.Instance.Roster[1], "seated on the host");
+        }
+
+        // The other machine leaves, then the host
+        static IEnumerator LeaveBoth()
+        {
+            if (joiner != null)
+            {
+                joiner.Leave();
+                float deadline = Time.realtimeSinceStartup + WAIT;
+                while (OnlinePlay.Instance.Session.PlayersIn > 1 && Time.realtimeSinceStartup < deadline)
+                    yield return null;
+                joiner = null;
+            }
+            OnlinePlay.Instance.Session.Leave();
+            yield return null;
+        }
+
+        [UnityTest]
+        public IEnumerator AutoStart_FillingWithTwo_StartsUnready()
+        {
+            EditorSceneManager.playModeStartScene = AssetDatabase.LoadAssetAtPath<SceneAsset>(MENU_SCENE);
+            yield return new EnterPlayMode();
+            LogAssert.ignoreFailingMessages = true;
+            LogCollector log = new LogCollector();
+            yield return HostOnDispatch(true);
+            yield return JoinTheHost();
+            LoadRecorder loads = new LoadRecorder(joiner.Match);
+
+            // The host readies its own player at the deadline, the other machine's FORCE_GRACE later, then Dispatch counts
+            // down in game time (SLACK more for the load request to travel and for the editor's slow frames)
+            float deadline = Time.realtimeSinceStartup + (float)(AUTO_START + MatchRules.FORCE_GRACE) + COUNTDOWN + SLACK;
+            while (!(loads.Loads.Count > 0 && State() != GameState.PlayerSelect) && Time.realtimeSinceStartup < deadline)
+                yield return null;
+
+            Assert.AreNotEqual(GameState.PlayerSelect, State(), "the host's match starts");
+            Assert.AreEqual(1, loads.Loads.Count, "and the other machine is asked to load it");
+            Assert.IsFalse(PlayerInSeat(OnlinePlay.Instance.Session, 1).Ready, "though that machine never readied");
+            Assert.AreEqual(0.0, OnlinePlay.Instance.Session.Match.AutoStartAt, "the match starting ends the count");
+
+            // The host is loading a match scene: leaving now isn't what this test checks
+            log.Dispose();
+            Assert.IsEmpty(log.Problems, "Errors:\n\n" + string.Join("\n\n", log.Problems));
+            yield return LeaveBoth();
+        }
+
+        [UnityTest]
+        public IEnumerator AutoStart_FriendsOnly_NeverStarts()
+        {
+            EditorSceneManager.playModeStartScene = AssetDatabase.LoadAssetAtPath<SceneAsset>(MENU_SCENE);
+            yield return new EnterPlayMode();
+            LogAssert.ignoreFailingMessages = true;
+            LogCollector log = new LogCollector();
+            yield return HostOnDispatch(false);
+            yield return JoinTheHost();
+
+            yield return WaitSeconds(8f);
+            Assert.AreEqual(GameState.PlayerSelect, State(), "still on Dispatch");
+            Assert.IsFalse(PlayerInstantiate.Instance.IsReady(0), "the host's player wasn't readied");
+            Assert.IsFalse(PlayerInstantiate.Instance.IsReady(1), "nor the other machine's");
+            Assert.IsFalse(CountingDown(), "no countdown");
+            Assert.AreEqual(0.0, OnlinePlay.Instance.Session.Match.AutoStartAt, "no start time shared");
+
+            log.MachinesLeave(); // Windows may report a leaving machine's closed port: see LogCollector.CLOSED_PORT
+            yield return LeaveBoth();
+            log.Dispose();
+            Assert.IsEmpty(log.Problems, "Errors:\n\n" + string.Join("\n\n", log.Problems));
+        }
+
+        [UnityTest]
+        public IEnumerator AutoStart_HostAlone_NeverStarts()
+        {
+            EditorSceneManager.playModeStartScene = AssetDatabase.LoadAssetAtPath<SceneAsset>(MENU_SCENE);
+            yield return new EnterPlayMode();
+            LogAssert.ignoreFailingMessages = true;
+            LogCollector log = new LogCollector();
+            yield return HostOnDispatch(true);
+
+            yield return WaitSeconds(8f);
+            Assert.AreEqual(GameState.PlayerSelect, State(), "still on Dispatch");
+            Assert.IsFalse(PlayerInstantiate.Instance.IsReady(0), "the host's player wasn't readied");
+            Assert.IsFalse(CountingDown(), "no countdown");
+            Assert.AreEqual(0.0, OnlinePlay.Instance.Session.Match.AutoStartAt, "no start time shared");
+
+            log.MachinesLeave();
+            yield return LeaveBoth();
+            log.Dispose();
+            Assert.IsEmpty(log.Problems, "Errors:\n\n" + string.Join("\n\n", log.Problems));
         }
     }
 }

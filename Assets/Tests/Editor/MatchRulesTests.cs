@@ -109,6 +109,22 @@ namespace DoA.Tests
         }
 
         [Test]
+        public void AutoStart_TestOverride_ShortensTheDelayAndTheClamp()
+        {
+            MatchRules.AutoStartSecondsOverride = 2;
+            try
+            {
+                Assert.AreEqual(102.0, MatchRules.AutoStartAt(100));
+                Assert.AreEqual(2f, MatchRules.AutoStartRemaining(1000, 100), "clamped to the shorter delay");
+            }
+            finally
+            {
+                MatchRules.AutoStartSecondsOverride = 0;
+            }
+            Assert.AreEqual(160.0, MatchRules.AutoStartAt(100), "0 = AUTO_START");
+        }
+
+        [Test]
         public void StatusLine_Copy()
         {
             Assert.AreEqual("LOOKING FOR A MATCH…", MatchRules.StatusLine(true, true, 10));

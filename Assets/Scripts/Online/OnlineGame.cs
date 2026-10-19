@@ -16,6 +16,7 @@ using UnityEngine;
 /// - everyone's colour, hat and readiness;
 /// - the host's game states;
 /// - the host's match clock (MatchClock);
+/// - an open lobby starting by itself (MatchRules.AutoStartAt);
 /// - why a session ended, in the controller hint bar. A match can't go on without its host: a machine in one goes back to
 ///   the menu.
 /// Whatever starts a session for the game adds it: OnlinePlay (Steam) or the editor's Online menu. See docs/online.md
@@ -62,6 +63,11 @@ public class OnlineGame : MonoBehaviour
     HostQueue hostMessages;  // client: the host's states, order changes, hits and respawn points, which wait while this machine's new scene comes up
     string pendingNotice;    // why the session ended, to say again once the menus are up
     bool wasInMenus = true; // the last state applied was in the menus (the host drops unready seats leaving them)
+    double lastSeatedAt;     // host: when a player was last seated, in server time
+    double countingTo;       // the automatic start this machine saw counting down (only a start seen counting readies)
+    double readiedFor;       // the automatic start this machine's players were readied for
+    double forcedFor;        // host: the automatic start other machines' players were made ready for
+    readonly HashSet<ulong> seatedMachines = new HashSet<ulong>();
 
     /// <summary>
     /// Plays the game over a session (adds an OnlineGame to its object)
@@ -247,6 +253,7 @@ public class OnlineGame : MonoBehaviour
         localPlayers.Clear();
         myName = null;
         asker.Reset();
+        lastSeatedAt = countingTo = readiedFor = forcedFor = 0; // the next session's server time starts again
         if (players != null)
             players.GoOffline();
     }
@@ -270,6 +277,10 @@ public class OnlineGame : MonoBehaviour
 
     void OnPlayerSpawned(OnlinePlayer player)
     {
+        // Host: a new seat taken restarts an open lobby's automatic start
+        if (session.Network != null && session.Network.IsServer)
+            lastSeatedAt = session.Network.ServerTime.Time;
+
         if (player.IsOwner)
         {
             // A seat for one of this machine's players: it answers an ask (the machine's first seat answers none). One
@@ -510,6 +521,80 @@ public class OnlineGame : MonoBehaviour
         ShareLocalChoices(players);
         ShowRemoteChoices(players);
         ShareOrFollowClock();
+        AutoStart(players);
+    }
+
+    // An open lobby (Fill) starts by itself AUTO_START after its last seat was taken, with at least two machines in it.
+    // The host shares when (0 = it doesn't); then every machine readies its own players as A does, and FORCE_GRACE later
+    // the host makes every other machine's player ready, so Dispatch's all-ready start runs
+    void AutoStart(PlayerInstantiate players)
+    {
+        OnlineMatch match = session.Match;
+        if (match == null || !session.IsRunning)
+            return;
+
+        double now = session.Network.ServerTime.Time;
+        bool inPlayerSelect = GameManager.Instance != null && GameManager.Instance.MainState == GameState.PlayerSelect;
+
+        if (match.IsServer)
+        {
+            // Leaving player select (the match starting) stops it. A count that begins (Fill turned on, or back from a
+            // match) starts from now, not from a seat taken long ago
+            bool open = inPlayerSelect && Filling() && MachinesSeated() >= 2;
+            if (open && match.AutoStartAt == 0)
+                lastSeatedAt = System.Math.Max(lastSeatedAt, now);
+            double at = open ? MatchRules.AutoStartAt(lastSeatedAt) : 0;
+            match.SetAutoStart(at);
+
+            if (at != 0 && now >= at + MatchRules.FORCE_GRACE && forcedFor != at)
+            {
+                forcedFor = at;
+                if (players.readyUpCountdown == null)
+                {
+                    foreach (RemotePlayer remote in remotes.Values)
+                        players.SetRemoteReady(remote.Seat, true);
+                }
+            }
+        }
+
+        // Whatever the host sends goes through AutoStartRemaining, which reads nonsense as no time left. Only a start this
+        // machine saw counting down readies its players, so nonsense never does
+        double shared = match.AutoStartAt;
+        if (MatchRules.AutoStartRemaining(shared, now) > 0)
+        {
+            countingTo = shared;
+            return;
+        }
+        if (shared == 0 || countingTo != shared || readiedFor == shared || !inPlayerSelect)
+            return;
+
+        readiedFor = shared;
+        foreach (PlayerSlot slot in players.Roster.LocalPlayers)
+            slot.Input.GetComponent<PlayerUIHandler>().menuInteractions.ReadyAsA();
+    }
+
+    // Host: whether its lobby is open to anyone (Fill in Online Play)
+    bool Filling()
+    {
+        OnlinePlay play = OnlinePlay.Instance;
+        return play != null && play.Session == session && play.Lobby != null && play.Lobby.Filling;
+    }
+
+    // How many machines have a player in the session
+    int MachinesSeated()
+    {
+        seatedMachines.Clear();
+        foreach (OnlinePlayer player in session.Players)
+            seatedMachines.Add(player.OwnerClientId);
+        return seatedMachines.Count;
+    }
+
+    // Host: other machines' players were made ready for the automatic start that's still set. Their own not-ready, sent
+    // before they heard of it, mustn't undo that
+    bool ForcedReady()
+    {
+        OnlineMatch match = session.Match;
+        return forcedFor != 0 && match != null && match.IsServer && match.AutoStartAt == forcedFor;
     }
 
     // Other machines' players take their seats here once they're free (this machine's player may be moving out of one)
@@ -583,7 +668,8 @@ public class OnlineGame : MonoBehaviour
             if (player.Ready != shown.Ready)
             {
                 shown.Ready = player.Ready;
-                players.SetRemoteReady(shown.Seat, player.Ready);
+                if (player.Ready || !ForcedReady())
+                    players.SetRemoteReady(shown.Seat, player.Ready);
             }
         }
     }
