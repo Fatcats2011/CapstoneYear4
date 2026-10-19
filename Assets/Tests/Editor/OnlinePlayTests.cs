@@ -33,40 +33,40 @@ namespace DoA.Tests
         [Test]
         public void Hint_PlayerSelect_OfflineWithSteam_OnePlayer_OffersOnlinePlay()
         {
-            Assert.AreEqual(OnlinePlay.HINT_PLAY_ONLINE, OnlinePlay.HintFor(GameState.PlayerSelect, false, false, true, false));
+            Assert.AreEqual(OnlinePlay.HINT_PLAY_ONLINE, OnlinePlay.HintFor(GameState.PlayerSelect, false, false, true, false, dispatch: false));
         }
 
         [Test]
         public void Hint_PlayerSelect_OfflineWithSteam_TwoPlayers_OffersOnlinePlayToo()
         {
             // Phase 3J: several players on one machine can play online
-            Assert.AreEqual(OnlinePlay.HINT_PLAY_ONLINE, OnlinePlay.HintFor(GameState.PlayerSelect, false, false, true, false));
+            Assert.AreEqual(OnlinePlay.HINT_PLAY_ONLINE, OnlinePlay.HintFor(GameState.PlayerSelect, false, false, true, false, dispatch: false));
         }
 
         [Test]
         public void Hint_PlayerSelect_WithoutSteam_OffersNothing()
         {
-            Assert.AreEqual("", OnlinePlay.HintFor(GameState.PlayerSelect, false, false, false, false));
+            Assert.AreEqual("", OnlinePlay.HintFor(GameState.PlayerSelect, false, false, false, false, dispatch: false));
         }
 
         [Test]
         public void Hint_PlayerSelect_InALobby_OffersInvitesAndLeaving()
         {
-            Assert.AreEqual(OnlinePlay.HINT_IN_LOBBY, OnlinePlay.HintFor(GameState.PlayerSelect, true, true, true, false));
+            Assert.AreEqual(OnlinePlay.HINT_IN_LOBBY, OnlinePlay.HintFor(GameState.PlayerSelect, true, true, true, false, dispatch: false));
         }
 
         [Test]
         public void Hint_PlayerSelect_OnlineWithoutALobby_OffersLeaving()
         {
-            Assert.AreEqual(OnlinePlay.HINT_LEAVE, OnlinePlay.HintFor(GameState.PlayerSelect, true, false, false, false));
+            Assert.AreEqual(OnlinePlay.HINT_LEAVE, OnlinePlay.HintFor(GameState.PlayerSelect, true, false, false, false, dispatch: false));
         }
 
         [Test]
         public void Hint_WithTheOnlineEntry_OfflinePlayerSelect_OffersNothing()
         {
             // Local Play: going online is the title screen's Online Play
-            Assert.AreEqual("", OnlinePlay.HintFor(GameState.PlayerSelect, false, false, true, true));
-            Assert.AreEqual(OnlinePlay.HINT_IN_LOBBY, OnlinePlay.HintFor(GameState.PlayerSelect, true, true, true, true));
+            Assert.AreEqual("", OnlinePlay.HintFor(GameState.PlayerSelect, false, false, true, true, dispatch: false));
+            Assert.AreEqual(OnlinePlay.HINT_IN_LOBBY, OnlinePlay.HintFor(GameState.PlayerSelect, true, true, true, true, dispatch: false));
         }
 
         [TestCase(true, false, OnlinePlay.YPress.Nothing)]   // Local Play
@@ -147,11 +147,19 @@ namespace DoA.Tests
             Assert.AreEqual(GameState.PlayerSelect, game.MainState);
         }
 
+        [Test]
+        public void Hint_OnlineDispatch_PlayerSelect_OffersNothing()
+        {
+            // Dispatch's tickets carry their own prompts
+            Assert.AreEqual("", OnlinePlay.HintFor(GameState.PlayerSelect, true, true, true, false, dispatch: true));
+            Assert.AreEqual(OnlinePlay.HINT_IN_LOBBY, OnlinePlay.HintFor(GameState.PlayerSelect, true, true, true, false, dispatch: false));
+        }
+
         [TestCase(GameState.Menu)]
         [TestCase(GameState.MainLoop)]
         public void Hint_OutsidePlayerSelect_OffersNothing(GameState state)
         {
-            Assert.AreEqual("", OnlinePlay.HintFor(state, true, true, true, false));
+            Assert.AreEqual("", OnlinePlay.HintFor(state, true, true, true, false, dispatch: false));
         }
 
         [Test]

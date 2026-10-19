@@ -80,6 +80,8 @@ public static class KeyboardControls
         Keys(asset, "UI/Down D-Pad", "s", "downArrow");
         Keys(asset, "UI/UnPause", "escape");
         Keys(asset, "UI/North Face", "tab");
+        if (asset.FindAction("UI/West Face") != null) // added by the editor step in EDITOR-TODO.md 1b; Keys throws when missing
+            Keys(asset, "UI/West Face", "q");
 
         // The loading screen (the Load map)
         Keys(asset, "Load/Confirm", "space", "enter", "numpadEnter");

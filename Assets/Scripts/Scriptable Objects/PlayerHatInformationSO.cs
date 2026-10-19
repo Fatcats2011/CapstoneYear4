@@ -10,6 +10,7 @@ public class PlayerHatInformationSO : ScriptableObject
     public Mesh hatMesh;
     public Material hatMaterial;
     public Sprite hatIcon;
+    public string displayName; // shown on Dispatch's tickets (the asset's name when empty)
 
     [Header("Transform Controls")]
     public Vector3 hatPosition;

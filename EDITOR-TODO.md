@@ -1,20 +1,50 @@
 # Editor to-do (master list)
 
-Things only you can do in the Unity editor (and on two PCs), top to bottom. Updated 2026-10-07 (Local Play and Online Play on the title screen; Phase 5A: the deferred fixes and bumps online; Phase 3J: several players on one machine online).
+Things only you can do in the Unity editor (and on two PCs), top to bottom. Updated 2026-10-13 (the Dispatch lobby; Local Play and Online Play on the title screen; Phase 5A: the deferred fixes and bumps online; Phase 3J: several players on one machine online).
 
-## 1. Local Play and Online Play on the title screen (15 minutes, main editor)
+## 1. Local Play and Online Play on the title screen (5 minutes, main editor)
 
-Code is done. Until this scene change, the title screen works as before (Play, and Y in player select goes online).
-- **The art:** draw an "Online Play" title-screen entry and its ghost sprite, in the style of the others. Optional: relabel Play as "Local Play".
-- **The scene** (the menu scene's MainMenu object):
-  - Duplicate the Play entry and place the copy under Play, then swap in the Online Play image.
-  - In MainMenu's **Selector Objects**, add it at position 1 (second). The list then holds 5: Play, Online Play, Options, Credits, Quit.
-  - In **Selector Ghost Sprites**, add its ghost sprite at position 1 too. That list holds 5 as well.
-  - Move Options, Credits and Quit down to make room.
+Done: the MULTIPLAYER and LOCAL entries are in the scene (Selector Objects: Multiplayer, Local, Options, Credits, Quit), and the code follows that order. Left to do:
+- **Selector Ghost Sprites** (MainMenu) still holds 4, so from Local down each entry shows the next one's ghost. Add one at the top (element 0) so it holds 5, one per entry in the same order: Multiplayer, Local, Options, Credits, Quit. With no Multiplayer ghost art yet, `Play.png` for both Multiplayer and Local is fine.
 - **Check, with Steam running:**
   - Local Play: player select; Y does nothing, and no line along the top.
-  - Online Play: player select, and Steam's invite window opens. The top line says "Y / Triangle: invite friends      B / Circle: leave"; Y reopens the window; B goes back to the title screen.
+  - Online Play: player select, and Steam's invite window opens. (Until Dispatch, 1c, is built) the top line says "Y / Triangle: invite friends      B / Circle: leave"; Y reopens the window; B goes back to the title screen.
 - **Check, with Steam closed:** Online Play shows "Start Steam to play online." and goes back to the title screen.
+
+## 1b. Dispatch: X opens the customization sliders (2 minutes, main editor)
+
+- **Input asset** (`Assets/Resources/CapstoneYear4.inputactions`): in the UI map add a Button action **West Face** (like North Face), bound to `<Gamepad>/buttonWest` (group Gamepad), gamepad binding only; the keyboard key (Q) comes from `KeyboardControls`. The code wires it by name (`UI/West Face`), so nothing else is needed. Until it exists, X does nothing in online player select, so the sliders can't be opened there.
+- **Check, online player select:** the sliders are hidden; X shows them (d-pad scrolls them); B or A hides them; local player select still shows them all the time, and X does nothing there.
+
+## 1c. Dispatch lobby: online player select (2-3 hours, main editor, mostly art)
+
+Code is done (`docs/online.md`, Phase 3B). Needs step 1b first (the West Face action), then, in the menu scene:
+- **The depot back room, behind the podiums:**
+  - A wall and a floor.
+  - A full-width corkboard above the podiums, lit at about 75% of the podium spotlights.
+  - A spotlight on each of the 4 `menuSpawnPositions` podiums, each rim glowing in that seat's company colour.
+- **A Screen Space canvas with a `DispatchBoard`:**
+  - `root`: the object the board shows and hides. Put the `DispatchBoard` component on a different object (the canvas, say). If it sits on `root`, hiding `root` stops its `Update` and the board never comes back.
+  - `tickets`: 4 `TicketView`s in seat order, laid out over the board, one above each podium. Wire each one's fields (header, company, playerName, colourName, hatName, colourSwatch, hatIcon, filled, hiring, stamp, gettingReady, mineMarker).
+  - The `stamp`, `gettingReady` and `hiring` objects each need a TMP_Text child holding their copy: `DISPATCHED`, `GETTING READY…`, `HIRING…`.
+  - `highlight` (an Animator) is optional: with none, a flash does nothing.
+  - `readyLine`: top right, shows `{ready} / {seated} READY`.
+  - `banner`: `ALL ORDERS DISPATCHED`.
+  - A "DISPATCH" wordmark top left (new art, in the style of `Local.png` and `Multiplayer.png`).
+  - Bottom prompts with the green button art: A CLOCK IN · X CUSTOMIZE · Y INVITE · B LEAVE.
+- **Ticket art:** the paper, a pin, a company header strip, the DISPATCHED stamp and the HIRING… blank. A `Flash` animator trigger on `highlight` (brighten, then fade back over about 0.6 s).
+- **`displayName`:** fill it in on the 6 colour assets and 7 hat assets (`PlayerColorInformationSO`, `PlayerHatInformationSO`).
+- **The camera:** with one local player online, the menu camera frames the board and all 4 podiums.
+- **Optional:** a short celebration animation on the ghost when a player clocks in.
+- **Check:**
+  - Online Play opens Dispatch, with Steam's invite window.
+  - A friend's ticket and ghost appear.
+  - X opens the sliders, and the ticket follows them.
+  - A stamps the ticket.
+  - Everyone ready: the banner, then 3-2-1, then the match.
+  - After the results you're back on Dispatch, unstamped.
+  - A second pad can't join online.
+  - Local Play's player select is unchanged.
 
 ## 2. Phases 5A and 3J: import, then check (40 minutes)
 
@@ -71,6 +101,7 @@ Code is done. Until this scene change, the title screen works as before (Play, a
   - On the title screen, press F1: a test pad joins, and the keyboard doesn't. Press X: the hint says "Press Space to play with the keyboard…".
   - Remove the test pad (exit and re-enter Play Mode). Press **Space**: the keyboard joins as P1. Join a real pad as P2.
   - Play one match: drive with the arrows (some letters are dev keys in the editor), Space to boost, Left Shift to drift, Escape to pause. Keys are in `docs/controls.md`.
+- **The Resolution row (a build only, the editor ignores sizes):** Options → down to Resolution (under Fullscreen). Left and right change the size and the row says "A: apply"; A applies it. Try it windowed (Fullscreen Off) too. Leave Options after picking a size without A: the old size stays. If the row sits awkwardly on the screen, tell me where it should go.
 - **Display (a build only, the editor ignores these):** open `%USERPROFILE%\AppData\LocalLow\The Boo Crew\Dead on Arrival\settings.cfg` and add lines, launching each time:
   - `vsync=0` and `framecap=60`: the Steam overlay's FPS counter stays near 60.
   - `fullscreen=0`, `width=1600`, `height=900`: a 1600×900 window.

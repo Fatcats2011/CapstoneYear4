@@ -8,4 +8,5 @@ public class PlayerColorInformationSO : ScriptableObject
     [Header("Color Information")]
     public Material colorMaterial;
     public Sprite colorIcon;
+    public string displayName; // shown on Dispatch's tickets (the asset's name when empty)
 }

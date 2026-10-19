@@ -60,10 +60,12 @@ public static class PlayerJoiner
     /// by PlayerInstantiate). A player moving seats joins by itself, without this
     /// </summary>
     /// <param name="allowSpawn">PlayerInstantiate's allowPlayerSpawn: players may join (offline)</param>
-    public static bool Welcomes(bool online, bool allowSpawn, int playerCount, int localCount, bool inPlayerSelect)
+    /// <param name="onePerMachine">OnlineRules.OnePlayerPerMachine: online, this machine's first player is its only one</param>
+    public static bool Welcomes(bool online, bool allowSpawn, int playerCount, int localCount, bool inPlayerSelect,
+        bool onePerMachine)
     {
         if (online)
-            return localCount == 0 || inPlayerSelect;
+            return (localCount == 0 || inPlayerSelect) && (!onePerMachine || localCount == 0);
 
         return (allowSpawn || playerCount == 0) && playerCount < Constants.MAX_PLAYERS;
     }

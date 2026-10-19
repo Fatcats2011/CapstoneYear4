@@ -17,6 +17,7 @@ namespace DoA.Tests
     {
         const string THIS_COMPUTER = "127.0.0.1";
         const ushort PORT = 7792;
+        const ushort PORT_NAME = 7818;
         const float WAIT = 10f;
 
         /// <summary>
@@ -247,6 +248,41 @@ namespace DoA.Tests
             while (host.PlayersIn > 2 && Time.realtimeSinceStartup < deadline)
                 yield return null;
             second.Leave();
+            deadline = Time.realtimeSinceStartup + WAIT;
+            while (host.PlayersIn > 1 && Time.realtimeSinceStartup < deadline)
+                yield return null;
+            host.Leave();
+            yield return null;
+            log.Dispose();
+            Assert.IsEmpty(log.Problems, "Errors while machines left:\n\n" + string.Join("\n\n", log.Problems));
+        }
+
+        [UnityTest]
+        public IEnumerator ClientName_ReachesTheHost()
+        {
+            EditorSceneManager.playModeStartScene = null;
+            EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
+            yield return new EnterPlayMode();
+
+            OnlineSession host = OnlineSession.Create("1.0.0");
+            host.HostDirect(THIS_COMPUTER, PORT_NAME);
+            OnlineSession client = OnlineSession.Create("1.0.0");
+            client.JoinDirect(THIS_COMPUTER, PORT_NAME);
+            float deadline = Time.realtimeSinceStartup + WAIT;
+            while (!(Sees(client, 2) && Sees(host, 2)) && Time.realtimeSinceStartup < deadline)
+                yield return null;
+
+            PlayerInSeat(client, 1).ShareName("Sam");
+            OnlinePlayer onHost = PlayerInSeat(host, 1);
+            deadline = Time.realtimeSinceStartup + WAIT;
+            while (onHost.Name != "Sam" && Time.realtimeSinceStartup < deadline)
+                yield return null;
+
+            Assert.AreEqual("Sam", onHost.Name, "the client's name on the host");
+
+            LogCollector log = new LogCollector();
+            log.MachinesLeave(); // Windows may report a leaving machine's closed port: see LogCollector.CLOSED_PORT
+            client.Leave();
             deadline = Time.realtimeSinceStartup + WAIT;
             while (host.PlayersIn > 1 && Time.realtimeSinceStartup < deadline)
                 yield return null;

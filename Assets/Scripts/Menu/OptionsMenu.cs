@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
+using TMPro;
 using UnityEngine;
 
 public class OptionsMenu : SingletonMonobehaviour<OptionsMenu>
@@ -41,9 +42,17 @@ public class OptionsMenu : SingletonMonobehaviour<OptionsMenu>
         BGM = 0,
         SFX = 1,
         FULLSCREEN = 2,
-        QUALITY = 3
+        QUALITY = 3,
+        RESOLUTION = 4
     }
     public OptionSelected optionSelected;
+
+    // What each selector spot is: the scene's rows in OptionSelected's order, then the Resolution row code adds (RowsFor)
+    List<OptionSelected> rows;
+    ResolutionRow resolutionRow;
+
+    /// <summary>The Resolution row code added (null until Start)</summary>
+    internal ResolutionRow ResolutionRow => resolutionRow;
 
     [Header("Selector Objects")]
     [SerializeField] GameObject selector;
@@ -58,6 +67,57 @@ public class OptionsMenu : SingletonMonobehaviour<OptionsMenu>
     {
         soundManager = SoundManager.Instance;
         LoadOptions();
+        AddResolutionRow();
+    }
+
+    /// <summary>
+    /// What each selector spot is: the scene's rows (in OptionSelected's order: Music, SFX, Fullscreen, then Quality once
+    /// the screen has one), then Resolution
+    /// </summary>
+    public static List<OptionSelected> RowsFor(int sceneRows)
+    {
+        List<OptionSelected> list = new List<OptionSelected>();
+        for (int i = 0; i < sceneRows && i <= (int)OptionSelected.QUALITY; i++)
+            list.Add((OptionSelected)i);
+        list.Add(OptionSelected.RESOLUTION);
+        return list;
+    }
+
+    // The Resolution row, built under the screen's last row and joined to the up/down selector
+    void AddResolutionRow()
+    {
+        if (selectorObjects == null || selectorObjects.Length == 0 || !(selectorObjects[selectorObjects.Length - 1].transform is RectTransform rowAbove))
+            return;
+
+        List<ScreenSize> listed = new List<ScreenSize>();
+        foreach (Resolution resolution in Screen.resolutions)
+            listed.Add(new ScreenSize(resolution.width, resolution.height));
+
+        // The screen's own text (Fullscreen's Off and On) gives the row its font and colour
+        TMP_Text style = rowAbove.parent != null ? rowAbove.parent.GetComponentInChildren<TMP_Text>(true) : null;
+        resolutionRow = ResolutionRow.Create(rowAbove, style, listed, new ScreenSize(current.width, current.height),
+            new ScreenSize(Screen.width, Screen.height));
+
+        rows = RowsFor(selectorObjects.Length);
+        GameObject[] spots = new GameObject[selectorObjects.Length + 1];
+        selectorObjects.CopyTo(spots, 0);
+        spots[spots.Length - 1] = resolutionRow.gameObject;
+        selectorObjects = spots;
+    }
+
+    ///<summary>
+    /// A in Options: on the Resolution row, applies the size it shows and saves it
+    ///</summary>
+    public void Confirm()
+    {
+        if (optionSelected != OptionSelected.RESOLUTION || resolutionRow == null)
+            return;
+
+        ScreenSize size = resolutionRow.Apply();
+        current.width = size.Width;
+        current.height = size.Height;
+        DisplaySettings.Apply(current);
+        SaveOptions();
     }
 
     string SettingsFilePath => Path.Combine(Application.persistentDataPath, SETTINGS_FILE_NAME);
@@ -164,7 +224,7 @@ public class OptionsMenu : SingletonMonobehaviour<OptionsMenu>
             }
         }
 
-        optionSelected = (OptionSelected)selectorPos;
+        optionSelected = rows != null ? rows[selectorPos] : (OptionSelected)selectorPos;
 
         // Updates selector for current slider selected
         selector.transform.position = new Vector3(selector.transform.position.x, selectorObjects[selectorPos].transform.position.y, selector.transform.position.z);
@@ -269,6 +329,10 @@ public class OptionsMenu : SingletonMonobehaviour<OptionsMenu>
 
             UpdateFullscreen(fullscreenPosition);
         }
+        else if (optionSelected == OptionSelected.RESOLUTION && resolutionRow != null)
+        {
+            resolutionRow.Step(direction);
+        }
         else if (optionSelected == OptionSelected.QUALITY && QualityRowExists)
         {
             // Positive Scroll
@@ -296,6 +360,9 @@ public class OptionsMenu : SingletonMonobehaviour<OptionsMenu>
     ///</summary>
     public void ExitMenu()
     {
+        // A size picked without A isn't kept
+        if (resolutionRow != null)
+            resolutionRow.Revert();
         SaveOptions();
 
         menu.SwapToMainMenu();

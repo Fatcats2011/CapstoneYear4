@@ -22,6 +22,7 @@ namespace DoA.Tests
         const string MENU_SCENE = "Assets/Scenes/Alex Player Testing.unity";
         const string THIS_COMPUTER = "127.0.0.1";
         const ushort PORT = 7797;
+        const ushort PORT_ONE_PLAYER = 7817;
         const float WAIT = 15f;
 
         // Why the other machine's session ended
@@ -41,6 +42,7 @@ namespace DoA.Tests
             if (Application.isPlaying)
                 yield return new ExitPlayMode();
 
+            OnlineRules.OnePlayerPerMachine = true;
             EditorSceneManager.playModeStartScene = null;
             TestPlayers.RemoveAll();
             GameAuthority.Role = NetworkRole.Offline;
@@ -94,10 +96,11 @@ namespace DoA.Tests
         }
 
         [UnityTest]
-        public IEnumerator Hosting_YHostsALobby_FriendsJoin_AndBEndsIt()
+        public IEnumerator Hosting_OnlinePlayHostsALobby_FriendsJoin_AndBEndsIt()
         {
             EditorSceneManager.playModeStartScene = AssetDatabase.LoadAssetAtPath<SceneAsset>(MENU_SCENE);
             yield return new EnterPlayMode();
+            OnlineRules.OnePlayerPerMachine = false; // two players here host together (Phase 3J)
             LogAssert.ignoreFailingMessages = true;
             LogCollector log = new LogCollector();
             yield return WaitForOnlinePlay();
@@ -120,14 +123,13 @@ namespace DoA.Tests
             FakeLobbyService lobbies = new FakeLobbyService { AutoAnswer = true };
             OnlinePlay.Instance.UseDirect(lobbies, THIS_COMPUTER, PORT);
 
-            // The menus ignore buttons for a moment after they open. Y hosts a lobby, both players here playing (Phase 3J)
-            yield return WaitSeconds(0.5f);
-            Press(TestPlayers.Pads[0], GamepadButton.North);
+            // Online Play (the title screen's entry) hosts a lobby, both players here playing (Phase 3J)
+            MainMenu.Instance.Choose(TitleEntry.Online);
             deadline = Time.realtimeSinceStartup + WAIT;
             while (GameAuthority.Role != NetworkRole.Host && Time.realtimeSinceStartup < deadline)
                 yield return null;
 
-            Assert.AreEqual(NetworkRole.Host, GameAuthority.Role, "Y hosts, with two players here");
+            Assert.AreEqual(NetworkRole.Host, GameAuthority.Role, "Online Play hosts, with two players here");
             Assert.AreEqual(1, lobbies.Creates.Count, "one lobby");
             OnlineSession hosting = OnlinePlay.Instance.Session;
             deadline = Time.realtimeSinceStartup + 5;
@@ -171,6 +173,58 @@ namespace DoA.Tests
                 yield return null;
             CollectionAssert.AreEqual(new[] { OnlineSession.HOST_LEFT }, ends.Reasons, "the friend hears why");
 
+            yield return null;
+            log.Dispose();
+            Assert.IsEmpty(log.Problems, "Errors:\n\n" + string.Join("\n\n", log.Problems));
+        }
+
+        [UnityTest]
+        public IEnumerator GoingOnline_WithTwoLocalPlayers_KeepsOnlyTheMenuPlayer()
+        {
+            EditorSceneManager.playModeStartScene = AssetDatabase.LoadAssetAtPath<SceneAsset>(MENU_SCENE);
+            yield return new EnterPlayMode();
+            LogAssert.ignoreFailingMessages = true;
+            LogCollector log = new LogCollector();
+            yield return WaitForOnlinePlay();
+            float deadline = Time.realtimeSinceStartup + 60;
+            while (!AtTitleScreen() && Time.realtimeSinceStartup < deadline)
+                yield return null;
+
+            // Two players here, joined in offline player select
+            TestPlayers.Add();
+            deadline = Time.realtimeSinceStartup + 10;
+            while (LocalCount() < 1 && Time.realtimeSinceStartup < deadline)
+                yield return null;
+            GameManager.Instance.SetGameState(GameState.PlayerSelect);
+            TestPlayers.Add();
+            deadline = Time.realtimeSinceStartup + 10;
+            while (LocalCount() < 2 && Time.realtimeSinceStartup < deadline)
+                yield return null;
+            Assert.AreEqual(2, LocalCount());
+            PlayerInput menuPlayer = Slot(0).Input;
+            PlayerInput other = Slot(1).Input;
+            Assert.IsTrue(menuPlayer.GetComponent<PlayerUIHandler>().menuInteractions.hostPlayer, "the first player is the menu player");
+
+            FakeLobbyService lobbies = new FakeLobbyService { AutoAnswer = true };
+            OnlinePlay.Instance.UseDirect(lobbies, THIS_COMPUTER, PORT_ONE_PLAYER);
+            MainMenu.Instance.Choose(TitleEntry.Online);
+            deadline = Time.realtimeSinceStartup + WAIT;
+            while (GameAuthority.Role != NetworkRole.Host && Time.realtimeSinceStartup < deadline)
+                yield return null;
+            Assert.AreEqual(NetworkRole.Host, GameAuthority.Role, "Online Play hosts");
+
+            // Long enough for a second seat to be asked, and answered
+            yield return WaitSeconds(3f);
+            OnlineSession hosting = OnlinePlay.Instance.Session;
+            Assert.AreEqual(1, LocalCount(), "one player per machine online");
+            Assert.AreEqual(1, hosting.Players.Count, "no seat asked of the host for the other");
+            Assert.IsTrue(other == null, "the other player is gone");
+            Assert.IsTrue(menuPlayer != null, "the menu player stays");
+            Assert.IsTrue(menuPlayer.GetComponent<PlayerUIHandler>().menuInteractions.hostPlayer, "and is still the menu player");
+            Assert.AreEqual(0, PlayerInstantiate.Instance.UnseatedLocalCount, "and sits in its seat");
+
+            log.MachinesLeave(); // Windows may report a leaving machine's closed port: see LogCollector.CLOSED_PORT
+            hosting.Leave();
             yield return null;
             log.Dispose();
             Assert.IsEmpty(log.Problems, "Errors:\n\n" + string.Join("\n\n", log.Problems));

@@ -10,6 +10,10 @@ public class PlayerUIHandler : MonoBehaviour
     /// <summary>The UI map's Y (triangle) action, which reaches the menus through NorthFaceTrigger</summary>
     public const string NORTH_ACTION = "UI/North Face";
 
+    /// <summary>The UI map's X (square) action, which reaches the menus through WestFaceTrigger. Online player select
+    /// uses it to open the customization sliders. Until the action exists in the input asset, X does nothing there</summary>
+    public const string WEST_ACTION = "UI/West Face";
+
     public GameObject MenuCanvas;
     public MenuInteractions menuInteractions;
     public CustomizationSelector customizationSelector;
@@ -59,6 +63,7 @@ public class PlayerUIHandler : MonoBehaviour
 
     Coroutine disableInteraction;
     InputAction northFace; // wired here: the player prefab's event list has no Y
+    InputAction westFace; // wired here: the player prefab's event list has no UI X
 
     private void OnEnable()
     {
@@ -82,12 +87,20 @@ public class PlayerUIHandler : MonoBehaviour
             northFace = null;
         if (northFace != null)
             northFace.performed += NorthFaceTrigger;
+
+        westFace = input.actions.FindAction(WEST_ACTION);
+        if (westFace != null && WiredByPlayerInput(input, westFace))
+            westFace = null;
+        if (westFace != null)
+            westFace.performed += WestFaceTrigger;
     }
 
     private void OnDestroy()
     {
         if (northFace != null)
             northFace.performed -= NorthFaceTrigger;
+        if (westFace != null)
+            westFace.performed -= WestFaceTrigger;
     }
 
     /// <summary>

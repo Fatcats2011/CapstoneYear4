@@ -226,9 +226,13 @@ public class OnlinePlay : MonoBehaviour, ISessionControl
     /// <param name="inLobby">Whether it's in a lobby (the editor's Online menu plays without one)</param>
     /// <param name="steam">Whether lobbies work here (Steam is running)</param>
     /// <param name="hasOnlineEntry">Whether the title screen has Online Play: then Local Play's player select offers nothing</param>
-    public static string HintFor(GameState state, bool online, bool inLobby, bool steam, bool hasOnlineEntry)
+    /// <param name="dispatch">Whether the Dispatch board is up (online player select): its tickets carry the prompts</param>
+    public static string HintFor(GameState state, bool online, bool inLobby, bool steam, bool hasOnlineEntry, bool dispatch)
     {
         if (state != GameState.PlayerSelect)
+            return "";
+
+        if (online && dispatch)
             return "";
 
         if (online)
@@ -255,7 +259,7 @@ public class OnlinePlay : MonoBehaviour, ISessionControl
         }
 
         bool hasOnlineEntry = MainMenu.Instance != null && MainMenu.Instance.HasOnlineEntry;
-        string hint = HintFor(game.MainState, GameAuthority.IsOnline, Lobby.Current != 0, lobbies.Available, hasOnlineEntry);
+        string hint = HintFor(game.MainState, GameAuthority.IsOnline, Lobby.Current != 0, lobbies.Available, hasOnlineEntry, DispatchBoard.Showing);
         if (hint != shownHint)
         {
             shownHint = hint;

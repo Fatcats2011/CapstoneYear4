@@ -15,6 +15,7 @@ Up to 4 players, one controller each (Xbox, PlayStation and Switch Pro controlle
 | Pause / resume | Start |
 | Menus: move / pick / back | D-pad or left stick / A / B |
 | Menus: host an online lobby (player select) | Y (triangle) |
+| Menus: open the customization sliders (online player select) | X (square) |
 
 ## Keyboard (one player)
 
@@ -36,6 +37,7 @@ The game joins players itself (`PlayerJoiner`, Phase 5A): the scene's `PlayerInp
 | Menus: pick | Space or Enter |
 | Menus: back | Backspace |
 | Menus: host an online lobby (player select) | Tab |
+| Menus: open the customization sliders (online player select) | Q |
 | Loading screen: ready | Space or Enter |
 
 - **Button prompts still show controller buttons:** read A as Space, B as Backspace and Start as Escape. Keyboard prompt art is still to come.
@@ -49,7 +51,16 @@ The game joins players itself (`PlayerJoiner`, Phase 5A): the scene's `PlayerInp
 
 ## Display settings in settings.cfg
 
-The Options screen has rows for music, sound effects, fullscreen and (once its art exists) quality. The display settings below have no rows yet: their hand-lettered art is still to come. Until then they're set in `settings.cfg`:
+The Options screen has rows for music, sound effects, fullscreen, resolution and (once its art exists) quality.
+
+**The Resolution row** (`ResolutionRow`, `ResolutionRules`) is built by code under the Fullscreen row, in the screen's own font, since its sizes depend on the monitor:
+- Left and right step through the monitor's sizes, smallest to largest, stopping at both ends. It starts on the saved size, or the current one.
+- **A** applies the shown size and saves it (`width`, `height` below). Until then the row says "A: apply".
+- Leaving Options without A keeps the size that was applied.
+- In borderless fullscreen (the default) Unity draws at the chosen size and stretches it to the screen; a window or exclusive fullscreen changes the real size.
+- The editor ignores display sizes (as for every display setting below): the row works there, but the size only changes in a build.
+
+The other display settings have no rows yet: their hand-lettered art is still to come. They're set in `settings.cfg`:
 
 - **Where:** `%USERPROFILE%\AppData\LocalLow\The Boo Crew\Dead on Arrival\settings.cfg`.
 - **When:** the game reads it at launch.
@@ -59,7 +70,7 @@ The Options screen has rows for music, sound effects, fullscreen and (once its a
 |---|---|---|---|
 | `fullscreen` | 0, 1 | 1 | 0 windowed, 1 fullscreen (the Options row) |
 | `exclusive` | 0, 1 | 0 | Fullscreen only: 0 borderless, 1 exclusive |
-| `width`, `height` | 0, or a size | 0 | 0 means the desktop's size |
+| `width`, `height` | 0, or a size | 0 | 0 means the desktop's size (the Resolution row) |
 | `vsync` | 0, 1 | 1 | VSync off or on |
 | `framecap` | 0, or 30–500 | 0 | The most frames per second; 0 means no cap. It only applies with VSync off. |
 

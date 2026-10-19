@@ -10,10 +10,11 @@ namespace DoA.Tests
     public class TitleEntriesTests
     {
         [Test]
-        public void FiveEntries_LocalOnlineOptionsCreditsQuit()
+        public void FiveEntries_OnlineLocalOptionsCreditsQuit()
         {
+            // The scene's order, top to bottom: Multiplayer, Local, Options, Credits, Quit
             CollectionAssert.AreEqual(
-                new[] { TitleEntry.Local, TitleEntry.Online, TitleEntry.Options, TitleEntry.Credits, TitleEntry.Quit },
+                new[] { TitleEntry.Online, TitleEntry.Local, TitleEntry.Options, TitleEntry.Credits, TitleEntry.Quit },
                 new[] { 0, 1, 2, 3, 4 }.Select(i => TitleEntries.At(i, 5)));
             Assert.IsTrue(TitleEntries.HasOnline(5));
         }

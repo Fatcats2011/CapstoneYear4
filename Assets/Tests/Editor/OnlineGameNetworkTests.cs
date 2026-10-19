@@ -134,6 +134,9 @@ namespace DoA.Tests
 
             // This machine's controller still drives player select with them here (menus ignore buttons for a moment
             // after they open, so keep pressing)
+            // Online, the d-pad scrolls the sliders only after X opens them (menus ignore buttons for a moment first)
+            yield return WaitSeconds(0.5f);
+            PlayerInstantiate.Instance.Roster[0].Input.GetComponent<PlayerUIHandler>().WestFaceEvent.Invoke(true);
             int colour = Colour(0);
             deadline = Time.realtimeSinceStartup + WAIT;
             float nextPress = 0;
@@ -317,6 +320,9 @@ namespace DoA.Tests
             Assert.AreEqual(GameState.PlayerSelect, GameManager.Instance.MainState, "straight into player select");
 
             // Their controller changes their colour, then readies them up (keep pressing: see above)
+            // Online, the d-pad scrolls the sliders only after X opens them (menus ignore buttons for a moment first)
+            yield return WaitSeconds(0.5f);
+            PlayerInstantiate.Instance.Roster[1].Input.GetComponent<PlayerUIHandler>().WestFaceEvent.Invoke(true);
             int colour = Colour(1);
             deadline = Time.realtimeSinceStartup + WAIT;
             float nextPress = 0;

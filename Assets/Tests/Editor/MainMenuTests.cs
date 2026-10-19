@@ -127,7 +127,7 @@ namespace DoA.Tests
         }
 
         [Test]
-        public void ConfirmMenu_TheSecondOfFiveEntries_IsOnlinePlay()
+        public void ConfirmMenu_TheFirstOfFiveEntries_IsOnlinePlay()
         {
             TitleEntriesOf(5, 5);
             OnlinePlay play = objects.Add<OnlinePlay>();
@@ -136,7 +136,6 @@ namespace DoA.Tests
             List<string> notices = new List<string>();
             play.Lobby.Notice += notices.Add;
 
-            menu.ScrollMenu(true);
             menu.ConfirmMenu();
 
             CollectionAssert.AreEqual(new[] { OnlineLobby.NO_STEAM }, notices);

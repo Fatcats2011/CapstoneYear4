@@ -27,6 +27,15 @@ public class OnlineGame : MonoBehaviour
 
     static OnlineGame playing; // the game whose session this machine plays online (none offline)
 
+    /// <summary>The game this machine plays online: none offline (Dispatch's board reads its players)</summary>
+    public static OnlineGame Playing { get { return playing; } }
+
+    /// <summary>Everyone in the session, whichever machine they are on</summary>
+    public IReadOnlyList<OnlinePlayer> Players { get { return session.Players; } }
+
+    /// <summary>Player select's colours and hats</summary>
+    public CustomizationSelector Choices { get { return choices; } }
+
     // What this machine shows of another machine's player
     class RemotePlayer
     {
@@ -41,6 +50,7 @@ public class OnlineGame : MonoBehaviour
     OnlinePrefabs prefabs;
     OnlineSceneFlow sceneFlow;
     CustomizationSelector choices; // player select's colours and hats, from the local player's prefab
+    string myName; // this machine's Steam name, cleaned (null until first shared, and again after the session ends)
     readonly List<OnlinePlayer> localPlayers = new List<OnlinePlayer>(); // this machine's players (several can share its screen)
     readonly SeatAsker asker = new SeatAsker(); // the seats asked of the host for this machine's players without one
     PlayerInstantiate hooked;     // the player manager whose seats given back this hears
@@ -235,6 +245,7 @@ public class OnlineGame : MonoBehaviour
         RecheckTutorial();
         waiting.Clear();
         localPlayers.Clear();
+        myName = null;
         asker.Reset();
         if (players != null)
             players.GoOffline();
@@ -265,6 +276,10 @@ public class OnlineGame : MonoBehaviour
             // nobody here will sit in any more goes back
             localPlayers.Add(player);
             asker.Answered();
+
+            // One player per machine: the others here leave before the menu player is seated
+            if (OnlineRules.OnePlayerPerMachine && PlayerInstantiate.Instance != null)
+                PlayerInstantiate.Instance.DropExtraLocalPlayers();
             if (PlayerInstantiate.Instance != null && !PlayerInstantiate.Instance.GiveSeat(player.Seat))
                 session.FreeSeat(player.Seat);
         }
@@ -332,8 +347,12 @@ public class OnlineGame : MonoBehaviour
         if (session.Match == null || !players.IsOnline || !session.IsRunning)
             return;
 
-        for (int ask = asker.ToAsk(players.UnseatedLocalCount, Time.realtimeSinceStartup); ask > 0; ask--)
-            session.AskSeat();
+        // One player per machine: the seat the session gave this machine is its only one
+        if (!OnlineRules.OnePlayerPerMachine)
+        {
+            for (int ask = asker.ToAsk(players.UnseatedLocalCount, Time.realtimeSinceStartup); ask > 0; ask--)
+                session.AskSeat();
+        }
 
         // Every couple of seconds, a seat given back that the host still holds goes back again
         if (Time.realtimeSinceStartup < nextGiveBackCheck)
@@ -515,9 +534,13 @@ public class OnlineGame : MonoBehaviour
         }
     }
 
-    // This machine's players' colour, hat and readiness go to every machine
+    // This machine's players' colour, hat, readiness and name go to every machine
     void ShareLocalChoices(PlayerInstantiate players)
     {
+        // Asked of Steam once per session, not every frame
+        if (myName == null)
+            myName = PlayerNames.Clean(SteamNames.Mine());
+
         foreach (OnlinePlayer localPlayer in localPlayers)
         {
             if (localPlayer == null || localPlayer.Seat < 0 || localPlayer.Seat >= Constants.MAX_PLAYERS)
@@ -529,6 +552,7 @@ public class OnlineGame : MonoBehaviour
 
             CustomizationSelector picked = slot.Input.GetComponent<PlayerUIHandler>().customizationSelector;
             localPlayer.Share(picked.ColourIndex, picked.HatIndex, players.IsReady(slot.Index));
+            localPlayer.ShareName(myName);
         }
     }
 

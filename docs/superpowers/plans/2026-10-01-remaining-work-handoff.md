@@ -8,7 +8,7 @@
 
 ## Where things stand (2026-10-08)
 
-- **Branch `steam-phase1a`** is at `a1c8c76d` "Local Play and Online Play on the title screen" (Phases 3J and 5A, and the title screen), with **Phase 5B (the last deferred minors) done on top, uncommitted** (`docs/superpowers/plans/2026-10-08-phase5b-deferred-minors.md`, `docs/online.md` Phase 5B). Another session's achievements work (Steam feats files, `OrderHandler`, `BallDriving`, `Respawn`, `TutorialManager`) is uncommitted beside it. The biggest remaining frame-rate gains are editor changes, listed in order in `docs/performance.md` (`EDITOR-TODO.md` section 4). All 760 tests pass (with the achievements work in the tree).
+- **Branch `steam-phase1a`** is at `a1c8c76d` "Local Play and Online Play on the title screen" (Phases 3J and 5A, and the title screen), with **Phase 5B (the last deferred minors) done on top, uncommitted** (`docs/superpowers/plans/2026-10-08-phase5b-deferred-minors.md`, `docs/online.md` Phase 5B). Another session's achievements work (Steam feats files, `OrderHandler`, `BallDriving`, `Respawn`, `TutorialManager`) is uncommitted beside it. The biggest remaining frame-rate gains are editor changes, listed in order in `docs/performance.md` (`EDITOR-TODO.md` section 4). Since then (uncommitted): the Options Resolution row, the title order matching the scene (Multiplayer first), and the `HitchProbe` diagnostic. 771 tests pass; 1 skipped (`HitchProbe`, run only by name).
 - The user allows Sonnet agents "as you see fit" for these phases (memory: `code-review-agents`); still one test run at a time.
 - **`main` holds the Steam API only** (the branch policy, below).
 - **Done:**
@@ -44,7 +44,7 @@
   - No lambda captures a test's local: after `EnterPlayMode`, even assigning one throws. Use recorder classes subscribed as method groups.
   - Wait by real time. Only `yield return null`.
   - Call `log.MachinesLeave()` before a machine leaves.
-  - Network test ports in use: 7791–7812. The next free port is 7813.
+  - Network test ports in use: 7791–7818. The next free port is 7819.
   - A test that loads the golden round: `OnlineOrdersNetworkTests.Hosting_AMachineLeavesHoldingTheGoldenOrder_…` (a `LoadAnswerer` on the other machine's match, then time up).
   - Fake "mid-match" in the menu scene with `GameState.MainLoop`: `StartingCutscene`'s listeners need the match scene.
 - **The game's own global `SceneManager` class** shadows Unity's: write `UnityEngine.SceneManagement.SceneManager` for Unity's.
@@ -56,7 +56,7 @@
 
 - Phase 4A (`03818e1c`) and Phase 1C (`8ce31e85`) are committed. Phase 4A's dashboard half is in Phase 4B below.
 - Still waiting on art:
-  - Options rows for the display settings and Quality. The code reads and saves them already: each row's selector is wired like the existing rows (`OptionsMenu`).
+  - Options rows for the other display settings and Quality. The code reads and saves them already: each row's selector is wired like the existing rows (`OptionsMenu`). The Resolution row exists (code-built text, `ResolutionRow`); a drawn "RESOLUTION" label can replace its text label later.
   - Keyboard button prompts.
   - PlayStation and Nintendo button prompts (roadmap Task 1.3). They need those button sprites drawn first, then a small code task to pick the sprites by device.
 

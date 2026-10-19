@@ -56,7 +56,8 @@ namespace DoA.Tests
             }
             Gamepad host = TestPlayers.Pads[0];
 
-            // Player 1 picks Play (menus ignore buttons for a moment after they open, so keep pressing)
+            // Player 1 moves down to Local (the top entry is Multiplayer, on the title screen with five) and picks it (menus
+            // ignore buttons for a moment after they open, so keep pressing)
             deadline = Deadline(15);
             nextPress = 0;
             while (State() != GameState.PlayerSelect)
@@ -64,7 +65,7 @@ namespace DoA.Tests
                 FailIfLate(log, deadline, "player select");
                 if (Time.realtimeSinceStartup >= nextPress)
                 {
-                    Press(host, GamepadButton.South);
+                    Press(host, MainMenu.Instance.Selected == TitleEntry.Local ? GamepadButton.South : GamepadButton.DpadDown);
                     nextPress = Time.realtimeSinceStartup + PRESS_EVERY;
                 }
                 yield return null;

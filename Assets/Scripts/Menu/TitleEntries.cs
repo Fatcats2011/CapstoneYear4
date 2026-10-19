@@ -5,13 +5,14 @@ public enum TitleEntry { None, Local, Online, Options, Credits, Quit }
 
 /// <summary>
 /// What each place on the title screen does. The entries are images in the scene (MainMenu's selector objects), so how
-/// many there are decides it: with 5, Local Play, Online Play, Options, Credits, Quit; with 4 (before the Online Play
-/// art was added), the old title screen, where Y in player select goes online instead (OnlinePlay.YAction)
+/// many there are decides it: with 5, top to bottom as the scene has them, Multiplayer (Online Play), Local, Options,
+/// Credits, Quit; with 4 (before the Online Play art was added), the old title screen, where Y in player select goes
+/// online instead (OnlinePlay.YAction)
 /// </summary>
 public static class TitleEntries
 {
     static readonly TitleEntry[] withOnline =
-        { TitleEntry.Local, TitleEntry.Online, TitleEntry.Options, TitleEntry.Credits, TitleEntry.Quit };
+        { TitleEntry.Online, TitleEntry.Local, TitleEntry.Options, TitleEntry.Credits, TitleEntry.Quit };
     static readonly TitleEntry[] withoutOnline =
         { TitleEntry.Local, TitleEntry.Options, TitleEntry.Credits, TitleEntry.Quit };
 

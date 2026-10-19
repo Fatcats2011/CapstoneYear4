@@ -1,3 +1,4 @@
+using Unity.Collections;
 using Unity.Netcode;
 using UnityEngine;
 
@@ -14,6 +15,7 @@ public class OnlinePlayer : NetworkBehaviour
     readonly NetworkVariable<int> colour = new NetworkVariable<int>(0, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Owner);
     readonly NetworkVariable<int> hat = new NetworkVariable<int>(0, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Owner);
     readonly NetworkVariable<bool> ready = new NetworkVariable<bool>(false, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Owner);
+    readonly NetworkVariable<FixedString32Bytes> displayName = new NetworkVariable<FixedString32Bytes>(default, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Owner);
     readonly NetworkVariable<int> score = new NetworkVariable<int>(0);
 
     OnlineSession session;
@@ -29,6 +31,9 @@ public class OnlinePlayer : NetworkBehaviour
 
     /// <summary>Whether they're ready in player select</summary>
     public bool Ready { get { return ready.Value; } }
+
+    /// <summary>Their name (their Steam name, cleaned): "" until they share one. Show it with PlayerNames.Shown</summary>
+    public string Name { get { return displayName.Value.ToString(); } }
 
     /// <summary>Their score in the match, which only the host writes</summary>
     public int Score { get { return score.Value; } }
@@ -67,6 +72,20 @@ public class OnlinePlayer : NetworkBehaviour
             hat.Value = chosenHat;
         if (ready.Value != isReady)
             ready.Value = isReady;
+    }
+
+    /// <summary>
+    /// This machine's player: shares their name (already cleaned: PlayerNames.Clean) with every machine, when it
+    /// changes. Does nothing for another machine's player
+    /// </summary>
+    public void ShareName(string cleaned)
+    {
+        if (!IsOwner)
+            return;
+
+        FixedString32Bytes value = cleaned;
+        if (!displayName.Value.Equals(value))
+            displayName.Value = value;
     }
 
     /// <summary>

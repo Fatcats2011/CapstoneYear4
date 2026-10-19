@@ -106,6 +106,9 @@ public class MainMenu : SingletonMonobehaviour<MainMenu>
     /// </summary>
     public bool HasOnlineEntry => selectorObjects != null && TitleEntries.HasOnline(selectorObjects.Length);
 
+    /// <summary>The entry the selector is on</summary>
+    internal TitleEntry Selected => TitleEntries.At(selectorPos, selectorObjects.Length);
+
     public void ConfirmMenu()
     {
         Choose(TitleEntries.At(selectorPos, selectorObjects.Length));

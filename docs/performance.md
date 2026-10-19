@@ -18,6 +18,8 @@ The goal is 120 FPS, or as high as the game can go, with 1 to 4 split-screen pla
 - **VSync:** VSync is on by default, so the frame rate stops at the monitor's refresh rate. 120 FPS needs a 120 Hz or faster monitor, or `vsync=0` in `settings.cfg` (`docs/controls.md`). The `Perf:` line shows the real frame rate either way.
 - **Editor vs build:** the editor itself costs frames, so measure a build for the real number.
 
+**Hitches (long single frames):** `bash tools/run-tests.sh HitchProbe` plays one player through a match (load, cutscene, tutorial, open map, first boost, the golden round) and writes the biggest timing markers of every frame over 100 ms to `Logs/hitches.txt`. It measures the editor: on 2026-10-08 it found the first boost's freeze was the editor compiling shader variants (gone once its shader cache was warm), and the long loading-screen freezes were a script or animator touching an asset while the next scene loaded in the background. Check a Development Build (F6, the Profiler) before fixing editor-only costs.
+
 ## What the code does now
 
 - **Cameras:**

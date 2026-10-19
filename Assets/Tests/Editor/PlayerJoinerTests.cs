@@ -28,17 +28,25 @@ namespace DoA.Tests
             InputSystem.RemoveDevice(keyboard);
         }
 
-        // online, allowSpawn (player select or the title screen offline), players, this machine's players, in player select
-        [TestCase(false, false, 0, 0, false, true, TestName = "Welcomes_Offline_TheFirstPlayerAtTheTitleScreen")]
-        [TestCase(false, false, 2, 2, false, false, TestName = "Welcomes_Offline_NobodyMidMatch")]
-        [TestCase(false, true, 4, 4, true, false, TestName = "Welcomes_Offline_NobodyInAFullPlayerSelect")]
-        [TestCase(false, true, 2, 2, true, true, TestName = "Welcomes_Offline_MoreInPlayerSelect")]
-        [TestCase(true, false, 1, 0, false, true, TestName = "Welcomes_Online_ThisMachinesFirstPlayerAnytime")]
-        [TestCase(true, false, 3, 1, false, false, TestName = "Welcomes_Online_NobodyMoreMidMatch")]
-        [TestCase(true, true, 2, 1, true, true, TestName = "Welcomes_Online_MoreInPlayerSelect")]
-        public void Welcomes(bool online, bool allowSpawn, int players, int localPlayers, bool inPlayerSelect, bool expected)
+        // online, allowSpawn (player select or the title screen offline), players, this machine's players, in player select,
+        // one player per machine
+        [TestCase(false, false, 0, 0, false, false, true, TestName = "Welcomes_Offline_TheFirstPlayerAtTheTitleScreen")]
+        [TestCase(false, false, 2, 2, false, false, false, TestName = "Welcomes_Offline_NobodyMidMatch")]
+        [TestCase(false, true, 4, 4, true, false, false, TestName = "Welcomes_Offline_NobodyInAFullPlayerSelect")]
+        [TestCase(false, true, 2, 2, true, false, true, TestName = "Welcomes_Offline_MoreInPlayerSelect")]
+        [TestCase(true, false, 1, 0, false, false, true, TestName = "Welcomes_Online_ThisMachinesFirstPlayerAnytime")]
+        [TestCase(true, false, 3, 1, false, false, false, TestName = "Welcomes_Online_NobodyMoreMidMatch")]
+        [TestCase(true, true, 2, 1, true, false, true, TestName = "Welcomes_Online_MoreInPlayerSelect")]
+        [TestCase(false, false, 0, 0, false, true, true, TestName = "Welcomes_OnePerMachine_OfflineTheFirstPlayerAtTheTitleScreen")]
+        [TestCase(false, true, 2, 2, true, true, true, TestName = "Welcomes_OnePerMachine_OfflineMoreInPlayerSelect")]
+        [TestCase(false, false, 2, 2, false, true, false, TestName = "Welcomes_OnePerMachine_OfflineNobodyMidMatch")]
+        [TestCase(true, false, 1, 0, false, true, true, TestName = "Welcomes_OnePerMachine_OnlineThisMachinesFirstPlayerAnytime")]
+        [TestCase(true, true, 1, 0, true, true, true, TestName = "Welcomes_OnePerMachine_OnlineThisMachinesFirstPlayerInPlayerSelect")]
+        [TestCase(true, true, 2, 1, true, true, false, TestName = "Welcomes_OnePerMachine_OnlineNoSecondPlayerInPlayerSelect")]
+        [TestCase(true, false, 3, 1, false, true, false, TestName = "Welcomes_OnePerMachine_OnlineNoSecondPlayerMidMatch")]
+        public void Welcomes(bool online, bool allowSpawn, int players, int localPlayers, bool inPlayerSelect, bool onePerMachine, bool expected)
         {
-            Assert.AreEqual(expected, PlayerJoiner.Welcomes(online, allowSpawn, players, localPlayers, inPlayerSelect));
+            Assert.AreEqual(expected, PlayerJoiner.Welcomes(online, allowSpawn, players, localPlayers, inPlayerSelect, onePerMachine));
         }
 
         // The scheme a press of one control would join with

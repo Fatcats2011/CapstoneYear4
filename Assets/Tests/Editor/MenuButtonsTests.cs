@@ -83,6 +83,91 @@ namespace DoA.Tests
             Assert.AreEqual(1, recorder.Presses, "Y reaches player select's menus");
         }
 
+        static void Set(MenuInteractions menu, string field, object value)
+        {
+            typeof(MenuInteractions).GetField(field, System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)
+                .SetValue(menu, value);
+        }
+
+        // Components added in Edit Mode don't get their serialized UnityEvents made
+        static void GiveEvents(PlayerUIHandler ui, InputManager driving)
+        {
+            ui.NorthFaceEvent = new UnityEngine.Events.UnityEvent<bool>();
+            ui.EastFaceEvent = new UnityEngine.Events.UnityEvent<bool>();
+            ui.SouthFaceEvent = new UnityEngine.Events.UnityEvent<bool>();
+            ui.WestFaceEvent = new UnityEngine.Events.UnityEvent<bool>();
+            ui.LeftPadEvent = new UnityEngine.Events.UnityEvent<bool>();
+            ui.RightPadEvent = new UnityEngine.Events.UnityEvent<bool>();
+            ui.UpPadEvent = new UnityEngine.Events.UnityEvent<bool>();
+            ui.DownPadEvent = new UnityEngine.Events.UnityEvent<bool>();
+            ui.StartPadEvent = new UnityEngine.Events.UnityEvent<bool>();
+            driving.StartPadEvent = new UnityEngine.Events.UnityEvent<bool>();
+        }
+
+        [Test]
+        public void Online_PlayerSelect_SlidersHiddenUntilWest()
+        {
+            TestObjects objects = new TestObjects();
+            try
+            {
+                GameAuthority.Role = NetworkRole.Host;
+                MenuInteractions menu = objects.Add<MenuInteractions>();
+                PlayerUIHandler ui = objects.Add<PlayerUIHandler>();
+                InputManager driving = objects.Add<InputManager>();
+                CustomizationSelector sliders = objects.Add<CustomizationSelector>();
+                Set(menu, "uiHandler", ui);
+                Set(menu, "drivingHandler", driving);
+                Set(menu, "customizationSelector", sliders);
+                GiveEvents(ui, driving);
+
+                menu.SwapMenuType(MenuType.PlayerSelect);
+                Assert.IsFalse(sliders.gameObject.activeSelf, "hidden when player select opens");
+
+                ui.WestFaceEvent.Invoke(true);
+                Assert.IsTrue(sliders.gameObject.activeSelf, "X opens them");
+
+                ui.EastFaceEvent.Invoke(true);
+                Assert.IsFalse(sliders.gameObject.activeSelf, "B closes them");
+
+                ui.WestFaceEvent.Invoke(true);
+                Assert.IsTrue(sliders.gameObject.activeSelf);
+                menu.SwapToPlayerSelect();
+                Assert.IsFalse(sliders.gameObject.activeSelf, "back in player select they start closed");
+            }
+            finally
+            {
+                GameAuthority.Role = NetworkRole.Offline;
+                objects.DestroyAll();
+            }
+        }
+
+        [Test]
+        public void Offline_PlayerSelect_SlidersAlwaysShown_AndXDoesNothing()
+        {
+            TestObjects objects = new TestObjects();
+            try
+            {
+                MenuInteractions menu = objects.Add<MenuInteractions>();
+                PlayerUIHandler ui = objects.Add<PlayerUIHandler>();
+                InputManager driving = objects.Add<InputManager>();
+                CustomizationSelector sliders = objects.Add<CustomizationSelector>();
+                Set(menu, "uiHandler", ui);
+                Set(menu, "drivingHandler", driving);
+                Set(menu, "customizationSelector", sliders);
+                GiveEvents(ui, driving);
+
+                menu.SwapMenuType(MenuType.PlayerSelect);
+                Assert.IsTrue(sliders.gameObject.activeSelf);
+
+                ui.WestFaceEvent.Invoke(true);
+                Assert.IsTrue(sliders.gameObject.activeSelf, "X changes nothing offline");
+            }
+            finally
+            {
+                objects.DestroyAll();
+            }
+        }
+
         class NorthRecorder
         {
             public int Presses;

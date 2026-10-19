@@ -41,6 +41,9 @@ public class MenuInteractions : MonoBehaviour
 
     private SoundPool soundPool;
 
+    // Dispatch (online player select): X opens the customization sliders. Offline it does nothing
+    private readonly DispatchMenu dispatchMenu = new DispatchMenu();
+
     public MenuType curentMenuType;
     private MenuType cache;
 
@@ -80,6 +83,7 @@ public class MenuInteractions : MonoBehaviour
 
     public void SwapToPlayerSelect()
     {
+        dispatchMenu.Reset();
         SwapMenuType(MenuType.PlayerSelect);
     }
 
@@ -144,6 +148,7 @@ public class MenuInteractions : MonoBehaviour
         uiHandler.SouthFaceEvent.RemoveAllListeners();
         uiHandler.EastFaceEvent.RemoveAllListeners();
         uiHandler.NorthFaceEvent.RemoveAllListeners();
+        uiHandler.WestFaceEvent.RemoveAllListeners();
 
         uiHandler.DownPadEvent.RemoveAllListeners();
         uiHandler.UpPadEvent.RemoveAllListeners();
@@ -171,6 +176,7 @@ public class MenuInteractions : MonoBehaviour
         optionsMenu = OptionsMenu.Instance;
 
         uiHandler.EastFaceEvent.AddListener(OptionsExit);
+        uiHandler.SouthFaceEvent.AddListener(OptionsConfirm);
 
         uiHandler.DownPadEvent.AddListener(OptionsScrollDown);
         uiHandler.UpPadEvent.AddListener(OptionsScrollUp);
@@ -188,16 +194,138 @@ public class MenuInteractions : MonoBehaviour
     private void CharacterSelectMenuInteractons()
     {
 
-        customizationSelector.gameObject.SetActive(true);
+        RefreshDispatchSliders();
 
-        uiHandler.SouthFaceEvent.AddListener(PlayerReady);
-        uiHandler.EastFaceEvent.AddListener(PlayerUnreadyDespawn);
+        uiHandler.SouthFaceEvent.AddListener(PlayerReadyButton);
+        uiHandler.EastFaceEvent.AddListener(PlayerUnreadyDespawnButton);
         uiHandler.NorthFaceEvent.AddListener(PlayOnline);
+        uiHandler.WestFaceEvent.AddListener(PlayerCustomize);
 
-        uiHandler.DownPadEvent.AddListener(CustomizationScrollDown);
-        uiHandler.UpPadEvent.AddListener(CustomizationScrollUp);
-        uiHandler.RightPadEvent.AddListener(CustomizationScrollRight);
-        uiHandler.LeftPadEvent.AddListener(CustomizationScrollLeft);
+        uiHandler.DownPadEvent.AddListener(CustomizationScrollDownButton);
+        uiHandler.UpPadEvent.AddListener(CustomizationScrollUpButton);
+        uiHandler.RightPadEvent.AddListener(CustomizationScrollRightButton);
+        uiHandler.LeftPadEvent.AddListener(CustomizationScrollLeftButton);
+    }
+
+    ///<summary>
+    /// Shows the customization sliders by Dispatch's rule: online, only while X has them open. Offline they are always
+    /// there. Safe to call any time (no sliders, offline, not in player select)
+    ///</summary>
+    public void RefreshDispatchSliders()
+    {
+        if (customizationSelector == null)
+            return;
+
+        if (curentMenuType != MenuType.PlayerSelect)
+            return;
+
+        customizationSelector.gameObject.SetActive(!GameAuthority.IsOnline || dispatchMenu.Open);
+    }
+
+    ///<summary>
+    /// X in player select: online, opens or closes the sliders
+    ///</summary>
+    private void PlayerCustomize(bool button)
+    {
+        if (!GameAuthority.IsOnline)
+            return;
+
+        DispatchAction action = dispatchMenu.Press(DispatchButton.West, readiedUp);
+        if (action == DispatchAction.None)
+            return;
+
+        RefreshDispatchSliders();
+        PlayDispatchSound(action == DispatchAction.OpenSliders);
+    }
+
+    private void PlayDispatchSound(bool enter)
+    {
+        if (soundPool == null)
+            return;
+
+        if (enter)
+            soundPool.PlayEnterUI();
+        else
+            soundPool.PlayBackUI();
+    }
+
+    ///<summary>
+    /// A in player select. Online, it also closes the sliders it readies from
+    ///</summary>
+    private void PlayerReadyButton(bool button)
+    {
+        if (!GameAuthority.IsOnline)
+        {
+            PlayerReady(button);
+            return;
+        }
+
+        switch (dispatchMenu.Press(DispatchButton.South, readiedUp))
+        {
+            case DispatchAction.CloseAndReady:
+                RefreshDispatchSliders();
+                PlayerReady(button);
+                break;
+            case DispatchAction.Ready:
+                PlayerReady(button);
+                break;
+        }
+    }
+
+    ///<summary>
+    /// B in player select. Online, it closes the sliders first, then unreadies, then leaves
+    ///</summary>
+    private void PlayerUnreadyDespawnButton(bool button)
+    {
+        if (!GameAuthority.IsOnline)
+        {
+            PlayerUnreadyDespawn(button);
+            return;
+        }
+
+        switch (dispatchMenu.Press(DispatchButton.East, readiedUp))
+        {
+            case DispatchAction.CloseSliders:
+                RefreshDispatchSliders();
+                PlayDispatchSound(false);
+                break;
+            case DispatchAction.Unready:
+            case DispatchAction.Leave:
+                PlayerUnreadyDespawn(button);
+                break;
+        }
+    }
+
+    ///<summary>
+    /// A d-pad press in player select. Offline it always scrolls the sliders; online, only while X has them open
+    ///</summary>
+    private bool DispatchScrolls()
+    {
+        return !GameAuthority.IsOnline || dispatchMenu.Press(DispatchButton.Pad, readiedUp) == DispatchAction.Scroll;
+    }
+
+    private void CustomizationScrollDownButton(bool button)
+    {
+        if (DispatchScrolls())
+            CustomizationScrollDown(button);
+    }
+
+    private void CustomizationScrollUpButton(bool button)
+    {
+        if (DispatchScrolls())
+            CustomizationScrollUp(button);
+    }
+
+    private void CustomizationScrollRightButton(bool button)
+    {
+        if (DispatchScrolls())
+            CustomizationScrollRight(button);
+    }
+
+    private void CustomizationScrollLeftButton(bool button)
+    {
+        if (DispatchScrolls())
+            CustomizationScrollLeft(button);
     }
 
     private void LoadingMenuInteractons()
@@ -365,6 +493,22 @@ public class MenuInteractions : MonoBehaviour
 
         // Scrolls selector down
         mainMenu.ConfirmMenu();
+
+        soundPool.PlayScrollUI();
+    }
+
+    ///<summary>
+    /// A on the Options Menu: applies the Resolution row's size (the other rows apply as they change)
+    ///</summary>
+    private void OptionsConfirm(bool button)
+    {
+        if (hostPlayer == false)
+            return;
+
+        if (optionsMenu == null)
+            optionsMenu = OptionsMenu.Instance;
+
+        optionsMenu.Confirm();
 
         soundPool.PlayScrollUI();
     }

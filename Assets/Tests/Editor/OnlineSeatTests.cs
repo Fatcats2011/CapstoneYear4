@@ -27,6 +27,7 @@ namespace DoA.Tests
 
             EditorSceneManager.playModeStartScene = null;
             TestPlayers.RemoveAll();
+            OnlineRules.OnePlayerPerMachine = true;
             if (extraPad != null && extraPad.added)
                 InputSystem.RemoveDevice(extraPad);
             extraPad = null;
@@ -64,6 +65,7 @@ namespace DoA.Tests
         {
             EditorSceneManager.playModeStartScene = AssetDatabase.LoadAssetAtPath<SceneAsset>(MENU_SCENE);
             yield return new EnterPlayMode();
+            OnlineRules.OnePlayerPerMachine = false; // these seat several players on one machine (Phase 3J)
             LogAssert.ignoreFailingMessages = true;
             LogCollector log = new LogCollector();
             float deadline = Time.realtimeSinceStartup + 60;
@@ -124,6 +126,7 @@ namespace DoA.Tests
         {
             EditorSceneManager.playModeStartScene = AssetDatabase.LoadAssetAtPath<SceneAsset>(MENU_SCENE);
             yield return new EnterPlayMode();
+            OnlineRules.OnePlayerPerMachine = false; // these seat several players on one machine (Phase 3J)
             float deadline = Time.realtimeSinceStartup + 60;
             while (!AtTitleScreen() && Time.realtimeSinceStartup < deadline)
                 yield return null;
@@ -146,6 +149,7 @@ namespace DoA.Tests
         {
             EditorSceneManager.playModeStartScene = AssetDatabase.LoadAssetAtPath<SceneAsset>(MENU_SCENE);
             yield return new EnterPlayMode();
+            OnlineRules.OnePlayerPerMachine = false; // these seat several players on one machine (Phase 3J)
             float deadline = Time.realtimeSinceStartup + 60;
             while (!AtTitleScreen() && Time.realtimeSinceStartup < deadline)
                 yield return null;
@@ -220,6 +224,7 @@ namespace DoA.Tests
         {
             EditorSceneManager.playModeStartScene = AssetDatabase.LoadAssetAtPath<SceneAsset>(MENU_SCENE);
             yield return new EnterPlayMode();
+            OnlineRules.OnePlayerPerMachine = false; // these seat several players on one machine (Phase 3J)
             LogAssert.ignoreFailingMessages = true;
             LogCollector log = new LogCollector();
             Gamepad[] pads = new Gamepad[2];
@@ -254,6 +259,7 @@ namespace DoA.Tests
         {
             EditorSceneManager.playModeStartScene = AssetDatabase.LoadAssetAtPath<SceneAsset>(MENU_SCENE);
             yield return new EnterPlayMode();
+            OnlineRules.OnePlayerPerMachine = false; // these seat several players on one machine (Phase 3J)
             LogAssert.ignoreFailingMessages = true;
             Gamepad[] pads = new Gamepad[2];
             yield return TwoPlayersInPlayerSelect(pads);
@@ -277,6 +283,7 @@ namespace DoA.Tests
         {
             EditorSceneManager.playModeStartScene = AssetDatabase.LoadAssetAtPath<SceneAsset>(MENU_SCENE);
             yield return new EnterPlayMode();
+            OnlineRules.OnePlayerPerMachine = false; // these seat several players on one machine (Phase 3J)
             LogAssert.ignoreFailingMessages = true;
             Gamepad[] pads = new Gamepad[2];
             yield return TwoPlayersInPlayerSelect(pads);
@@ -317,6 +324,7 @@ namespace DoA.Tests
         {
             EditorSceneManager.playModeStartScene = AssetDatabase.LoadAssetAtPath<SceneAsset>(MENU_SCENE);
             yield return new EnterPlayMode();
+            OnlineRules.OnePlayerPerMachine = false; // these seat several players on one machine (Phase 3J)
             LogAssert.ignoreFailingMessages = true;
             float deadline = Time.realtimeSinceStartup + 60;
             while (!AtTitleScreen() && Time.realtimeSinceStartup < deadline)
@@ -343,6 +351,7 @@ namespace DoA.Tests
         {
             EditorSceneManager.playModeStartScene = AssetDatabase.LoadAssetAtPath<SceneAsset>(MENU_SCENE);
             yield return new EnterPlayMode();
+            OnlineRules.OnePlayerPerMachine = false; // these seat several players on one machine (Phase 3J)
             LogAssert.ignoreFailingMessages = true;
             float deadline = Time.realtimeSinceStartup + 60;
             while (!AtTitleScreen() && Time.realtimeSinceStartup < deadline)
@@ -377,6 +386,7 @@ namespace DoA.Tests
         {
             EditorSceneManager.playModeStartScene = AssetDatabase.LoadAssetAtPath<SceneAsset>(MENU_SCENE);
             yield return new EnterPlayMode();
+            OnlineRules.OnePlayerPerMachine = false; // these seat several players on one machine (Phase 3J)
             float deadline = Time.realtimeSinceStartup + 60;
             while (!AtTitleScreen() && Time.realtimeSinceStartup < deadline)
                 yield return null;
@@ -412,6 +422,7 @@ namespace DoA.Tests
         {
             EditorSceneManager.playModeStartScene = AssetDatabase.LoadAssetAtPath<SceneAsset>(MENU_SCENE);
             yield return new EnterPlayMode();
+            OnlineRules.OnePlayerPerMachine = false; // these seat several players on one machine (Phase 3J)
             LogAssert.ignoreFailingMessages = true;
             float deadline = Time.realtimeSinceStartup + 60;
             while (!AtTitleScreen() && Time.realtimeSinceStartup < deadline)

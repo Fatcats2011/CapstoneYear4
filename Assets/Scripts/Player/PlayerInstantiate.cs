@@ -103,7 +103,7 @@ public class PlayerInstantiate : SingletonMonobehaviour<PlayerInstantiate>
     private bool WelcomesJoins()
     {
         return PlayerJoiner.Welcomes(online, allowPlayerSpawn, PlayerCount, roster.LocalCount,
-            gameManager != null && gameManager.MainState == GameState.PlayerSelect);
+            gameManager != null && gameManager.MainState == GameState.PlayerSelect, OnlineRules.OnePlayerPerMachine);
     }
 
     private void Start()
@@ -1016,6 +1016,25 @@ public class PlayerInstantiate : SingletonMonobehaviour<PlayerInstantiate>
         if (leaving.Count > 0)
             ControllerPrompts.Instance.ShowHint(reason, OnlineGame.NOTICE_SECONDS);
         return leaving.Count;
+    }
+
+    ///<summary>
+    /// Online, one player per machine (OnlineRules): every local player but the menu player leaves, and gives back the seat
+    /// they held, as RemovePlayerRef does. Returns how many are left (the menu player: 1, or 0 with nobody here)
+    ///</summary>
+    public int DropExtraLocalPlayers()
+    {
+        List<PlayerSlot> locals = new List<PlayerSlot>(roster.LocalPlayers);
+        locals.Sort(MenuPlayerFirst);
+        for (int i = 1; i < locals.Count; i++)
+        {
+            int slot = locals[i].Index;
+            bool gaveBack = onlineSeats.Remove(slot);
+            LeaveLocal(locals[i].Input);
+            if (gaveBack)
+                SeatGivenUp?.Invoke(slot);
+        }
+        return roster.LocalCount;
     }
 
     // Online: one of this machine's seats with nobody in it, or -1

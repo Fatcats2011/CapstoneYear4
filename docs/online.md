@@ -24,8 +24,12 @@ Online multiplayer is being built in steps (roadmap Phase 3: `docs/superpowers/p
 
 - **Seats.** The host takes the first seat (P1) and each joiner the lowest free one. A seat is the player's slot on every machine: their company, podium, spawn point and name (P1–P4). In code, seats count from 0.
 - **This machine's player moves into its seat**, taking their controller with them. Since Phase 3J several players can share one machine: see Phase 3J below.
-- **Player select is the online lobby.**
+- **Player select is the online lobby, called Dispatch** (`DispatchMenu`, `DispatchBoard`; Local Play's player select is unchanged).
   - Every other player's scooter stands on its podium, in its company's colours, with their ghost colour and hat, which update as they change them.
+  - **Tickets.** A corkboard over the podiums has one ticket per seat (`TicketView`): the player's name, their company, and the state. Empty is `HIRING…`, seated but not ready is `GETTING READY…`, ready is stamped `DISPATCHED`. The counter on the top right reads `{ready} / {seated} READY`.
+  - **A clocks in** (readies up, the stamp). **X customizes:** the colour and hat sliders are hidden until X shows them, and the ticket follows the choices. B or A hides them again. **Y invites** (Steam's window). **B leaves.**
+  - When everyone's ready, the banner says `ALL ORDERS DISPATCHED`, the 3-2-1 runs, and the match starts. After the results the players are back on Dispatch, unstamped.
+  - The join prompts are hidden the whole time Dispatch shows.
   - Who's ready counts on every machine.
 - **Clients follow the host's menus:** title screen and player select. The host's options and credits show as the title screen.
 - **When everyone's ready, the match starts on every machine** (Phase 3C, below).
@@ -39,6 +43,10 @@ Online multiplayer is being built in steps (roadmap Phase 3: `docs/superpowers/p
     - It seats this machine's player, and shows other machines' players.
     - It shares choices and relays the host's states.
     - Whatever starts a session for the game adds one: the Online menu now, the Steam lobby later.
+  - **Names.** Each machine's player shares its name as `OnlinePlayer.displayName` (a network variable the owner writes; read it as `OnlinePlayer.Name`, shared with `ShareName`).
+    - The name is the Steam name (`SteamNames`), cleaned by `PlayerNames.Clean` (control characters out, a length cap) once per session and cached in `OnlineGame`.
+    - A ticket shows `PlayerNames.Shown`: the synced name, or `Player {seat+1}` while it's empty or not here yet.
+    - The ticket's colour and hat text come from `displayName` on the colour and hat assets (`PlayerColorInformationSO`, `PlayerHatInformationSO`).
   - **Another machine's scooter** is `PlayerAvatar.prefab` alone (`RemoteAvatar`).
     - Its controls, physics, water respawns and horn gauge are off.
     - It's dressed by `ScooterLook` (see `docs/player-prefab.md`).
@@ -217,6 +225,7 @@ Online multiplayer is being built in steps (roadmap Phase 3: `docs/superpowers/p
   - **B in player select:** this machine's menu player leaves the match, as before (the host's ends it for everyone). Any other player here leaves player select and gives their seat back.
   - **A full match:** a machine's players the host has no seat for are told "That match is full." and leave player select. A player still waiting for a seat when the match starts is told it has started.
   - Achievements a machine's players earn unlock for that machine's Steam account, as in local split-screen. Other machines' sounds fade with the distance to the nearest of this machine's players.
+- **Off for now:** `OnlineRules.OnePlayerPerMachine` is `true`, so online there is one player per machine on Dispatch: a second controller can't join, and going online drops extra local players (`PlayerInstantiate.DropExtraLocalPlayers`). Couch seats online are switched off, not removed: everything in Phase 3J is kept, and setting the flag to `false` turns it back on. Tests that seat two local players online set it to `false` themselves.
 - How it works:
   - **Seats belong to machines, several each** (`SeatTable`). The host spawns one `OnlinePlayer` and `OnlineScooter` per seat, owned by that seat's machine, with the seat (`OnlineSession.SpawningSeat`). Every host check that a request names the sender's own seat is `OnlineSession.Owns(machine, seat)`.
   - **A machine joins with one seat and asks for each further one:** `OnlineSession.AskSeat` (a client's goes as `OnlineMatch.AskSeat`, rate-limited as `RpcKind.Seat`). The host applies the join rules (full, started), then seats and spawns, or refuses (`SeatRefused`). `FreeSeat` gives one back; the host ignores another machine's seat or a machine's last.
@@ -250,7 +259,7 @@ Online multiplayer is being built in steps (roadmap Phase 3: `docs/superpowers/p
 
 ### Local Play and Online Play on the title screen
 
-- **The title screen** has Local Play, Online Play, Options, Credits and Quit. The scene's entries are images, so `TitleEntries` decides what each place does from how many `MainMenu` holds: with 4 (before the Online Play art), it's the old title screen.
+- **The title screen** has, top to bottom, MULTIPLAYER (Online Play), LOCAL (Local Play), Options, Credits and Quit. The scene's entries are images, so `TitleEntries` decides what each place does from how many `MainMenu` holds: with 4 (before the Online Play art), it's the old title screen.
 - **Local Play** goes to player select as Play did: split screen, with nothing online. Y does nothing and there's no line along the top.
 - **Online Play** (`MainMenu.SwapToOnline`) goes to player select, then `OnlinePlay.StartOnline` hosts a lobby (`OnlineLobby.Host`), which opens Steam's invite window. Player select comes first: a lobby still being made is kept only there.
 - **Failure:** no Steam, no lobby, or a session that won't start. `OnlineLobby.HostFailed` fires; the reason shows in the hint bar, and for a host attempt from Online Play, OnlinePlay unreadies this machine's players and goes back to the title screen while the game is still in offline player select (`OnlinePlay.BackToTitle`). A player who moved on is left alone, and Y on the old title screen only says why, as before.
