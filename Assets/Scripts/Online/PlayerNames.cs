@@ -51,9 +51,13 @@ public static class PlayerNames
         return builder.ToString();
     }
 
-    /// <summary>The name to show for a player: the synced one, or the seat's fallback when it's empty</summary>
+    /// <summary>
+    /// The name to show for a player: the synced one cleaned again (another machine's game may not have), or the seat's
+    /// fallback when nothing is left
+    /// </summary>
     public static string Shown(string synced, int seat)
     {
-        return string.IsNullOrWhiteSpace(synced) ? Fallback(seat) : synced;
+        string name = Clean(synced);
+        return name.Length == 0 ? Fallback(seat) : name;
     }
 }

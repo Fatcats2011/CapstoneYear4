@@ -490,6 +490,35 @@ namespace DoA.Tests
 
         // Finding 4: a session that never stops doesn't keep Find waiting forever
         [Test]
+        public void Found_AHugeAnswer_OnlyTheFirstMaxResultsAreRead()
+        {
+            // Steam's answer is capped in SteamLobbyService; Find doesn't count on it
+            ulong[] huge = new ulong[100000];
+            for (int i = 0; i < huge.Length; i++)
+                huge[i] = 1000 + (ulong)i;
+
+            match.Find();
+            lobbies.Reads = 0;
+            lobbies.AnswerSearch(huge);
+
+            Assert.LessOrEqual(lobbies.Reads, MatchRules.MAX_RESULTS * 5, "an owner and four tags per lobby looked at");
+            Assert.IsFalse(match.Searching, "none of them is this game's: none found");
+        }
+
+        [Test]
+        public void Found_AgainAfterTheAnswer_IsIgnored()
+        {
+            // Steam (or a fake answer) repeating itself doesn't start a second round of tries
+            Open(70, 170, 1);
+            match.Find();
+            lobbies.AnswerSearch(70);
+            lobbies.AnswerSearch(70);
+            lobbies.AnswerSearch(70);
+
+            CollectionAssert.AreEqual(new[] { 70UL }, lobbies.Joins);
+        }
+
+        [Test]
         public void Retry_SessionNeverStops_GivesUpAsNoneFound()
         {
             Open(70, 170, 1);

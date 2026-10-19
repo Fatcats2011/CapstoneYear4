@@ -65,8 +65,12 @@ namespace DoA.Tests
             data[key] = value;
         }
 
+        /// <summary>How many lobbies' data or owner were read</summary>
+        public int Reads;
+
         public string GetData(ulong lobby, string key)
         {
+            Reads++;
             Dictionary<string, string> data;
             string value;
             return Data.TryGetValue(lobby, out data) && data.TryGetValue(key, out value) ? value : "";
@@ -74,6 +78,7 @@ namespace DoA.Tests
 
         public ulong Owner(ulong lobby)
         {
+            Reads++;
             ulong owner;
             return Owners.TryGetValue(lobby, out owner) ? owner : 0;
         }

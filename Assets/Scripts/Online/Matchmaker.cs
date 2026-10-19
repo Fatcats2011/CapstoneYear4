@@ -162,8 +162,10 @@ public class Matchmaker
             new List<(ulong lobby, ulong owner, string game, string build, string mm, string open)>();
         if (found != null)
         {
-            foreach (ulong id in found)
+            // Only the first MAX_RESULTS are read, whatever came (SteamLobbyService caps Steam's answer too)
+            for (int i = 0; i < found.Length && i < MatchRules.MAX_RESULTS; i++)
             {
+                ulong id = found[i];
                 tagged.Add((id, lobbies.Owner(id), lobbies.GetData(id, LobbyRules.GAME_KEY),
                     lobbies.GetData(id, LobbyRules.BUILD_KEY), lobbies.GetData(id, MatchRules.MM_KEY),
                     lobbies.GetData(id, MatchRules.OPEN_KEY)));

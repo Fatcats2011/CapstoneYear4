@@ -72,5 +72,13 @@ namespace DoA.Tests
             Assert.AreEqual("Player 1", PlayerNames.Shown("   ", 0));
             Assert.AreEqual("Alex", PlayerNames.Shown("Alex", 1));
         }
+
+        [Test]
+        public void Shown_CleansWhatAnotherMachineSent()
+        {
+            // A modified game can sync a name that never went through Clean
+            Assert.AreEqual("Alexforged", PlayerNames.Shown("Alex\nforged", 1), "no control characters");
+            Assert.AreEqual("Player 2", PlayerNames.Shown("\n\t\r", 1), "nothing left: the fallback");
+        }
     }
 }

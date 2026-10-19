@@ -280,6 +280,13 @@ Playing with strangers is opt-in: a lobby is created friends only, exactly as be
 - **Joins** are rate-limited per Steam ID (`JoinChurn`): at most `CHURN_LIMIT` = 5 accepted connections within `CHURN_WINDOW` = 60 s.
 - **The status line** (`DispatchBoard.matchmakingLine`, `MatchRules.StatusLine`) shows `LOOKING FOR A MATCH…`, `OPEN TO ANYONE` (with ` · STARTS IN {s}` while counting, whole seconds rounded up) or `FRIENDS ONLY`. A client can't see whether the host's lobby is open, so it shows the host's countdown when there is one, and `FRIENDS ONLY` otherwise.
 
+**Manual check over Steam** (two PCs, two Steam accounts, the same build on both; the accounts needn't be friends):
+- A: Online Play, then RB (R). The line shows `OPEN TO ANYONE`.
+- B: Online Play, then LB (F). The line shows `LOOKING FOR A MATCH…`, then B lands in A's Dispatch.
+- Wait 60 s without readying. The line counts down (`STARTS IN …`), then the match starts.
+- After the match, both are back in Dispatch. A presses RB (R) again: the line shows `FRIENDS ONLY`.
+- B: B to the title screen, Online Play, then LB (F). B can't find A: it shows `No open matches right now. Your lobby is open to anyone.`
+
 ## Two editors on one computer (ParrelSync)
 
 - **ParrelSync → Clones Manager → Create new clone** (once). The clone shares this project's Assets and ProjectSettings. Unity imports the project the first time the clone opens, which takes a while.

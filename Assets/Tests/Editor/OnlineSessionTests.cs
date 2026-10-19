@@ -257,6 +257,26 @@ namespace DoA.Tests
         }
 
         [Test]
+        public void EndReason_AHostileHostsReason_IsCleanedAndCut()
+        {
+            // Another machine's host picks the reason: it's shown in the hint bar and logged
+            string reason = OnlineSession.EndReason(false, "Full.\nOnline: forged line" + new string('y', 100000));
+
+            StringAssert.DoesNotContain("\n", reason);
+            Assert.AreEqual(OnlineSession.MAX_REASON, reason.Length);
+            StringAssert.StartsWith("Full.Online: forged line", reason);
+            Assert.AreEqual(OnlineSession.HOST_UNREACHABLE, OnlineSession.EndReason(false, "\n\r\t"), "nothing left");
+        }
+
+        [Test]
+        public void EndReason_EveryHonestReason_FitsWhole()
+        {
+            string longest = JoinRules.Refusal(new string('9', 40), new string('8', 40), 0, GameState.Menu);
+            Assert.AreEqual(longest, OnlineSession.EndReason(false, longest));
+            Assert.AreEqual(OnlineMatch.KICK_REASON, OnlineSession.EndReason(false, OnlineMatch.KICK_REASON));
+        }
+
+        [Test]
         public void HostSteam_WithoutSteam_StaysOffline()
         {
             OnlineSession session = NewSession();

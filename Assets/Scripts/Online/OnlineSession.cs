@@ -37,6 +37,9 @@ public class OnlineSession : MonoBehaviour
     public const string HOST_UNREACHABLE = "Couldn't reach the host.";
     public const string CONNECTION_LOST = "The connection was lost.";
 
+    /// <summary>The most of a host's reason for ending a session ever shown or logged</summary>
+    public const int MAX_REASON = 160;
+
     /// <summary>Logged when a Steam session can't start</summary>
     public const string NO_STEAM = "Online: Steam isn't running, so this machine can't host or join over Steam.";
 
@@ -303,14 +306,16 @@ public class OnlineSession : MonoBehaviour
 
     /// <summary>
     /// What to tell a client whose session ended: the host left (after letting it in), the host's own reason (it turned
-    /// the player away), or that the host couldn't be reached
+    /// the player away), or that the host couldn't be reached. Another machine's host picks its reason: it's shown and
+    /// logged without control characters, and at most MAX_REASON characters of it
     /// </summary>
     public static string EndReason(bool reachedHost, string netcodeReason)
     {
         if (reachedHost)
             return HOST_LEFT;
 
-        return string.IsNullOrEmpty(netcodeReason) ? HOST_UNREACHABLE : netcodeReason;
+        string shown = LobbyRules.Shown(netcodeReason, MAX_REASON);
+        return string.IsNullOrWhiteSpace(shown) ? HOST_UNREACHABLE : shown;
     }
 
     /// <summary>

@@ -51,15 +51,23 @@ public static class LobbyRules
     /// </summary>
     public static string Shown(string version)
     {
-        if (string.IsNullOrEmpty(version))
+        return Shown(version, SHOWN_VERSION);
+    }
+
+    /// <summary>
+    /// Another machine's text as shown in a hint or the log: no control characters, and at most `most` characters
+    /// </summary>
+    public static string Shown(string text, int most)
+    {
+        if (string.IsNullOrEmpty(text))
             return "";
 
-        System.Text.StringBuilder shown = new System.Text.StringBuilder(SHOWN_VERSION);
-        foreach (char c in version)
+        System.Text.StringBuilder shown = new System.Text.StringBuilder(System.Math.Min(text.Length, most));
+        foreach (char c in text)
         {
             if (char.IsControl(c))
                 continue;
-            if (shown.Length == SHOWN_VERSION)
+            if (shown.Length == most)
                 break;
             shown.Append(c);
         }

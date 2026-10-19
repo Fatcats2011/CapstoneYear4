@@ -101,6 +101,27 @@ namespace DoA.Tests
             Assert.AreEqual(0, queue.Waiting);
         }
 
+        [Test]
+        public void Holding_MessagesPastTheCap_AreDropped_WithOneWarning()
+        {
+            // Another machine's host could hold this machine's scene change for good and keep sending: the wait can't grow
+            // without bound
+            holding = true;
+            LogAssert.Expect(LogType.Warning, new Regex("dropped"));
+            for (int i = 0; i < HostQueue.MAX_WAITING + 10; i++)
+            {
+                int message = i;
+                queue.Add(() => ran.Add(message));
+            }
+
+            Assert.AreEqual(HostQueue.MAX_WAITING, queue.Waiting);
+
+            holding = false;
+            queue.Release();
+            Assert.AreEqual(HostQueue.MAX_WAITING, ran.Count);
+            Assert.AreEqual(HostQueue.MAX_WAITING - 1, ran[ran.Count - 1], "the first ones kept, in order");
+        }
+
         static void Throw()
         {
             throw new InvalidOperationException("a bad message");
