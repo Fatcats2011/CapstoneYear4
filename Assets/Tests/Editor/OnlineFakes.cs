@@ -14,6 +14,7 @@ namespace DoA.Tests
         public readonly List<ulong> Left = new List<ulong>();
         public readonly List<ulong> Invites = new List<ulong>();
         public readonly List<(ulong lobby, bool open)> PublicCalls = new List<(ulong lobby, bool open)>();
+        public readonly List<(ulong lobby, string key, string value)> DataCalls = new List<(ulong lobby, string key, string value)>();
         public readonly List<(string build, int seats)> Searches = new List<(string build, int seats)>();
 
         public readonly Dictionary<ulong, Dictionary<string, string>> Data = new Dictionary<ulong, Dictionary<string, string>>();
@@ -54,6 +55,7 @@ namespace DoA.Tests
 
         public void SetData(ulong lobby, string key, string value)
         {
+            DataCalls.Add((lobby, key, value));
             Dictionary<string, string> data;
             if (!Data.TryGetValue(lobby, out data))
             {

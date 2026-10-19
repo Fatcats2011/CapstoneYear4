@@ -2,7 +2,7 @@
 
 Online matches are peer to peer: one player's game hosts, and their friends' games connect to it. A player could run a modified game that sends anything the network lets through. This page lists what such a game could try, and what stops it.
 
-**In scope:** the safety of every player's machine and session: no crash, freeze, memory or disk blow-up, IP leak or file access, and no strangers joining.
+**In scope:** the safety of every player's machine and session: no crash, freeze, memory or disk blow-up, IP leak or file access, and strangers join only through a lobby its host opened to anyone (Fill).
 
 **Out of scope:** cheating inside the rules. Each player's game drives its own scooter (Phase 3C), so a modified game could still teleport or speed up its own scooter. That needs host-side movement checks: a later anti-cheat phase.
 
@@ -15,6 +15,7 @@ Online matches are peer to peer: one player's game hosts, and their friends' gam
 | An empty or huge message crashing the receiver | The patched transport drops messages of 1 byte or less, or over 256 KB, and always releases Steam's message. It used to throw and leak on an empty one. | the patched transport, `SteamPeerRules.Deliverable` |
 | Flooding the host with requests (one-shots, drops, steals, bumps…) | Each machine has an allowance per kind of request (a burst, refilled each second). The excess is dropped; 200 drops within 10 s disconnects that machine ("Disconnected: too many messages."). The disconnect closes with linger on, so the reason reaches them first. | `RateGate`, `OnlineMatch.Allowed`, `OnlineSession.Kick` |
 | A kicked player reconnecting to flood again | Over Steam the kicked Steam ID is banned for the rest of the session: the lobby has no kick, so they stay a member, but every new connection from them is refused. A new hosting session starts with no bans. | the patched transport's `BanOnNextDisconnect`, `ConnectionGate.Ban` |
+| A lobby open to strangers by accident | A lobby is made friends-only. Only `SetFill(true)` (Fill, or Find's fallback) makes it public, and Fill resets to off whenever the lobby is left. A client can't open one. | `OnlineLobby.SetFill` |
 | A stranger connecting and dropping over and over | refused for the session after 5 connections in 60 s | `JoinChurn`, `OnlineLobby.LetsIn` |
 | Bumps that push another player across the map | The host passes on a bump only for the sender's own seat, between players within reach, neither respawning, one per pair per half second, and never harder than a clash, whatever speed was sent. Clients take only seats 0–3 and a finite push. | `BumpRules`, `OnlineBumps`, `OnlineMatch.BumpClientRpc` |
 | A scooter pose that isn't numbers (NaN, infinity), making Unity log an error every frame | Another machine's scooter proxy stops following poses that aren't numbers, and holds its last good one until a second of good poses has come. | `PoseHold`, `OwnerNetworkTransform` |
@@ -39,7 +40,7 @@ Netcode's own settings (`OnlineSession.NewConfig`):
 - The host checks that every request comes from the machine whose seat it names.
 - Seats and indexes are range-checked.
 - Only the host spawns, and only the game's three network prefabs.
-- Lobbies are friends-only.
+- Lobbies are friends-only unless the host turns Fill on.
 - Scene management is off.
 
 ## The transport copy

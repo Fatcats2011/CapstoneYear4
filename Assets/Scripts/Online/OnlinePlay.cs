@@ -3,6 +3,7 @@
 #endif
 
 using System;
+using System.Collections.Generic;
 using UnityEngine;
 
 /// <summary>
@@ -258,6 +259,9 @@ public class OnlinePlay : MonoBehaviour, ISessionControl
             Lobby.ShowState(shownState);
         }
 
+        if (Lobby.IsHost)
+            Lobby.ShowOpenSeats(Constants.MAX_PLAYERS - SeatedCount());
+
         bool hasOnlineEntry = MainMenu.Instance != null && MainMenu.Instance.HasOnlineEntry;
         string hint = HintFor(game.MainState, GameAuthority.IsOnline, Lobby.Current != 0, lobbies.Available, hasOnlineEntry, DispatchBoard.Showing);
         if (hint != shownHint)
@@ -267,6 +271,23 @@ public class OnlinePlay : MonoBehaviour, ISessionControl
             if (hint != "" || LobbyPrompt.Exists)
                 LobbyPrompt.Instance.Show(hint);
         }
+    }
+
+    // Seated players in the online game (the host included), as the Dispatch board counts them
+    static int SeatedCount()
+    {
+        OnlineGame game = OnlineGame.Playing;
+        if (game == null)
+            return 0;
+
+        int seated = 0;
+        IReadOnlyList<OnlinePlayer> players = game.Players;
+        for (int i = 0; i < players.Count; i++)
+        {
+            if (players[i].Seat >= 0)
+                seated++;
+        }
+        return seated;
     }
 
     // A friend's invite: from options or credits it goes through the title screen

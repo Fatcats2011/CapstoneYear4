@@ -25,12 +25,21 @@ public class OnlineLobby
     JoinChurn churn;   // this hosting session's reconnect counts (null while not hosting)
 
     bool creating;   // a lobby is being made to host in
+    bool inviteOnCreate = true;   // the lobby being made opens the invite dialog
+    bool fillOnCreate;   // the lobby being made opens to anyone
     ulong joining;   // the lobby being entered (0 = none)
+    int openSeats = -1;   // the free seats last shown (-1 = none yet)
 
     /// <summary>The lobby this machine is in (0 = none)</summary>
     public ulong Current { get; private set; }
 
     public bool IsHost { get; private set; }
+
+    /// <summary>Whether the host's lobby is open to anyone (Fill). Friends only otherwise</summary>
+    public bool Filling { get; private set; }
+
+    /// <summary>Fill turned on or off, with the new state</summary>
+    public event Action<bool> FillChanged;
 
     /// <summary>A message for the player. Session ends aren't told here: the online game shows those</summary>
     public event Action<string> Notice;
@@ -71,7 +80,9 @@ public class OnlineLobby
     /// Makes a lobby and hosts the session in it, then opens the invite dialog. Nothing while one is being made, or while
     /// this machine is in a lobby or a session already
     /// </summary>
-    public void Host()
+    /// <param name="invite">Whether to open the invite dialog once hosting</param>
+    /// <param name="fill">Whether to open the lobby to anyone once hosting (SetFill)</param>
+    public void Host(bool invite = true, bool fill = false)
     {
         if (creating || Current != 0 || session.IsRunning)
             return;
@@ -84,7 +95,55 @@ public class OnlineLobby
 
         // Set first: the lobby may be made before Create returns
         creating = true;
+        inviteOnCreate = invite;
+        fillOnCreate = fill;
         lobbies.Create(Constants.MAX_PLAYERS);
+    }
+
+    /// <summary>
+    /// Opens the host's lobby to anyone (on) or back to friends only (off). The only place a lobby is made public.
+    /// Nothing on a client or without a lobby
+    /// </summary>
+    public void SetFill(bool on)
+    {
+        if (!IsHost || Current == 0)
+            return;
+
+        if (on)
+        {
+            lobbies.SetPublic(Current, true);
+            lobbies.SetData(Current, MatchRules.MM_KEY, MatchRules.MM_ON);
+            if (openSeats < 0)
+                openSeats = Constants.MAX_PLAYERS - 1;
+            lobbies.SetData(Current, MatchRules.OPEN_KEY, openSeats.ToString());
+        }
+        else
+        {
+            lobbies.SetPublic(Current, false);
+            lobbies.SetData(Current, MatchRules.MM_KEY, "");
+        }
+
+        if (Filling != on)
+        {
+            Filling = on;
+            FillChanged?.Invoke(on);
+        }
+    }
+
+    /// <summary>
+    /// The free seats (0 to 4) a searching stranger sees on the host's lobby. Host only; written only when it changed
+    /// </summary>
+    public void ShowOpenSeats(int free)
+    {
+        if (!IsHost || Current == 0)
+            return;
+
+        free = Math.Max(0, Math.Min(Constants.MAX_PLAYERS, free));
+        if (free == openSeats)
+            return;
+
+        openSeats = free;
+        lobbies.SetData(Current, MatchRules.OPEN_KEY, free.ToString());
     }
 
     /// <summary>
@@ -159,6 +218,8 @@ public class OnlineLobby
         lobbies.SetData(lobby, LobbyRules.BUILD_KEY, build);
         Current = lobby;
         IsHost = true;
+        Filling = false;
+        openSeats = -1;
         churn = new JoinChurn(clock);
 
         if (!session.Host())
@@ -168,7 +229,10 @@ public class OnlineLobby
             return;
         }
 
-        Invite();
+        if (fillOnCreate)
+            SetFill(true);
+        if (inviteOnCreate)
+            Invite();
     }
 
     void OnEntered(ulong lobby, bool entered)
@@ -230,6 +294,7 @@ public class OnlineLobby
         lobbies.Leave(Current);
         Current = 0;
         IsHost = false;
+        Filling = false;
     }
 
     /// <summary>

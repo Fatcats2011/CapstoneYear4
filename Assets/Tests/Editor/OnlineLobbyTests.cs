@@ -373,5 +373,115 @@ namespace DoA.Tests
 
             Assert.IsFalse(lobbies.Joinable.ContainsKey(7));
         }
+
+        [Test]
+        public void NewLobby_NeverPublic()
+        {
+            Hosting();
+
+            Assert.IsFalse(lobbies.PublicCalls.Exists(c => c.open));
+            Assert.IsFalse(lobby.Filling);
+        }
+
+        [Test]
+        public void Fill_On_PublicAndTagged()
+        {
+            Hosting();
+            bool raised = false;
+            lobby.FillChanged += on => raised = on;
+
+            lobby.SetFill(true);
+
+            Assert.IsTrue(lobby.Filling);
+            Assert.IsTrue(raised);
+            CollectionAssert.Contains(lobbies.PublicCalls, (42UL, true));
+            Assert.AreEqual(MatchRules.MM_ON, lobbies.GetData(42, MatchRules.MM_KEY));
+            Assert.AreEqual("3", lobbies.GetData(42, MatchRules.OPEN_KEY), "4 seats minus the host");
+        }
+
+        [Test]
+        public void Fill_Off_FriendsOnlyAndUntagged()
+        {
+            Hosting();
+            lobby.SetFill(true);
+
+            lobby.SetFill(false);
+
+            Assert.IsFalse(lobby.Filling);
+            Assert.AreEqual((42UL, false), lobbies.PublicCalls[lobbies.PublicCalls.Count - 1]);
+            Assert.AreEqual("", lobbies.GetData(42, MatchRules.MM_KEY));
+        }
+
+        [Test]
+        public void Fill_OnClient_DoesNothing()
+        {
+            Joined(7, 99);
+
+            lobby.SetFill(true);
+
+            Assert.IsFalse(lobby.Filling);
+            Assert.IsEmpty(lobbies.PublicCalls);
+            Assert.AreEqual("", lobbies.GetData(7, MatchRules.MM_KEY));
+        }
+
+        [Test]
+        public void Fill_ResetOnLeave_NewLobbyFriendsOnly()
+        {
+            Hosting();
+            lobby.SetFill(true);
+            int publicCalls = lobbies.PublicCalls.Count;
+
+            session.Stop(null);
+            Assert.IsFalse(lobby.Filling);
+            Hosting43();
+
+            Assert.IsFalse(lobby.Filling);
+            Assert.AreEqual(publicCalls, lobbies.PublicCalls.Count, "no new public call");
+        }
+
+        void Hosting43()
+        {
+            lobby.Host();
+            lobbies.RaiseCreated(43);
+        }
+
+        [Test]
+        public void ShowOpenSeats_OnlyOnChange()
+        {
+            Hosting();
+
+            lobby.ShowOpenSeats(3);
+            lobby.ShowOpenSeats(3);
+            lobby.ShowOpenSeats(2);
+
+            Assert.AreEqual(2, lobbies.DataCalls.FindAll(c => c.key == MatchRules.OPEN_KEY).Count);
+            Assert.AreEqual("2", lobbies.GetData(42, MatchRules.OPEN_KEY));
+        }
+
+        [Test]
+        public void ShowOpenSeats_ClampedAndUsedWhenFillStarts()
+        {
+            Hosting();
+
+            lobby.ShowOpenSeats(9);
+            Assert.AreEqual("4", lobbies.GetData(42, MatchRules.OPEN_KEY));
+
+            lobby.ShowOpenSeats(1);
+            lobby.SetFill(true);
+            Assert.AreEqual("1", lobbies.GetData(42, MatchRules.OPEN_KEY));
+        }
+
+        [Test]
+        public void Host_FillTrue_NoInvite_PublicWhenMade()
+        {
+            lobby.Host(invite: false, fill: true);
+            Assert.IsEmpty(lobbies.PublicCalls, "not before the lobby is made");
+
+            lobbies.RaiseCreated(42);
+
+            Assert.IsTrue(lobby.Filling);
+            CollectionAssert.Contains(lobbies.PublicCalls, (42UL, true));
+            Assert.IsEmpty(lobbies.Invites);
+        }
     }
 }
