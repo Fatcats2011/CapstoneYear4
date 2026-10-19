@@ -415,11 +415,15 @@ namespace DoA.Tests
             // The host readies its own player at the deadline, the other machine's FORCE_GRACE later, then Dispatch counts
             // down in game time (SLACK more for the load request to travel and for the editor's slow frames)
             float deadline = Time.realtimeSinceStartup + (float)(AUTO_START + MatchRules.FORCE_GRACE) + COUNTDOWN + SLACK;
-            while (!(loads.Loads.Count > 0 && State() != GameState.PlayerSelect) && Time.realtimeSinceStartup < deadline)
+            while (State() == GameState.PlayerSelect && Time.realtimeSinceStartup < deadline)
                 yield return null;
-
             Assert.AreNotEqual(GameState.PlayerSelect, State(), "the host's match starts");
-            Assert.AreEqual(1, loads.Loads.Count, "and the other machine is asked to load it");
+            float startedWithSpare = deadline - Time.realtimeSinceStartup;
+            deadline = Time.realtimeSinceStartup + WAIT;
+            while (loads.Loads.Count == 0 && Time.realtimeSinceStartup < deadline)
+                yield return null;
+            Assert.AreEqual(1, loads.Loads.Count, "and the other machine is asked to load it (the start came with "
+                + startedWithSpare + " s to spare; " + (WAIT - (deadline - Time.realtimeSinceStartup)) + " s waited for the load)");
             Assert.IsFalse(PlayerInSeat(OnlinePlay.Instance.Session, 1).Ready, "though that machine never readied");
             Assert.AreEqual(0.0, OnlinePlay.Instance.Session.Match.AutoStartAt, "the match starting ends the count");
 
@@ -427,6 +431,56 @@ namespace DoA.Tests
             log.Dispose();
             Assert.IsEmpty(log.Problems, "Errors:\n\n" + string.Join("\n\n", log.Problems));
             yield return LeaveBoth();
+        }
+
+        [UnityTest]
+        public IEnumerator AutoStart_ForcedSeat_HoldsWhileSet_ThenFollowsItsOwnReady()
+        {
+            EditorSceneManager.playModeStartScene = AssetDatabase.LoadAssetAtPath<SceneAsset>(MENU_SCENE);
+            yield return new EnterPlayMode();
+            LogAssert.ignoreFailingMessages = true;
+            LogCollector log = new LogCollector();
+            yield return HostOnDispatch(true);
+            yield return JoinTheHost();
+            OnlinePlayer theirs = PlayerInSeat(joiner, 1);
+            OnlinePlayer onHost = PlayerInSeat(OnlinePlay.Instance.Session, 1);
+            Assert.IsTrue(theirs.IsOwner, "the other machine's own player");
+
+            // FORCE_GRACE after the deadline the host makes the other machine's player ready: Dispatch counts down
+            float deadline = Time.realtimeSinceStartup + (float)(AUTO_START + MatchRules.FORCE_GRACE) + SLACK;
+            while (!CountingDown() && Time.realtimeSinceStartup < deadline)
+                yield return null;
+            Assert.IsTrue(CountingDown(), "counting down");
+            Assert.IsTrue(PlayerInstantiate.Instance.IsReady(1), "made ready");
+
+            // Their machine readies, then sends not ready (before it heard of the start): the start is still set, so it holds
+            theirs.Share(0, 0, true);
+            deadline = Time.realtimeSinceStartup + WAIT;
+            while (!onHost.Ready && Time.realtimeSinceStartup < deadline)
+                yield return null;
+            theirs.Share(0, 0, false);
+            deadline = Time.realtimeSinceStartup + WAIT;
+            while (onHost.Ready && Time.realtimeSinceStartup < deadline)
+                yield return null;
+            Assert.IsFalse(onHost.Ready, "their not ready reached the host");
+            Assert.IsTrue(PlayerInstantiate.Instance.IsReady(1), "still ready on the host");
+            Assert.IsTrue(CountingDown(), "still counting down");
+            Assert.AreNotEqual(0.0, OnlinePlay.Instance.Session.Match.AutoStartAt, "the start is still set");
+
+            // Fill off: no start is set any more, so their own not ready counts again
+            OnlinePlay.Instance.Lobby.SetFill(false);
+            deadline = Time.realtimeSinceStartup + 1f;
+            while (PlayerInstantiate.Instance.IsReady(1) && Time.realtimeSinceStartup < deadline)
+                yield return null;
+            Assert.IsFalse(PlayerInstantiate.Instance.IsReady(1), "back to their own not ready");
+            Assert.IsFalse(CountingDown(), "which stops the countdown");
+            Assert.AreEqual(GameState.PlayerSelect, State(), "still on Dispatch");
+            Assert.AreEqual(0.0, OnlinePlay.Instance.Session.Match.AutoStartAt, "no start set");
+
+            log.MachinesLeave(); // Windows may report a leaving machine's closed port: see LogCollector.CLOSED_PORT
+            yield return LeaveBoth();
+            log.Dispose();
+            Assert.IsEmpty(log.Problems, "Errors:\n\n" + string.Join("\n\n", log.Problems));
         }
 
         [UnityTest]

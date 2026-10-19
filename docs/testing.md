@@ -77,7 +77,7 @@
   - **`OnlineRules.OnePlayerPerMachine` is a static test seam, `true` in play.** A Play Mode test that seats two local players online sets it to `false` after `EnterPlayMode` (a domain reload resets statics) and restores it in its `[UnityTearDown]`.
 - Matchmaking's automatic start (an open lobby starting by itself):
   - `MatchRulesTests.AutoStart_…`: the start time, the seconds left (nonsense reads as none), and the test override.
-  - `OnlinePlayersNetworkTests.AutoStart_…` (port 7821, menu scene, about 15 s each): an open lobby with another machine that never readies starts its match on both machines; a friends-only lobby and a host alone never do. **`MatchRules.AutoStartSecondsOverride` is a static test seam** (0 = `AUTO_START`): the class sets it to 2 s in `[SetUp]` and back to 0 in `[UnityTearDown]`.
+  - `OnlinePlayersNetworkTests.AutoStart_…` (port 7821, menu scene, about 15 s each): an open lobby with another machine that never readies starts its match on both machines; a seat the host made ready stays ready against its machine's late not-ready while the start is set, and follows its own readiness again once Fill is off; a friends-only lobby and a host alone never start. **`MatchRules.AutoStartSecondsOverride` is a static test seam** (0 = `AUTO_START`): the class sets it to 2 s in `[SetUp]` and back to 0 in `[UnityTearDown]`.
   - `NonsenseNetworkTests.AutoStart_NaNFromHost_Ignored` (port 7812, menu scene): a start time that isn't a number leaves this machine's player unready, while an honest one readies them.
 - Display settings and the keyboard (Phase 1C, `docs/controls.md`):
   - `GameSettingsTests` also cover the display keys in `settings.cfg`; `DisplayRulesTests`: fullscreen mode, a size the screen can show, VSync and the frame cap.

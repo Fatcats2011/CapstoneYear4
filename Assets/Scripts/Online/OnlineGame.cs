@@ -44,7 +44,8 @@ public class OnlineGame : MonoBehaviour
         public int Seat;
         public int Colour = -1;
         public int Hat = -1;
-        public bool Ready;
+        public bool Ready;  // the readiness applied here (PlayerInstantiate.SetRemoteReady)
+        public bool Forced; // host: made ready for the automatic start, whatever their own machine says
     }
 
     OnlineSession session;
@@ -66,6 +67,7 @@ public class OnlineGame : MonoBehaviour
     double lastSeatedAt;     // host: when a player was last seated, in server time
     double countingTo;       // the automatic start this machine saw counting down (only a start seen counting readies)
     double readiedFor;       // the automatic start this machine's players were readied for
+    double graceFor;         // host: the automatic start whose grace ran out (other machines' players made ready, or already counting down)
     double forcedFor;        // host: the automatic start other machines' players were made ready for
     readonly HashSet<ulong> seatedMachines = new HashSet<ulong>();
 
@@ -253,7 +255,7 @@ public class OnlineGame : MonoBehaviour
         localPlayers.Clear();
         myName = null;
         asker.Reset();
-        lastSeatedAt = countingTo = readiedFor = forcedFor = 0; // the next session's server time starts again
+        lastSeatedAt = countingTo = readiedFor = graceFor = forcedFor = 0; // the next session's server time starts again
         if (players != null)
             players.GoOffline();
     }
@@ -534,7 +536,7 @@ public class OnlineGame : MonoBehaviour
             return;
 
         double now = session.Network.ServerTime.Time;
-        bool inPlayerSelect = GameManager.Instance != null && GameManager.Instance.MainState == GameState.PlayerSelect;
+        bool inPlayerSelect = InPlayerSelect();
 
         if (match.IsServer)
         {
@@ -546,13 +548,19 @@ public class OnlineGame : MonoBehaviour
             double at = open ? MatchRules.AutoStartAt(lastSeatedAt) : 0;
             match.SetAutoStart(at);
 
-            if (at != 0 && now >= at + MatchRules.FORCE_GRACE && forcedFor != at)
+            // Once per start: a countdown already running (everyone ready) is left alone, so a player backing out of it still can
+            if (at != 0 && now >= at + MatchRules.FORCE_GRACE && graceFor != at)
             {
-                forcedFor = at;
+                graceFor = at;
                 if (players.readyUpCountdown == null)
                 {
+                    forcedFor = at;
                     foreach (RemotePlayer remote in remotes.Values)
+                    {
+                        remote.Forced = true;
+                        remote.Ready = true;
                         players.SetRemoteReady(remote.Seat, true);
+                    }
                 }
             }
         }
@@ -571,6 +579,11 @@ public class OnlineGame : MonoBehaviour
         readiedFor = shared;
         foreach (PlayerSlot slot in players.Roster.LocalPlayers)
             slot.Input.GetComponent<PlayerUIHandler>().menuInteractions.ReadyAsA();
+    }
+
+    static bool InPlayerSelect()
+    {
+        return GameManager.Instance != null && GameManager.Instance.MainState == GameState.PlayerSelect;
     }
 
     // Host: whether its lobby is open to anyone (Fill in Online Play)
@@ -665,11 +678,16 @@ public class OnlineGame : MonoBehaviour
                     shown.Avatar.ShowHat(hat);
             }
 
-            if (player.Ready != shown.Ready)
+            // A player made ready for the automatic start stays ready while it's set, whatever their machine sent before it
+            // heard. Once it isn't (a new seat, Fill off), their own readiness counts again. From the match starting until
+            // player select, readiness stays as it was
+            if (shown.Forced && !ForcedReady() && InPlayerSelect())
+                shown.Forced = false;
+            bool ready = shown.Forced || player.Ready;
+            if (ready != shown.Ready)
             {
-                shown.Ready = player.Ready;
-                if (player.Ready || !ForcedReady())
-                    players.SetRemoteReady(shown.Seat, player.Ready);
+                shown.Ready = ready;
+                players.SetRemoteReady(shown.Seat, ready);
             }
         }
     }
