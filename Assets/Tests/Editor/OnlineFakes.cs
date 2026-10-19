@@ -13,6 +13,8 @@ namespace DoA.Tests
         public readonly List<ulong> Joins = new List<ulong>();
         public readonly List<ulong> Left = new List<ulong>();
         public readonly List<ulong> Invites = new List<ulong>();
+        public readonly List<(ulong lobby, bool open)> PublicCalls = new List<(ulong lobby, bool open)>();
+        public readonly List<(string build, int seats)> Searches = new List<(string build, int seats)>();
 
         public readonly Dictionary<ulong, Dictionary<string, string>> Data = new Dictionary<ulong, Dictionary<string, string>>();
         public readonly Dictionary<ulong, ulong> Owners = new Dictionary<ulong, ulong>();
@@ -29,6 +31,7 @@ namespace DoA.Tests
         public event Action<ulong> Created;
         public event Action<ulong, bool> Entered;
         public event Action<ulong> JoinRequested;
+        public event Action<ulong[]> Found;
 
         public void Create(int maxMembers)
         {
@@ -82,6 +85,24 @@ namespace DoA.Tests
         {
             List<ulong> members;
             return Members.TryGetValue(lobby, out members) && members.Contains(steamId);
+        }
+
+        public ulong Me { get; set; }
+
+        public void SetPublic(ulong lobby, bool open)
+        {
+            PublicCalls.Add((lobby, open));
+        }
+
+        public void Search(string build, int seatsNeeded)
+        {
+            Searches.Add((build, seatsNeeded));
+        }
+
+        /// <summary>Answers the search with these lobbies</summary>
+        public void AnswerSearch(params ulong[] lobbies)
+        {
+            Found?.Invoke(lobbies);
         }
 
         public bool Invite(ulong lobby)

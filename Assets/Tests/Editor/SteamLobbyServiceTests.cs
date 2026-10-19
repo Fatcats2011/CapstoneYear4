@@ -68,6 +68,33 @@ namespace DoA.Tests
             Assert.DoesNotThrow(() => lobbies.SetJoinable(7, true));
         }
 
+        [Test]
+        public void Search_WithoutSteam_AnswersEmptyAtOnce()
+        {
+            SteamLobbyService lobbies = new SteamLobbyService();
+            List<int> lengths = new List<int>();
+            lobbies.Found += delegate (ulong[] found) { lengths.Add(found.Length); };
+
+            lobbies.Search("1.0", 2);
+
+            CollectionAssert.AreEqual(new[] { 0 }, lengths);
+        }
+
+        [Test]
+        public void SetPublic_WithoutSteam_DoesNothing()
+        {
+            SteamLobbyService lobbies = new SteamLobbyService();
+
+            Assert.DoesNotThrow(() => lobbies.SetPublic(7, true));
+            Assert.DoesNotThrow(() => lobbies.SetPublic(7, false));
+        }
+
+        [Test]
+        public void Me_WithoutSteam_IsZero()
+        {
+            Assert.AreEqual(0UL, new SteamLobbyService().Me);
+        }
+
         class LobbyRecorder
         {
             public readonly List<ulong> Lobbies = new List<ulong>();

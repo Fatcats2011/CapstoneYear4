@@ -36,6 +36,18 @@ public interface ILobbyService
 
     void SetJoinable(ulong lobby, bool joinable);
 
+    /// <summary>This machine's Steam ID, or 0 without Steam</summary>
+    ulong Me { get; }
+
+    /// <summary>Makes a lobby public (anyone can find it) when open, friends-only otherwise</summary>
+    void SetPublic(ulong lobby, bool open);
+
+    /// <summary>Looks for public matchmaking lobbies of this build with seatsNeeded free seats. Found follows</summary>
+    void Search(string build, int seatsNeeded);
+
+    /// <summary>The lobbies a search found: at most MatchRules.MAX_RESULTS, empty when none or without Steam</summary>
+    event Action<ulong[]> Found;
+
     /// <summary>Whether a Steam user (a Steam ID) is in a lobby now. Only members may connect to a host (SteamPeerRules)</summary>
     bool IsMember(ulong lobby, ulong steamId);
 

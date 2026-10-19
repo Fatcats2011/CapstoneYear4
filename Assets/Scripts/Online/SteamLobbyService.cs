@@ -18,6 +18,7 @@ public class SteamLobbyService : ILobbyService
     public event Action<ulong> Created;
     public event Action<ulong, bool> Entered;
     public event Action<ulong> JoinRequested;
+    public event Action<ulong[]> Found;
 
 #if !DISABLESTEAMWORKS
     // Each call waits for its own answer, kept here until it comes: a CallResult set again drops the answer it was
@@ -25,6 +26,7 @@ public class SteamLobbyService : ILobbyService
     // also sends to a lobby's creator never looks like a join
     readonly List<CallResult<LobbyCreated_t>> creates = new List<CallResult<LobbyCreated_t>>();
     readonly List<CallResult<LobbyEnter_t>> joins = new List<CallResult<LobbyEnter_t>>();
+    readonly List<CallResult<LobbyMatchList_t>> searches = new List<CallResult<LobbyMatchList_t>>();
     readonly Callback<GameLobbyJoinRequested_t> joinRequested;
 #endif
 
@@ -150,6 +152,60 @@ public class SteamLobbyService : ILobbyService
 #endif
     }
 
+    /// <summary>This machine's Steam ID (0 without Steam)</summary>
+    public ulong Me
+    {
+        get
+        {
+#if !DISABLESTEAMWORKS
+            if (Available)
+                return SteamUser.GetSteamID().m_SteamID;
+#endif
+            return 0;
+        }
+    }
+
+    public void SetPublic(ulong lobby, bool open)
+    {
+#if !DISABLESTEAMWORKS
+        if (Available)
+            SteamMatchmaking.SetLobbyType(new CSteamID(lobby),
+                open ? ELobbyType.k_ELobbyTypePublic : ELobbyType.k_ELobbyTypeFriendsOnly);
+#endif
+    }
+
+    public void Search(string build, int seatsNeeded)
+    {
+#if !DISABLESTEAMWORKS
+        if (Available)
+        {
+            SteamMatchmaking.AddRequestLobbyListStringFilter(LobbyRules.GAME_KEY, LobbyRules.GAME,
+                ELobbyComparison.k_ELobbyComparisonEqual);
+            SteamMatchmaking.AddRequestLobbyListStringFilter(LobbyRules.BUILD_KEY, build,
+                ELobbyComparison.k_ELobbyComparisonEqual);
+            SteamMatchmaking.AddRequestLobbyListStringFilter(MatchRules.MM_KEY, MatchRules.MM_ON,
+                ELobbyComparison.k_ELobbyComparisonEqual);
+            SteamMatchmaking.AddRequestLobbyListNumericalFilter(MatchRules.OPEN_KEY, seatsNeeded,
+                ELobbyComparison.k_ELobbyComparisonEqualToOrGreaterThan);
+            SteamMatchmaking.AddRequestLobbyListFilterSlotsAvailable(seatsNeeded);
+            SteamMatchmaking.AddRequestLobbyListResultCountFilter(MatchRules.MAX_RESULTS);
+            SteamMatchmaking.AddRequestLobbyListDistanceFilter(ELobbyDistanceFilter.k_ELobbyDistanceFilterDefault);
+            SteamAPICall_t asked = SteamMatchmaking.RequestLobbyList();
+            if (!Started(asked))
+            {
+                Found?.Invoke(new ulong[0]);
+                return;
+            }
+            CallResult<LobbyMatchList_t> call = CallResult<LobbyMatchList_t>.Create(OnFound);
+            call.Set(asked);
+            searches.RemoveAll(Answered);
+            searches.Add(call);
+            return;
+        }
+#endif
+        Found?.Invoke(new ulong[0]);
+    }
+
     public bool Invite(ulong lobby)
     {
 #if !DISABLESTEAMWORKS
@@ -174,6 +230,15 @@ public class SteamLobbyService : ILobbyService
         bool entered = !ioFailure
             && result.m_EChatRoomEnterResponse == (uint)EChatRoomEnterResponse.k_EChatRoomEnterResponseSuccess;
         Entered?.Invoke(lobby, entered);
+    }
+
+    void OnFound(LobbyMatchList_t result, bool ioFailure)
+    {
+        int count = ioFailure ? 0 : (int)Math.Min(result.m_nLobbiesMatching, (uint)MatchRules.MAX_RESULTS);
+        ulong[] lobbies = new ulong[count];
+        for (int i = 0; i < count; i++)
+            lobbies[i] = SteamMatchmaking.GetLobbyByIndex(i).m_SteamID;
+        Found?.Invoke(lobbies);
     }
 
     void OnJoinRequested(GameLobbyJoinRequested_t request)
