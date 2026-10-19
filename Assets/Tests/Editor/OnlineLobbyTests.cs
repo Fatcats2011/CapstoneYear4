@@ -68,6 +68,24 @@ namespace DoA.Tests
         }
 
         [Test]
+        public void LetsIn_RepeatedReconnects_Refused()
+        {
+            double now = 0;
+            lobby = new OnlineLobby(lobbies, session, "1.2", () => now);
+            lobby.ShowState(GameState.PlayerSelect);
+            lobbies.Members[42] = new List<ulong> { 8 };
+            Hosting();
+
+            for (int i = 0; i < JoinChurn.CHURN_LIMIT; i++)
+            {
+                Assert.IsTrue(lobby.LetsIn(8), "connection " + (i + 1));
+                now += 5;
+            }
+
+            Assert.IsFalse(lobby.LetsIn(8), "the sixth within a minute");
+        }
+
+        [Test]
         public void Host_MakesAFriendsOnlyLobbyForFour_TagsItWithTheGameAndBuild_AndHostsInIt()
         {
             Hosting();

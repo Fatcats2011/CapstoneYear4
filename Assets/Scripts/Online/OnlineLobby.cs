@@ -20,6 +20,9 @@ public class OnlineLobby
     readonly ILobbyService lobbies;
     readonly ISessionControl session;
     readonly string build;
+    readonly Func<double> clock;
+
+    JoinChurn churn;   // this hosting session's reconnect counts (null while not hosting)
 
     bool creating;   // a lobby is being made to host in
     ulong joining;   // the lobby being entered (0 = none)
@@ -39,11 +42,13 @@ public class OnlineLobby
     public event Action<string> HostFailed;
 
     /// <param name="build">This build's tag (LobbyRules.BuildTag): the host's lobby carries it, and a friend's lobby must match it</param>
-    public OnlineLobby(ILobbyService lobbies, ISessionControl session, string build)
+    /// <param name="clock">Seconds, for JoinChurn (null = realtime since startup); tests pass a fake</param>
+    public OnlineLobby(ILobbyService lobbies, ISessionControl session, string build, Func<double> clock = null)
     {
         this.lobbies = lobbies;
         this.session = session;
         this.build = build;
+        this.clock = clock ?? (() => UnityEngine.Time.realtimeSinceStartupAsDouble);
 
         lobbies.Created += OnCreated;
         lobbies.Entered += OnEntered;
@@ -154,6 +159,7 @@ public class OnlineLobby
         lobbies.SetData(lobby, LobbyRules.BUILD_KEY, build);
         Current = lobby;
         IsHost = true;
+        churn = new JoinChurn(clock);
 
         if (!session.Host())
         {
@@ -228,11 +234,12 @@ public class OnlineLobby
 
     /// <summary>
     /// Whether a Steam user may connect to this machine's session: only while it hosts a lobby, and only that lobby's
-    /// members (SteamPeerRules). A stranger who knows the host's Steam ID is closed before Netcode sees them
+    /// members (SteamPeerRules). A stranger who knows the host's Steam ID is closed before Netcode sees them. Called once
+    /// per accepted connection, and a Steam ID that keeps reconnecting is refused for the session (JoinChurn)
     /// </summary>
     public bool LetsIn(ulong steamId)
     {
-        return IsHost && SteamPeerRules.Accepts(steamId, Current, lobbies);
+        return IsHost && SteamPeerRules.Accepts(steamId, Current, lobbies) && churn.Allow(steamId);
     }
 
     void Tell(string message)
