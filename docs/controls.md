@@ -16,6 +16,8 @@ Up to 4 players, one controller each (Xbox, PlayStation and Switch Pro controlle
 | Menus: move / pick / back | D-pad or left stick / A / B |
 | Menus: host an online lobby (player select) | Y (triangle) |
 | Menus: open the customization sliders (online player select) | X (square) |
+| Menus: find a match (online player select, host) | Left shoulder (L1 / LB) |
+| Menus: open the lobby to anyone, or back to friends only (online player select, host) | Right shoulder (R1 / RB) |
 
 ## Keyboard (one player)
 
@@ -38,6 +40,8 @@ The game joins players itself (`PlayerJoiner`, Phase 5A): the scene's `PlayerInp
 | Menus: back | Backspace |
 | Menus: host an online lobby (player select) | Tab |
 | Menus: open the customization sliders (online player select) | Q |
+| Menus: find a match (online player select, host) | F |
+| Menus: open the lobby to anyone, or back to friends only (online player select, host) | R |
 | Loading screen: ready | Space or Enter |
 
 - **Button prompts still show controller buttons:** read A as Space, B as Backspace and Start as Escape. Keyboard prompt art is still to come.

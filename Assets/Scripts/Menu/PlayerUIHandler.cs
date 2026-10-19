@@ -14,6 +14,14 @@ public class PlayerUIHandler : MonoBehaviour
     /// uses it to open the customization sliders. Until the action exists in the input asset, X does nothing there</summary>
     public const string WEST_ACTION = "UI/West Face";
 
+    /// <summary>The UI map's left shoulder action (L1/LB), which reaches the menus through LeftShoulderTrigger. Online player
+    /// select uses it to find a match. Until the action exists in the input asset, it does nothing</summary>
+    public const string LEFT_SHOULDER_ACTION = "UI/Left Shoulder";
+
+    /// <summary>The UI map's right shoulder action (R1/RB), which reaches the menus through RightShoulderTrigger. Online
+    /// player select uses it to open the lobby to anyone. Until the action exists in the input asset, it does nothing</summary>
+    public const string RIGHT_SHOULDER_ACTION = "UI/Right Shoulder";
+
     public GameObject MenuCanvas;
     public MenuInteractions menuInteractions;
     public CustomizationSelector customizationSelector;
@@ -37,6 +45,10 @@ public class PlayerUIHandler : MonoBehaviour
     public UnityEvent<bool> WestFaceEvent;
     private bool westFaceValue; //a bool representing the pushed state of the west face button (true for pushed, false for loose)
     public bool WestFaceValue { get { return westFaceValue; } }
+
+    public UnityEvent<bool> LeftShoulderEvent;
+
+    public UnityEvent<bool> RightShoulderEvent;
 
     public UnityEvent<bool> LeftPadEvent;
     private bool leftPadValue; //a bool representing the pushed state of the left d-pad button (true for pushed, false for loose)
@@ -64,6 +76,8 @@ public class PlayerUIHandler : MonoBehaviour
     Coroutine disableInteraction;
     InputAction northFace; // wired here: the player prefab's event list has no Y
     InputAction westFace; // wired here: the player prefab's event list has no UI X
+    InputAction leftShoulder; // wired here: the player prefab's event list has no shoulders
+    InputAction rightShoulder;
 
     private void OnEnable()
     {
@@ -93,6 +107,18 @@ public class PlayerUIHandler : MonoBehaviour
             westFace = null;
         if (westFace != null)
             westFace.performed += WestFaceTrigger;
+
+        leftShoulder = input.actions.FindAction(LEFT_SHOULDER_ACTION);
+        if (leftShoulder != null && WiredByPlayerInput(input, leftShoulder))
+            leftShoulder = null;
+        if (leftShoulder != null)
+            leftShoulder.performed += LeftShoulderTrigger;
+
+        rightShoulder = input.actions.FindAction(RIGHT_SHOULDER_ACTION);
+        if (rightShoulder != null && WiredByPlayerInput(input, rightShoulder))
+            rightShoulder = null;
+        if (rightShoulder != null)
+            rightShoulder.performed += RightShoulderTrigger;
     }
 
     private void OnDestroy()
@@ -101,6 +127,10 @@ public class PlayerUIHandler : MonoBehaviour
             northFace.performed -= NorthFaceTrigger;
         if (westFace != null)
             westFace.performed -= WestFaceTrigger;
+        if (leftShoulder != null)
+            leftShoulder.performed -= LeftShoulderTrigger;
+        if (rightShoulder != null)
+            rightShoulder.performed -= RightShoulderTrigger;
     }
 
     /// <summary>
@@ -204,6 +234,34 @@ public class PlayerUIHandler : MonoBehaviour
             westFaceValue = context.ReadValueAsButton();
             WestFaceEvent?.Invoke(westFaceValue);
         }
+    }
+
+    /// <summary>
+    /// Takes input from the left shoulder button (L1 on PlayStation, LB on Xbox)
+    /// </summary>
+    /// <param name="context">boilerplate for Input Controller</param>
+    public void LeftShoulderTrigger(CallbackContext context)
+    {
+        // Disables input untill can input is true
+        if (canInput == false)
+            return;
+
+        if (context.performed)
+            LeftShoulderEvent?.Invoke(context.ReadValueAsButton());
+    }
+
+    /// <summary>
+    /// Takes input from the right shoulder button (R1 on PlayStation, RB on Xbox)
+    /// </summary>
+    /// <param name="context">boilerplate for Input Controller</param>
+    public void RightShoulderTrigger(CallbackContext context)
+    {
+        // Disables input untill can input is true
+        if (canInput == false)
+            return;
+
+        if (context.performed)
+            RightShoulderEvent?.Invoke(context.ReadValueAsButton());
     }
 
     /// <summary>

@@ -269,6 +269,17 @@ Online multiplayer is being built in steps (roadmap Phase 3: `docs/superpowers/p
 - **B** is unchanged.
 - **Accepting a friend's invite** works as before, from Local Play's player select too.
 
+### Matchmaking
+
+Playing with strangers is opt-in: a lobby is created friends only, exactly as before. Only Fill (or Find's fallback) makes it public. The code is `MatchRules` (constants and rules), `Matchmaker` (Find), `OnlineLobby.SetFill` (Fill) and `OnlineGame` (the automatic start).
+- **Fill** (right shoulder / R, the host only): opens the lobby to anyone (`mm=1` and the free seats in `open` on the Steam lobby) or back to friends only. A client's press does nothing, with no sound. The prompt shows what pressing does: `OPEN TO ANYONE` or `FRIENDS ONLY`.
+- **Find** (left shoulder / F, a host not ready and with the sliders closed): searches Steam's public lobbies of this build for a free seat (`MAX_RESULTS` = 50, one search every `SEARCH_GAP` = 5 s) and moves the lone host into the fullest, trying up to `MAX_TRIES` = 3. With none, the host's own lobby opens to anyone and says so. The status line shows `LOOKING FOR A MATCH…` meanwhile. B cancels. Find is refused once another machine is in the lobby (`Find a match before others join your lobby.`). A lone Fill host searches again every `RESEARCH` = 15 s, and only the owner with the higher Steam ID moves, so two such hosts never both leave.
+- **Automatic start:** an open lobby with two or more machines seated starts by itself `AUTO_START` = 60 s after its last seat was taken. The host shares the time (`OnlineMatch.AutoStartAt`, server time); every machine readies its own players as A does, and `FORCE_GRACE` = 5 s later the host readies any seat still not ready, so Dispatch's all-ready countdown runs.
+  - The count restarts whenever the number of seated machines changes, including a brief dip during a seat move.
+  - A lone host never auto-starts, and a friends-only lobby never does.
+- **Joins** are rate-limited per Steam ID (`JoinChurn`): at most `CHURN_LIMIT` = 5 accepted connections within `CHURN_WINDOW` = 60 s.
+- **The status line** (`DispatchBoard.matchmakingLine`, `MatchRules.StatusLine`) shows `LOOKING FOR A MATCH…`, `OPEN TO ANYONE` (with ` · STARTS IN {s}` while counting, whole seconds rounded up) or `FRIENDS ONLY`. A client can't see whether the host's lobby is open, so it shows the host's countdown when there is one, and `FRIENDS ONLY` otherwise.
+
 ## Two editors on one computer (ParrelSync)
 
 - **ParrelSync → Clones Manager → Create new clone** (once). The clone shares this project's Assets and ProjectSettings. Unity imports the project the first time the clone opens, which takes a while.

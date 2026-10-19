@@ -34,6 +34,31 @@ public class OnlineGame : MonoBehaviour
     /// <summary>Everyone in the session, whichever machine they are on</summary>
     public IReadOnlyList<OnlinePlayer> Players { get { return session.Players; } }
 
+    /// <summary>
+    /// Seconds until the open lobby starts by itself, 0 when no start is set (the host's, shared with every machine)
+    /// </summary>
+    public float AutoStartRemaining
+    {
+        get
+        {
+            OnlineMatch match = session == null ? null : session.Match;
+            if (match == null || !session.IsRunning)
+                return 0;
+
+            return MatchRules.AutoStartRemaining(match.AutoStartAt, session.Network.ServerTime.Time);
+        }
+    }
+
+    /// <summary>Whether the host has set an automatic start (a client can't tell whether the lobby is open to anyone otherwise)</summary>
+    public bool AutoStartSet
+    {
+        get
+        {
+            OnlineMatch match = session == null ? null : session.Match;
+            return match != null && session.IsRunning && match.AutoStartAt != 0;
+        }
+    }
+
     /// <summary>Player select's colours and hats</summary>
     public CustomizationSelector Choices { get { return choices; } }
 

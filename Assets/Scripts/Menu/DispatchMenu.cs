@@ -1,12 +1,12 @@
 /// <summary>
 /// The buttons a player has in Dispatch (online player select)
 /// </summary>
-public enum DispatchButton { South, East, West, North, Pad }
+public enum DispatchButton { South, East, West, North, Pad, LeftShoulder, RightShoulder }
 
 /// <summary>
 /// What a Dispatch button press does
 /// </summary>
-public enum DispatchAction { None, OpenSliders, CloseSliders, Scroll, Ready, CloseAndReady, Unready, Leave, Invite }
+public enum DispatchAction { None, OpenSliders, CloseSliders, Scroll, Ready, CloseAndReady, Unready, Leave, Invite, Find, Fill, CancelFind }
 
 /// <summary>
 /// Dispatch's button rules: X opens the customization sliders, which stay closed until then. While they are open, the d-pad
@@ -20,9 +20,9 @@ public class DispatchMenu
     public bool Open { get; private set; }
 
     /// <summary>
-    /// What a press does for a player who is (not) ready. Updates Open
+    /// What a press does for a player who is (not) ready, while a search for a match is (not) running. Updates Open
     /// </summary>
-    public DispatchAction Press(DispatchButton button, bool readied)
+    public DispatchAction Press(DispatchButton button, bool readied, bool searching = false)
     {
         switch (button)
         {
@@ -42,6 +42,8 @@ public class DispatchMenu
                 return Open ? DispatchAction.Scroll : DispatchAction.None;
 
             case DispatchButton.East:
+                if (searching)
+                    return DispatchAction.CancelFind;
                 if (Open)
                 {
                     Open = false;
@@ -61,6 +63,12 @@ public class DispatchMenu
 
             case DispatchButton.North:
                 return DispatchAction.Invite;
+
+            case DispatchButton.LeftShoulder:
+                return !Open && !readied ? DispatchAction.Find : DispatchAction.None;
+
+            case DispatchButton.RightShoulder:
+                return Open ? DispatchAction.None : DispatchAction.Fill;
         }
         return DispatchAction.None;
     }

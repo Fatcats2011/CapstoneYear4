@@ -13,6 +13,7 @@ public class DispatchBoard : MonoBehaviour
     [SerializeField] TicketView[] tickets; // by seat
     [SerializeField] TMP_Text readyLine;
     [SerializeField] GameObject banner;
+    [SerializeField] TMP_Text matchmakingLine; // optional: searching, open to anyone (with the seconds to a start), friends only
 
     /// <summary>Whether the board is up (OnlinePlay hides its hint bar then)</summary>
     public static bool Showing { get; private set; }
@@ -22,6 +23,7 @@ public class DispatchBoard : MonoBehaviour
     readonly TicketState[] buffer = new TicketState[Constants.MAX_PLAYERS]; // the tickets as they are now, rebuilt each frame
     readonly TicketState[] shown = new TicketState[Constants.MAX_PLAYERS];  // the tickets as last applied
     bool applied;
+    string statusShown; // the matchmaking line as last set
 
     void Start()
     {
@@ -54,6 +56,29 @@ public class DispatchBoard : MonoBehaviour
 
         Gather();
         Apply(buffer);
+        ShowMatchmaking();
+    }
+
+    // The matchmaking line, set only when it changes. A client can't see whether the host's lobby is open, so it shows the
+    // host's countdown when there is one
+    void ShowMatchmaking()
+    {
+        if (matchmakingLine == null)
+            return;
+
+        OnlinePlay play = OnlinePlay.Instance;
+        OnlineGame game = OnlineGame.Playing;
+        bool host = play != null && play.Lobby != null && play.Lobby.IsHost;
+        bool filling = host ? play.Lobby.Filling : game != null && game.AutoStartSet;
+        bool searching = play != null && play.Match != null && play.Match.Searching;
+        float remaining = game == null ? 0 : game.AutoStartRemaining;
+
+        string line = MatchRules.StatusLine(filling, searching, remaining);
+        if (line == statusShown)
+            return;
+
+        statusShown = line;
+        matchmakingLine.text = line;
     }
 
     // Player select's canvas comes and goes with its scene
@@ -82,7 +107,10 @@ public class DispatchBoard : MonoBehaviour
             PlayerSelectCanvas.Instance.SetJoinPromptsHidden(on);
 
         if (!on)
+        {
             SetBanner(false);
+            statusShown = null;
+        }
 
         // The sliders follow Dispatch's rule while it is up, and come back when it is down
         PlayerInstantiate players = PlayerInstantiate.Instance;

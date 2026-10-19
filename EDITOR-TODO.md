@@ -16,6 +16,17 @@ Done: the MULTIPLAYER and LOCAL entries are in the scene (Selector Objects: Mult
 - **Input asset** (`Assets/Resources/CapstoneYear4.inputactions`): in the UI map add a Button action **West Face** (like North Face), bound to `<Gamepad>/buttonWest` (group Gamepad), gamepad binding only; the keyboard key (Q) comes from `KeyboardControls`. The code wires it by name (`UI/West Face`), so nothing else is needed. Until it exists, X does nothing in online player select, so the sliders can't be opened there.
 - **Check, online player select:** the sliders are hidden; X shows them (d-pad scrolls them); B or A hides them; local player select still shows them all the time, and X does nothing there.
 
+## 1d. Matchmaking buttons and status line (5 minutes, main editor)
+
+Code is done (`docs/online.md`, Matchmaking). Neither shoulder nor F/R was used in the UI map, so these are free:
+- **Input asset** (`Assets/Resources/CapstoneYear4.inputactions`): in the UI map add two Button actions, like North Face:
+  - **Left Shoulder**, bound to `<Gamepad>/leftShoulder` (group Gamepad); the keyboard key (F) comes from `KeyboardControls`.
+  - **Right Shoulder**, bound to `<Gamepad>/rightShoulder` (group Gamepad); the keyboard key (R) comes from `KeyboardControls`.
+  - The code wires them by name (`UI/Left Shoulder`, `UI/Right Shoulder`). Until they exist, the buttons do nothing.
+- **The Dispatch board:** add a text for `matchmakingLine` (below the ready counter, say) and wire it. It shows `LOOKING FOR A MATCH…`, `OPEN TO ANYONE`, `OPEN TO ANYONE · STARTS IN 42` or `FRIENDS ONLY`. Optional: with none wired, the line is just not shown.
+- **Two prompts** with the shoulder button art, in the bottom prompts: `FIND MATCH` (left shoulder) and `OPEN TO ANYONE` / `FRIENDS ONLY` (right shoulder; the text is what pressing does, so swap it when the lobby opens or closes).
+- **Check, online player select (the host):** R opens the lobby to anyone and the line follows; R again closes it. F searches (`LOOKING FOR A MATCH…`) and B cancels. A client's R does nothing. Two machines seated in an open lobby show the countdown from 60.
+
 ## 1c. Dispatch lobby: online player select (2-3 hours, main editor, mostly art)
 
 Code is done (`docs/online.md`, Phase 3B). Needs step 1b first (the West Face action), then, in the menu scene:

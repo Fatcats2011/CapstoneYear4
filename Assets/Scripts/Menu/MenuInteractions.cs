@@ -149,6 +149,8 @@ public class MenuInteractions : MonoBehaviour
         uiHandler.EastFaceEvent.RemoveAllListeners();
         uiHandler.NorthFaceEvent.RemoveAllListeners();
         uiHandler.WestFaceEvent.RemoveAllListeners();
+        uiHandler.LeftShoulderEvent.RemoveAllListeners();
+        uiHandler.RightShoulderEvent.RemoveAllListeners();
 
         uiHandler.DownPadEvent.RemoveAllListeners();
         uiHandler.UpPadEvent.RemoveAllListeners();
@@ -200,6 +202,8 @@ public class MenuInteractions : MonoBehaviour
         uiHandler.EastFaceEvent.AddListener(PlayerUnreadyDespawnButton);
         uiHandler.NorthFaceEvent.AddListener(PlayOnline);
         uiHandler.WestFaceEvent.AddListener(PlayerCustomize);
+        uiHandler.LeftShoulderEvent.AddListener(FindMatchButton);
+        uiHandler.RightShoulderEvent.AddListener(FillButton);
 
         uiHandler.DownPadEvent.AddListener(CustomizationScrollDownButton);
         uiHandler.UpPadEvent.AddListener(CustomizationScrollUpButton);
@@ -236,6 +240,45 @@ public class MenuInteractions : MonoBehaviour
 
         RefreshDispatchSliders();
         PlayDispatchSound(action == DispatchAction.OpenSliders);
+    }
+
+    ///<summary>
+    /// Left shoulder in player select, online: looks for a match for the host's lobby (Matchmaker.Find)
+    ///</summary>
+    private void FindMatchButton(bool button)
+    {
+        if (!GameAuthority.IsOnline)
+            return;
+
+        if (dispatchMenu.Press(DispatchButton.LeftShoulder, readiedUp) != DispatchAction.Find)
+            return;
+
+        OnlinePlay play = OnlinePlay.Instance;
+        if (play == null || play.Match == null)
+            return;
+
+        if (play.Match.Find())
+            PlayDispatchSound(true);
+    }
+
+    ///<summary>
+    /// Right shoulder in player select, online: the host opens the lobby to anyone or back to friends only. A client gets
+    /// nothing (no action, no sound)
+    ///</summary>
+    private void FillButton(bool button)
+    {
+        if (!GameAuthority.IsOnline)
+            return;
+
+        if (dispatchMenu.Press(DispatchButton.RightShoulder, readiedUp) != DispatchAction.Fill)
+            return;
+
+        OnlinePlay play = OnlinePlay.Instance;
+        if (play == null || play.Lobby == null || !play.Lobby.IsHost)
+            return;
+
+        play.Lobby.SetFill(!play.Lobby.Filling);
+        PlayDispatchSound(true);
     }
 
     private void PlayDispatchSound(bool enter)
@@ -291,8 +334,14 @@ public class MenuInteractions : MonoBehaviour
             return;
         }
 
-        switch (dispatchMenu.Press(DispatchButton.East, readiedUp))
+        OnlinePlay play = OnlinePlay.Instance;
+        bool searching = play != null && play.Match != null && play.Match.Searching;
+        switch (dispatchMenu.Press(DispatchButton.East, readiedUp, searching))
         {
+            case DispatchAction.CancelFind:
+                play.Match.Cancel();
+                PlayDispatchSound(false);
+                break;
             case DispatchAction.CloseSliders:
                 RefreshDispatchSliders();
                 PlayDispatchSound(false);

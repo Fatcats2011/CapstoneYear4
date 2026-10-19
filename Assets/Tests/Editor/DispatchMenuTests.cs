@@ -34,6 +34,43 @@ namespace DoA.Tests
         }
 
         [Test]
+        public void LeftShoulder_FindsWhenIdle()
+        {
+            DispatchMenu menu = new DispatchMenu();
+
+            Assert.AreEqual(DispatchAction.Find, menu.Press(DispatchButton.LeftShoulder, false));
+        }
+
+        [Test]
+        public void LeftShoulder_NothingWhenReadyOrOpen()
+        {
+            DispatchMenu menu = new DispatchMenu();
+            Assert.AreEqual(DispatchAction.None, menu.Press(DispatchButton.LeftShoulder, true), "ready");
+
+            menu.Press(DispatchButton.West, false);
+            Assert.AreEqual(DispatchAction.None, menu.Press(DispatchButton.LeftShoulder, false), "sliders open");
+        }
+
+        [Test]
+        public void RightShoulder_FillWhenClosed()
+        {
+            DispatchMenu menu = new DispatchMenu();
+            Assert.AreEqual(DispatchAction.Fill, menu.Press(DispatchButton.RightShoulder, false), "idle");
+            Assert.AreEqual(DispatchAction.Fill, menu.Press(DispatchButton.RightShoulder, true), "ready");
+
+            menu.Press(DispatchButton.West, false);
+            Assert.AreEqual(DispatchAction.None, menu.Press(DispatchButton.RightShoulder, false), "sliders open");
+        }
+
+        [Test]
+        public void East_WhileSearching_Cancels()
+        {
+            DispatchMenu menu = new DispatchMenu();
+            Assert.AreEqual(DispatchAction.CancelFind, menu.Press(DispatchButton.East, false, true), "idle");
+            Assert.AreEqual(DispatchAction.CancelFind, menu.Press(DispatchButton.East, true, true), "ready");
+        }
+
+        [Test]
         public void Reset_ClosesTheSliders()
         {
             DispatchMenu menu = new DispatchMenu();

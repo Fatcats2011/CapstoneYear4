@@ -96,6 +96,8 @@ namespace DoA.Tests
             ui.EastFaceEvent = new UnityEngine.Events.UnityEvent<bool>();
             ui.SouthFaceEvent = new UnityEngine.Events.UnityEvent<bool>();
             ui.WestFaceEvent = new UnityEngine.Events.UnityEvent<bool>();
+            ui.LeftShoulderEvent = new UnityEngine.Events.UnityEvent<bool>();
+            ui.RightShoulderEvent = new UnityEngine.Events.UnityEvent<bool>();
             ui.LeftPadEvent = new UnityEngine.Events.UnityEvent<bool>();
             ui.RightPadEvent = new UnityEngine.Events.UnityEvent<bool>();
             ui.UpPadEvent = new UnityEngine.Events.UnityEvent<bool>();
@@ -164,6 +166,41 @@ namespace DoA.Tests
             }
             finally
             {
+                objects.DestroyAll();
+            }
+        }
+
+        [Test]
+        public void Online_RightShoulder_OnClient_DoesNothing()
+        {
+            TestObjects objects = new TestObjects();
+            try
+            {
+                GameAuthority.Role = NetworkRole.Client;
+                FakeLobbyService lobbies = new FakeLobbyService();
+                OnlinePlay play = objects.Add<OnlinePlay>();
+                play.UseDirect(lobbies, "127.0.0.1", 7777);
+                OnlinePlay.Instance = play;
+                MenuInteractions menu = objects.Add<MenuInteractions>();
+                PlayerUIHandler ui = objects.Add<PlayerUIHandler>();
+                InputManager driving = objects.Add<InputManager>();
+                CustomizationSelector sliders = objects.Add<CustomizationSelector>();
+                Set(menu, "uiHandler", ui);
+                Set(menu, "drivingHandler", driving);
+                Set(menu, "customizationSelector", sliders);
+                GiveEvents(ui, driving);
+                menu.SwapMenuType(MenuType.PlayerSelect);
+
+                ui.RightShoulderEvent.Invoke(true);
+
+                Assert.IsFalse(play.Lobby.Filling, "a client can't open the lobby");
+                Assert.IsEmpty(lobbies.PublicCalls);
+                Assert.IsEmpty(lobbies.DataCalls);
+            }
+            finally
+            {
+                OnlinePlay.Instance = null;
+                GameAuthority.Role = NetworkRole.Offline;
                 objects.DestroyAll();
             }
         }

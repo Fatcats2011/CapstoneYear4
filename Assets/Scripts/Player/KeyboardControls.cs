@@ -82,6 +82,10 @@ public static class KeyboardControls
         Keys(asset, "UI/North Face", "tab");
         if (asset.FindAction("UI/West Face") != null) // added by the editor step in EDITOR-TODO.md 1b; Keys throws when missing
             Keys(asset, "UI/West Face", "q");
+        if (asset.FindAction("UI/Left Shoulder") != null) // added by the editor step in EDITOR-TODO.md 1d
+            Keys(asset, "UI/Left Shoulder", "f");
+        if (asset.FindAction("UI/Right Shoulder") != null)
+            Keys(asset, "UI/Right Shoulder", "r");
 
         // The loading screen (the Load map)
         Keys(asset, "Load/Confirm", "space", "enter", "numpadEnter");
