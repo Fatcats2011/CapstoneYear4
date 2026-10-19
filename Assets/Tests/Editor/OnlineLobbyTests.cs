@@ -429,14 +429,81 @@ namespace DoA.Tests
         {
             Hosting();
             lobby.SetFill(true);
-            int publicCalls = lobbies.PublicCalls.Count;
 
             session.Stop(null);
             Assert.IsFalse(lobby.Filling);
+            int publicCalls = lobbies.PublicCalls.Count;
             Hosting43();
 
             Assert.IsFalse(lobby.Filling);
-            Assert.AreEqual(publicCalls, lobbies.PublicCalls.Count, "no new public call");
+            Assert.AreEqual(publicCalls, lobbies.PublicCalls.Count, "no public call for the new lobby");
+        }
+
+        // M-5 (spec Safety 3): Steam may hand a left lobby to a member who stays, so it goes back to friends only first
+        [Test]
+        public void Leave_WhileFilling_FriendsOnlyBeforeLeaving_AndFillChangedOff()
+        {
+            Hosting();
+            lobby.SetFill(true);
+            List<bool> changes = new List<bool>();
+            lobby.FillChanged += changes.Add;
+
+            session.Stop(null);
+
+            Assert.AreEqual((42UL, false), lobbies.PublicCalls[lobbies.PublicCalls.Count - 1], "friends only");
+            Assert.AreEqual("", lobbies.GetData(42, MatchRules.MM_KEY), "untagged");
+            CollectionAssert.AreEqual(new[] { 42UL }, lobbies.Left);
+            CollectionAssert.AreEqual(new[] { false }, changes, "Fill off is told");
+            Assert.IsFalse(lobby.Filling);
+        }
+
+        [Test]
+        public void Leave_NeverFilled_NoPublicCallAndNoFillChanged()
+        {
+            Hosting();
+            List<bool> changes = new List<bool>();
+            lobby.FillChanged += changes.Add;
+
+            session.Stop(null);
+
+            Assert.IsEmpty(lobbies.PublicCalls);
+            Assert.IsEmpty(changes);
+        }
+
+        // M-4: an invite answered during a switch between sessions drops the switch first
+        [Test]
+        public void Answer_DuringASwitch_DropsIt_ThenJoins()
+        {
+            Hosting();
+            lobbies.AddLobby(77, "doa", "1.2", 177);
+            lobbies.AddLobby(7, "doa", "1.2", 99);
+            Assert.IsTrue(lobby.Switch(77));
+            lobbies.RaiseEntered(77, true);
+            Assert.AreEqual(77UL, lobby.Current, "switching");
+            bool answering = false;
+            lobby.Answering += () => answering = true;
+
+            lobby.Answer(7, null);
+
+            Assert.IsTrue(answering, "Find hears it");
+            CollectionAssert.Contains(lobbies.Left, 77UL, "the switch's lobby is left");
+            Assert.AreEqual(2, session.Leaves, "the old session, then the one joining the switch's host");
+            lobbies.RaiseEntered(7, true);
+            Assert.AreEqual(7UL, lobby.Current);
+            CollectionAssert.AreEqual(new[] { 177UL, 99UL }, session.JoinedHosts);
+        }
+
+        [Test]
+        public void Host_SaysWhetherALobbyIsBeingMade()
+        {
+            Assert.IsTrue(lobby.Host(), "being made");
+            Assert.IsFalse(lobby.Host(), "one is being made already");
+            lobbies.RaiseCreated(42);
+            Assert.IsFalse(lobby.Host(), "in a lobby");
+
+            session.Stop(null);
+            lobbies.Available = false;
+            Assert.IsFalse(lobby.Host(), "no Steam");
         }
 
         void Hosting43()

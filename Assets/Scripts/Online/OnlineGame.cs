@@ -16,7 +16,7 @@ using UnityEngine;
 /// - everyone's colour, hat and readiness;
 /// - the host's game states;
 /// - the host's match clock (MatchClock);
-/// - an open lobby starting by itself (MatchRules.AutoStartAt);
+/// - an open lobby starting by itself (AutoStartClock);
 /// - why a session ended, in the controller hint bar. A match can't go on without its host: a machine in one goes back to
 ///   the menu.
 /// Whatever starts a session for the game adds it: OnlinePlay (Steam) or the editor's Online menu. See docs/online.md
@@ -89,7 +89,7 @@ public class OnlineGame : MonoBehaviour
     HostQueue hostMessages;  // client: the host's states, order changes, hits and respawn points, which wait while this machine's new scene comes up
     string pendingNotice;    // why the session ended, to say again once the menus are up
     bool wasInMenus = true; // the last state applied was in the menus (the host drops unready seats leaving them)
-    double lastSeatedAt;     // host: when a player was last seated, in server time
+    readonly AutoStartClock autoStartClock = new AutoStartClock(); // host: when an open lobby starts by itself
     double countingTo;       // the automatic start this machine saw counting down (only a start seen counting readies)
     double readiedFor;       // the automatic start this machine's players were readied for
     double graceFor;         // host: the automatic start whose grace ran out (other machines' players made ready, or already counting down)
@@ -280,7 +280,8 @@ public class OnlineGame : MonoBehaviour
         localPlayers.Clear();
         myName = null;
         asker.Reset();
-        lastSeatedAt = countingTo = readiedFor = graceFor = forcedFor = 0; // the next session's server time starts again
+        countingTo = readiedFor = graceFor = forcedFor = 0; // the next session's server time starts again
+        autoStartClock.Reset();
         if (players != null)
             players.GoOffline();
     }
@@ -304,9 +305,9 @@ public class OnlineGame : MonoBehaviour
 
     void OnPlayerSpawned(OnlinePlayer player)
     {
-        // Host: a new seat taken restarts an open lobby's automatic start
+        // Host: a machine's first seat in this session restarts an open lobby's automatic start (AutoStartClock)
         if (session.Network != null && session.Network.IsServer)
-            lastSeatedAt = session.Network.ServerTime.Time;
+            autoStartClock.Seated(session.MachineOf(player.OwnerClientId), session.Network.ServerTime.Time);
 
         if (player.IsOwner)
         {
@@ -551,9 +552,10 @@ public class OnlineGame : MonoBehaviour
         AutoStart(players);
     }
 
-    // An open lobby (Fill) starts by itself AUTO_START after its last seat was taken, with at least two machines in it.
-    // The host shares when (0 = it doesn't); then every machine readies its own players as A does, and FORCE_GRACE later
-    // the host makes every other machine's player ready, so Dispatch's all-ready start runs
+    // An open lobby (Fill) starts by itself AUTO_START after a machine last sat down for the first time, with at least
+    // two machines in it (AutoStartClock). The host shares when (0 = it doesn't); then every machine readies its own
+    // players as A does, and FORCE_GRACE later the host makes every other machine's player ready, so Dispatch's all-ready
+    // start runs
     void AutoStart(PlayerInstantiate players)
     {
         OnlineMatch match = session.Match;
@@ -565,12 +567,8 @@ public class OnlineGame : MonoBehaviour
 
         if (match.IsServer)
         {
-            // Leaving player select (the match starting) stops it. A count that begins (Fill turned on, or back from a
-            // match) starts from now, not from a seat taken long ago
-            bool open = inPlayerSelect && Filling() && MachinesSeated() >= 2;
-            if (open && match.AutoStartAt == 0)
-                lastSeatedAt = System.Math.Max(lastSeatedAt, now);
-            double at = open ? MatchRules.AutoStartAt(lastSeatedAt) : 0;
+            // Leaving player select (the match starting) stops it
+            double at = autoStartClock.StartAt(inPlayerSelect && Filling(), MachinesSeated(), now);
             match.SetAutoStart(at);
 
             // Once per start: a countdown already running (everyone ready) is left alone, so a player backing out of it still can
@@ -704,8 +702,8 @@ public class OnlineGame : MonoBehaviour
             }
 
             // A player made ready for the automatic start stays ready while it's set, whatever their machine sent before it
-            // heard. Once it isn't (a new seat, Fill off), their own readiness counts again. From the match starting until
-            // player select, readiness stays as it was
+            // heard. Once it isn't (a new machine seated, Fill off), their own readiness counts again. From the match
+            // starting until player select, readiness stays as it was
             if (shown.Forced && !ForcedReady() && InPlayerSelect())
                 shown.Forced = false;
             bool ready = shown.Forced || player.Ready;

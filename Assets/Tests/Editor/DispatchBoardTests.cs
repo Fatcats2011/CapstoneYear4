@@ -218,6 +218,40 @@ namespace DoA.Tests
             Assert.IsTrue(prompts[3].activeSelf);
         }
 
+        // I-2: the board stays up through a lobby switch's moment offline, so Local Play's player select doesn't show
+        [Test]
+        public void ShowsFor_OnlineOrSwitching_InPlayerSelectOnly()
+        {
+            Assert.IsTrue(DispatchBoard.ShowsFor(true, false, GameState.PlayerSelect), "online");
+            Assert.IsTrue(DispatchBoard.ShowsFor(false, true, GameState.PlayerSelect), "between sessions in a switch");
+            Assert.IsFalse(DispatchBoard.ShowsFor(false, false, GameState.PlayerSelect), "Local Play");
+            Assert.IsFalse(DispatchBoard.ShowsFor(true, true, GameState.Menu), "not outside player select");
+        }
+
+        // M-10: the right shoulder's label says what pressing it does, on the host only
+        [Test]
+        public void FillPrompt_HostSeesWhatPressingDoes_ClientSeesNothing()
+        {
+            TMP_Text prompt = objects.Add<TextMeshProUGUI>();
+            Set(board, "fillPrompt", prompt);
+
+            board.ShowFillPrompt(true, false);
+            Assert.IsTrue(prompt.gameObject.activeSelf);
+            Assert.AreEqual(MatchRules.OPEN_TO_ANYONE, prompt.text, "friends only: pressing opens it");
+
+            board.ShowFillPrompt(true, true);
+            Assert.AreEqual(MatchRules.FRIENDS_ONLY, prompt.text, "open: pressing closes it");
+
+            board.ShowFillPrompt(false, false);
+            Assert.IsFalse(prompt.gameObject.activeSelf, "a client's press does nothing");
+        }
+
+        [Test]
+        public void FillPrompt_NoneWired_Nothing()
+        {
+            Assert.DoesNotThrow(() => board.ShowFillPrompt(true, true));
+        }
+
         [Test]
         public void TicketView_FlashWithoutAnAnimator_JustCounts()
         {

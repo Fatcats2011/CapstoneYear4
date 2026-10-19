@@ -5,12 +5,15 @@ using System.Collections.Generic;
 /// Find (a lone host in Dispatch looking for a match):
 /// - searches Steam's public lobbies of this build with a free seat (one search at a time, SEARCH_GAP apart), and moves
 ///   into the fullest (OnlineLobby.Switch). A lobby that fails is passed for the next: a host with no free seat left
-///   doesn't count against the MAX_TRIES, anything else does;
-/// - with none left, the player's lobby opens to anyone (Fill), hosted again if it was left on the way;
-/// - a friend joining while it searches cancels it, and so does the player (B) or leaving the menus, at any step;
-/// - a search Steam doesn't answer within SEARCH_TIMEOUT counts as none found;
-/// - a lone Fill host searches again every RESEARCH seconds, and moves only to a lobby whose owner has the lower Steam
-///   ID, so two such hosts never both leave.
+///   doesn't count against the MAX_TRIES, anything else does, and no more than MAX_ATTEMPTS are moved into in all;
+/// - with none left, the player's lobby opens to anyone (Fill), hosted again if it was left on the way, and the player
+///   hears whether it did;
+/// - a friend joining while it searches cancels it, and so does the player (B, Fill turned off, a friend's invite
+///   answered) or leaving the menus, at any step;
+/// - a search Steam doesn't answer within SEARCH_TIMEOUT counts as none found, and a found lobby Steam doesn't answer
+///   within it as one that couldn't be entered;
+/// - a lone Fill host searches again every RESEARCH seconds, quietly (nothing shown, its own lobby left as it is), and
+///   moves only to a lobby whose owner has the lower Steam ID, so two such hosts never both leave.
 /// Plain C# over ILobbyService and OnlineLobby, so it's tested without Steam. OnlinePlay runs it. See docs/online.md
 /// </summary>
 public class Matchmaker
@@ -24,17 +27,33 @@ public class Matchmaker
 
     double lastSearchAt = double.NegativeInfinity;
     double fillSince = double.NegativeInfinity;   // when Fill last turned on
+    bool running;   // a search (the player's or a quiet one) or a move into a found lobby is under way
     bool awaitingFound;   // the search is out, its answer not in yet
-    bool quiet;   // a Fill host's own search again: nobody is told when nothing is found
+    bool quiet;   // a Fill host's own search again: nothing is shown for it, and its own lobby is left as it is
     List<MatchRules.Candidate> candidates = new List<MatchRules.Candidate>();
     int next;   // the next candidate to try
     int tries;   // the candidates that failed, a host with no free seat not counted
+    int attempts;   // the candidates moved into, whatever came of each
     ulong trying;   // the lobby being switched to (0 = none)
+    double triedAt;   // when the switch to it began
     bool tryNext;   // a switch failed: the next candidate is tried on the next Tick, once the failed session has stopped
     double blockedSince = double.NaN;   // when the next candidate couldn't be tried yet (NaN = it could)
 
-    /// <summary>Whether a search or a move into a found lobby is under way</summary>
-    public bool Searching { get; private set; }
+    /// <summary>
+    /// Whether the player's Find is under way: searching, or moving into a found lobby. The status line shows it and B
+    /// cancels it. A lone Fill host's quiet search again isn't this
+    /// </summary>
+    public bool Searching { get { return running && !quiet; } }
+
+    /// <summary>Whether a lone Fill host's quiet search again (or its move into a found lobby) is under way</summary>
+    internal bool ResearchingQuietly { get { return running && quiet; } }
+
+    /// <summary>
+    /// Whether a search, the player's or a quiet one, has this machine between sessions: its own lobby and session left
+    /// for a found lobby's host, who hasn't let it in yet (or between two tries). The machine is offline meanwhile, so
+    /// Dispatch stays up and its buttons wait (B cancels)
+    /// </summary>
+    public bool Switching { get { return running && !lobby.IsHost; } }
 
     /// <summary>A message for the player: nothing found, or Find refused</summary>
     public event Action<string> Notice;
@@ -57,6 +76,7 @@ public class Matchmaker
         lobby.SwitchFailed += OnSwitchFailed;
         lobby.Switched += OnSwitched;
         lobby.FillChanged += OnFillChanged;
+        lobby.Answering += Cancel;
     }
 
     /// <summary>
@@ -68,15 +88,17 @@ public class Matchmaker
         lobby.SwitchFailed -= OnSwitchFailed;
         lobby.Switched -= OnSwitched;
         lobby.FillChanged -= OnFillChanged;
+        lobby.Answering -= Cancel;
     }
 
     /// <summary>
-    /// Looks for a match to move into. False (and nothing happens) while searching, outside the menus, for a player not
-    /// hosting, within SEARCH_GAP of the last search, or for a host with others in its lobby (who is told so)
+    /// Looks for a match to move into. False (and nothing happens) while a search runs (a quiet one too), outside the
+    /// menus, for a player not hosting, within SEARCH_GAP of the last search, or for a host with others in its lobby (who
+    /// is told so)
     /// </summary>
     public bool Find()
     {
-        if (Searching || !inMenus() || !lobby.IsHost || lobby.Current == 0)
+        if (running || !inMenus() || !lobby.IsHost || lobby.Current == 0)
             return false;
 
         if (otherMachines() > 0)
@@ -93,12 +115,13 @@ public class Matchmaker
     }
 
     /// <summary>
-    /// Stops a search at any step, quietly (B, a friend joining, the player leaving): a lobby being entered is left when
-    /// it answers, and once the player's own lobby was left, the new lobby and its host's session are left too
+    /// Stops a search at any step, the player's or a quiet one, quietly (B, a friend joining or inviting, Fill turned
+    /// off, the player leaving): a lobby being entered is left when it answers, and once the player's own lobby was left,
+    /// the new lobby and its host's session are left too
     /// </summary>
     public void Cancel()
     {
-        if (!Searching)
+        if (!running)
             return;
 
         Stop();
@@ -106,12 +129,12 @@ public class Matchmaker
     }
 
     /// <summary>
-    /// Every frame: leaving the menus or a friend joining cancels the search, a search Steam doesn't answer times out, a
-    /// failed move tries the next lobby, and a lone Fill host searches again every RESEARCH seconds
+    /// Every frame: leaving the menus or a friend joining cancels the search, a search or a found lobby Steam doesn't
+    /// answer times out, a failed move tries the next lobby, and a lone Fill host searches again every RESEARCH seconds
     /// </summary>
     public void Tick()
     {
-        if (Searching && (!inMenus() || (lobby.IsHost && otherMachines() > 0)))
+        if (running && (!inMenus() || (lobby.IsHost && otherMachines() > 0)))
         {
             Cancel();
             return;
@@ -125,6 +148,10 @@ public class Matchmaker
             return;
         }
 
+        // A found lobby Steam never let this machine into: a failed try (OnSwitchFailed), and its late answer is left
+        if (trying != 0 && now - triedAt >= MatchRules.SEARCH_TIMEOUT && lobby.GiveUpEntering(trying))
+            return;
+
         if (tryNext)
         {
             tryNext = false;
@@ -132,14 +159,14 @@ public class Matchmaker
             return;
         }
 
-        if (!Searching && inMenus() && lobby.IsHost && lobby.Current != 0 && lobby.Filling && otherMachines() == 0
+        if (!running && inMenus() && lobby.IsHost && lobby.Current != 0 && lobby.Filling && otherMachines() == 0
             && now - Math.Max(lastSearchAt, fillSince) >= MatchRules.RESEARCH)
             Search(true);
     }
 
     void Search(bool again)
     {
-        Searching = true;
+        running = true;
         quiet = again;
         awaitingFound = true;
         lastSearchAt = clock();
@@ -178,13 +205,15 @@ public class Matchmaker
             candidates.RemoveAll(c => !MatchRules.MayYieldTo(lobbies.Me, c.Owner));
         next = 0;
         tries = 0;
+        attempts = 0;
         blockedSince = double.NaN;
         TryNext();
     }
 
     void TryNext()
     {
-        if (next >= candidates.Count || tries >= MatchRules.MAX_TRIES)
+        // Hosts with no free seat don't count as tries, but they can't keep a search going for ever either
+        if (next >= candidates.Count || tries >= MatchRules.MAX_TRIES || attempts >= MatchRules.MAX_ATTEMPTS)
         {
             NothingFound();
             return;
@@ -194,6 +223,8 @@ public class Matchmaker
         if (lobby.Switch(trying))
         {
             next++;
+            attempts++;
+            triedAt = clock();
             blockedSince = double.NaN;
             return;
         }
@@ -218,23 +249,33 @@ public class Matchmaker
         Stop();
     }
 
-    // No lobby worked out: the player's lobby opens to anyone, hosted again if the last try left it
+    // No lobby worked out. The player's Find opens their lobby to anyone, and they hear whether it did. A quiet search
+    // leaves the lobby as it is (still open: turning Fill off stops the search) and says nothing. Either one hosts again,
+    // open to anyone, when the last try left the lobby: the player chose that, by Find or by Fill
     void NothingFound()
     {
-        bool tell = !quiet;
+        bool find = !quiet;
         Stop();
-        if (tell)
-            Tell(MatchRules.NONE_FOUND);
 
+        bool open;
         if (lobby.IsHost)
-            lobby.SetFill(true);
+        {
+            if (find)
+                lobby.SetFill(true);
+            open = lobby.Filling;
+        }
         else if (lobby.Current == 0)
-            lobby.Host(invite: false, fill: true);
+            open = lobby.Host(invite: false, fill: true);
+        else
+            open = false;
+
+        if (find)
+            Tell(open ? MatchRules.NONE_FOUND : MatchRules.NONE_FOUND_CLOSED);
     }
 
     void OnSwitchFailed(ulong failed, OnlineLobby.SwitchFailure why)
     {
-        if (!Searching || failed != trying)
+        if (!running || failed != trying)
             return;
 
         trying = 0;
@@ -247,19 +288,24 @@ public class Matchmaker
 
     void OnSwitched(ulong switched)
     {
-        if (Searching && switched == trying)
+        if (running && switched == trying)
             Stop();
     }
 
+    // Fill on: a lone host's quiet search waits RESEARCH from now. The host turning it off stops any search, so its
+    // fallback can't open the lobby again and it can't move them into a stranger's. A lobby left by a switch also reads
+    // as Fill off, once it's gone: that isn't the host's choice, and the switch goes on
     void OnFillChanged(bool on)
     {
         if (on)
             fillSince = clock();
+        else if (lobby.IsHost)
+            Cancel();
     }
 
     void Stop()
     {
-        Searching = false;
+        running = false;
         awaitingFound = false;
         tryNext = false;
         trying = 0;

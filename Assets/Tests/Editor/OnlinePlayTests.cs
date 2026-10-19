@@ -155,6 +155,14 @@ namespace DoA.Tests
             Assert.AreEqual(OnlinePlay.HINT_IN_LOBBY, OnlinePlay.HintFor(GameState.PlayerSelect, true, true, true, false, dispatch: false));
         }
 
+        [Test]
+        public void Hint_DispatchUpBetweenSessions_OffersNothing()
+        {
+            // A lobby switch has this machine offline for a moment; Dispatch stays up, so the old title screen's offer to
+            // go online doesn't show
+            Assert.AreEqual("", OnlinePlay.HintFor(GameState.PlayerSelect, false, false, true, false, dispatch: true));
+        }
+
         [TestCase(GameState.Menu)]
         [TestCase(GameState.MainLoop)]
         public void Hint_OutsidePlayerSelect_OffersNothing(GameState state)

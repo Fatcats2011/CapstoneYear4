@@ -140,5 +140,19 @@ namespace DoA.Tests
             Assert.IsFalse(MatchRules.SearchAllowed(10, 14.9));
             Assert.IsTrue(MatchRules.SearchAllowed(10, 15));
         }
+
+        [Test]
+        public void FillPrompt_WhatPressingDoes()
+        {
+            Assert.AreEqual("OPEN TO ANYONE", MatchRules.FillPrompt(false));
+            Assert.AreEqual("FRIENDS ONLY", MatchRules.FillPrompt(true));
+        }
+
+        [Test]
+        public void NoneFound_Copy()
+        {
+            Assert.AreEqual("No open matches right now. Your lobby is open to anyone.", MatchRules.NONE_FOUND);
+            Assert.AreEqual("No open matches right now.", MatchRules.NONE_FOUND_CLOSED);
+        }
     }
 }

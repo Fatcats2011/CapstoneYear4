@@ -52,8 +52,10 @@ public class OnlinePlay : MonoBehaviour, ISessionControl
     /// <summary>The lobby flow: Steam's lobbies, or the ones UseDirect gave</summary>
     public OnlineLobby Lobby { get; private set; }
 
-    /// <summary>Find in Dispatch: moving into another open lobby (over the same lobbies as Lobby)</summary>
-    public Matchmaker Match { get; private set; }
+    /// <summary>
+    /// Find in Dispatch: moving into another open lobby (over the same lobbies as Lobby). Tests may set their own
+    /// </summary>
+    public Matchmaker Match { get; internal set; }
 
     /// <summary>
     /// The session this machine plays online (made on first use; OnlineGame plays it)
@@ -197,6 +199,10 @@ public class OnlinePlay : MonoBehaviour, ISessionControl
     /// <param name="hasOnlineEntry">Whether the title screen has Online Play (MainMenu.HasOnlineEntry)</param>
     public void PressY(bool hasOnlineEntry)
     {
+        // Between sessions in a lobby switch (offline for a moment): Y waits, as Dispatch's other buttons do
+        if (Match != null && Match.Switching)
+            return;
+
         switch (YAction(hasOnlineEntry, GameAuthority.IsOnline))
         {
             case YPress.Host:
@@ -265,13 +271,14 @@ public class OnlinePlay : MonoBehaviour, ISessionControl
     /// <param name="inLobby">Whether it's in a lobby (the editor's Online menu plays without one)</param>
     /// <param name="steam">Whether lobbies work here (Steam is running)</param>
     /// <param name="hasOnlineEntry">Whether the title screen has Online Play: then Local Play's player select offers nothing</param>
-    /// <param name="dispatch">Whether the Dispatch board is up (online player select): its tickets carry the prompts</param>
+    /// <param name="dispatch">Whether the Dispatch board is up (online player select, or a lobby switch between sessions):
+    /// its tickets carry the prompts</param>
     public static string HintFor(GameState state, bool online, bool inLobby, bool steam, bool hasOnlineEntry, bool dispatch)
     {
         if (state != GameState.PlayerSelect)
             return "";
 
-        if (online && dispatch)
+        if (dispatch)
             return "";
 
         if (online)

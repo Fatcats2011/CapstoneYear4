@@ -122,6 +122,31 @@ namespace DoA.Tests
             Assert.AreEqual(HostQueue.MAX_WAITING - 1, ran[ran.Count - 1], "the first ones kept, in order");
         }
 
+        // Another hold that overflows, after the session ended or the wait drained, is warned about again
+        [TestCase(true)]
+        [TestCase(false)]
+        public void Overflow_AfterClearOrDrain_WarnsAgain(bool clear)
+        {
+            holding = true;
+            LogAssert.Expect(LogType.Warning, new Regex("dropped"));
+            for (int i = 0; i <= HostQueue.MAX_WAITING; i++)
+                queue.Add(() => { });
+
+            if (clear)
+                queue.Clear();
+            else
+            {
+                holding = false;
+                queue.Release();
+                holding = true;
+            }
+
+            LogAssert.Expect(LogType.Warning, new Regex("dropped"));
+            for (int i = 0; i <= HostQueue.MAX_WAITING; i++)
+                queue.Add(() => { });
+            LogAssert.NoUnexpectedReceived();
+        }
+
         static void Throw()
         {
             throw new InvalidOperationException("a bad message");

@@ -205,6 +205,68 @@ namespace DoA.Tests
             }
         }
 
+        // I-2: a lobby switch has this machine offline for a moment, between sessions. Dispatch's buttons mustn't fall
+        // through to Local Play: A doesn't ready (a solo local match), B cancels the switch (not the title screen), and the
+        // sliders stay as Dispatch has them
+        [Test]
+        public void Switching_Offline_ADoesNothing_BCancels()
+        {
+            TestObjects objects = new TestObjects();
+            try
+            {
+                // A host alone in lobby 42, whose Find has left it for lobby 70's host
+                FakeLobbyService lobbies = new FakeLobbyService();
+                FakeSessionControl session = new FakeSessionControl();
+                OnlineLobby lobby = new OnlineLobby(lobbies, session, "1.2", () => 0);
+                lobby.ShowState(GameState.PlayerSelect);
+                Matchmaker match = new Matchmaker(lobbies, lobby, "1.2", () => 0, () => 0, () => true);
+                lobby.Host(invite: false);
+                lobbies.RaiseCreated(42);
+                lobbies.AddLobby(70, LobbyRules.GAME, "1.2", 170);
+                lobbies.SetData(70, MatchRules.MM_KEY, MatchRules.MM_ON);
+                lobbies.SetData(70, MatchRules.OPEN_KEY, "3");
+                Assert.IsTrue(match.Find());
+                lobbies.AnswerSearch(70);
+                lobbies.RaiseEntered(70, true);
+                Assert.IsTrue(match.Switching, "between sessions");
+                Assert.IsFalse(GameAuthority.IsOnline, "offline meanwhile");
+
+                OnlinePlay play = objects.Add<OnlinePlay>();
+                play.Match = match;
+                OnlinePlay.Instance = play;
+                MenuInteractions menu = objects.Add<MenuInteractions>();
+                PlayerUIHandler ui = objects.Add<PlayerUIHandler>();
+                InputManager driving = objects.Add<InputManager>();
+                CustomizationSelector sliders = objects.Add<CustomizationSelector>();
+                Set(menu, "uiHandler", ui);
+                Set(menu, "drivingHandler", driving);
+                Set(menu, "customizationSelector", sliders);
+                GiveEvents(ui, driving);
+                menu.SwapMenuType(MenuType.PlayerSelect);
+                Assert.IsFalse(sliders.gameObject.activeSelf, "Dispatch's sliders, closed (offline they'd show)");
+
+                ui.SouthFaceEvent.Invoke(true);
+                Assert.IsFalse((bool)Get(menu, "readiedUp"), "A doesn't ready");
+
+                ui.EastFaceEvent.Invoke(true);
+                Assert.IsFalse(match.Searching, "B cancels Find");
+                Assert.IsFalse(match.Switching);
+                Assert.AreEqual(0UL, lobby.Current, "the switch's lobby is left");
+                Assert.AreEqual(2, session.Leaves, "and the session joining its host");
+            }
+            finally
+            {
+                OnlinePlay.Instance = null;
+                objects.DestroyAll();
+            }
+        }
+
+        static object Get(MenuInteractions menu, string field)
+        {
+            return typeof(MenuInteractions).GetField(field, System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)
+                .GetValue(menu);
+        }
+
         class NorthRecorder
         {
             public int Presses;

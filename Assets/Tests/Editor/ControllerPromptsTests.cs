@@ -46,6 +46,18 @@ namespace DoA.Tests
             StringAssert.StartsWith("P3 ", ControllerPrompts.ReconnectMessage(2));
         }
 
+        // M-1: a hint can carry another machine's text (a host's reason): tags in it show as written
+        [Test]
+        public void Hint_ShowsTagsAsWritten()
+        {
+            ControllerPrompts prompts = ControllerPrompts.Instance;
+            prompts.ShowHint("<size=500>big</size>", 1f);
+
+            TMPro.TMP_Text text = prompts.transform.Find("Hint/Text").GetComponent<TMPro.TMP_Text>();
+            Assert.AreEqual("<size=500>big</size>", text.text);
+            Assert.IsFalse(text.richText, "rich text off");
+        }
+
         [Test]
         public void Hint_DisappearsWhenItsTimeIsUp()
         {

@@ -24,8 +24,8 @@ Code is done (`docs/online.md`, Matchmaking). Neither shoulder nor F/R was used 
   - **Right Shoulder**, bound to `<Gamepad>/rightShoulder` (group Gamepad); the keyboard key (R) comes from `KeyboardControls`.
   - The code wires them by name (`UI/Left Shoulder`, `UI/Right Shoulder`). Until they exist, the buttons do nothing.
 - **The Dispatch board:** add a text for `matchmakingLine` (below the ready counter, say) and wire it. It shows `LOOKING FOR A MATCH…`, `OPEN TO ANYONE`, `OPEN TO ANYONE · STARTS IN 42` or `FRIENDS ONLY`. Optional: with none wired, the line is just not shown.
-- **Two prompts** with the shoulder button art, in the bottom prompts: `FIND MATCH` (left shoulder) and `OPEN TO ANYONE` / `FRIENDS ONLY` (right shoulder; the text is what pressing does, so swap it when the lobby opens or closes).
-- **Check, online player select (the host):** R opens the lobby to anyone and the line follows; R again closes it. F searches (`LOOKING FOR A MATCH…`) and B cancels. A client's R does nothing. Two machines seated in an open lobby show the countdown from 60.
+- **Two prompts** with the shoulder button art, in the bottom prompts: `FIND MATCH` (left shoulder) and the right shoulder's Fill prompt. For the Fill prompt, add a text and wire it to the board's `fillPrompt`, with its right-shoulder art as a child of that text: the code sets it to what pressing does (`OPEN TO ANYONE` or `FRIENDS ONLY`) and hides it (art included) on a client. Nothing to swap by hand.
+- **Check, online player select (the host):** R opens the lobby to anyone and the line and the R prompt follow; R again closes it. F searches (`LOOKING FOR A MATCH…`) and B cancels. A client's R does nothing, and it shows no R prompt. Two machines seated in an open lobby show the countdown from 60.
 
 ## 1c. Dispatch lobby: online player select (2-3 hours, main editor, mostly art)
 

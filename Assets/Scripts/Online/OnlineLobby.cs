@@ -4,11 +4,12 @@ using System;
 /// Playing with friends through lobbies (Steam's in the game):
 /// - Host: makes a friends-only lobby for four, tags it with the game and build, hosts the session in it, and opens the
 ///   invite dialog.
-/// - Answer: enters a friend's lobby, checks its tags, and joins its owner's session.
+/// - Answer: enters a friend's lobby, checks its tags, and joins its owner's session (a switch under way is dropped).
 /// - Switch (Find, Matchmaker): a host alone in its lobby moves into another open lobby, keeping its own until the new
 ///   one is entered and its tags pass.
-/// - The lobby follows the session: it's left whenever the session stops, and a lobby that answers after the player
-///   moved on is left at once. The host's lobby is joinable only while the game is in its menus.
+/// - The lobby follows the session: it's left whenever the session stops (a host's open lobby back to friends only
+///   first), and a lobby that answers after the player moved on is left at once. The host's lobby is joinable only
+///   while the game is in its menus.
 /// Plain C# over ILobbyService and ISessionControl, so it's tested without Steam. OnlinePlay runs it. See docs/online.md
 /// </summary>
 public class OnlineLobby
@@ -74,6 +75,9 @@ public class OnlineLobby
     /// <summary>A switch is done: the new lobby's host let this machine in</summary>
     public event Action<ulong> Switched;
 
+    /// <summary>A friend's invite is being answered: it wins over Find, which stops (a switch is dropped)</summary>
+    public event Action Answering;
+
     // A switch is under way: entering the new lobby, or joining its host
     bool Switching { get { return switchEntering != 0 || switchingTo != 0; } }
 
@@ -108,19 +112,20 @@ public class OnlineLobby
 
     /// <summary>
     /// Makes a lobby and hosts the session in it, then opens the invite dialog. Nothing while one is being made, or while
-    /// this machine is in a lobby or a session already
+    /// this machine is in a lobby or a session already. Returns whether a lobby is being made, or was made and hosts
+    /// (false when nothing started, or it failed at once)
     /// </summary>
     /// <param name="invite">Whether to open the invite dialog once hosting</param>
     /// <param name="fill">Whether to open the lobby to anyone once hosting (SetFill)</param>
-    public void Host(bool invite = true, bool fill = false)
+    public bool Host(bool invite = true, bool fill = false)
     {
         if (creating || Current != 0 || session.IsRunning)
-            return;
+            return false;
 
         if (!lobbies.Available)
         {
             FailHost(NO_STEAM);
-            return;
+            return false;
         }
 
         // Set first: the lobby may be made before Create returns
@@ -128,6 +133,7 @@ public class OnlineLobby
         inviteOnCreate = invite;
         fillOnCreate = fill;
         lobbies.Create(Constants.MAX_PLAYERS);
+        return creating || IsHost;
     }
 
     /// <summary>
@@ -178,12 +184,13 @@ public class OnlineLobby
 
     /// <summary>
     /// A lobby to join (a friend's invite). busy is why this machine can't join now (LobbyRules.Busy), or null. The
-    /// latest request wins
+    /// latest request wins, over a lobby switch too: Find stops (Answering) and the switch is dropped first
     /// </summary>
     public void Answer(ulong lobby, string busy)
     {
-        // The lobby it's in, or already entering (a double "Join Game": a second answer would leave it)
-        if (lobby == 0 || lobby == Current || lobby == joining)
+        // The lobby it's in, or already entering, to join or to switch to (a double "Join Game": a second answer would
+        // leave it)
+        if (lobby == 0 || lobby == Current || lobby == joining || lobby == switchEntering)
             return;
 
         if (busy != null)
@@ -191,6 +198,10 @@ public class OnlineLobby
             Tell(busy);
             return;
         }
+
+        // A switch between sessions (this machine is offline, so not busy): its lobbies and session are left
+        Answering?.Invoke();
+        CancelSwitch();
 
         // Set first: the lobby may answer before Join returns
         joining = lobby;
@@ -233,6 +244,20 @@ public class OnlineLobby
         LeaveLobby();
         if (session.IsRunning)
             session.Leave();
+    }
+
+    /// <summary>
+    /// Gives up on the lobby a switch is entering, which Steam hasn't answered (Find's timeout): SwitchFailed says it
+    /// couldn't be entered, and a late answer is left. False (and nothing happens) when that lobby isn't being entered
+    /// </summary>
+    public bool GiveUpEntering(ulong lobby)
+    {
+        if (lobby == 0 || lobby != switchEntering)
+            return false;
+
+        switchEntering = 0;
+        FailSwitch(lobby, SwitchFailure.CouldNotEnter);
+        return true;
     }
 
     /// <summary>
@@ -434,15 +459,27 @@ public class OnlineLobby
         LeaveLobby();
     }
 
+    // A host's open lobby goes back to friends only before it's left: Steam may hand it to a member who stays
     void LeaveLobby()
     {
         if (Current == 0)
             return;
 
+        bool wasFilling = IsHost && Filling;
+        if (wasFilling)
+        {
+            lobbies.SetPublic(Current, false);
+            lobbies.SetData(Current, MatchRules.MM_KEY, "");
+        }
+
         lobbies.Leave(Current);
         Current = 0;
         IsHost = false;
         Filling = false;
+
+        // Raised once the lobby is gone: Find tells this from the host turning Fill off
+        if (wasFilling)
+            FillChanged?.Invoke(false);
     }
 
     /// <summary>
@@ -452,7 +489,7 @@ public class OnlineLobby
     /// </summary>
     public bool LetsIn(ulong steamId)
     {
-        return IsHost && SteamPeerRules.Accepts(steamId, Current, lobbies) && churn.Allow(steamId);
+        return IsHost && SteamPeerRules.Accepts(steamId, Current, lobbies) && churn != null && churn.Allow(steamId);
     }
 
     void Tell(string message)

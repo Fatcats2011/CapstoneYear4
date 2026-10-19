@@ -4,8 +4,9 @@ using UnityEngine;
 
 /// <summary>
 /// The Dispatch board: online player select shown as four tickets (one per seat), a ready counter and, once everyone
-/// is ready, a banner over the countdown. Shows only while online in player select; Local Play's player select is
-/// untouched. The scene wires the fields. See docs/online.md
+/// is ready, a banner over the countdown. Shows only while online in player select, and through a lobby switch's moment
+/// offline (Matchmaker.Switching); Local Play's player select is untouched. The scene wires the fields. See
+/// docs/online.md
 /// </summary>
 public class DispatchBoard : MonoBehaviour
 {
@@ -14,6 +15,7 @@ public class DispatchBoard : MonoBehaviour
     [SerializeField] TMP_Text readyLine;
     [SerializeField] GameObject banner;
     [SerializeField] TMP_Text matchmakingLine; // optional: searching, open to anyone (with the seconds to a start), friends only
+    [SerializeField] TMP_Text fillPrompt; // optional: the right shoulder's label, what pressing it does (host only)
 
     /// <summary>Whether the board is up (OnlinePlay hides its hint bar then)</summary>
     public static bool Showing { get; private set; }
@@ -24,6 +26,8 @@ public class DispatchBoard : MonoBehaviour
     readonly TicketState[] shown = new TicketState[Constants.MAX_PLAYERS];  // the tickets as last applied
     bool applied;
     string statusShown; // the matchmaking line as last set
+    string fillPromptShown; // the Fill prompt as last set (null = hidden)
+    bool fillPromptSet; // fillPromptShown has been applied since the board came up
 
     void Start()
     {
@@ -47,7 +51,9 @@ public class DispatchBoard : MonoBehaviour
             Hook();
 
         GameManager game = GameManager.Instance;
-        bool show = GameAuthority.IsOnline && game != null && game.MainState == GameState.PlayerSelect;
+        OnlinePlay play = OnlinePlay.Instance;
+        bool switching = play != null && play.Match != null && play.Match.Switching;
+        bool show = ShowsFor(GameAuthority.IsOnline, switching, game == null ? GameState.Default : game.MainState);
         if (show != showing)
             SetShowing(show);
 
@@ -56,7 +62,46 @@ public class DispatchBoard : MonoBehaviour
 
         Gather();
         Apply(buffer);
-        ShowMatchmaking();
+
+        // Between sessions in a lobby switch the prompt and line stay as they were: the player's Find still shows it's
+        // searching, and a quiet search again is never shown
+        if (!switching)
+        {
+            bool host = play != null && play.Lobby != null && play.Lobby.IsHost;
+            ShowFillPrompt(host, host && play.Lobby.Filling);
+            ShowMatchmaking();
+        }
+        else if (play.Match.Searching)
+            ShowMatchmaking();
+    }
+
+    /// <summary>
+    /// Whether the board is up: in player select, online or between sessions in a lobby switch (Matchmaker.Switching), so
+    /// Local Play's player select never shows through for that moment
+    /// </summary>
+    public static bool ShowsFor(bool online, bool switching, GameState state)
+    {
+        return (online || switching) && state == GameState.PlayerSelect;
+    }
+
+    /// <summary>
+    /// The Fill prompt (fillPrompt, optional): on the host, what pressing the right shoulder does (MatchRules.FillPrompt);
+    /// hidden on a client, whose press does nothing. Set only when it changes
+    /// </summary>
+    internal void ShowFillPrompt(bool host, bool filling)
+    {
+        if (fillPrompt == null)
+            return;
+
+        string label = host ? MatchRules.FillPrompt(filling) : null;
+        if (fillPromptSet && label == fillPromptShown)
+            return;
+
+        fillPromptSet = true;
+        fillPromptShown = label;
+        if (label != null)
+            fillPrompt.text = label;
+        fillPrompt.gameObject.SetActive(label != null);
     }
 
     // The matchmaking line, set only when it changes. A client can't see whether the host's lobby is open, so it shows the
@@ -110,6 +155,7 @@ public class DispatchBoard : MonoBehaviour
         {
             SetBanner(false);
             statusShown = null;
+            fillPromptSet = false;
         }
 
         // The sliders follow Dispatch's rule while it is up, and come back when it is down

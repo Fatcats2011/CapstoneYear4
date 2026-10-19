@@ -333,6 +333,24 @@ public class OnlineSession : MonoBehaviour
         return seats.CountOf(clientId);
     }
 
+    /// <summary>
+    /// Host: who a machine is for the whole session. Over Steam, its Steam ID: the same when it leaves and comes back. In
+    /// a direct session (the editor's, tests'), its Netcode client id, which Netcode never gives out twice
+    /// </summary>
+    public ulong MachineOf(ulong clientId)
+    {
+#if !DISABLESTEAMWORKS
+        // The Steam transport's id for a connection is the peer's Steam ID
+        if (steam != null && Network.NetworkConfig.NetworkTransport == steam && clientId != NetworkManager.ServerClientId)
+        {
+            ulong steamId = Network.GetTransportIdFromClientId(clientId);
+            if (steamId != ulong.MaxValue)
+                return steamId;
+        }
+#endif
+        return clientId;
+    }
+
     /// <summary>The seat being spawned (OnlinePlayer and OnlineScooter take it as they spawn), -1 otherwise</summary>
     internal int SpawningSeat { get; private set; } = -1;
 

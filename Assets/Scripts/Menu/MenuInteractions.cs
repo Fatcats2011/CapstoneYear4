@@ -223,7 +223,18 @@ public class MenuInteractions : MonoBehaviour
         if (curentMenuType != MenuType.PlayerSelect)
             return;
 
-        customizationSelector.gameObject.SetActive(!GameAuthority.IsOnline || dispatchMenu.Open);
+        customizationSelector.gameObject.SetActive(!(GameAuthority.IsOnline || Switching()) || dispatchMenu.Open);
+    }
+
+    ///<summary>
+    /// Whether a lobby switch (Find) has this machine between sessions: offline for a moment, but still in Dispatch. Its
+    /// buttons wait meanwhile (X and the shoulders do nothing offline anyway), and B cancels the switch, so nothing falls
+    /// through to Local Play
+    ///</summary>
+    private static bool Switching()
+    {
+        OnlinePlay play = OnlinePlay.Instance;
+        return play != null && play.Match != null && play.Match.Switching;
     }
 
     ///<summary>
@@ -293,10 +304,13 @@ public class MenuInteractions : MonoBehaviour
     }
 
     ///<summary>
-    /// A in player select. Online, it also closes the sliders it readies from
+    /// A in player select. Online, it also closes the sliders it readies from. During a lobby switch it does nothing
     ///</summary>
     private void PlayerReadyButton(bool button)
     {
+        if (Switching())
+            return;
+
         if (!GameAuthority.IsOnline)
         {
             PlayerReady(button);
@@ -324,17 +338,25 @@ public class MenuInteractions : MonoBehaviour
     }
 
     ///<summary>
-    /// B in player select. Online, it closes the sliders first, then unreadies, then leaves
+    /// B in player select. Online, it closes the sliders first, then unreadies, then leaves. During a lobby switch it
+    /// cancels the switch (not back to the title screen)
     ///</summary>
     private void PlayerUnreadyDespawnButton(bool button)
     {
+        OnlinePlay play = OnlinePlay.Instance;
+        if (Switching())
+        {
+            play.Match.Cancel();
+            PlayDispatchSound(false);
+            return;
+        }
+
         if (!GameAuthority.IsOnline)
         {
             PlayerUnreadyDespawn(button);
             return;
         }
 
-        OnlinePlay play = OnlinePlay.Instance;
         bool searching = play != null && play.Match != null && play.Match.Searching;
         switch (dispatchMenu.Press(DispatchButton.East, readiedUp, searching))
         {
@@ -354,10 +376,14 @@ public class MenuInteractions : MonoBehaviour
     }
 
     ///<summary>
-    /// A d-pad press in player select. Offline it always scrolls the sliders; online, only while X has them open
+    /// A d-pad press in player select. Offline it always scrolls the sliders; online, only while X has them open. During
+    /// a lobby switch, never
     ///</summary>
     private bool DispatchScrolls()
     {
+        if (Switching())
+            return false;
+
         return !GameAuthority.IsOnline || dispatchMenu.Press(DispatchButton.Pad, readiedUp) == DispatchAction.Scroll;
     }
 

@@ -232,8 +232,10 @@ namespace DoA.Tests
             now += 1;
             match.Tick();
             Assert.AreEqual(1, lobbies.Searches.Count, "a lone Fill host searches again");
+            Assert.IsTrue(match.ResearchingQuietly);
+            Assert.IsFalse(match.Searching, "quietly: not shown as the player's Find");
             lobbies.AnswerSearch();
-            Assert.IsFalse(match.Searching);
+            Assert.IsFalse(match.ResearchingQuietly);
             Assert.IsEmpty(notices, "a quiet search: nobody is told nothing was found");
 
             now += MatchRules.RESEARCH - 1;
@@ -441,7 +443,7 @@ namespace DoA.Tests
             menus = false;
             lobbies.AnswerSearch(70);
             Assert.IsEmpty(lobbies.Joins);
-            Assert.IsFalse(match.Searching);
+            Assert.IsFalse(match.ResearchingQuietly);
         }
 
         // Finding 4: no retry or fallback once the player left the menus
@@ -518,8 +520,9 @@ namespace DoA.Tests
             CollectionAssert.AreEqual(new[] { 70UL }, lobbies.Joins);
         }
 
+        // M-8: the notice says the lobby is open only when it is
         [Test]
-        public void Retry_SessionNeverStops_GivesUpAsNoneFound()
+        public void Retry_SessionNeverStops_GivesUpAsNoneFound_WithoutClaimingAnOpenLobby()
         {
             Open(70, 170, 1);
             Open(71, 171, 2);
@@ -534,7 +537,252 @@ namespace DoA.Tests
             match.Tick();
 
             Assert.IsFalse(match.Searching);
+            Assert.AreEqual(1, lobbies.Creates.Count, "no lobby can be hosted while the old session still runs");
+            CollectionAssert.AreEqual(new[] { MatchRules.NONE_FOUND_CLOSED }, notices, "so it isn't said to be open");
+        }
+
+        // I-1: Fill turned off stops a quiet search: its answer neither opens the lobby again nor moves the host
+        [Test]
+        public void QuietSearch_FillTurnedOff_StopsAndNeverReopens()
+        {
+            lobby.SetFill(true);
+            now += MatchRules.RESEARCH;
+            match.Tick();
+            Assert.IsTrue(match.ResearchingQuietly);
+
+            lobby.SetFill(false);
+            int publicCalls = lobbies.PublicCalls.Count;
+            Assert.IsFalse(match.ResearchingQuietly, "stopped");
+            lobbies.AnswerSearch();
+
+            Assert.IsFalse(lobby.Filling);
+            Assert.AreEqual(publicCalls, lobbies.PublicCalls.Count, "no new (OWN, true): the lobby isn't made public again");
+            Assert.IsEmpty(notices);
+        }
+
+        // I-1: Fill turned off while a quiet search enters a stranger's lobby: the host stays
+        [Test]
+        public void QuietSearch_FillTurnedOffWhileEntering_HostStays()
+        {
+            Open(70, 400, 1);
+            lobby.SetFill(true);
+            now += MatchRules.RESEARCH;
+            match.Tick();
+            lobbies.AnswerSearch(70);
+            CollectionAssert.AreEqual(new[] { 70UL }, lobbies.Joins);
+
+            lobby.SetFill(false);
+            lobbies.RaiseEntered(70, true);
+
+            CollectionAssert.Contains(lobbies.Left, 70UL, "the stranger's lobby answering late is left");
+            Assert.AreEqual(OWN, lobby.Current);
+            Assert.IsTrue(lobby.IsHost);
+            Assert.AreEqual(0, session.Leaves, "its own session is kept");
+            Assert.IsEmpty(session.JoinedHosts);
+            Assert.IsFalse(lobby.Filling);
+        }
+
+        // I-1: the same for the player's Find, Fill turned off mid-search
+        [Test]
+        public void Find_FillTurnedOffMidSearch_StopsAndStaysFriendsOnly()
+        {
+            lobby.SetFill(true);
+            Assert.IsTrue(match.Find());
+
+            lobby.SetFill(false);
+            int publicCalls = lobbies.PublicCalls.Count;
+            Assert.IsFalse(match.Searching, "stopped");
+            lobbies.AnswerSearch();
+            now += MatchRules.SEARCH_TIMEOUT;
+            match.Tick();
+
+            Assert.IsFalse(lobby.Filling);
+            Assert.AreEqual(publicCalls, lobbies.PublicCalls.Count, "no fallback opens it");
+            Assert.IsEmpty(notices);
+        }
+
+        // M-5 with I-1: the switch leaving the host's open lobby (back to friends only) isn't the host turning Fill off
+        [Test]
+        public void QuietSwitch_LeavingTheOpenLobby_GoesOn()
+        {
+            Open(70, 400, 1);
+            lobby.SetFill(true);
+            now += MatchRules.RESEARCH;
+            match.Tick();
+            lobbies.AnswerSearch(70);
+            lobbies.RaiseEntered(70, true);
+
+            Assert.AreEqual((OWN, false), lobbies.PublicCalls[lobbies.PublicCalls.Count - 1], "its own lobby friends only as it's left");
+            Assert.IsTrue(match.ResearchingQuietly, "the switch goes on");
+            Assert.IsTrue(match.Switching, "between sessions");
+            CollectionAssert.AreEqual(new[] { 400UL }, session.JoinedHosts);
+
+            session.LetIn();
+            Assert.IsFalse(match.ResearchingQuietly);
+            Assert.IsFalse(match.Switching);
+            Assert.AreEqual(70UL, lobby.Current);
+        }
+
+        // A quiet search that left its lobby and found nothing hosts again, open as the host had it, and says nothing
+        [Test]
+        public void QuietSwitch_FailsAfterLeaving_HostsAgainOpen_Quietly()
+        {
+            Open(70, 400, 1);
+            session.JoinWorks = false;
+            lobby.SetFill(true);
+            now += MatchRules.RESEARCH;
+            match.Tick();
+            lobbies.AnswerSearch(70);
+            lobbies.RaiseEntered(70, true); // can't join its host, after leaving
+            match.Tick();
+
+            Assert.IsFalse(match.ResearchingQuietly);
+            Assert.AreEqual(2, lobbies.Creates.Count, "hosted again");
+            lobbies.RaiseCreated(43);
+            Assert.IsTrue(lobby.Filling, "open to anyone, as the host had it");
+            Assert.IsEmpty(notices);
+        }
+
+        // M-6: Switching covers only the moment between sessions, for the player's Find and a quiet search alike
+        [Test]
+        public void Switching_OnlyBetweenSessions()
+        {
+            Open(70, 170, 1);
+
+            match.Find();
+            Assert.IsFalse(match.Switching, "searching: still hosting");
+            lobbies.AnswerSearch(70);
+            Assert.IsFalse(match.Switching, "entering the found lobby: still hosting");
+            lobbies.RaiseEntered(70, true);
+            Assert.IsTrue(match.Switching, "its own session left, the new host not reached yet");
+            Assert.IsTrue(match.Searching);
+
+            session.LetIn();
+            Assert.IsFalse(match.Switching);
+            Assert.IsFalse(match.Searching);
+        }
+
+        // M-7: hosts with no free seat don't count as tries, but no more than MAX_ATTEMPTS lobbies are moved into
+        [Test]
+        public void Find_NoSeatRefusals_CappedAtMaxAttempts()
+        {
+            int lobbiesFound = MatchRules.MAX_ATTEMPTS + 2;
+            ulong[] found = new ulong[lobbiesFound];
+            for (int i = 0; i < lobbiesFound; i++)
+            {
+                found[i] = 70 + (ulong)i;
+                Open(found[i], 170 + (ulong)i, 1);
+            }
+
+            match.Find();
+            lobbies.AnswerSearch(found);
+            for (int i = 0; i < lobbiesFound && match.Searching; i++)
+            {
+                lobbies.RaiseEntered(lobbies.Joins[lobbies.Joins.Count - 1], true);
+                session.TurnAway(JoinRules.FULL); // another took the last seat first
+                match.Tick();
+            }
+
+            Assert.AreEqual(MatchRules.MAX_ATTEMPTS, lobbies.Joins.Count, "the rest aren't tried");
+            Assert.IsFalse(match.Searching);
+            Assert.AreEqual(2, lobbies.Creates.Count, "it ends as none found: its own lobby was left, so it hosts again");
             CollectionAssert.AreEqual(new[] { MatchRules.NONE_FOUND }, notices);
+        }
+
+        // Deferred T5: a found lobby Steam never answers is a failed try after SEARCH_TIMEOUT
+        [Test]
+        public void FoundLobbyNeverAnswers_TimesOut_AndTheNextIsTried()
+        {
+            Open(70, 170, 1);
+            Open(71, 171, 2);
+
+            match.Find();
+            lobbies.AnswerSearch(70, 71);
+            now += MatchRules.SEARCH_TIMEOUT - 1;
+            match.Tick();
+            Assert.IsEmpty(failures, "not yet");
+
+            now += 1;
+            match.Tick();
+            CollectionAssert.AreEqual(new[] { (70UL, OnlineLobby.SwitchFailure.CouldNotEnter) }, failures);
+            match.Tick();
+            CollectionAssert.AreEqual(new[] { 70UL, 71UL }, lobbies.Joins, "the next lobby");
+            Assert.IsTrue(match.Searching);
+
+            lobbies.RaiseEntered(70, true); // too late
+            CollectionAssert.AreEqual(new[] { 70UL }, lobbies.Left, "the late answer is left");
+            Assert.AreEqual(OWN, lobby.Current, "its own lobby kept while 71 is entered");
+            Assert.IsTrue(lobby.IsHost);
+            Assert.AreEqual(0, session.Leaves);
+        }
+
+        // M-4: a friend's invite answered between sessions drops the switch first, then joins the friend
+        [Test]
+        public void Answer_WhileSwitching_CancelsTheSwitch_ThenJoinsTheFriend()
+        {
+            Open(70, 170, 1);
+            lobbies.AddLobby(9, LobbyRules.GAME, BUILD, 99);
+
+            match.Find();
+            lobbies.AnswerSearch(70);
+            lobbies.RaiseEntered(70, true);
+            Assert.IsTrue(match.Switching);
+
+            lobby.Answer(9, null); // offline for the moment, so not busy
+            Assert.IsFalse(match.Searching, "Find stops");
+            Assert.IsFalse(match.Switching);
+            CollectionAssert.Contains(lobbies.Left, 70UL, "the switch's lobby is left");
+            Assert.AreEqual(2, session.Leaves, "and the session joining its host");
+            Assert.AreEqual(9UL, lobbies.Joins[lobbies.Joins.Count - 1], "then the friend's lobby is entered");
+
+            lobbies.RaiseEntered(9, true);
+            CollectionAssert.AreEqual(new[] { 170UL, 99UL }, session.JoinedHosts);
+            Assert.AreEqual(9UL, lobby.Current);
+
+            session.LetIn();
+            now += MatchRules.SEARCH_TIMEOUT;
+            match.Tick();
+            Assert.AreEqual(9UL, lobby.Current, "no switch or fallback takes it out again");
+            Assert.AreEqual(1, lobbies.Creates.Count);
+            Assert.IsEmpty(notices);
+        }
+
+        // M-4: between two tries (no lobby, no session) an invite stops Find before the next lobby is tried
+        [Test]
+        public void Answer_BetweenTries_NextLobbyNotTried()
+        {
+            Open(70, 170, 1);
+            Open(71, 171, 2);
+            lobbies.AddLobby(9, LobbyRules.GAME, BUILD, 99);
+
+            match.Find();
+            lobbies.AnswerSearch(70, 71);
+            lobbies.RaiseEntered(70, true);
+            session.TurnAway(JoinRules.FULL);
+            Assert.AreEqual(0UL, lobby.Current);
+
+            lobby.Answer(9, null);
+            match.Tick();
+
+            Assert.IsFalse(match.Searching);
+            CollectionAssert.AreEqual(new[] { 70UL, 9UL }, lobbies.Joins, "71 isn't tried");
+        }
+
+        // M-4: while this machine still hosts its own lobby it's busy: the invite is refused and the switch goes on
+        [Test]
+        public void Answer_Busy_LeavesTheSwitchAlone()
+        {
+            Open(70, 170, 1);
+            lobbies.AddLobby(9, LobbyRules.GAME, BUILD, 99);
+
+            match.Find();
+            lobbies.AnswerSearch(70);
+            lobby.Answer(9, LobbyRules.ALREADY_ONLINE);
+
+            Assert.IsTrue(match.Searching);
+            CollectionAssert.AreEqual(new[] { 70UL }, lobbies.Joins);
+            lobbies.RaiseEntered(70, true);
+            CollectionAssert.AreEqual(new[] { 170UL }, session.JoinedHosts, "the switch carries on");
         }
     }
 }

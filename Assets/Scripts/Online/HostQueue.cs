@@ -6,7 +6,7 @@ using UnityEngine;
 /// Client: the host's messages (its states, order changes, hits and respawn points), in the order they came. While this machine's scene
 /// changes they wait, so the new scene's objects hear them, then go in order. A message that comes while others still
 /// wait goes behind them. One that throws is logged and doesn't hold up the rest. At most MAX_WAITING wait (another
-/// machine's host could hold the change for good): the rest are dropped, with one warning
+/// machine's host could hold the change for good): the rest are dropped, with one warning until the wait drains
 /// </summary>
 public class HostQueue
 {
@@ -51,6 +51,10 @@ public class HostQueue
     {
         while (waiting.Count > 0 && !holding())
             Run(waiting.Dequeue());
+
+        // Drained: a later hold that overflows is warned about again
+        if (waiting.Count == 0)
+            warnedDropped = false;
     }
 
     /// <summary>
@@ -59,11 +63,12 @@ public class HostQueue
     public void Clear()
     {
         waiting.Clear();
+        warnedDropped = false;
     }
 
     bool warnedDropped;
 
-    // Logged once per queue: the host sent more than a scene change holds
+    // Logged once per hold: the host sent more than a scene change holds
     void WarnDropped()
     {
         if (warnedDropped)

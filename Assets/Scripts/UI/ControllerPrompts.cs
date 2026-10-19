@@ -152,6 +152,8 @@ public class ControllerPrompts : MonoBehaviour
         }
 
         prompts.hintPanel = prompts.CreatePanel("Hint", 0.6f, 36f, out prompts.hintText);
+        // Hints carry other machines' text (a host's reason for turning a player away): shown as written, never as tags
+        prompts.hintText.richText = false;
         RectTransform hintArea = (RectTransform)prompts.hintPanel.transform;
         hintArea.anchorMin = new Vector2(0f, 0.05f);
         hintArea.anchorMax = new Vector2(1f, 0.15f);

@@ -17,6 +17,8 @@ public static class MatchRules
     /// <summary>How long a search waits for Steam's answer before it counts as none found</summary>
     public const double SEARCH_TIMEOUT = 10.0;
     public const int MAX_TRIES = 3;
+    /// <summary>The most found lobbies one search moves into, whatever each failed for (no free seat too)</summary>
+    public const int MAX_ATTEMPTS = 10;
     public const double RESEARCH = 15.0;
     public const double AUTO_START = 60.0;
     public const double FORCE_GRACE = 5.0;
@@ -29,6 +31,8 @@ public static class MatchRules
 
     public const string SEARCHING = "LOOKING FOR A MATCH…";
     public const string NONE_FOUND = "No open matches right now. Your lobby is open to anyone.";
+    /// <summary>None found, and the player's lobby couldn't be opened (it was left, and can't be hosted again yet)</summary>
+    public const string NONE_FOUND_CLOSED = "No open matches right now.";
     public const string OPEN_TO_ANYONE = "OPEN TO ANYONE";
     public const string FRIENDS_ONLY = "FRIENDS ONLY";
     public const string FIND_MATCH = "FIND MATCH";
@@ -154,6 +158,14 @@ public static class MatchRules
         if (autoStartRemaining > 0)
             return OPEN_TO_ANYONE + " · STARTS IN " + ((int)System.Math.Ceiling(autoStartRemaining)).ToString(CultureInfo.InvariantCulture);
         return OPEN_TO_ANYONE;
+    }
+
+    /// <summary>
+    /// The host's Fill prompt (right shoulder): what pressing it does, so the lobby's state flipped
+    /// </summary>
+    public static string FillPrompt(bool filling)
+    {
+        return filling ? FRIENDS_ONLY : OPEN_TO_ANYONE;
     }
 
     /// <summary>
