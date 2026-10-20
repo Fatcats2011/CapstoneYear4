@@ -21,6 +21,9 @@ public static class PlayerNames
         if (raw == null)
             return "";
 
+        if (IsClean(raw))
+            return raw;
+
         string trimmed = StripControls(raw).Trim();
         int bytes = 0;
         int end = 0;
@@ -57,6 +60,34 @@ public static class PlayerNames
             default:
                 return false;
         }
+    }
+
+    /// <summary>
+    /// Whether Clean would hand the name back unchanged: nothing hidden, no space at either end, and it fits. One scan, no
+    /// allocation, so a name that is already fine costs nothing each frame it is shown
+    /// </summary>
+    private static bool IsClean(string raw)
+    {
+        if (raw.Length == 0)
+            return true;
+        if (char.IsWhiteSpace(raw[0]) || char.IsWhiteSpace(raw[raw.Length - 1]))
+            return false;
+
+        int bytes = 0;
+        for (int i = 0; i < raw.Length; i++)
+        {
+            char c = raw[i];
+            if (IsHidden(c))
+                return false;
+
+            bool pair = char.IsHighSurrogate(c) && i + 1 < raw.Length && char.IsLowSurrogate(raw[i + 1]);
+            bytes += pair ? 4 : c < 0x80 ? 1 : c < 0x800 ? 2 : 3;
+            if (bytes > FixedString32Bytes.UTF8MaxLengthInBytes)
+                return false;
+            if (pair)
+                i++;
+        }
+        return true;
     }
 
     private static string StripControls(string raw)

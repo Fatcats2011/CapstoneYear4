@@ -68,7 +68,7 @@
   - `SessionLogTests`: the opt-in session logs' rules and files (in a temp folder).
   - `SteamFeaturesTests` (empty Play Mode scene, fake stores): a local delivery unlocks, a client's replay counts for nothing, an online host leaves unlocking to `OnlineAchievements`, and each state sets the presence.
 - The Dispatch lobby (online player select, `docs/online.md`), without Play Mode unless said:
-  - `PlayerNamesTests`: cleaning a Steam name (control characters, length, empty), the `Player {seat+1}` fallback, and what a ticket shows.
+  - `PlayerNamesTests`: cleaning a Steam name (control characters, length, empty), the `Player {seat+1}` fallback, a clean name coming back as the same instance (no allocation per frame), and what a ticket shows.
   - `DispatchRulesTests`: the ticket's state per seat (empty, getting ready, dispatched), the `{ready} / {seated} READY` counter, which changes flash a ticket, and when everyone is ready.
   - `DispatchMenuTests`: which buttons do what on Dispatch, and when the sliders open and close (Local Play being untouched is in `MenuButtonsTests`). `LeftShoulder_…` (Find only when idle), `RightShoulder_FillWhenClosed` and `East_WhileSearching_Cancels` cover matchmaking's buttons.
   - `DispatchBoardTests`: the board's tickets, stamp and counter following the seats, and the banner following the countdown events (it builds its own `TicketView`s, no scene wiring). `ShowsFor_…` keeps the board up through a lobby switch's moment offline; `FillPrompt_…` is the right shoulder's label (host only), hidden with the board.

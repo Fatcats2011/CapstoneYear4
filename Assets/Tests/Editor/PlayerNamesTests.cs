@@ -80,6 +80,26 @@ namespace DoA.Tests
         }
 
         [Test]
+        public void Clean_AnAlreadyCleanName_IsReturnedAsTheSameInstance()
+        {
+            // DispatchBoard asks for every seat's name each frame, so a clean name must not allocate
+            string clean = new string(new[] { 'A', 'l', 'e', 'x', ' ', 'B' });
+            Assert.AreSame(clean, PlayerNames.Clean(clean));
+            Assert.AreSame(clean, PlayerNames.Shown(clean, 0));
+        }
+
+        [Test]
+        public void Clean_ADirtyName_IsStillCleaned()
+        {
+            Assert.AreEqual("Alex", PlayerNames.Clean("  Alex\n"), "whitespace and control");
+            Assert.AreEqual("Alex", PlayerNames.Clean("Al​ex"), "format character");
+            Assert.AreEqual("Alex", PlayerNames.Clean("Alex "), "trailing space");
+            Assert.AreEqual("Alex", PlayerNames.Clean(" Alex"), "leading space");
+            string tooLong = new string('a', 40);
+            Assert.AreEqual(FixedString32Bytes.UTF8MaxLengthInBytes, PlayerNames.Clean(tooLong).Length, "over the cap");
+        }
+
+        [Test]
         public void Shown_CleansWhatAnotherMachineSent()
         {
             // A modified game can sync a name that never went through Clean
