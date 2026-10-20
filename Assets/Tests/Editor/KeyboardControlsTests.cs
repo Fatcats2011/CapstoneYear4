@@ -110,6 +110,45 @@ namespace DoA.Tests
             CollectionAssert.AreEquivalent(new InputControl[] { keyboard.spaceKey }, player.FindAction("Boost", true).controls.ToArray());
         }
 
+        static bool HasKey(InputAction action, string key)
+        {
+            return action.bindings.Any(binding => binding.path == "<Keyboard>/" + key && binding.groups != null && binding.groups.Contains(KeyboardControls.SCHEME));
+        }
+
+        [Test]
+        public void Install_BindsFAndR_WhenTheShoulderActionsExist()
+        {
+            InputActionAsset asset = PristineCopy();
+            InputActionMap ui = asset.FindActionMap("UI", true);
+            InputAction left = ui.AddAction("Left Shoulder", InputActionType.Button);
+            InputAction right = ui.AddAction("Right Shoulder", InputActionType.Button);
+
+            KeyboardControls.Install(asset);
+
+            Assert.IsTrue(HasKey(left, "f"), "F is L1");
+            Assert.IsTrue(HasKey(right, "r"), "R is R1");
+        }
+
+        [Test]
+        public void Install_WithoutTheShoulderActions_DoesNotThrow()
+        {
+            InputActionAsset asset = PristineCopy();
+            InputActionMap ui = asset.FindActionMap("UI", true);
+            InputAction left = ui.FindAction("Left Shoulder");
+            InputAction right = ui.FindAction("Right Shoulder");
+            if (left != null)
+                left.RemoveAction();
+            if (right != null)
+                right.RemoveAction();
+
+            bool installed = false;
+            Assert.DoesNotThrow(() => installed = KeyboardControls.Install(asset));
+
+            Assert.IsTrue(installed);
+            Assert.IsNull(asset.FindAction("UI/Left Shoulder"));
+            Assert.IsNull(asset.FindAction("UI/Right Shoulder"));
+        }
+
         [Test]
         public void Install_Twice_ChangesNothing()
         {

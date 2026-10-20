@@ -378,6 +378,133 @@ namespace DoA.Tests
             }
         }
 
+        // A host in lobby 42 in player select, online, with its own lobby and matchmaker (OnlinePlay.Lobby is set by
+        // reflection: UseDirect's lobby would host a real session). Lobby 70 is open for a Find. Ends with EndHosting
+        void HostOnline(bool fill)
+        {
+            switching = new TestObjects();
+            GameAuthority.Role = NetworkRole.Host;
+            game = switching.Add<GameManager>();
+            GameManager.instance = game;
+            game.SetGameState(GameState.PlayerSelect);
+            MainMenu.instance = switching.Add<MainMenu>();
+
+            Clock clock = new Clock();
+            lobbies = new FakeLobbyService { Me = 500 };
+            session = new FakeSessionControl();
+            lobby = new OnlineLobby(lobbies, session, "1.2", clock.Read);
+            lobby.ShowState(GameState.PlayerSelect);
+            match = new Matchmaker(lobbies, lobby, "1.2", clock.Read, NoOtherMachines, InTheMenus);
+            lobby.Host(invite: false);
+            lobbies.RaiseCreated(42);
+            lobby.SetFill(fill);
+            lobbies.AddLobby(70, LobbyRules.GAME, "1.2", 170);
+            lobbies.SetData(70, MatchRules.MM_KEY, MatchRules.MM_ON);
+            lobbies.SetData(70, MatchRules.OPEN_KEY, "3");
+            Assert.IsTrue(lobby.IsHost);
+
+            OnlinePlay play = switching.Add<OnlinePlay>();
+            play.Match = match;
+            typeof(OnlinePlay).GetProperty("Lobby").SetValue(play, lobby);
+            OnlinePlay.Instance = play;
+            menu = switching.Add<MenuInteractions>();
+            ui = switching.Add<PlayerUIHandler>();
+            InputManager driving = switching.Add<InputManager>();
+            sliders = switching.Add<CustomizationSelector>();
+            Set(menu, "uiHandler", ui);
+            Set(menu, "drivingHandler", driving);
+            Set(menu, "customizationSelector", sliders);
+            GiveEvents(ui, driving);
+            menu.SwapMenuType(MenuType.PlayerSelect);
+        }
+
+        void EndHosting()
+        {
+            GameAuthority.Role = NetworkRole.Offline;
+            EndSwitching();
+        }
+
+        [Test]
+        public void Online_LeftShoulder_OnTheHost_FindsAMatch()
+        {
+            try
+            {
+                HostOnline(fill: false);
+                Assert.IsFalse(match.Searching);
+
+                ui.LeftShoulderEvent.Invoke(true);
+
+                Assert.IsTrue(match.Searching, "L1 starts a search");
+            }
+            finally
+            {
+                EndHosting();
+            }
+        }
+
+        [Test]
+        public void Offline_LeftShoulder_DoesNothing()
+        {
+            try
+            {
+                HostOnline(fill: false);
+                GameAuthority.Role = NetworkRole.Offline;
+
+                ui.LeftShoulderEvent.Invoke(true);
+
+                Assert.IsFalse(match.Searching, "no search offline");
+            }
+            finally
+            {
+                EndHosting();
+            }
+        }
+
+        [Test]
+        public void Online_B_WhileSearching_CancelsTheFind_AndDoesNotUnreadyOrLeave()
+        {
+            try
+            {
+                HostOnline(fill: false);
+                ui.LeftShoulderEvent.Invoke(true);
+                Assert.IsTrue(match.Searching);
+                Set(menu, "readiedUp", true);
+
+                ui.EastFaceEvent.Invoke(true);
+
+                Assert.IsFalse(match.Searching, "B cancels the search");
+                Assert.IsTrue((bool)Get(menu, "readiedUp"), "still ready");
+                Assert.IsTrue(lobby.IsHost, "still hosting");
+                Assert.AreEqual(42UL, lobby.Current, "still in the lobby");
+                Assert.AreEqual(0, session.Leaves, "the session isn't left");
+                Assert.AreEqual(GameState.PlayerSelect, game.MainState, "still in player select");
+            }
+            finally
+            {
+                EndHosting();
+            }
+        }
+
+        [Test]
+        public void Online_RightShoulder_OnTheHost_OpensTheLobby_ThenClosesItAgain()
+        {
+            try
+            {
+                HostOnline(fill: false);
+                Assert.IsFalse(lobby.Filling);
+
+                ui.RightShoulderEvent.Invoke(true);
+                Assert.IsTrue(lobby.Filling, "R1 opens it to anyone");
+
+                ui.RightShoulderEvent.Invoke(true);
+                Assert.IsFalse(lobby.Filling, "and back to friends only");
+            }
+            finally
+            {
+                EndHosting();
+            }
+        }
+
         static object Get(MenuInteractions menu, string field)
         {
             return typeof(MenuInteractions).GetField(field, System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)
