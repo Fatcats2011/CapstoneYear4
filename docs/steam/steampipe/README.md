@@ -8,7 +8,7 @@ Templates for when the Steam App ID is ready. `Builds/` is already git-ignored.
 - Don't copy anything from the SDK into `Assets/`: Steamworks.NET brings its own `steam_api64.dll`, built for the SDK it wraps (1.64). The 1.65 DLL no longer has the Steam Deck check that `SteamManager.IsSteamDeck` calls.
 - Run `steamcmd.exe` once: it updates itself, then at the `Steam>` prompt type `login YOUR_STEAM_USERNAME` (password + Steam Guard code), then `quit`. Later runs reuse that login.
 - In Steamworks → your app → SteamPipe → Depots, note the Windows depot ID (usually App ID + 1).
-- In `app_build.vdf` replace `APP_ID` and `WINDOWS_DEPOT_ID`.
+- Run `python tools/set-app-id.py <APP_ID> [<DEPOT_ID>]` (the depot defaults to App ID + 1). It sets the App ID in `SteamStartup.cs`, `steam_appid.txt` and `app_build.vdf`, plus the depot in `app_build.vdf`. `--check` shows what each one holds. These are Steam API files, so they go on `main` too (the branch policy).
 
 ## Every upload
 

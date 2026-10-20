@@ -6,15 +6,27 @@
 > 3. Run it inline (superpowers:executing-plans), then self-review.
 > 4. Leave it uncommitted: the user commits.
 
-## Where things stand (2026-10-08)
+## Where things stand (2026-10-20)
 
-- **Branch `steam-phase1a`** is at `a1c8c76d` "Local Play and Online Play on the title screen" (Phases 3J and 5A, and the title screen), with **Phase 5B (the last deferred minors) done on top, uncommitted** (`docs/superpowers/plans/2026-10-08-phase5b-deferred-minors.md`, `docs/online.md` Phase 5B). Another session's achievements work (Steam feats files, `OrderHandler`, `BallDriving`, `Respawn`, `TutorialManager`) is uncommitted beside it. The biggest remaining frame-rate gains are editor changes, listed in order in `docs/performance.md` (`EDITOR-TODO.md` section 4). Since then (uncommitted): the Options Resolution row, the title order matching the scene (Multiplayer first), and the `HitchProbe` diagnostic. 771 tests pass; 1 skipped (`HitchProbe`, run only by name).
-- The user allows Sonnet agents "as you see fit" for these phases (memory: `code-review-agents`); still one test run at a time.
+- **Branch `steam-phase1a`** is at `8ecc8e93`. Everything through matchmaking is committed:
+  - the Dispatch online lobby (`9bd5124b`, `docs/superpowers/plans/2026-10-13-dispatch-lobby.md`);
+  - matchmaking: Find and Fill, an auto-start 60 s after the last seat, the join-churn guard, and a hostile-host audit (`da366861`..`8ecc8e93`, `docs/superpowers/plans/2026-10-18-matchmaking.md`).
+- **Done on 2026-10-20, uncommitted:**
+  - **The 4-Sonnet review** of `49edc702..8ecc8e93` (Dispatch, matchmaking, the Resolution row) found no bugs.
+  - **Licenses** (`LICENSES.md`): the license terms for each item, and a "What to do before release" list. Two new urgent items:
+    - 14 placeholder sounds from `Assets/Audio/TEST` play in the game;
+    - our own materials use 7 textures from the OToon demo folder, so it can't simply be deleted.
+  - **`tools/unused-assets.py`** now reads binary assets: it had wrongly listed 185 lightmaps the build uses. `docs/unused-assets.md` was regenerated (917 files, 1065 MB), with an approval checklist.
+  - **`tools/set-app-id.py`** sets the App ID in all three places.
+  - **Docs:** `docs/steam/store-page-draft.md` is updated for online, keyboard and Steam features. New: `docs/steam/steam-deck.md`.
+  - **`ButtonGlyph`** (`Assets/Scripts/UI/ButtonGlyph.cs`) picks PlayStation, Nintendo or keyboard prompt art by device, falling back to Xbox until that art exists. Its editor steps are in `EDITOR-TODO.md` section 16.
+  - **`CursorHider`** (`Assets/Scripts/Management/CursorHider.cs`) hides the mouse cursor in builds after 2 s without mouse movement.
 - **`main` holds the Steam API only** (the branch policy, below).
-- **Done:**
-  - Phase 1's code (1A, 1B, 1C), Phase 2 (2A–2C), Phase 3 (3A–3J; 3J is roadmap Task 3.9), Phases 4A, 4C and 4D, Phase 5A (the deferred minors), Local Play / Online Play on the title screen (its scene art is `EDITOR-TODO.md` section 1), and Phase 5B (the last deferred minors).
-  - Each has a plan in `docs/superpowers/plans/`.
-  - `docs/online.md` explains the online code, phase by phase.
+- **Done in earlier phases:**
+  - Phase 1's code (1A, 1B, 1C), Phase 2 (2A–2C), Phase 3 (3A–3J; 3J is roadmap Task 3.9), Phases 4A, 4C and 4D, and Phases 5A and 5B (the deferred minors);
+  - Local Play and Online Play on the title screen, the Options Resolution row, the Dispatch lobby and matchmaking.
+  - Each has a plan in `docs/superpowers/plans/`. `docs/online.md` explains the online code, phase by phase.
+- The user allows Sonnet agents "as you see fit" (memory: `code-review-agents`). Still one test run at a time.
 
 ## How to work in this repo
 
@@ -54,11 +66,11 @@
 
 ### 1. Art, then its small code tasks (`EDITOR-TODO.md` section 16)
 
-- Phase 4A (`03818e1c`) and Phase 1C (`8ce31e85`) are committed. Phase 4A's dashboard half is in Phase 4B below.
 - Still waiting on art:
-  - Options rows for the other display settings and Quality. The code reads and saves them already: each row's selector is wired like the existing rows (`OptionsMenu`). The Resolution row exists (code-built text, `ResolutionRow`); a drawn "RESOLUTION" label can replace its text label later.
-  - Keyboard button prompts.
-  - PlayStation and Nintendo button prompts (roadmap Task 1.3). They need those button sprites drawn first, then a small code task to pick the sprites by device.
+  - **Options rows** for the other display settings and Quality. The code reads and saves them already; wire each row's selector like the existing rows (`OptionsMenu`). A drawn "RESOLUTION" label can replace the Resolution row's text label.
+  - **Keyboard, PlayStation and Nintendo button prompts.** The code is ready (`ButtonGlyph`): the editor adds the component to each prompt Image and fills in the sprites.
+  - **The Dispatch board art and its wiring** (`EDITOR-TODO.md` sections 1b–1d), with the new UI input actions (West Face, Left Shoulder, Right Shoulder).
+- **Audio:** replacements for the placeholder TEST sounds that play in the game (`LICENSES.md`, Audio).
 
 ### 2. Phase 4B: launch operations (mostly the user)
 
@@ -75,7 +87,7 @@
   - The text draft is `docs/steam/store-page-draft.md`.
 - **Legal:**
   - A written agreement from every contributor (IP, revenue split, credits), and the school's student-IP policy.
-  - `LICENSES.md` still has 13 ⚠️/❌ items. The urgent ones are the two fonts in use (Sobiscuit, jcandlestick), DOTween, Udar SceneField, OToon, which audio is original, and unused files to delete.
+  - `LICENSES.md` ends with a "What to do before release" list. Buy the two fonts in use (Sobiscuit: Khurasan's App/Game license; jcandlestick: Iconian, $20 per seat after an email). Confirm who owns OToon. Replace the placeholder sounds. DOTween is cleared.
 - **Valve's review** of the store page and the build (a few business days each).
 
 ## The user's checklist (no code)

@@ -1,27 +1,29 @@
 # Unused assets inventory
 
-1115 files, 1237 MB (1.24 GB) under `Assets/`, as of 2026-10-06. To get the current list, run `python tools/unused-assets.py`: it writes every unused file, with its size, to `Logs/unused-assets.txt`, and prints a summary by folder.
+917 files, 1065 MB (1.07 GB) under `Assets/`, as of 2026-10-20. To get the current list, run `python tools/unused-assets.py`: it writes every unused file, with its size, to `Logs/unused-assets.txt`, and prints a summary by folder.
 
 **What "unused" means here:** no GUID reference to the file is reachable from the 4 build scenes (SplashScreen, Alex Player Testing, Design Scene(Main), FinalAreaScene), `Resources/`, `ProjectSettings`, scripts, or paths that code names directly. It is a list to review, not a delete list. Anything the artists may still want (source art, bake data, reference models) needs a human decision. Sizes are file sizes only, without `.meta` files. Nothing has been deleted or moved.
+
+**Fixed 2026-10-20:** the tool used to miss references inside binary assets. The build scenes' `LightingData.asset` files are binary, so their lightmaps (185 files) were wrongly listed as unused. They're in use: never delete a scene's bake folder from this list without re-baking.
 
 ## By top folder
 
 | Folder | Files | MB |
 |---|---:|---:|
-| `Textures` | 124 | 701.7 |
-| `Scenes` | 225 | 255.2 |
+| `Textures` | 120 | 660.5 |
 | `Audio` | 63 | 140.3 |
-| `Materials` | 204 | 59.9 |
+| `Scenes` | 40 | 124.2 |
+| `Materials` | 203 | 59.9 |
 | `Models` | 90 | 20.9 |
 | `OToon- URP Toon Shading` | 243 | 20.0 |
 | `FlowerPot` | 8 | 13.3 |
 | `Fonts` | 6 | 6.5 |
-| `Prefabs` | 43 | 5.5 |
+| `Prefabs` | 38 | 5.5 |
 | `Sprites` | 29 | 3.8 |
 | `Rendering` | 41 | 3.0 |
 | `Cinemachine` | 12 | 2.9 |
-| `Terrain` | 7 | 2.2 |
-| `(loose files in Assets/)` | 5 | 1.1 |
+| `Terrain` | 5 | 2.2 |
+| `(loose files in Assets/)` | 4 | 1.1 |
 | `Podium` | 1 | 0.9 |
 | `DoA-Mats-Ryan-DesignerProjFiles` | 4 | 0.2 |
 | `Presets` | 7 | 0.1 |
@@ -29,14 +31,14 @@
 
 ## Per folder detail
 
-### `Textures` (124 files, 701.7 MB)
+### `Textures` (120 files, 660.5 MB)
 
 Biggest subfolders:
 
 - `Textures/Roofs`: 27 files, 277.1 MB
 - `Textures/WallsTall`: 5 files, 96.9 MB
-- `Textures/DoA-Grass`: 4 files, 96.1 MB
 - `Textures/Walls end cap`: 5 files, 82.5 MB
+- `Textures/DoA-Grass`: 3 files, 55.0 MB
 - `Textures/Hats`: 12 files, 43.3 MB
 - `Textures/DoA-RoadV2`: 7 files, 42.6 MB
 
@@ -46,36 +48,12 @@ Biggest subfolders:
 - `Assets/Textures/Roofs/Roof_Tiles_basecolor.png`: 63.5 MB
 - `Assets/Textures/Walls end cap/Wall-endcap_Black_Normal.png`: 60.1 MB
 - `Assets/Textures/DoA-Grass/Grass, Alt.png`: 54.9 MB
-- `Assets/Textures/DoA-Grass/DefaultMaterial_Normal.png`: 41.1 MB
 - `Assets/Textures/Roofs/RoofGeneric3/RoofGeneric_03_DefaultMaterial_Normal.png`: 40.3 MB
 - `Assets/Textures/Roofs/Roof_Tiles_normal.png`: 38.9 MB
 - `Assets/Textures/Roofs/RoofGeneric1/DefaultMaterial_Normal_OpenGL.png`: 28.6 MB
 - `Assets/Textures/DoA-Stone/Material_Normal_OpenGL.png`: 25.3 MB
 - `Assets/Textures/DoA-RoadV2/Substance_graph_basecolor.png`: 24.2 MB
-
-### `Scenes` (225 files, 255.2 MB)
-
-Biggest subfolders:
-
-- `Scenes/Outdated`: 13 files, 107.4 MB
-- `Scenes/FinalAreaScene`: 97 files, 72.9 MB
-- `Scenes/Design Scene(Main)`: 100 files, 68.4 MB
-- `Scenes/Design Scene`: 1 files, 3.0 MB
-- `Scenes/Design Scene-Ryan`: 1 files, 0.9 MB
-- `Scenes/GrassTest`: 4 files, 0.2 MB
-
-10 biggest files:
-
-- `Assets/Scenes/Outdated/Design Scene - Backup.unity`: 15.4 MB
-- `Assets/Scenes/Outdated/Design Scene(Working).unity`: 13.1 MB
-- `Assets/Scenes/Outdated/Design Scene.unity`: 13.1 MB
-- `Assets/Scenes/Outdated/Design Scene(Main) 1.unity`: 10.5 MB
-- `Assets/Scenes/Outdated/CUBED.unity`: 10.2 MB
-- `Assets/Scenes/Outdated/SQUARE.unity`: 10.1 MB
-- `Assets/Scenes/Outdated/Alternis City.unity`: 9.8 MB
-- `Assets/Scenes/Outdated/NewGraveyard.unity`: 8.9 MB
-- `Assets/Scenes/Outdated/Design Scene-Ryan.unity`: 8.3 MB
-- `Assets/Scenes/Outdated/Design Scene(Alternate City).unity`: 6.5 MB
+- `Assets/Textures/Roofs/RoofGeneric2/DefaultMaterial_Normal_OpenGL.png`: 19.8 MB
 
 ### `Audio` (63 files, 140.3 MB)
 
@@ -93,17 +71,41 @@ Biggest subfolders:
 - `Assets/Audio/Music/April 13 Main.wav`: 24.9 MB
 - `Assets/Audio/TEST/78651__justinbw__moped-motor.wav`: 5.3 MB
 - `Assets/Audio/TEST/28. Coconut Mall.mp3`: 5.1 MB
-- `Assets/Audio/Closed Playtest/B2/b2_menu.mp3`: 4.2 MB
 - `Assets/Audio/Closed Playtest/B1/b1_final.mp3`: 4.2 MB
+- `Assets/Audio/Closed Playtest/B2/b2_menu.mp3`: 4.2 MB
 - `Assets/Audio/TEST/432304__richwise__xsr700-tickover-loop.wav`: 4.1 MB
 - `Assets/Audio/TEST/29. Coconut Mall (Final Lap).mp3`: 3.3 MB
 - `Assets/Audio/TEST/Drink  One Piece  Official Soundtrack  Netflix.mp3`: 3.2 MB
 
-### `Materials` (204 files, 59.9 MB)
+### `Scenes` (40 files, 124.2 MB)
 
 Biggest subfolders:
 
-- `Materials/Placeholder colours`: 70 files, 47.0 MB
+- `Scenes/Outdated`: 13 files, 107.4 MB
+- `Scenes/Design Scene(Main)`: 12 files, 10.2 MB
+- `Scenes/Design Scene`: 1 files, 3.0 MB
+- `Scenes/Design Scene-Ryan`: 1 files, 0.9 MB
+- `Scenes/GrassTest`: 4 files, 0.2 MB
+- `Scenes/PedestrianTesting`: 1 files, 0.1 MB
+
+10 biggest files:
+
+- `Assets/Scenes/Outdated/Design Scene - Backup.unity`: 15.4 MB
+- `Assets/Scenes/Outdated/Design Scene(Working).unity`: 13.1 MB
+- `Assets/Scenes/Outdated/Design Scene.unity`: 13.1 MB
+- `Assets/Scenes/Outdated/Design Scene(Main) 1.unity`: 10.5 MB
+- `Assets/Scenes/Outdated/CUBED.unity`: 10.2 MB
+- `Assets/Scenes/Outdated/SQUARE.unity`: 10.1 MB
+- `Assets/Scenes/Outdated/Alternis City.unity`: 9.8 MB
+- `Assets/Scenes/Outdated/NewGraveyard.unity`: 8.9 MB
+- `Assets/Scenes/Outdated/Design Scene-Ryan.unity`: 8.3 MB
+- `Assets/Scenes/Outdated/Design Scene(Alternate City).unity`: 6.5 MB
+
+### `Materials` (203 files, 59.9 MB)
+
+Biggest subfolders:
+
+- `Materials/Placeholder colours`: 69 files, 47.0 MB
 - `Materials/Textures & Meshes`: 73 files, 7.5 MB
 - `Materials/Skybox`: 5 files, 2.0 MB
 - `Materials/Flat Colours`: 4 files, 0.0 MB
@@ -167,20 +169,20 @@ Biggest subfolders:
 
 ### `FlowerPot` (8 files, 13.3 MB)
 
-10 biggest files:
+8 biggest files:
 
 - `Assets/FlowerPot/FlowerPot.png`: 6.1 MB
-- `Assets/FlowerPot/Flowerpot4.png`: 1.1 MB
 - `Assets/FlowerPot/Flowerpot4 1.png`: 1.1 MB
-- `Assets/FlowerPot/Flowerpot3.png`: 1.1 MB
+- `Assets/FlowerPot/Flowerpot4.png`: 1.1 MB
 - `Assets/FlowerPot/Flowerpot3 1.png`: 1.1 MB
-- `Assets/FlowerPot/Flowerpot2.png`: 1.0 MB
-- `Assets/FlowerPot/Flowerpot2 2.png`: 1.0 MB
+- `Assets/FlowerPot/Flowerpot3.png`: 1.1 MB
 - `Assets/FlowerPot/Flowerpot2 1.png`: 1.0 MB
+- `Assets/FlowerPot/Flowerpot2 2.png`: 1.0 MB
+- `Assets/FlowerPot/Flowerpot2.png`: 1.0 MB
 
 ### `Fonts` (6 files, 6.5 MB)
 
-10 biggest files:
+6 biggest files:
 
 - `Assets/Fonts/Distress SDF.asset`: 2.1 MB
 - `Assets/Fonts/Lazy Sans SDF.asset`: 2.1 MB
@@ -189,7 +191,7 @@ Biggest subfolders:
 - `Assets/Fonts/Lazy Sans.ttf`: 0.0 MB
 - `Assets/Fonts/Distress.otf`: 0.0 MB
 
-### `Prefabs` (43 files, 5.5 MB)
+### `Prefabs` (38 files, 5.5 MB)
 
 Biggest subfolders:
 
@@ -197,8 +199,8 @@ Biggest subfolders:
 - `Prefabs/Secret Beacon Folder`: 3 files, 0.4 MB
 - `Prefabs/Buildings`: 16 files, 0.2 MB
 - `Prefabs/Player Prefabs`: 4 files, 0.1 MB
-- `Prefabs/Trail Objects`: 5 files, 0.0 MB (deleted 2026-10-07 with the QA recorder)
 - `Prefabs/Market`: 1 files, 0.0 MB
+- `Prefabs/Packages`: 1 files, 0.0 MB
 
 10 biggest files:
 
@@ -260,10 +262,6 @@ Biggest subfolders:
 
 ### `Cinemachine` (12 files, 2.9 MB)
 
-Biggest subfolders:
-
-- `Cinemachine/Presets`: 8 files, 0.0 MB
-
 10 biggest files:
 
 - `Assets/Cinemachine/CINEMACHINE_install.pdf`: 1.7 MB
@@ -277,37 +275,34 @@ Biggest subfolders:
 - `Assets/Cinemachine/Presets/Noise/Handheld_tele_mild.asset`: 0.0 MB
 - `Assets/Cinemachine/Presets/Noise/Handheld_normal_mild.asset`: 0.0 MB
 
-### `Terrain` (7 files, 2.2 MB)
+### `Terrain` (5 files, 2.2 MB)
 
-10 biggest files:
+5 biggest files:
 
 - `Assets/Terrain/TerrainData_02c94c5a-62b9-4bc2-b7b1-c1fb9f18e99a.asset`: 0.6 MB
 - `Assets/Terrain/New Terrain 1 - Copy.asset`: 0.6 MB
 - `Assets/Terrain/New Terrain 1.asset`: 0.6 MB
 - `Assets/Terrain/New Terrain.asset`: 0.6 MB
-- `Assets/Terrain/NewLayer.terrainlayer`: 0.0 MB
-- `Assets/Terrain/NewLayer - Copy.terrainlayer`: 0.0 MB
 - `Assets/Terrain/New Terrain Layer.terrainlayer`: 0.0 MB
 
-### `(loose files in Assets/)` (5 files, 1.1 MB)
+### `(loose files in Assets/)` (4 files, 1.1 MB)
 
-10 biggest files:
+4 biggest files:
 
 - `Assets/TerrainData_36fe901f-2d6b-4b97-855f-a5ab3d340f75.asset`: 0.6 MB
 - `Assets/GrassTest.asset`: 0.6 MB
-- `Assets/.DS_Store`: 0.0 MB
 - `Assets/DefaultNetworkPrefabs.asset`: 0.0 MB
 - `Assets/NormalCracker.png`: 0.0 MB
 
 ### `Podium` (1 files, 0.9 MB)
 
-10 biggest files:
+The biggest files:
 
 - `Assets/Podium/DOA_Podium2d.png`: 0.9 MB
 
 ### `DoA-Mats-Ryan-DesignerProjFiles` (4 files, 0.2 MB)
 
-10 biggest files:
+4 biggest files:
 
 - `Assets/DoA-Mats-Ryan-DesignerProjFiles/DoA_-_Dirt.sbs`: 0.1 MB
 - `Assets/DoA-Mats-Ryan-DesignerProjFiles/DoA_Grass1.sbs`: 0.0 MB
@@ -323,7 +318,7 @@ Biggest subfolders:
 - `Presets/DrivingIndicators`: 1 files, 0.0 MB
 - `Presets/Volume`: 1 files, 0.0 MB
 
-10 biggest files:
+7 biggest files:
 
 - `Assets/Presets/DepthShader/Option2.preset`: 0.0 MB
 - `Assets/Presets/DepthShader/Original.preset`: 0.0 MB
@@ -340,7 +335,7 @@ Biggest subfolders:
 - `Animations/Menu Animations`: 2 files, 0.0 MB
 - `Animations/UI`: 1 files, 0.0 MB
 
-10 biggest files:
+3 biggest files:
 
 - `Assets/Animations/Menu Animations/ScreenAnim/Start.anim`: 0.0 MB
 - `Assets/Animations/UI/Results/Default.anim`: 0.0 MB
@@ -383,8 +378,8 @@ Lighting/bake data folders that belong to those scenes (`Assets/Scenes/<name>/` 
 | Folder | Files | MB | Scene reached by build? |
 |---|---:|---:|---|
 | `Assets/Scenes/Outdated` | 13 | 107.4 | no (whole folder unreached) |
-| `Assets/Scenes/FinalAreaScene` | 97 | 72.9 | no (whole folder unreached) |
-| `Assets/Scenes/Design Scene(Main)` | 100 | 68.4 | no (whole folder unreached) |
+| `Assets/Scenes/FinalAreaScene` | 0 of 97 | 0 | **yes**: every file is in use (2026-10-20 fix) |
+| `Assets/Scenes/Design Scene(Main)` | 12 of 100 | 8.2 | **yes**: only `Lightmap-29` to `-32` (12 files) are left over from an older bake |
 | `Assets/Scenes/Design Scene` | 1 | 3.0 | no (whole folder unreached) |
 | `Assets/Scenes/Design Scene-Ryan` | 1 | 0.9 | no (whole folder unreached) |
 | `Assets/Scenes/GrassTest` | 4 | 0.2 | no (whole folder unreached) |
@@ -403,7 +398,7 @@ Clearly old or test-only by name or folder. Still confirm with the team first.
 | Path | Files | MB | Why |
 |---|---:|---:|---|
 | `Assets/Scenes/Outdated/` | 13 | 107.4 | old scenes, folder is named for it |
-| `Assets/OToon- URP Toon Shading/Demo(Can be delete)/` | 219 | 8.2 | third-party demo, folder says it can be deleted |
+| `Assets/OToon- URP Toon Shading/Demo(Can be delete)/` | 219 of 357 | 8.2 | third-party demo, but 7 of its textures are in use: move them out first (Approval checklist) |
 | `Assets/Scenes/GrassTest` | 5 | 0.2 | test scene, its bake data and `Assets/GrassTest.asset` |
 | `Assets/Scenes/PedestrianTesting` | 2 | 0.2 | test scene |
 | `Assets/Scenes/Shader Work` | 1 | 0.2 | shader test scene and data |
@@ -419,16 +414,16 @@ Real art or data where only the artists know whether it is still wanted:
 | Path | Files | MB |
 |---|---:|---:|
 | `Assets/Models/` (3D models) | 90 | 20.9 |
-| `Assets/Textures/` (textures) | 124 | 701.7 |
-| `Assets/Materials/` (materials) | 204 | 59.9 |
+| `Assets/Textures/` (textures) | 120 | 660.5 |
+| `Assets/Materials/` (materials) | 203 | 59.9 |
 | `Assets/Animations/` (animations) | 3 | 0.0 |
 | `Assets/Audio/` (audio) | 63 | 140.3 |
-| `Assets/Prefabs/` (prefabs) | 43 | 5.5 |
-| `Assets/Terrain/` (terrain data) | 7 | 2.2 |
+| `Assets/Prefabs/` (prefabs) | 38 | 5.5 |
+| `Assets/Terrain/` (terrain data) | 5 | 2.2 |
 | `Assets/Sprites/` (sprites) | 29 | 3.8 |
 | `Assets/DoA-Mats-Ryan-DesignerProjFiles/` (designer project files) | 4 | 0.2 |
 | `Assets/Scenes/Art Showcase` (art showcase scene) | 1 | 1.0 |
-| `Assets/Scenes/Design Scene(Main)/` (bake data of the main scene: check it is the one in use) | 100 | 68.4 |
+| `Assets/Scenes/Design Scene(Main)/Lightmap-29` to `-32` (left over from an older bake; a re-bake rewrites the folder anyway) | 12 | 8.2 |
 
 ### Loose files directly in `Assets/`
 
@@ -445,3 +440,17 @@ Real art or data where only the artists know whether it is still wanted:
 | `DoA-Final Area Start.mat` | no | FinalAreaScene (build) |
 | `DoA-Final Area.mat` | no | FinalAreaScene (build) |
 | `DefaultNetworkPrefabs.asset` | no | Netcode's own file, never touch |
+
+## Approval checklist
+
+Tick a line once the team agrees, then delete those files in the Unity editor (never in Explorer, or the `.meta` files get left behind). Afterwards, run `python tools/unused-assets.py` again and play a match.
+
+- **Team OK (license or junk, no art value):**
+  - [ ] OToon demo (Unity-chan license, `LICENSES.md` ❌). First, in the editor, move the 7 textures our materials use out of `Demo(Can be delete)` into a folder of our own (e.g. `Assets/Textures/OToon/`): `Art/Textures/line.png`, `Art/Textures/noise_c.png`, `Scenes/1 Tutorials/Texture/2ToneCustom_RampTex.png`, `3Tone_RampTex.png`, `5ToneCustom_RampTex.png`, `5Toon_RampTex.png`, `Scenes/2 NPRStyles RobotKyle/Textures/5step 1_RampTex.png`. Then delete the demo folder.
+  - [ ] `Assets/Fonts/Distress*`, `Lazy Sans*`, `Yagitudeh*` (no license, `LICENSES.md` ❌)
+  - [ ] The 32 unused files in `Assets/Audio/TEST/` (listed in `Logs/unused-assets.txt`). **Not the whole folder:** 14 of its sounds play in the game (`LICENSES.md`, Audio).
+  - [ ] `Assets/Scenes/Outdated/` (107 MB)
+  - [ ] The test scenes: `GrassTest` (+ folder and `Assets/GrassTest.asset`), `PedestrianTesting` (+ folder), `Shader Work`, `NewDrive Test`, `Programming Scene`, `Design Scene-Ryan/`, `Design Scene/`, `Bake Low Res.lighting`, `Baking Test.lighting`
+  - [ ] `Assets/TerrainData_36fe901f-...asset`, `Assets/NormalCracker.png`
+- **Artists decide:** each row of "Check with the artists" above. Textures are the big one (660 MB).
+- **Never delete:** `Assets/DefaultNetworkPrefabs.asset` (Netcode's own file), or any build scene's bake folder.

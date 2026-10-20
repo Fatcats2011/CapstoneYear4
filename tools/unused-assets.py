@@ -1,6 +1,6 @@
 """Lists the files under Assets/ that nothing in the build uses.
 
-Follows Unity's GUID references (the project saves its assets as text) from what the build starts from:
+Follows Unity's GUID references (text assets by their "guid:" lines, binary ones such as LightingData.asset by raw GUID bytes) from what the build starts from:
 - the enabled and disabled scenes in Build Settings;
 - everything ProjectSettings names;
 - Resources, Editor, StreamingAssets, Plugins and Gizmos folders;
@@ -27,9 +27,17 @@ TEXT = {".unity", ".prefab", ".asset", ".mat", ".controller", ".anim", ".overrid
 ROOT_FOLDERS = ("Resources", "Editor", "StreamingAssets", "Plugins", "Gizmos", "Editor Default Resources")
 ROOT_FILES = (".cs", ".asmdef", ".shader", ".hlsl", ".cginc", ".compute")
 
+def binary_guid(g):
+    """How a binary asset (LightingData, terrain data) stores a GUID: 16 bytes, each byte's hex digits swapped"""
+    return bytes(int(g[2 * i + 1] + g[2 * i], 16) for i in range(16))
+
 def guids_in(path):
     with open(path, "rb") as fh:
-        return set(g.decode() for g in GUID.findall(fh.read()))
+        data = fh.read()
+    if data.startswith(b"%YAML") or path.endswith(".meta") or os.path.splitext(path)[1] not in TEXT:
+        return set(g.decode() for g in GUID.findall(data))
+    # A binary asset (LightingData.asset names its lightmaps this way)
+    return set(g for g, b in by_bytes.items() if b in data)
 
 # Every asset by its GUID (from its .meta)
 by_guid, files = {}, []
@@ -43,6 +51,7 @@ for dp, ds, fs in os.walk(ASSETS):
                 by_guid[m.group(1).decode()] = path[:-5]
         else:
             files.append(path)
+by_bytes = {g: binary_guid(g) for g in by_guid}
 
 def references(path):
     """GUIDs a file names: its own content if Unity saves it as text, and its .meta (a model's external materials)"""

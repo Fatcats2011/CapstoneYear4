@@ -180,13 +180,20 @@ Code is done (`docs/online.md`, Phase 3B). Needs step 1b first (the West Face ac
 
 ## 15. At Phase 4B, when the App ID exists: the Steamworks dashboard
 
-- Stats & Achievements: create `FIRST_DELIVERY` ("First Delivery") and `GOLDEN_WIN` ("Golden Finish"), with the descriptions in `docs/steam/in-game-features.md`. Each needs two 256×256 JPG icons (unlocked and locked).
+- First run `python tools/set-app-id.py <APP_ID>` (it sets `SteamStartup.cs`, `steam_appid.txt` and `app_build.vdf`; these go on `main` too).
+- Stats & Achievements: create all 9 achievements in the table in `docs/steam/in-game-features.md`, with the exact API names. Each needs two 256×256 JPG icons (unlocked and locked).
 - Community → Rich Presence: upload `docs/steam/rich-presence-english.vdf`.
+- Store page and tags: `docs/steam/store-page-draft.md`. Steam Deck: `docs/steam/steam-deck.md`.
 
 ## 16. When there's art
 
 - Options rows for the display settings (screen size, borderless or exclusive, VSync, frame cap), and for Quality. The code reads and saves them already: wire each row's selector like the existing rows (`OptionsMenu`).
-- Keyboard button prompts (Space, Backspace, Escape), and PlayStation/Nintendo button prompts.
+- Keyboard button prompts (Space, Backspace, Escape), and PlayStation/Nintendo button prompts. The code that swaps them is ready (`ButtonGlyph`):
+  - Add a **Button Glyph** component to each prompt Image. Today `MenUI_Buttons.png` is used 5 times: 3 in `Alex Player Testing` (one may be a prefab override), and 1 each in `Menu Canvas.prefab` and `Loading Screen World Canvas.prefab`. New Dispatch prompts get one too.
+  - Fill in **PlayStation**, **Nintendo** and **Keyboard** with the new art. Leave **Xbox** empty: it takes the Image's current sprite.
+  - Empty slots fall back to Xbox, so adding the component before the art exists changes nothing.
+  - Inside a player's hierarchy, a prompt follows that player's controller. Elsewhere it follows whichever device was used last.
+  - With Steam Input on, Steam turns every pad into an Xbox pad, so the prompts stay Xbox (fine on the Steam Deck).
 
 ## 17. Reference
 

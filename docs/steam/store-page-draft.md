@@ -1,18 +1,22 @@
 # Steam Store Page — Draft
 
-Built from what the game actually contains (2026-09-22). Edit freely; items marked ⚠️ depend on open legal checks in `LICENSES.md`.
+Built from what the game actually contains (updated 2026-10-20: online play, matchmaking, keyboard, Steam features). Edit freely; items marked ⚠️ depend on open legal checks in `LICENSES.md`.
 
 ## Basics
 
 - **Title:** Dead on Arrival
 - **Developer / Publisher:** The Boo Crew
-- **Players:** 1–4, local split-screen (Remote Play Together once enabled)
-- **Controller:** Full controller support; a gamepad is required to play (keyboard can't join yet)
-- **Suggested tags:** Racing, Party Game, Local Multiplayer, Split Screen, PvP, Arcade, Driving, Casual, Funny, Cartoony, Colorful, Stylized
+- **Players:** 1–4. Local split-screen, online over Steam (friends or matchmaking), or both at once: two players on one PC can join an online match together. Remote Play Together once it's enabled in Steamworks.
+- **Controller:** Full controller support. One player can use the keyboard (button prompts show controller buttons until the keyboard prompt art lands).
+- **Steam features:** 9 achievements, Steam Cloud (settings), Rich Presence, invites from the friends list.
+- **Suggested tags:** Racing, Party Game, Local Multiplayer, Split Screen, Online PvP, PvP, Multiplayer, Arcade, Driving, Casual, Funny, Cartoony, Colorful, Stylized
+- **Steamworks checkboxes:** Single-player, Online PvP, Shared/Split Screen PvP, Remote Play Together, Steam Achievements, Steam Cloud, Full controller support
 
 ## Short description (≤ 300 characters)
 
-> Ghost couriers race through a haunted town on scooters in this 1–4 player split-screen party racer. Grab orders, phase-boost straight through buildings, drift for speed and steal packages from your rivals — the richest ghost after the final Golden Order wins.
+> Ghost couriers race through a haunted town on scooters in this 1–4 player party racer, split-screen or online. Grab orders, phase-boost through buildings, drift for speed and steal packages from rivals: the richest ghost after the final Golden Order wins.
+
+(255 characters.)
 
 ## About this game
 
@@ -28,9 +32,12 @@ Built from what the game actually contains (2026-09-22). Edit freely; items mark
 
 **Make it yours.** Pick your ghost's color and hat, send emotes mid-race, and see who tops the podium.
 
+**Couch or online.** Play split-screen on one screen, invite friends over Steam, or let matchmaking find a lobby. Bring a friend on the couch into an online match too.
+
 ## Features
 
 - 1–4 player local split-screen chaos
+- Online play over Steam: invite friends or find a match, with couch players joining together
 - Phase-Boost through buildings and into rivals to steal their deliveries
 - Drift boosts, slipstreams, pedestrians and props to knock around
 - Three waves of rising order difficulty, then a Golden Order showdown
@@ -41,7 +48,7 @@ Built from what the game actually contains (2026-09-22). Edit freely; items mark
 
 - Cartoon ghosts; death is played for laughs (you respawn from a gravestone after falling in water).
 - Mild slapstick: pedestrians and props get bumped or flung, then pop back — no blood or gore.
-- No online chat, purchases or user-generated content.
+- No chat (text or voice), no purchases and no user-generated content. Online, other players' Steam names are shown on the lobby board.
 
 ## System requirements
 
@@ -56,3 +63,12 @@ To be measured during Phase 1 performance work (4-player split-screen at 1080p).
 5. The Golden Order finale.
 6. Character customization (colors and hats).
 7. The results podium.
+8. The Dispatch lobby: friends' tickets filling up before an online match.
+
+## Achievements (paste into Steamworks → Stats & Achievements)
+
+The API names, display names and descriptions are in `docs/steam/in-game-features.md` (Achievements). Each needs two 256×256 JPG icons (unlocked and locked), so 18 icons in all.
+
+## Rich Presence
+
+Upload `docs/steam/rich-presence-english.vdf` as it is (checked 2026-10-20: its 8 tokens match `PresenceRules`).
