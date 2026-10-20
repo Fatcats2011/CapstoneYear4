@@ -266,6 +266,45 @@ namespace DoA.Tests
             CollectionAssert.AreEqual(new[] { 71UL }, lobbies.Joins, "only the lower ID's lobby");
         }
 
+        // Steam only tells a member who a lobby's owner is, so a search reads it from the host's own owner tag
+        [Test]
+        public void Tick_TieBreak_ReadsTheOwnerTag_NotLobbyOwner()
+        {
+            // Owners stays unset (as on Steam for a lobby not joined yet); only the tag says who hosts
+            foreach (var (id, owner) in new[] { (70UL, 600UL), (71UL, 400UL) })
+            {
+                lobbies.SetData(id, LobbyRules.GAME_KEY, LobbyRules.GAME);
+                lobbies.SetData(id, LobbyRules.BUILD_KEY, BUILD);
+                lobbies.SetData(id, MatchRules.MM_KEY, MatchRules.MM_ON);
+                lobbies.SetData(id, MatchRules.OPEN_KEY, "1");
+                lobbies.SetData(id, MatchRules.OWNER_KEY, owner.ToString());
+            }
+            lobby.SetFill(true);
+
+            now += MatchRules.RESEARCH;
+            match.Tick();
+            lobbies.AnswerSearch(70, 71);
+
+            CollectionAssert.AreEqual(new[] { 71UL }, lobbies.Joins, "yields to the lower ID from its tag only");
+        }
+
+        [Test]
+        public void Tick_TieBreak_MissingOwnerTag_NeverYields()
+        {
+            lobbies.SetData(70, LobbyRules.GAME_KEY, LobbyRules.GAME);
+            lobbies.SetData(70, LobbyRules.BUILD_KEY, BUILD);
+            lobbies.SetData(70, MatchRules.MM_KEY, MatchRules.MM_ON);
+            lobbies.SetData(70, MatchRules.OPEN_KEY, "1");
+            lobbies.Owners[70] = 1; // not readable before joining, so never used
+            lobby.SetFill(true);
+
+            now += MatchRules.RESEARCH;
+            match.Tick();
+            lobbies.AnswerSearch(70);
+
+            Assert.IsEmpty(lobbies.Joins, "an unknown owner is never yielded to");
+        }
+
         [Test]
         public void Switch_RefusedTags_KeepsOwnLobby()
         {
@@ -503,7 +542,7 @@ namespace DoA.Tests
             lobbies.Reads = 0;
             lobbies.AnswerSearch(huge);
 
-            Assert.LessOrEqual(lobbies.Reads, MatchRules.MAX_RESULTS * 5, "an owner and four tags per lobby looked at");
+            Assert.LessOrEqual(lobbies.Reads, MatchRules.MAX_RESULTS * 5, "five tags per lobby looked at, the owner's among them");
             Assert.IsFalse(match.Searching, "none of them is this game's: none found");
         }
 

@@ -100,6 +100,15 @@ namespace DoA.Tests
         }
 
         [Test]
+        public void Host_PublishesItsSteamIdInTheOwnerTag()
+        {
+            lobbies.Me = 76561198000000001UL;
+            Hosting();
+
+            Assert.AreEqual("76561198000000001", lobbies.Data[42][MatchRules.OWNER_KEY]);
+        }
+
+        [Test]
         public void Host_WithoutSteam_SaysSo_AndMakesNoLobby()
         {
             lobbies.Available = false;

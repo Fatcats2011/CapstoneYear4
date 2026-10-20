@@ -319,6 +319,8 @@ public class OnlineLobby
 
         lobbies.SetData(lobby, LobbyRules.GAME_KEY, LobbyRules.GAME);
         lobbies.SetData(lobby, LobbyRules.BUILD_KEY, build);
+        // Searchers can't ask Steam who owns a lobby they haven't joined, so the host says so
+        lobbies.SetData(lobby, MatchRules.OWNER_KEY, lobbies.Me.ToString(System.Globalization.CultureInfo.InvariantCulture));
         Current = lobby;
         IsHost = true;
         Filling = false;

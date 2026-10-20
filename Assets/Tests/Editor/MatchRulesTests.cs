@@ -19,6 +19,28 @@ namespace DoA.Tests
         }
 
         [Test]
+        public void ParseOwner_Valid()
+        {
+            Assert.AreEqual(76561198000000001UL, MatchRules.ParseOwner("76561198000000001"));
+            Assert.AreEqual(ulong.MaxValue, MatchRules.ParseOwner(ulong.MaxValue.ToString()));
+        }
+
+        [Test]
+        public void ParseOwner_GarbageHugeOrMissing_IsZero()
+        {
+            foreach (string tag in new string[] { null, "", "0", "-5", "+5", " 5", "5 ", "12ab", "1.5", "１２",
+                "18446744073709551616", new string('9', 10000) })
+                Assert.AreEqual(0UL, MatchRules.ParseOwner(tag), tag == null ? "null" : tag.Length > 30 ? "long" : tag);
+        }
+
+        [Test]
+        public void MayYieldTo_UnknownOwner_NeverYields()
+        {
+            Assert.IsFalse(MatchRules.MayYieldTo(5, 0));
+            Assert.IsFalse(MatchRules.MayYieldTo(ulong.MaxValue, 0));
+        }
+
+        [Test]
         public void ParseOpenSeats_Invalid()
         {
             foreach (string tag in new string[] { null, "", "-1", "5", "99", "4abc", " 3", new string('9', 10000) })

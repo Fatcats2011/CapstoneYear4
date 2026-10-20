@@ -255,7 +255,9 @@ public class Matchmaker
             for (int i = 0; i < found.Length && i < MatchRules.MAX_RESULTS; i++)
             {
                 ulong id = found[i];
-                tagged.Add((id, lobbies.Owner(id), lobbies.GetData(id, LobbyRules.GAME_KEY),
+                // The owner comes from the host's own tag: Steam only tells a lobby's members who owns it
+                tagged.Add((id, MatchRules.ParseOwner(lobbies.GetData(id, MatchRules.OWNER_KEY)),
+                    lobbies.GetData(id, LobbyRules.GAME_KEY),
                     lobbies.GetData(id, LobbyRules.BUILD_KEY), lobbies.GetData(id, MatchRules.MM_KEY),
                     lobbies.GetData(id, MatchRules.OPEN_KEY)));
             }

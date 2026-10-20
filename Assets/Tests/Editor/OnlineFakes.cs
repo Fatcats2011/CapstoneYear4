@@ -142,6 +142,8 @@ namespace DoA.Tests
             SetData(lobby, LobbyRules.GAME_KEY, game);
             SetData(lobby, LobbyRules.BUILD_KEY, build);
             Owners[lobby] = owner;
+            // A real host publishes its Steam ID in the lobby; a searcher can only read it from there
+            SetData(lobby, MatchRules.OWNER_KEY, owner.ToString());
         }
     }
 

@@ -10,9 +10,13 @@ public static class MatchRules
     public const string MM_KEY = "mm";
     public const string MM_ON = "1";
     public const string OPEN_KEY = "open";
+    /// <summary>The lobby tag where the host publishes its Steam ID (Steam only tells members who a lobby's owner is)</summary>
+    public const string OWNER_KEY = "owner";
 
     public const int MAX_RESULTS = 50;
     public const int MAX_TAG = 64;
+    // The most digits a Steam ID (a ulong) has
+    const int MAX_OWNER_DIGITS = 20;
     public const double SEARCH_GAP = 5.0;
     /// <summary>How long a search waits for Steam's answer before it counts as none found</summary>
     public const double SEARCH_TIMEOUT = 10.0;
@@ -69,6 +73,25 @@ public static class MatchRules
     }
 
     /// <summary>
+    /// A lobby host's Steam ID from its owner tag, or 0 when the tag is missing or isn't plain digits that fit
+    /// (another machine writes it, so it is never trusted)
+    /// </summary>
+    public static ulong ParseOwner(string tag)
+    {
+        if (string.IsNullOrEmpty(tag) || tag.Length > MAX_OWNER_DIGITS)
+            return 0;
+
+        foreach (char c in tag)
+        {
+            if (c < '0' || c > '9')
+                return 0;
+        }
+
+        ulong owner;
+        return ulong.TryParse(tag, NumberStyles.None, CultureInfo.InvariantCulture, out owner) ? owner : 0;
+    }
+
+    /// <summary>
     /// Whether a lobby's matchmaking tag marks it open to anyone
     /// </summary>
     public static bool IsOpen(string mmTag)
@@ -115,11 +138,12 @@ public static class MatchRules
     }
 
     /// <summary>
-    /// Whether a lone Fill host may join another's lobby: only the higher Steam ID yields, so two hosts never join each other
+    /// Whether a lone Fill host may join another's lobby: only the higher Steam ID yields, so two hosts never join each other.
+    /// An unknown owner (0: no readable owner tag) is never yielded to
     /// </summary>
     public static bool MayYieldTo(ulong me, ulong otherOwner)
     {
-        return me > otherOwner;
+        return otherOwner != 0 && me > otherOwner;
     }
 
     /// <summary>
