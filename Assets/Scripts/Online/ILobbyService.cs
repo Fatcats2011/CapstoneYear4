@@ -42,11 +42,17 @@ public interface ILobbyService
     /// <summary>Makes a lobby public (anyone can find it) when open, friends-only otherwise</summary>
     void SetPublic(ulong lobby, bool open);
 
-    /// <summary>Looks for public matchmaking lobbies of this build with seatsNeeded free seats. Found follows</summary>
-    void Search(string build, int seatsNeeded);
+    /// <summary>
+    /// Looks for public matchmaking lobbies of this build with seatsNeeded free seats. Found follows, with the id this
+    /// returns (each search's is one more than the last's), maybe before it returns
+    /// </summary>
+    int Search(string build, int seatsNeeded);
 
-    /// <summary>The lobbies a search found: at most MatchRules.MAX_RESULTS, empty when none or without Steam</summary>
-    event Action<ulong[]> Found;
+    /// <summary>
+    /// A search's id, and the lobbies it found: at most MatchRules.MAX_RESULTS, empty when none or without Steam. A search
+    /// given up on can still answer, late
+    /// </summary>
+    event Action<int, ulong[]> Found;
 
     /// <summary>Whether a Steam user (a Steam ID) is in a lobby now. Only members may connect to a host (SteamPeerRules)</summary>
     bool IsMember(ulong lobby, ulong steamId);

@@ -456,6 +456,63 @@ namespace DoA.Tests
             Assert.IsEmpty(lobbies.Joins, "a late answer is ignored");
         }
 
+        // A search that timed out answers late, during the next Find: it isn't taken as the new search's answer
+        [Test]
+        public void TimedOutSearch_AnswersDuringTheNextFind_Ignored()
+        {
+            Open(70, 170, 1);
+            Open(71, 171, 1);
+            match.Find();
+            int timedOut = lobbies.Searches.Count;
+            now += MatchRules.SEARCH_TIMEOUT;
+            match.Tick();
+            Assert.IsFalse(match.Searching);
+            notices.Clear();
+
+            Assert.IsTrue(match.Find());
+            lobbies.AnswerSearchFor(timedOut, 70);
+            Assert.IsEmpty(lobbies.Joins, "the old search's answer is ignored");
+            Assert.IsTrue(match.Searching, "the new search still waits for its own");
+
+            lobbies.AnswerSearch(71);
+            CollectionAssert.AreEqual(new[] { 71UL }, lobbies.Joins, "the new search's answer is taken");
+            Assert.IsEmpty(notices);
+        }
+
+        // The same after B: a cancelled search answering during the next Find is ignored
+        [Test]
+        public void CancelledSearch_AnswersDuringTheNextFind_Ignored()
+        {
+            Open(70, 170, 1);
+            Open(71, 171, 1);
+            match.Find();
+            int cancelled = lobbies.Searches.Count;
+            match.Cancel();
+            now += MatchRules.SEARCH_GAP;
+
+            Assert.IsTrue(match.Find());
+            lobbies.AnswerSearchFor(cancelled, 70);
+            Assert.IsEmpty(lobbies.Joins, "the cancelled search's answer is ignored");
+            Assert.IsTrue(match.Searching, "the new search still waits for its own");
+
+            lobbies.AnswerSearch(71);
+            CollectionAssert.AreEqual(new[] { 71UL }, lobbies.Joins, "the new search's answer is taken");
+            Assert.IsEmpty(notices);
+        }
+
+        // Steam (or SteamLobbyService without it) can answer before Search returns: that answer is still this search's
+        [Test]
+        public void SearchAnsweredBeforeItReturns_Taken()
+        {
+            lobbies.AnswerSearchAtOnce = true;
+
+            Assert.IsTrue(match.Find());
+
+            Assert.IsFalse(match.Searching);
+            CollectionAssert.AreEqual(new[] { MatchRules.NONE_FOUND }, notices);
+            Assert.IsTrue(lobby.Filling);
+        }
+
         // Finding 3: a lone Fill host outside the menus (in a match) doesn't search or move
         [Test]
         public void NotInMenus_NoFindAndNoResearch()

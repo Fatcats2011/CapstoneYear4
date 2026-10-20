@@ -12,7 +12,8 @@ using System.Collections.Generic;
 ///   answered) or leaving the menus, at any step. B once the player's lobby was left hosts it again as it was
 ///   (BackBetweenSessions), or, for a quiet search, is the player leaving;
 /// - a search Steam doesn't answer within SEARCH_TIMEOUT counts as none found, and a found lobby Steam doesn't answer
-///   within it as one that couldn't be entered;
+///   within it as one that couldn't be entered. A search timed out or cancelled that answers late, even during a newer
+///   one, is ignored: each answer carries its search's id;
 /// - a lone Fill host searches again every RESEARCH seconds, quietly (nothing shown, its own lobby left as it is), and
 ///   moves only to a lobby whose owner has the lower Steam ID, so two such hosts never both leave.
 /// Plain C# over ILobbyService and OnlineLobby, so it's tested without Steam. OnlinePlay runs it. See docs/online.md
@@ -30,6 +31,8 @@ public class Matchmaker
     double fillSince = double.NegativeInfinity;   // when Fill last turned on
     bool running;   // a search (the player's or a quiet one) or a move into a found lobby is under way
     bool awaitingFound;   // the search is out, its answer not in yet
+    int searchId;   // the search out (ILobbyService.Search's id): any other's answer is a late one, and ignored
+    bool asking;   // inside ILobbyService.Search: an answer now is this search's, before its id is known
     bool quiet;   // a Fill host's own search again: nothing is shown for it, and its own lobby is left as it is
     List<MatchRules.Candidate> candidates = new List<MatchRules.Candidate>();
     int next;   // the next candidate to try
@@ -212,7 +215,10 @@ public class Matchmaker
         fillBefore = lobby.Filling;
         awaitingFound = true;
         lastSearchAt = clock();
-        lobbies.Search(build, 1);
+        asking = true;
+        int id = lobbies.Search(build, 1);
+        asking = false;
+        searchId = id;
     }
 
     // B dropped the player's Find between sessions: their lobby is hosted again, as it was before the switch. Host waits
@@ -235,10 +241,10 @@ public class Matchmaker
         rehosting = false;
     }
 
-    void OnFound(ulong[] found)
+    void OnFound(int search, ulong[] found)
     {
-        // A search cancelled, or one that isn't this one's
-        if (!awaitingFound)
+        // A search cancelled or timed out, answering late (maybe during a newer one), or one that isn't this one's
+        if (!awaitingFound || (!asking && search != searchId))
             return;
         awaitingFound = false;
         if (!inMenus())

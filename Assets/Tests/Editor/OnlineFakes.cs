@@ -32,7 +32,7 @@ namespace DoA.Tests
         public event Action<ulong> Created;
         public event Action<ulong, bool> Entered;
         public event Action<ulong> JoinRequested;
-        public event Action<ulong[]> Found;
+        public event Action<int, ulong[]> Found;
 
         public void Create(int maxMembers)
         {
@@ -101,15 +101,28 @@ namespace DoA.Tests
             PublicCalls.Add((lobby, open));
         }
 
-        public void Search(string build, int seatsNeeded)
+        /// <summary>Search answers with no lobbies at once, before it returns (as SteamLobbyService does without Steam)</summary>
+        public bool AnswerSearchAtOnce;
+
+        /// <summary>Each search's id is its number in Searches, from 1</summary>
+        public int Search(string build, int seatsNeeded)
         {
             Searches.Add((build, seatsNeeded));
+            if (AnswerSearchAtOnce)
+                AnswerSearch();
+            return Searches.Count;
         }
 
-        /// <summary>Answers the search with these lobbies</summary>
+        /// <summary>Answers the latest search with these lobbies</summary>
         public void AnswerSearch(params ulong[] lobbies)
         {
-            Found?.Invoke(lobbies);
+            AnswerSearchFor(Searches.Count, lobbies);
+        }
+
+        /// <summary>Answers one search (its id), maybe not the latest, with these lobbies</summary>
+        public void AnswerSearchFor(int search, params ulong[] lobbies)
+        {
+            Found?.Invoke(search, lobbies);
         }
 
         public bool Invite(ulong lobby)

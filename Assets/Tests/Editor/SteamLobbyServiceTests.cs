@@ -69,15 +69,17 @@ namespace DoA.Tests
         }
 
         [Test]
-        public void Search_WithoutSteam_AnswersEmptyAtOnce()
+        public void Search_WithoutSteam_AnswersEmptyAtOnce_WithItsOwnId()
         {
             SteamLobbyService lobbies = new SteamLobbyService();
-            List<int> lengths = new List<int>();
-            lobbies.Found += delegate (ulong[] found) { lengths.Add(found.Length); };
+            List<(int search, int length)> answers = new List<(int search, int length)>();
+            lobbies.Found += delegate (int search, ulong[] found) { answers.Add((search, found.Length)); };
 
-            lobbies.Search("1.0", 2);
+            int first = lobbies.Search("1.0", 2);
+            int second = lobbies.Search("1.0", 2);
 
-            CollectionAssert.AreEqual(new[] { 0 }, lengths);
+            Assert.AreEqual(first + 1, second, "each search's id is one more than the last's");
+            CollectionAssert.AreEqual(new[] { (first, 0), (second, 0) }, answers);
         }
 
         [Test]

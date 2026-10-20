@@ -18,7 +18,9 @@ public class SteamLobbyService : ILobbyService
     public event Action<ulong> Created;
     public event Action<ulong, bool> Entered;
     public event Action<ulong> JoinRequested;
-    public event Action<ulong[]> Found;
+    public event Action<int, ulong[]> Found;
+
+    int lastSearch;   // the last search's id
 
 #if !DISABLESTEAMWORKS
     // Each call waits for its own answer, kept here until it comes: a CallResult set again drops the answer it was
@@ -174,8 +176,12 @@ public class SteamLobbyService : ILobbyService
 #endif
     }
 
-    public void Search(string build, int seatsNeeded)
+    /// <summary>
+    /// Each search answers with its own id: one Steam answers late, after a newer search, is told apart by it
+    /// </summary>
+    public int Search(string build, int seatsNeeded)
     {
+        int search = ++lastSearch;
 #if !DISABLESTEAMWORKS
         if (Available)
         {
@@ -193,17 +199,19 @@ public class SteamLobbyService : ILobbyService
             SteamAPICall_t asked = SteamMatchmaking.RequestLobbyList();
             if (!Started(asked))
             {
-                Found?.Invoke(new ulong[0]);
-                return;
+                Found?.Invoke(search, new ulong[0]);
+                return search;
             }
-            CallResult<LobbyMatchList_t> call = CallResult<LobbyMatchList_t>.Create(OnFound);
+            CallResult<LobbyMatchList_t> call = CallResult<LobbyMatchList_t>.Create(
+                delegate (LobbyMatchList_t result, bool ioFailure) { OnFound(search, result, ioFailure); });
             call.Set(asked);
             searches.RemoveAll(Answered);
             searches.Add(call);
-            return;
+            return search;
         }
 #endif
-        Found?.Invoke(new ulong[0]);
+        Found?.Invoke(search, new ulong[0]);
+        return search;
     }
 
     public bool Invite(ulong lobby)
@@ -232,13 +240,13 @@ public class SteamLobbyService : ILobbyService
         Entered?.Invoke(lobby, entered);
     }
 
-    void OnFound(LobbyMatchList_t result, bool ioFailure)
+    void OnFound(int search, LobbyMatchList_t result, bool ioFailure)
     {
         int count = ioFailure ? 0 : (int)Math.Min(result.m_nLobbiesMatching, (uint)MatchRules.MAX_RESULTS);
         ulong[] lobbies = new ulong[count];
         for (int i = 0; i < count; i++)
             lobbies[i] = SteamMatchmaking.GetLobbyByIndex(i).m_SteamID;
-        Found?.Invoke(lobbies);
+        Found?.Invoke(search, lobbies);
     }
 
     void OnJoinRequested(GameLobbyJoinRequested_t request)
