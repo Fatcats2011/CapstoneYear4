@@ -46,8 +46,8 @@ public static class LobbyRules
     public const int SHOWN_VERSION = 32;
 
     /// <summary>
-    /// Another machine's version as shown in a hint or the log: no control characters (a new line could forge a log
-    /// line), and at most SHOWN_VERSION characters
+    /// Another machine's version as shown in a hint or the log: no control, format or line-separator characters (a new
+    /// line could forge a log line), and at most SHOWN_VERSION characters
     /// </summary>
     public static string Shown(string version)
     {
@@ -55,7 +55,8 @@ public static class LobbyRules
     }
 
     /// <summary>
-    /// Another machine's text as shown in a hint or the log: no control characters, and at most `most` characters
+    /// Another machine's text as shown in a hint or the log: no control, format or line-separator characters, and at
+    /// most `most` characters, never ending on half of a surrogate pair
     /// </summary>
     public static string Shown(string text, int most)
     {
@@ -65,12 +66,16 @@ public static class LobbyRules
         System.Text.StringBuilder shown = new System.Text.StringBuilder(System.Math.Min(text.Length, most));
         foreach (char c in text)
         {
-            if (char.IsControl(c))
+            if (PlayerNames.IsHidden(c))
                 continue;
             if (shown.Length == most)
                 break;
             shown.Append(c);
         }
+
+        // A cut between the two halves of a surrogate pair leaves the first half alone
+        if (shown.Length > 0 && char.IsHighSurrogate(shown[shown.Length - 1]))
+            shown.Length--;
         return shown.ToString();
     }
 

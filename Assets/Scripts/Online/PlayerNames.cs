@@ -13,7 +13,7 @@ public static class PlayerNames
     }
 
     /// <summary>
-    /// Drops control characters, trims a name, then cuts it to what a synced string holds (in UTF-8 bytes), never between the two halves of a
+    /// Drops control, format and line-separator characters (IsHidden), trims a name, then cuts it to what a synced string holds (in UTF-8 bytes), never between the two halves of a
     /// character that is a surrogate pair. Null gives ""
     /// </summary>
     public static string Clean(string raw)
@@ -40,12 +40,31 @@ public static class PlayerNames
         return end == trimmed.Length ? trimmed : trimmed.Substring(0, end).Trim();
     }
 
+    /// <summary>
+    /// Whether a character is one another machine's text must not carry into a name, hint or log line: a control
+    /// character, a format character (a right-to-left override, a zero-width space, a byte-order mark), or a line or
+    /// paragraph separator (some log viewers break a line at those)
+    /// </summary>
+    internal static bool IsHidden(char c)
+    {
+        switch (char.GetUnicodeCategory(c))
+        {
+            case System.Globalization.UnicodeCategory.Control:
+            case System.Globalization.UnicodeCategory.Format:
+            case System.Globalization.UnicodeCategory.LineSeparator:
+            case System.Globalization.UnicodeCategory.ParagraphSeparator:
+                return true;
+            default:
+                return false;
+        }
+    }
+
     private static string StripControls(string raw)
     {
         System.Text.StringBuilder builder = new System.Text.StringBuilder(raw.Length);
         foreach (char c in raw)
         {
-            if (!char.IsControl(c))
+            if (!IsHidden(c))
                 builder.Append(c);
         }
         return builder.ToString();

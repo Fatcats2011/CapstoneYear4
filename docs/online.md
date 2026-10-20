@@ -44,7 +44,7 @@ Online multiplayer is being built in steps (roadmap Phase 3: `docs/superpowers/p
     - It shares choices and relays the host's states.
     - Whatever starts a session for the game adds one: the Online menu now, the Steam lobby later.
   - **Names.** Each machine's player shares its name as `OnlinePlayer.displayName` (a network variable the owner writes; read it as `OnlinePlayer.Name`, shared with `ShareName`).
-    - The name is the Steam name (`SteamNames`), cleaned by `PlayerNames.Clean` (control characters out, a length cap) once per session and cached in `OnlineGame`.
+    - The name is the Steam name (`SteamNames`), cleaned by `PlayerNames.Clean` (control, format and line-separator characters out, a length cap) once per session and cached in `OnlineGame`.
     - A ticket shows `PlayerNames.Shown`: the synced name, or `Player {seat+1}` while it's empty or not here yet.
     - The ticket's colour and hat text come from `displayName` on the colour and hat assets (`PlayerColorInformationSO`, `PlayerHatInformationSO`).
   - **Another machine's scooter** is `PlayerAvatar.prefab` alone (`RemoteAvatar`).

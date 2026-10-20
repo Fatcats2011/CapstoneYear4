@@ -30,6 +30,12 @@ namespace DoA.Tests
         }
 
         [Test]
+        public void Clean_DropsLineSeparatorsDirectionOverridesAndZeroWidthCharacters()
+        {
+            Assert.AreEqual("Ryan", PlayerNames.Clean("R\u2028y\u2029a\u202En\u200B\uFEFF"));
+        }
+
+        [Test]
         public void Clean_CutsALongNameToWhatFitsTheSyncedString()
         {
             Assert.AreEqual(FixedString32Bytes.UTF8MaxLengthInBytes, PlayerNames.Clean(new string('a', 100)).Length);

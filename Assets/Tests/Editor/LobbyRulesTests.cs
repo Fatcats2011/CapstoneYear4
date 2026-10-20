@@ -17,6 +17,20 @@ namespace DoA.Tests
         }
 
         [Test]
+        public void Shown_DropsLineSeparatorsDirectionOverridesAndZeroWidthCharacters()
+        {
+            Assert.AreEqual("abcdef", LobbyRules.Shown("a\u2028b\u2029c\u202Ed\u200Be\uFEFFf"));
+        }
+
+        [Test]
+        public void Shown_APairStraddlingTheCut_IsNotSplit()
+        {
+            string shown = LobbyRules.Shown("ab\U0001F47Bcd", 3);
+
+            Assert.AreEqual("ab", shown, "the pair doesn't fit, so neither half is kept");
+        }
+
+        [Test]
         public void Refusal_ThisGameAndBuild_LetsThePlayerIn()
         {
             Assert.IsNull(LobbyRules.Refusal("doa", "1.2", "1.2"));
