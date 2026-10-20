@@ -100,5 +100,21 @@ namespace DoA.Tests
                 Assert.LessOrEqual(churn.Tracked, JoinChurn.MAX_TRACKED);
             }
         }
+
+        [Test]
+        public void ActiveId_SeenEarly_SurvivesTheCap()
+        {
+            // 7 is seen first and connects 4 times, spread among 64 other new IDs: it stays active, so it isn't the one dropped
+            churn.Allow(7);
+            for (ulong k = 0; k < JoinChurn.MAX_TRACKED; k++)
+            {
+                churn.Allow(100 + k);
+                if (k % 16 == 15 && k < 63)
+                    Assert.IsTrue(churn.Allow(7));
+            }
+
+            Assert.IsTrue(churn.Allow(7), "5th connection");
+            Assert.IsFalse(churn.Allow(7), "6th connection: its count was not reset");
+        }
     }
 }

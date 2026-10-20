@@ -5,8 +5,9 @@ using System.Collections.Generic;
 /// A stranger connecting and dropping over and over (now that strangers can join a public lobby): the host refuses a
 /// Steam ID that has been let in more than CHURN_LIMIT times within CHURN_WINDOW, and keeps refusing it for the rest of the
 /// session (this object's life; a new hosting session makes a new one). OnlineLobby.LetsIn asks once per accepted
-/// connection. At most MAX_TRACKED Steam IDs are remembered, so it can't grow without bound: at the cap the oldest ID that
-/// isn't refused is dropped to make room (a refused ID is dropped only when every tracked ID is refused, oldest first).
+/// connection. At most MAX_TRACKED Steam IDs are remembered, so it can't grow without bound: at the cap the ID that isn't
+/// refused and connected least recently is dropped to make room (a refused ID is dropped only when every tracked ID is
+/// refused, the one refused first).
 /// See docs/online-safety.md
 /// </summary>
 public class JoinChurn
@@ -28,7 +29,7 @@ public class JoinChurn
 
     readonly Func<double> clock;
     readonly Dictionary<ulong, History> histories = new Dictionary<ulong, History>();
-    readonly List<ulong> order = new List<ulong>();   // oldest first
+    readonly List<ulong> order = new List<ulong>();   // least recently connected first
 
     /// <summary>How many Steam IDs are remembered (at most MAX_TRACKED)</summary>
     internal int Tracked => histories.Count;
@@ -56,6 +57,9 @@ public class JoinChurn
         if (history.Refused)
             return false;
 
+        order.Remove(steamId);   // most recently active goes to the back
+        order.Add(steamId);
+
         double now = clock();
         while (history.Times.Count > 0 && now - history.Times.Peek() >= CHURN_WINDOW)
             history.Times.Dequeue();
@@ -71,7 +75,7 @@ public class JoinChurn
         return true;
     }
 
-    // The oldest ID that isn't refused goes first; if all are refused, the oldest of them
+    // The least recently connected ID that isn't refused goes first; if all are refused, the one refused first
     void MakeRoom()
     {
         if (histories.Count < MAX_TRACKED)
