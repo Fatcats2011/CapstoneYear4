@@ -85,7 +85,7 @@ Online multiplayer is being built in steps (roadmap Phase 3: `docs/superpowers/p
 ### Phase 3D: playing over Steam
 
 - **Y (triangle) in player select plays online** with Steam friends:
-  - It makes a friends-only Steam lobby for four, hosts the match in it, and opens Steam's invite dialog.
+  - It makes a friends-only Steam lobby (four seats, a Steam member cap of 16), hosts the match in it, and opens Steam's invite dialog.
   - Once online, Y opens the invite dialog again. Without Steam's overlay (the editor has none), a message says to invite from the Steam friends list.
   - A line along the top of player select says what Y and B do.
 - **Friends join through Steam:** they accept the invite, or pick "Join Game" on the host in their friends list. With the game's own App ID that works whether their game is running or not (Steam starts it with `+connect_lobby`). With the test App ID, start the game first (Known limits).

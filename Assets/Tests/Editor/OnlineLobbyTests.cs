@@ -86,11 +86,12 @@ namespace DoA.Tests
         }
 
         [Test]
-        public void Host_MakesAFriendsOnlyLobbyForFour_TagsItWithTheGameAndBuild_AndHostsInIt()
+        public void Host_MakesAFriendsOnlyLobbyWithRoomAboveTheSeats_TagsItWithTheGameAndBuild_AndHostsInIt()
         {
             Hosting();
 
-            CollectionAssert.AreEqual(new[] { 4 }, lobbies.Creates);
+            CollectionAssert.AreEqual(new[] { MatchRules.LOBBY_MEMBERS }, lobbies.Creates, "squatters can't fill it");
+            Assert.Greater(MatchRules.LOBBY_MEMBERS, Constants.MAX_PLAYERS);
             Assert.AreEqual("doa", lobbies.Data[42]["game"]);
             Assert.AreEqual("1.2", lobbies.Data[42]["build"]);
             Assert.AreEqual(1, session.Hosts);

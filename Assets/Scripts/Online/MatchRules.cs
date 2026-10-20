@@ -13,6 +13,12 @@ public static class MatchRules
     /// <summary>The lobby tag where the host publishes its Steam ID (Steam only tells members who a lobby's owner is)</summary>
     public const string OWNER_KEY = "owner";
 
+    /// <summary>
+    /// The Steam member cap of a lobby. Above the seats on purpose: Steam counts lobby members, not seats, so a cap of
+    /// four would let three accounts that never connect fill the lobby. Seats are held to four by JoinRules and the open tag
+    /// </summary>
+    public const int LOBBY_MEMBERS = 16;
+
     public const int MAX_RESULTS = 50;
     public const int MAX_TAG = 64;
     // The most digits a Steam ID (a ulong) has

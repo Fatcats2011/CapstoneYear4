@@ -132,7 +132,7 @@ public class OnlineLobby
         creating = true;
         inviteOnCreate = invite;
         fillOnCreate = fill;
-        lobbies.Create(Constants.MAX_PLAYERS);
+        lobbies.Create(MatchRules.LOBBY_MEMBERS);
         return creating || IsHost;
     }
 
