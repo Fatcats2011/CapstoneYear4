@@ -10,7 +10,7 @@ using System.Collections.Generic;
 ///   hears whether it did;
 /// - a friend joining while it searches cancels it, and so does the player (B, Fill turned off, a friend's invite
 ///   answered) or leaving the menus, at any step. B once the player's lobby was left hosts it again as it was
-///   (BackBetweenSessions), or, for a quiet search, is the player leaving;
+///   (BackBetweenSessions; given up after SEARCH_TIMEOUT, RehostFailed), or, for a quiet search, is the player leaving;
 /// - a search Steam doesn't answer within SEARCH_TIMEOUT counts as none found, and a found lobby Steam doesn't answer
 ///   within it as one that couldn't be entered. A search timed out or cancelled that answers late, even during a newer
 ///   one, is ignored: each answer carries its search's id;
@@ -45,6 +45,7 @@ public class Matchmaker
     bool fillBefore;   // whether the player's lobby was open to anyone before the switch left it
     bool rehosting;   // B dropped the player's Find between sessions: their lobby is being hosted again
     bool rehostAsked;   // that lobby was asked for (OnlineLobby.Host): it's being made
+    double rehostSince;   // when B began hosting it again: it's given up SEARCH_TIMEOUT later
 
     /// <summary>
     /// Whether the player's Find is under way: searching, or moving into a found lobby. The status line shows it and B
@@ -64,6 +65,12 @@ public class Matchmaker
 
     /// <summary>A message for the player: nothing found, or Find refused</summary>
     public event Action<string> Notice;
+
+    /// <summary>
+    /// The player's lobby, hosted again after B (BackBetweenSessions), wasn't hosted within SEARCH_TIMEOUT: they were told
+    /// (LOBBY_FAILED), and OnlinePlay takes them back to the title screen as a failed Online Play does
+    /// </summary>
+    public event Action RehostFailed;
 
     /// <param name="build">This build's tag (LobbyRules.BuildTag): only lobbies with it are joined</param>
     /// <param name="clock">Seconds (OnlinePlay passes realtime since startup); tests pass a fake</param>
@@ -142,13 +149,18 @@ public class Matchmaker
     /// <summary>
     /// B while a search has this machine between sessions (Switching). The search stops. The player's Find hosts their
     /// lobby again, friends only or open as it was before the switch and without the invite dialog, once the session it
-    /// left has stopped, and they stay in Dispatch (true). A quiet search again, whose B says LEAVE, or B again while that
-    /// lobby is still being made, is the player leaving: false, and they go back to the title screen. Outside that moment
-    /// it stops a search as Cancel does (true)
+    /// left has stopped, and they stay in Dispatch (true). B again while that lobby is still being made does nothing
+    /// (true): a lobby not hosted within SEARCH_TIMEOUT is given up instead (RehostFailed). A quiet search again, whose B
+    /// says LEAVE, is the player leaving: false, and they go back to the title screen. Outside that moment it stops a
+    /// search as Cancel does (true)
     /// </summary>
     /// <returns>Whether the player stays in Dispatch</returns>
     public bool BackBetweenSessions()
     {
+        // A double tap, or another player's controller: the lobby is still hosted again
+        if (rehosting && !lobby.IsHost)
+            return true;
+
         bool betweenSessions = Switching;
         bool find = running && !quiet;
         Cancel();
@@ -159,6 +171,7 @@ public class Matchmaker
 
         rehosting = true;
         rehostAsked = false;
+        rehostSince = clock();
         Rehost();
         return true;
     }
@@ -177,10 +190,14 @@ public class Matchmaker
 
         if (rehosting)
         {
-            if (inMenus())
-                Rehost();
-            else
+            if (!inMenus())
                 Cancel();
+            else
+            {
+                Rehost();
+                if (rehosting && clock() - rehostSince >= MatchRules.SEARCH_TIMEOUT)
+                    GiveUpRehost();
+            }
             return;
         }
 
@@ -234,6 +251,15 @@ public class Matchmaker
 
         if (!rehostAsked && lobby.Host(invite: false, fill: fillBefore))
             rehostAsked = true;
+    }
+
+    // The lobby hosted again after B wasn't made within SEARCH_TIMEOUT (Steam never answered, or the session left never
+    // stopped): the player hears it failed and goes back to the title screen, where a lobby made late is left
+    void GiveUpRehost()
+    {
+        rehosting = false;
+        Tell(OnlineLobby.LOBBY_FAILED);
+        RehostFailed?.Invoke();
     }
 
     void OnHostFailed(string reason)

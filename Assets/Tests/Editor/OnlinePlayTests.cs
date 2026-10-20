@@ -98,6 +98,18 @@ namespace DoA.Tests
         }
 
         [Test]
+        public void HostingAgainAfterB_Fails_GoesBackToTheTitleScreen()
+        {
+            // Matchmaker gave up on the player's lobby being hosted again (RehostFailed): as a failed Online Play
+            OnlinePlay play = InPlayerSelect(new FakeLobbyService(), out GameManager game);
+            Assert.AreEqual(1, Reflect.HandlerCount(play.Match, nameof(Matchmaker.RehostFailed), play), "listened to");
+
+            Reflect.Raise(play.Match, nameof(Matchmaker.RehostFailed));
+
+            Assert.AreEqual(GameState.Menu, game.MainState);
+        }
+
+        [Test]
         public void Y_OnTheOldTitleScreen_FailingToGetOnline_StaysInPlayerSelect()
         {
             // Before the Online Play entry is in the scene, Y goes online as it always did: a failure only says why

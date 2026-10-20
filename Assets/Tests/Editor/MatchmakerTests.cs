@@ -994,21 +994,54 @@ namespace DoA.Tests
             Assert.AreEqual(1, lobbies.Creates.Count, "no lobby hosted again");
         }
 
-        // R1: B again while the lobby is being made is the leave B is for a lone host
+        // R1: B again while the lobby is being made (a double tap, another player's controller) does nothing: the player
+        // stays in Dispatch, and the lobby is still hosted. Once it hosts, B is B again
         [Test]
-        public void BackAgain_WhileTheLobbyIsMade_Leaves()
+        public void BackAgain_WhileTheLobbyIsMade_DoesNothing()
         {
             FindLeavesForSeventy();
             match.BackBetweenSessions();
 
-            Assert.IsFalse(match.BackBetweenSessions(), "the player leaves");
+            Assert.IsTrue(match.BackBetweenSessions(), "the player stays in Dispatch");
+            Assert.IsTrue(match.Switching, "still waiting for the lobby");
+            match.Tick();
+            Assert.AreEqual(2, lobbies.Creates.Count, "asked for once");
+            lobbies.RaiseCreated(43);
+            Assert.IsTrue(lobby.IsHost, "hosting again");
+            Assert.AreEqual(43UL, lobby.Current);
             Assert.IsFalse(match.Switching);
+            Assert.IsEmpty(notices);
+        }
+
+        // R1: a lobby Steam never makes isn't waited for longer than SEARCH_TIMEOUT: Dispatch stops waiting, the player
+        // hears it failed as Online Play's would, and OnlinePlay takes them to the title screen (RehostFailed). A lobby
+        // made late is left
+        [Test]
+        public void HostingAgain_NeverAnswered_GivesUpAfterTheSearchTimeout()
+        {
+            int failed = 0;
+            match.RehostFailed += () => failed++;
+            FindLeavesForSeventy();
+            match.BackBetweenSessions();
+
+            now += MatchRules.SEARCH_TIMEOUT - 0.1;
+            match.Tick();
+            Assert.IsTrue(match.Switching, "still waiting just before the timeout");
+            Assert.AreEqual(0, failed);
+
+            now += 0.1;
+            match.Tick();
+            Assert.IsFalse(match.Switching, "no longer waiting");
+            Assert.AreEqual(1, failed, "the player leaves for the title screen");
+            CollectionAssert.AreEqual(new[] { OnlineLobby.LOBBY_FAILED }, notices);
+
             lobby.ShowState(GameState.Menu); // the title screen
             lobbies.RaiseCreated(43);
             CollectionAssert.Contains(lobbies.Left, 43UL, "the lobby made late is left");
             Assert.IsFalse(lobby.IsHost);
             match.Tick();
             Assert.AreEqual(2, lobbies.Creates.Count, "and not made again");
+            Assert.AreEqual(1, failed);
         }
 
         // R1: hosting again can fail like any hosting (OnlinePlay says why): Dispatch stops waiting for it

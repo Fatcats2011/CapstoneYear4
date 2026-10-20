@@ -140,6 +140,7 @@ public class OnlinePlay : MonoBehaviour, ISessionControl
         if (Match != null)
         {
             Match.Notice -= Tell;
+            Match.RehostFailed -= BackToTitleAfterFailing;
             Match.Detach();
         }
 
@@ -151,6 +152,7 @@ public class OnlinePlay : MonoBehaviour, ISessionControl
         Lobby.HostFailed += OnHostFailed;
         Match = new Matchmaker(lobbies, Lobby, build, Clock, OtherMachines, InMenus);
         Match.Notice += Tell;
+        Match.RehostFailed += BackToTitleAfterFailing;
         startingOnline = false;
         stateShown = false;
     }
@@ -237,16 +239,23 @@ public class OnlinePlay : MonoBehaviour, ISessionControl
         return state == GameState.PlayerSelect && !online;
     }
 
-    // Online Play couldn't get online: the reason is in the hint bar (Notice), and player select would be a local one.
-    // A player who readied up while the lobby was being made stops being ready first, as B would have them, so no
-    // countdown is left to start a match from the title screen
+    // Online Play couldn't get online: the reason is in the hint bar (Notice), and player select would be a local one
     void OnHostFailed(string reason)
     {
         bool fromOnlinePlay = startingOnline;
         startingOnline = false;
 
+        if (fromOnlinePlay)
+            BackToTitleAfterFailing();
+    }
+
+    // Back to the title screen after failing to get online: Online Play, or the player's lobby hosted again after B
+    // (Matchmaker.RehostFailed). A player who readied up while the lobby was being made stops being ready first, as B
+    // would have them, so no countdown is left to start a match from the title screen
+    void BackToTitleAfterFailing()
+    {
         GameManager game = GameManager.Instance;
-        if (!fromOnlinePlay || game == null || !BackToTitle(game.MainState, GameAuthority.IsOnline))
+        if (game == null || !BackToTitle(game.MainState, GameAuthority.IsOnline))
             return;
 
         if (PlayerInstantiate.Instance != null)

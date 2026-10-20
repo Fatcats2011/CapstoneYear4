@@ -339,8 +339,9 @@ public class MenuInteractions : MonoBehaviour
 
     ///<summary>
     /// B in player select. Online, it closes the sliders first, then unreadies, then leaves. During a lobby switch it
-    /// cancels the switch: the player's Find lands them back in their own lobby, hosted again, and a quiet search again
-    /// (B says LEAVE) leaves, back to the title screen as a lone host's B does. Never into Local Play
+    /// cancels the switch: the player's Find lands them back in their own lobby, hosted again (B again meanwhile does
+    /// nothing), and a quiet search again (B says LEAVE) leaves, back to the title screen as a lone host's B does. Never
+    /// into Local Play
     ///</summary>
     private void PlayerUnreadyDespawnButton(bool button)
     {

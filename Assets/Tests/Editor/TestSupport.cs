@@ -68,6 +68,23 @@ namespace DoA.Tests
             return handlers == null ? 0 : handlers.GetInvocationList().Count(h => ReferenceEquals(h.Target, subscriber));
         }
 
+        /// <summary>
+        /// Raises an event (or calls a delegate field) from outside its class: every handler, as the class would
+        /// </summary>
+        public static void Raise(object source, string eventName, params object[] args)
+        {
+            Delegate handlers = FindField(source.GetType(), eventName).GetValue(source) as Delegate;
+            try
+            {
+                handlers?.DynamicInvoke(args);
+            }
+            catch (TargetInvocationException e)
+            {
+                ExceptionDispatchInfo.Capture(e.InnerException).Throw();
+                throw;
+            }
+        }
+
         static FieldInfo FindField(Type type, string name)
         {
             for (Type t = type; t != null; t = t.BaseType)
