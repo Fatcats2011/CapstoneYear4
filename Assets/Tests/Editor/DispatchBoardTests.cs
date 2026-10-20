@@ -267,6 +267,37 @@ namespace DoA.Tests
             Assert.IsTrue(prompt.gameObject.activeSelf, "shown again once the board is up");
         }
 
+        // The line is rebuilt only when filling, searching or the whole seconds shown change, so a countdown frame that
+        // changes none of them allocates nothing
+        [Test]
+        public void Matchmaking_LineFollowsSecondFillingAndSearching_BuiltOnlyOnAChange()
+        {
+            TMP_Text line = objects.Add<TextMeshProUGUI>();
+            Set(board, "matchmakingLine", line);
+
+            board.ShowMatchmaking(true, false, 29.2f);
+            Assert.AreEqual("OPEN TO ANYONE · STARTS IN 30", line.text);
+            Assert.AreEqual(1, board.StatusBuilds);
+
+            board.ShowMatchmaking(true, false, 29.5f); // 30 is the ceiling of all three
+            board.ShowMatchmaking(true, false, 29.01f);
+            Assert.AreEqual(1, board.StatusBuilds, "the same second builds nothing");
+
+            board.ShowMatchmaking(true, false, 28.9f);
+            Assert.AreEqual("OPEN TO ANYONE · STARTS IN 29", line.text, "the next second updates it");
+            Assert.AreEqual(2, board.StatusBuilds);
+
+            board.ShowMatchmaking(false, false, 28.9f);
+            Assert.AreEqual(MatchRules.FRIENDS_ONLY, line.text, "filling changes it");
+
+            board.ShowMatchmaking(false, true, 28.9f);
+            Assert.AreEqual(MatchRules.StatusLine(false, true, 0), line.text, "searching changes it");
+
+            Reflect.Invoke(board, "SetShowing", false);
+            board.ShowMatchmaking(false, true, 28.9f);
+            Assert.AreEqual(5, board.StatusBuilds, "a re-shown board sets it again");
+        }
+
         [Test]
         public void TicketView_FlashWithoutAnAnimator_JustCounts()
         {

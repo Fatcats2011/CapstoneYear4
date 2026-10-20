@@ -284,7 +284,7 @@ Playing with strangers is opt-in: a lobby is created friends only, exactly as be
   - Fewer than two machines seated stops it. When a second sits down again, it runs on from the last first seat, or from then if that start has already passed. A count that begins (Fill turned on, or back from a match) runs from then.
   - A lone host never auto-starts, and a friends-only lobby never does.
 - **Joins** are rate-limited per Steam ID (`JoinChurn`): at most `CHURN_LIMIT` = 5 accepted connections within `CHURN_WINDOW` = 60 s.
-- **The status line** (`DispatchBoard.matchmakingLine`, `MatchRules.StatusLine`) shows `LOOKING FOR A MATCH…` (the player's Find only), `OPEN TO ANYONE` (with ` · STARTS IN {s}` while counting, whole seconds rounded up) or `FRIENDS ONLY`. A client can't see whether the host's lobby is open, so it shows the host's countdown when there is one, and `FRIENDS ONLY` otherwise.
+- **The status line** (`DispatchBoard.matchmakingLine`, `MatchRules.StatusLine`) shows `LOOKING FOR A MATCH…` (the player's Find only), `OPEN TO ANYONE` (with ` · STARTS IN {s}` while counting, whole seconds rounded up) or `FRIENDS ONLY`. A client can't see whether the host's lobby is open, so it shows the host's countdown when there is one, and `FRIENDS ONLY` otherwise. The line is rebuilt only when filling, searching or the whole seconds change, so a countdown frame allocates nothing.
 
 **Manual check over Steam** (two PCs, two Steam accounts, the same build on both; the accounts needn't be friends):
 - A: Online Play, then RB (R). The line shows `OPEN TO ANYONE`.

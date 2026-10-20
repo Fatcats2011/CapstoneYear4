@@ -20,12 +20,18 @@ public class DispatchBoard : MonoBehaviour
     /// <summary>Whether the board is up (OnlinePlay hides its hint bar then)</summary>
     public static bool Showing { get; private set; }
 
+    /// <summary>How many times the matchmaking line has been rebuilt (tests: an unchanged second builds nothing)</summary>
+    internal int StatusBuilds { get; private set; }
+
     bool showing;
     PlayerSelectCanvas hooked;
     readonly TicketState[] buffer = new TicketState[Constants.MAX_PLAYERS]; // the tickets as they are now, rebuilt each frame
     readonly TicketState[] shown = new TicketState[Constants.MAX_PLAYERS];  // the tickets as last applied
     bool applied;
     string statusShown; // the matchmaking line as last set
+    bool statusKeyed; // the inputs below have been applied since the board came up
+    bool statusFilling, statusSearching; // the inputs the matchmaking line was last built from
+    int statusSeconds;
     string fillPromptShown; // the Fill prompt as last set (null = hidden)
     bool fillPromptSet; // fillPromptShown has been applied since the board came up
 
@@ -117,7 +123,27 @@ public class DispatchBoard : MonoBehaviour
         bool filling = host ? play.Lobby.Filling : game != null && game.AutoStartSet;
         bool searching = play != null && play.Match != null && play.Match.Searching;
         float remaining = game == null ? 0 : game.AutoStartRemaining;
+        ShowMatchmaking(filling, searching, remaining);
+    }
 
+    /// <summary>
+    /// Sets the matchmaking line from its inputs. The line is rebuilt (MatchRules.StatusLine allocates) only when filling,
+    /// searching or the whole seconds shown (the ceiling of the time left) change, not every frame of a countdown
+    /// </summary>
+    internal void ShowMatchmaking(bool filling, bool searching, float remaining)
+    {
+        if (matchmakingLine == null)
+            return;
+
+        int seconds = remaining > 0 ? (int)System.Math.Ceiling(remaining) : 0;
+        if (statusKeyed && filling == statusFilling && searching == statusSearching && seconds == statusSeconds)
+            return;
+
+        statusKeyed = true;
+        statusFilling = filling;
+        statusSearching = searching;
+        statusSeconds = seconds;
+        StatusBuilds++;
         string line = MatchRules.StatusLine(filling, searching, remaining);
         if (line == statusShown)
             return;
@@ -155,6 +181,7 @@ public class DispatchBoard : MonoBehaviour
         {
             SetBanner(false);
             statusShown = null;
+            statusKeyed = false;
             // Hidden with the board even when the scene wires it outside root; set again once the board is up
             fillPromptSet = false;
             if (fillPrompt != null)
