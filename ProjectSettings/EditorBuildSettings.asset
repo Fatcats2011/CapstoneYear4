@@ -20,5 +20,8 @@ EditorBuildSettings:
   - enabled: 0
     path: Assets/Scenes/Tutorial scene.unity
     guid: 1a1711866ab5097498828501d31cf70f
+  - enabled: 1
+    path: Assets/Scenes/Multiplayerlobby.unity
+    guid: 24ced0b12ea0f4a489903e4c7fc23e28
   m_configObjects:
     com.unity.input.settings: {fileID: 11400000, guid: 1b5427a78b1c46c4ba3209eac398a038, type: 2}

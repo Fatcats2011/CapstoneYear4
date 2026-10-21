@@ -109,6 +109,42 @@ namespace DoA.Tests
             Assert.IsEmpty(log.Problems, "Errors:\n\n" + string.Join("\n\n", log.Problems));
         }
 
+        // Online, scooters stand in the Dispatch room's seats; offline (Local Play) in the booths again, from player select
+        [UnityTest]
+        public IEnumerator Online_ScootersStandInTheDispatchRoom_OfflineInTheBooths()
+        {
+            EditorSceneManager.playModeStartScene = AssetDatabase.LoadAssetAtPath<SceneAsset>(MENU_SCENE);
+            yield return new EnterPlayMode();
+            float deadline = Time.realtimeSinceStartup + 60;
+            while (!AtTitleScreen() && Time.realtimeSinceStartup < deadline)
+                yield return null;
+            Assert.IsTrue(AtTitleScreen(), "the title screen");
+
+            PlayerInstantiate players = PlayerInstantiate.Instance;
+            GameObject[] room = new GameObject[Constants.MAX_PLAYERS];
+            for (int i = 0; i < room.Length; i++)
+            {
+                room[i] = new GameObject("Seat" + (i + 1) + "_Spawn");
+                room[i].transform.position = new Vector3(-18 + 12 * i, -1500, 0);
+            }
+            players.dispatchSeats = room;
+            OnlinePrefabs prefabs = OnlinePrefabs.Load();
+
+            players.GiveSeat(0);
+            RemoteAvatar remote = RemoteAvatar.Create(prefabs.RemoteAvatarPrefab, null);
+            players.AddRemotePlayer(remote.gameObject, 1, 5);
+            Assert.Less(Vector3.Distance(room[1].transform.position, remote.Driving.transform.position), 0.01f, "online: seat 2 in the room");
+
+            players.GoOffline();
+            GameManager.Instance.ApplyGameState(GameState.PlayerSelect);
+            GameObject[] booths = players.menuSpawnPositions;
+            Assert.Less(Vector3.Distance(booths[1].transform.position, remote.Driving.transform.position), 0.01f, "offline: seat 2's booth");
+
+            players.RemoveRemotePlayer(1);
+            GameManager.Instance.ApplyGameState(GameState.Menu);
+            yield return null;
+        }
+
         [UnityTest]
         public IEnumerator RemoteScooter_MakesNoEngineSound_WhenTheGameSwitchesToTheGoldenRound()
         {

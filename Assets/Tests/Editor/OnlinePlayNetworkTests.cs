@@ -146,10 +146,13 @@ namespace DoA.Tests
             Assert.AreEqual(OnlinePlay.BuildTag(), lobbies.GetData(OnlinePlay.Instance.Lobby.Current, LobbyRules.BUILD_KEY),
                 "tagged with this build's version and Netcode setup");
             CollectionAssert.AreEqual(new[] { 42UL }, lobbies.Invites, "and opens the invite dialog");
+            // Dispatch's board is up, with its own prompts: the old line along the top (what Y and B do) stays hidden
             deadline = Time.realtimeSinceStartup + 2;
-            while ((!LobbyPrompt.Exists || LobbyPrompt.Instance.Text != OnlinePlay.HINT_IN_LOBBY) && Time.realtimeSinceStartup < deadline)
+            while (!DispatchBoard.Showing && Time.realtimeSinceStartup < deadline)
                 yield return null;
-            Assert.AreEqual(OnlinePlay.HINT_IN_LOBBY, LobbyPrompt.Instance.Text, "the line says what Y and B do now");
+            Assert.IsTrue(DispatchBoard.Showing, "Dispatch's board is up");
+            yield return null;
+            Assert.IsTrue(!LobbyPrompt.Exists || !LobbyPrompt.Instance.IsShown, "the old line is hidden on Dispatch");
 
             // A friend joins
             OnlineSession other = OnlineSession.Create(Application.version);

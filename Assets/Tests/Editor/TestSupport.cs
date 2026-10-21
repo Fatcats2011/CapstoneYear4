@@ -22,6 +22,12 @@ namespace DoA.Tests
             return go;
         }
 
+        /// <summary>Destroys a GameObject made elsewhere along with the rest</summary>
+        public void Keep(GameObject go)
+        {
+            created.Add(go);
+        }
+
         public T Add<T>() where T : Component
         {
             return NewGameObject(typeof(T).Name).AddComponent<T>();

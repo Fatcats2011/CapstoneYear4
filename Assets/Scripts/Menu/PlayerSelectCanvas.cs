@@ -18,6 +18,18 @@ public class PlayerSelectCanvas : SingletonMonobehaviour<PlayerSelectCanvas>
     public event Action CountdownBegan;
     public event Action CountdownStopped;
 
+    [Tooltip("Each seat's preview panel (Player 1 Cam … Player 4 Cam): Dispatch hides them to show its room")]
+    [SerializeField] internal GameObject[] playerViews;
+    bool[] playerViewsKept;   // each panel's state before Dispatch hid them (null: not hidden)
+
+    [Tooltip("The old lobby's look (Player Backgrounds, Player Icons, the dividers): Dispatch hides them to show its room. Not the countdown")]
+    [SerializeField] internal GameObject[] dispatchHides;
+    bool[] dispatchHidesKept; // each one's state before Dispatch hid them
+    [Tooltip("Canvases Dispatch stops drawing (the title screen's Main Menu Canvas): their scripts keep running")]
+    [SerializeField] internal Canvas[] dispatchHideCanvases;
+    bool[] dispatchCanvasesKept; // each one's enabled before Dispatch hid them
+    bool dispatchHidden;
+
     bool joinPromptsHidden;   // Dispatch has the join prompts hidden
     bool[] joinPromptsKept;   // each prompt's state under that hiding: what comes back
 
@@ -83,5 +95,85 @@ public class PlayerSelectCanvas : SingletonMonobehaviour<PlayerSelectCanvas>
         joinPromptsHidden = false;
         for (int i = 0; i < pressButtonTexts.Length; i++)
             pressButtonTexts[i].SetActive(joinPromptsKept[i]);
+    }
+
+    /// <summary>
+    /// Dispatch hides the old lobby's look (dispatchHides) and stops other canvases drawing (dispatchHideCanvases, the
+    /// title screen's): they draw over every camera. False puts each back as it was
+    /// </summary>
+    public void SetDispatchHidden(bool hidden)
+    {
+        if (hidden == dispatchHidden)
+            return;
+        dispatchHidden = hidden;
+
+        if (hidden)
+        {
+            dispatchHidesKept = new bool[dispatchHides == null ? 0 : dispatchHides.Length];
+            for (int i = 0; i < dispatchHidesKept.Length; i++)
+            {
+                if (dispatchHides[i] == null)
+                    continue;
+                dispatchHidesKept[i] = dispatchHides[i].activeSelf;
+                dispatchHides[i].SetActive(false);
+            }
+            dispatchCanvasesKept = new bool[dispatchHideCanvases == null ? 0 : dispatchHideCanvases.Length];
+            for (int i = 0; i < dispatchCanvasesKept.Length; i++)
+            {
+                if (dispatchHideCanvases[i] == null)
+                    continue;
+                dispatchCanvasesKept[i] = dispatchHideCanvases[i].enabled;
+                dispatchHideCanvases[i].enabled = false;
+            }
+            return;
+        }
+
+        for (int i = 0; i < dispatchHidesKept.Length; i++)
+        {
+            if (dispatchHides[i] != null)
+                dispatchHides[i].SetActive(dispatchHidesKept[i]);
+        }
+        for (int i = 0; i < dispatchCanvasesKept.Length; i++)
+        {
+            if (dispatchHideCanvases[i] != null)
+                dispatchHideCanvases[i].enabled = dispatchCanvasesKept[i];
+        }
+    }
+
+    /// <summary>
+    /// Dispatch shows the room, not each player's preview panel (Player N Cam): on Dispatch every panel is hidden except
+    /// the one whose player has the sliders open (-1: none). Off Dispatch they come back as they were
+    /// </summary>
+    public void SetPlayerViews(bool dispatch, int customizingSeat)
+    {
+        if (playerViews == null)
+            return;
+
+        if (dispatch && playerViewsKept == null)
+        {
+            playerViewsKept = new bool[playerViews.Length];
+            for (int i = 0; i < playerViews.Length; i++)
+                playerViewsKept[i] = playerViews[i] != null && playerViews[i].activeSelf;
+        }
+
+        if (!dispatch)
+        {
+            if (playerViewsKept == null)
+                return;
+            for (int i = 0; i < playerViews.Length; i++)
+            {
+                if (playerViews[i] != null)
+                    playerViews[i].SetActive(playerViewsKept[i]);
+            }
+            playerViewsKept = null;
+            return;
+        }
+
+        for (int i = 0; i < playerViews.Length; i++)
+        {
+            bool on = i == customizingSeat;
+            if (playerViews[i] != null && playerViews[i].activeSelf != on)
+                playerViews[i].SetActive(on);
+        }
     }
 }

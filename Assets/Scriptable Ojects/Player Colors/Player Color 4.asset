@@ -14,3 +14,4 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   colorMaterial: {fileID: 2100000, guid: 55bd7bd006f418449972ebfe2228008a, type: 2}
   colorIcon: {fileID: 21300000, guid: 3035bc78cf70d8b4a831f6face02106a, type: 3}
+  displayName: Yellow

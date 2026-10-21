@@ -298,6 +298,27 @@ namespace DoA.Tests
             Assert.AreEqual(5, board.StatusBuilds, "a re-shown board sets it again");
         }
 
+        // The room's camera films the podiums while the board is up, and is off otherwise (the menu's own camera again)
+        [Test]
+        public void RoomCamera_OnWithTheBoard_OffWithout()
+        {
+            GameObject room = objects.NewGameObject("Room Camera");
+            room.SetActive(false);
+            Set(board, "roomCamera", room);
+
+            Reflect.Invoke(board, "SetShowing", true);
+            Assert.IsTrue(room.activeSelf, "on with the board");
+
+            Reflect.Invoke(board, "SetShowing", false);
+            Assert.IsFalse(room.activeSelf, "off with it");
+        }
+
+        [Test]
+        public void RoomCamera_NoneWired_Nothing()
+        {
+            Assert.DoesNotThrow(() => Reflect.Invoke(board, "SetShowing", true));
+        }
+
         [Test]
         public void TicketView_FlashWithoutAnAnimator_JustCounts()
         {

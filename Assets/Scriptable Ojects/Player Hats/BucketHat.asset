@@ -19,3 +19,4 @@ MonoBehaviour:
   hatPosition: {x: -0.0012, y: 0.01, z: 0}
   hatRotation: {x: 0, y: 0, z: 0}
   hatScale: {x: 0.009874113, y: 0.009874113, z: 0.009874113}
+  displayName: Bucket Hat

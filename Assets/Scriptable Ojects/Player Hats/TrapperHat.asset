@@ -19,3 +19,4 @@ MonoBehaviour:
   hatPosition: {x: -0.001, y: 0.0078, z: 0}
   hatRotation: {x: -90, y: 0, z: 0}
   hatScale: {x: 0.3825712, y: 0.3825712, z: 0.3825712}
+  displayName: Trapper Hat

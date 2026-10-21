@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using NUnit.Framework;
+using UnityEngine;
 
 public class DispatchRulesTests
 {
@@ -111,6 +112,70 @@ public class DispatchRulesTests
         Assert.IsTrue(DispatchRules.EveryoneReady(t));
         t[1] = Seat(1, true, false);
         Assert.IsFalse(DispatchRules.EveryoneReady(t));
+    }
+
+    // Four stand-in podiums; the test destroys them
+    private static GameObject[] Podiums(string name)
+    {
+        GameObject[] p = new GameObject[Constants.MAX_PLAYERS];
+        for (int i = 0; i < p.Length; i++) p[i] = new GameObject(name + i);
+        return p;
+    }
+
+    private static void Destroy(params GameObject[][] sets)
+    {
+        foreach (GameObject[] set in sets)
+            foreach (GameObject o in set)
+                if (o != null) Object.DestroyImmediate(o);
+    }
+
+    [Test]
+    public void Podium_Offline_TheSeatsBooth()
+    {
+        GameObject[] room = Podiums("Room"), booths = Podiums("Booth");
+        try
+        {
+            Assert.AreSame(booths[2], DispatchRules.Podium(2, false, room, booths), "Local Play stays in its booths");
+        }
+        finally { Destroy(room, booths); }
+    }
+
+    [Test]
+    public void Podium_Online_TheRoomsSeat()
+    {
+        GameObject[] room = Podiums("Room"), booths = Podiums("Booth");
+        try
+        {
+            for (int seat = 0; seat < Constants.MAX_PLAYERS; seat++)
+                Assert.AreSame(room[seat], DispatchRules.Podium(seat, true, room, booths));
+        }
+        finally { Destroy(room, booths); }
+    }
+
+    [Test]
+    public void Podium_OnlineWithoutARoom_TheBooths()
+    {
+        GameObject[] booths = Podiums("Booth");
+        try
+        {
+            Assert.AreSame(booths[1], DispatchRules.Podium(1, true, null, booths), "no room in the scene");
+            Assert.AreSame(booths[1], DispatchRules.Podium(1, true, new GameObject[Constants.MAX_PLAYERS], booths), "none wired");
+            Assert.AreSame(booths[1], DispatchRules.Podium(1, true, new GameObject[2], booths), "too few");
+        }
+        finally { Destroy(booths); }
+    }
+
+    // A room missing a seat isn't used at all: players split between the room and the booths would see each other's gaps
+    [Test]
+    public void Podium_OnlineWithARoomSeatMissing_TheBooths()
+    {
+        GameObject[] room = Podiums("Room"), booths = Podiums("Booth");
+        try
+        {
+            Object.DestroyImmediate(room[3]); // a deleted object: Unity's null
+            Assert.AreSame(booths[0], DispatchRules.Podium(0, true, room, booths));
+        }
+        finally { Destroy(room, booths); }
     }
 
     [Test]

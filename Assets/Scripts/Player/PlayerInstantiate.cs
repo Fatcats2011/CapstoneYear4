@@ -28,6 +28,9 @@ public class PlayerInstantiate : SingletonMonobehaviour<PlayerInstantiate>
     [Tooltip("The indexed array of player spawn positions")]
     [SerializeField] internal GameObject[] menuSpawnPositions = new GameObject[Constants.MAX_PLAYERS];
 
+    [Tooltip("Online: the seats in the Dispatch room (SeatN_Spawn), by seat. Leave empty when the room is its own scene (Multiplayerlobby): its DispatchRoom gives them. With neither, online uses the spawn positions above")]
+    [SerializeField] internal GameObject[] dispatchSeats = new GameObject[Constants.MAX_PLAYERS];
+
     [Tooltip("The indexed array of player render texutres")]
     [SerializeField] RenderTexture[] playerRenderTextures = new RenderTexture[Constants.MAX_PLAYERS];
 
@@ -68,6 +71,8 @@ public class PlayerInstantiate : SingletonMonobehaviour<PlayerInstantiate>
     {
         gameManager.OnSwapPlayerSelect += EnablePlayerSpawn;
         gameManager.OnSwapPlayerSelect += SwapForCharacterSelect;
+        // Online or not decides the podiums (the Dispatch room or the booths): player select stands everyone on theirs
+        gameManager.OnSwapPlayerSelect += SetAllPlayerSpawn;
 
         gameManager.OnSwapLoading += DisablePlayerSpawn;
 
@@ -130,6 +135,7 @@ public class PlayerInstantiate : SingletonMonobehaviour<PlayerInstantiate>
 
         gameManager.OnSwapPlayerSelect -= EnablePlayerSpawn;
         gameManager.OnSwapPlayerSelect -= SwapForCharacterSelect;
+        gameManager.OnSwapPlayerSelect -= SetAllPlayerSpawn;
 
         gameManager.OnSwapLoading -= DisablePlayerSpawn;
 
@@ -333,11 +339,13 @@ public class PlayerInstantiate : SingletonMonobehaviour<PlayerInstantiate>
     }
 
     ///<summary>
-    /// Stands a player's scooter on their slot's podium
+    /// Stands a player's scooter on their slot's podium: online in the Dispatch room, offline in their booth
     ///</summary>
     private void PlaceOnPodium(PlayerSlot slot)
     {
-        int i = slot.Index;
+        // The room's seats: wired here, or the Dispatch room's own scene once it's loaded
+        GameObject[] room = DispatchRules.RoomSeats(dispatchSeats, DispatchRoom.Current == null ? null : DispatchRoom.Current.Seats);
+        Transform podium = DispatchRules.Podium(slot.Index, online, room, menuSpawnPositions).transform;
         Rigidbody ball = slot.Player.GetComponentInChildren<Rigidbody>();
 
         // Resets the velocity of the players (another machine's scooter is kinematic: nothing to reset)
@@ -345,11 +353,11 @@ public class PlayerInstantiate : SingletonMonobehaviour<PlayerInstantiate>
             ball.velocity = Vector3.zero;
 
         // reset position and rotation of ball and controller
-        ball.transform.position = menuSpawnPositions[i].transform.position;
-        ball.transform.rotation = menuSpawnPositions[i].transform.rotation;
+        ball.transform.position = podium.position;
+        ball.transform.rotation = podium.rotation;
 
-        slot.Player.GetComponentInChildren<BallDriving>(true).transform.position = menuSpawnPositions[i].transform.position;
-        slot.Player.GetComponentInChildren<BallDriving>(true).transform.rotation = menuSpawnPositions[i].transform.rotation;
+        slot.Player.GetComponentInChildren<BallDriving>(true).transform.position = podium.position;
+        slot.Player.GetComponentInChildren<BallDriving>(true).transform.rotation = podium.rotation;
     }
 
     ///<summary>
@@ -953,8 +961,12 @@ public class PlayerInstantiate : SingletonMonobehaviour<PlayerInstantiate>
         if (seat < 0 || seat >= Constants.MAX_PLAYERS)
             return false;
 
+        bool wasOnline = online;
         online = true;
         onlineSeats.Add(seat);
+        // Players already in their seat don't move seats: in player select they still move from the booths to the room
+        if (!wasOnline && gameManager != null && gameManager.MainState == GameState.PlayerSelect)
+            SetAllPlayerSpawn();
         bool taken = Reseat(seat);
         if (!taken && onlineSeats.Count > 1)
         {

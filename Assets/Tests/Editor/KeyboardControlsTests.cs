@@ -120,8 +120,9 @@ namespace DoA.Tests
         {
             InputActionAsset asset = PristineCopy();
             InputActionMap ui = asset.FindActionMap("UI", true);
-            InputAction left = ui.AddAction("Left Shoulder", InputActionType.Button);
-            InputAction right = ui.AddAction("Right Shoulder", InputActionType.Button);
+            // The asset may have them already (EDITOR-TODO 1d)
+            InputAction left = ui.FindAction("Left Shoulder") ?? ui.AddAction("Left Shoulder", InputActionType.Button);
+            InputAction right = ui.FindAction("Right Shoulder") ?? ui.AddAction("Right Shoulder", InputActionType.Button);
 
             KeyboardControls.Install(asset);
 

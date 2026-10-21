@@ -104,8 +104,12 @@ public class SceneManager : SingletonMonobehaviour<SceneManager>, ISceneFlow, IM
         ConfirmLoad();
     }
 
-    void RaiseSceneUp(Scene scene, LoadSceneMode mode)
+    internal void RaiseSceneUp(Scene scene, LoadSceneMode mode)
     {
+        // A scene loaded alongside (the Dispatch room) isn't a scene change: the match flow waits only for its own loads
+        if (mode == LoadSceneMode.Additive)
+            return;
+
         if (scene.buildIndex == loadingIndex)
         {
             loadingIndex = -1;

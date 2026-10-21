@@ -44,6 +44,9 @@ public class MenuInteractions : MonoBehaviour
     // Dispatch (online player select): X opens the customization sliders. Offline it does nothing
     private readonly DispatchMenu dispatchMenu = new DispatchMenu();
 
+    /// <summary>On Dispatch, whether this player has the sliders open (the board shows their preview panel then)</summary>
+    internal bool DispatchCustomizing { get { return dispatchMenu.Open; } }
+
     public MenuType curentMenuType;
     private MenuType cache;
 

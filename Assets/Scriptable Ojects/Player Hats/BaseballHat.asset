@@ -19,3 +19,4 @@ MonoBehaviour:
   hatPosition: {x: -0.0024, y: 0.0104, z: 0}
   hatRotation: {x: -90, y: 0, z: 0}
   hatScale: {x: 1, y: 1, z: 1}
+  displayName: Baseball Cap

@@ -11,11 +11,17 @@ using UnityEngine;
 public class DispatchBoard : MonoBehaviour
 {
     [SerializeField] GameObject root;
+    [SerializeField] GameObject roomCamera; // optional: the camera on the Dispatch room, on only while the board is up
     [SerializeField] TicketView[] tickets; // by seat
     [SerializeField] TMP_Text readyLine;
     [SerializeField] GameObject banner;
     [SerializeField] TMP_Text matchmakingLine; // optional: searching, open to anyone (with the seconds to a start), friends only
     [SerializeField] TMP_Text fillPrompt; // optional: the right shoulder's label, what pressing it does (host only)
+    [Tooltip("Each ticket sits over its seat's anchor on the room's board (DispatchRoom, its own scene) while the room is up")]
+    [SerializeField] bool ticketsFollowRoom = true;
+
+    /// <summary>How much of the gap between two seats' anchors a ticket's width takes</summary>
+    public const float TICKET_FILL = 0.8f;
 
     /// <summary>Whether the board is up (OnlinePlay hides its hint bar then)</summary>
     public static bool Showing { get; private set; }
@@ -34,6 +40,21 @@ public class DispatchBoard : MonoBehaviour
     int statusSeconds;
     string fillPromptShown; // the Fill prompt as last set (null = hidden)
     bool fillPromptSet; // fillPromptShown has been applied since the board came up
+    DispatchRoomLoader roomLoader;
+    RectTransform[] ticketRects;
+
+    /// <summary>How the room's scene loads (Unity's, additive; tests set a fake before the board first shows)</summary>
+    internal IRoomScenes RoomScenes { get; set; }
+
+    DispatchRoomLoader RoomLoader
+    {
+        get
+        {
+            if (roomLoader == null)
+                roomLoader = new DispatchRoomLoader(RoomScenes ?? new UnityRoomScenes(), UnityRoomScenes.Leaving);
+            return roomLoader;
+        }
+    }
 
     void Start()
     {
@@ -68,6 +89,8 @@ public class DispatchBoard : MonoBehaviour
 
         Gather();
         Apply(buffer);
+        FollowRoom();
+        ShowCustomizingView();
 
         // Between sessions in a lobby switch the prompt and line stay as they were: the player's Find still shows it's
         // searching, and a quiet search again is never shown
@@ -173,9 +196,20 @@ public class DispatchBoard : MonoBehaviour
             System.Array.Clear(shown, 0, shown.Length); // a re-show flashes like the first
         if (root != null)
             root.SetActive(on);
+        if (roomCamera != null)
+            roomCamera.SetActive(on);
+
+        // The room's scene comes and goes with the board, and its camera with it when the scene was already open
+        RoomLoader.SetWanted(on);
+        if (DispatchRoom.Current != null)
+            DispatchRoom.Current.ShowCamera(on);
 
         if (PlayerSelectCanvas.Instance != null)
+        {
             PlayerSelectCanvas.Instance.SetJoinPromptsHidden(on);
+            PlayerSelectCanvas.Instance.SetPlayerViews(on, -1);
+            PlayerSelectCanvas.Instance.SetDispatchHidden(on);
+        }
 
         if (!on)
         {
@@ -269,6 +303,82 @@ public class DispatchBoard : MonoBehaviour
 
         if (readyLine != null)
             readyLine.text = DispatchRules.ReadyLine(states);
+    }
+
+    // Each ticket over its seat's anchor on the room's board, once the room is loaded
+    void FollowRoom()
+    {
+        DispatchRoom room = DispatchRoom.Current;
+        if (!ticketsFollowRoom || room == null || room.RoomCamera == null || tickets == null)
+            return;
+
+        if (ticketRects == null)
+        {
+            ticketRects = new RectTransform[tickets.Length];
+            for (int i = 0; i < tickets.Length; i++)
+                ticketRects[i] = tickets[i] == null ? null : tickets[i].transform as RectTransform;
+        }
+        PlaceTickets(room.RoomCamera, room.TicketAnchors, ticketRects);
+    }
+
+    /// <summary>
+    /// Puts each ticket (centre-anchored in its parent) over its anchor as the camera sees it, sized to TICKET_FILL of the
+    /// gap between neighbouring anchors. An anchor that's missing or behind the camera leaves its ticket where it is
+    /// </summary>
+    internal void PlaceTickets(Camera cam, Transform[] anchors, RectTransform[] rects)
+    {
+        if (anchors == null)
+            return;
+
+        float gap = float.MaxValue;
+        bool hasLast = false;
+        float lastX = 0;
+        for (int i = 0; i < rects.Length && i < anchors.Length; i++)
+        {
+            RectTransform rect = rects[i];
+            RectTransform area = rect == null ? null : rect.parent as RectTransform;
+            if (area == null || anchors[i] == null)
+                continue;
+
+            Vector3 viewport = cam.WorldToViewportPoint(anchors[i].position);
+            if (!DispatchRules.InView(viewport))
+                continue;
+
+            rect.anchoredPosition = DispatchRules.ViewportToCanvas(viewport, area.rect.size);
+            if (hasLast)
+                gap = Mathf.Min(gap, Mathf.Abs(rect.anchoredPosition.x - lastX));
+            lastX = rect.anchoredPosition.x;
+            hasLast = true;
+        }
+
+        if (gap == float.MaxValue || gap <= 0)
+            return;
+        foreach (RectTransform rect in rects)
+        {
+            if (rect != null && rect.rect.width > 0)
+                rect.localScale = Vector3.one * (gap * TICKET_FILL / rect.rect.width);
+        }
+    }
+
+    // The preview panel of a player here with the sliders open (X): the room hides the rest
+    void ShowCustomizingView()
+    {
+        PlayerSelectCanvas canvas = PlayerSelectCanvas.Instance;
+        PlayerInstantiate players = PlayerInstantiate.Instance;
+        if (canvas == null || players == null)
+            return;
+
+        int seat = -1;
+        foreach (PlayerSlot slot in players.Roster.LocalPlayers)
+        {
+            PlayerUIHandler handler = slot.Input == null ? null : slot.Input.GetComponent<PlayerUIHandler>();
+            if (handler != null && handler.menuInteractions != null && handler.menuInteractions.DispatchCustomizing)
+            {
+                seat = slot.Index;
+                break;
+            }
+        }
+        canvas.SetPlayerViews(true, seat);
     }
 
     /// <summary>The "all orders dispatched" banner over the countdown: on or off (on twice leaves one)</summary>

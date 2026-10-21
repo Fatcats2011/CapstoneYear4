@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using UnityEngine;
 
 /// <summary>One seat's ticket on the Dispatch board. A seat nobody holds has Taken = false</summary>
 public struct TicketState : IEquatable<TicketState>
@@ -89,6 +90,50 @@ public static class DispatchRules
     public static bool Flashes(TicketState before, TicketState after)
     {
         return after.Taken && before != after;
+    }
+
+    /// <summary>
+    /// The podium a seat's scooter stands on in the menus: online, the seat in the Dispatch room; offline (Local Play),
+    /// the seat's own booth. A room missing any seat isn't used at all, online or not
+    /// </summary>
+    public static GameObject Podium(int seat, bool online, GameObject[] room, GameObject[] booths)
+    {
+        return online && HasEverySeat(room) ? room[seat] : booths[seat];
+    }
+
+    /// <summary>
+    /// The room's seats: the ones wired on PlayerInstantiate when all 4 are, else the loaded room's (DispatchRoom, its
+    /// own scene), which may be null
+    /// </summary>
+    public static GameObject[] RoomSeats(GameObject[] wired, GameObject[] loaded)
+    {
+        return HasEverySeat(wired) ? wired : loaded;
+    }
+
+    /// <summary>
+    /// A point in the room camera's viewport (0-1 across and up) as a position on a canvas of that size, from its centre
+    /// </summary>
+    public static Vector2 ViewportToCanvas(Vector3 viewport, Vector2 canvasSize)
+    {
+        return new Vector2((viewport.x - 0.5f) * canvasSize.x, (viewport.y - 0.5f) * canvasSize.y);
+    }
+
+    /// <summary>Whether a viewport point is in front of the camera</summary>
+    public static bool InView(Vector3 viewport)
+    {
+        return viewport.z > 0;
+    }
+
+    static bool HasEverySeat(GameObject[] room)
+    {
+        if (room == null || room.Length < Constants.MAX_PLAYERS)
+            return false;
+        for (int i = 0; i < Constants.MAX_PLAYERS; i++)
+        {
+            if (room[i] == null)
+                return false;
+        }
+        return true;
     }
 
     /// <summary>At least one seat is taken and every taken seat is ready (the host alone can start)</summary>

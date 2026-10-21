@@ -19,3 +19,4 @@ MonoBehaviour:
   hatPosition: {x: -0.01428, y: 0.00442, z: 0.00009}
   hatRotation: {x: -0.000047811325, y: 270, z: 89.28294}
   hatScale: {x: 0.12142597, y: 0.12142597, z: 0.12142597}
+  displayName: Sunglasses

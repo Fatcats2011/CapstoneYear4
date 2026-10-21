@@ -29,23 +29,45 @@ Code is done (`docs/online.md`, Matchmaking). Neither shoulder nor F/R was used 
 
 ## 1c. Dispatch lobby: online player select (2-3 hours, main editor, mostly art)
 
-Code is done (`docs/online.md`, Phase 3B). Needs step 1b first (the West Face action), then, in the menu scene:
-- **The depot back room, behind the podiums:**
-  - A wall and a floor.
-  - A full-width corkboard above the podiums, lit at about 75% of the podium spotlights.
-  - A spotlight on each of the 4 `menuSpawnPositions` podiums, each rim glowing in that seat's company colour.
-- **A Screen Space canvas with a `DispatchBoard`:**
-  - `root`: the object the board shows and hides. Put the `DispatchBoard` component on a different object (the canvas, say). If it sits on `root`, hiding `root` stops its `Update` and the board never comes back.
-  - `tickets`: 4 `TicketView`s in seat order, laid out over the board, one above each podium. Wire each one's fields (header, company, playerName, colourName, hatName, colourSwatch, hatIcon, filled, hiring, stamp, gettingReady, mineMarker).
-  - The `stamp`, `gettingReady` and `hiring` objects each need a TMP_Text child holding their copy: `DISPATCHED`, `GETTING READY…`, `HIRING…`.
-  - `highlight` (an Animator) is optional: with none, a flash does nothing.
-  - `readyLine`: top right, shows `{ready} / {seated} READY`.
-  - `banner`: `ALL ORDERS DISPATCHED`.
-  - A "DISPATCH" wordmark top left (new art, in the style of `Local.png` and `Multiplayer.png`).
-  - Bottom prompts with the green button art: A CLOCK IN · X CUSTOMIZE · Y INVITE · B LEAVE.
-- **Ticket art:** the paper, a pin, a company header strip, the DISPATCHED stamp and the HIRING… blank. A `Flash` animator trigger on `highlight` (brighten, then fade back over about 0.6 s).
-- **`displayName`:** fill it in on the 6 colour assets and 7 hat assets (`PlayerColorInformationSO`, `PlayerHatInformationSO`).
-- **The camera:** with one local player online, the menu camera frames the board and all 4 podiums.
+The room is its own scene, `Assets/Scenes/Multiplayerlobby.unity`, loaded alongside the menu while Dispatch is up. Code and art are done (`docs/online.md`, Phase 3B). Needs step 1b first (the West Face action), then:
+- **Room scene, one click:** **Tools → Dead on Arrival → Dispatch → Set Up Room Scene**.
+  - It finds `Seat1–4_Spawn`, `Seat1–4_Ticket` and `Podium1–4_Rim` in the lobby model and wires them to a `DispatchRoom` on the model.
+  - It uses the model's own `Camera` (else Main Camera):
+    - depth 10 or more, so it covers the players' views;
+    - it doesn't render the menu layers.
+  - It turns the scene's other cameras off and removes its Audio Listeners (the menu has its own).
+  - It also does the room's look (matching the W3 mockup):
+    - scales the model to 0.4, so the scooters are the right size on the podiums (`DispatchLobbyBuilder.ROOM_SCALE`);
+    - frames its own camera between the top row (wordmark, pills) and the bottom prompts;
+    - hides Blender's default `Cube` and `Light`;
+    - adds a spotlight over each podium, dims the scene's Directional Light, and dims the backdrop (walls, floor, board, props) to 65% at runtime (`DispatchRoom.BACKDROP`).
+  - It saves the scene and adds it to Build Settings.
+  - Run it again after changing the model.
+- **Board UI, one click:** **Tools → Dead on Arrival → Dispatch → Build Board In Menu Scene**.
+  - It builds the `Dispatch Board` canvas in `Alex Player Testing`:
+    - wordmark, ready and matchmaking pills;
+    - 4 tickets with the Dispatch art;
+    - the banner;
+    - the A / X / Y / B prompts;
+    - the Fill prompt;
+    - a `Flash` animator (`Assets/Animations/Dispatch`).
+  - It wires `Player Select Canvas`'s **Player Views** (`Player 1–4 Cam`). Dispatch hides them, except your own while the sliders are open.
+  - It also wires what Dispatch hides so the room shows: the old lobby's backgrounds, icons and dividers, and the title screen's `Main Menu Canvas` (its drawing only).
+  - Running it again replaces the old board.
+- **What happens at runtime:**
+  - The tickets sit over the board's `SeatN_Ticket` empties, as the room camera sees them.
+  - The scooters stand on `SeatN_Spawn`.
+  - Each `PodiumN_Rim` glows in its seat's company colour.
+  - Leave **Dispatch Seats** on `PlayerInstantiate` empty: the room scene gives them.
+- **Check in the room scene:**
+  - Seat 1 is on the camera's left.
+  - The camera frames the board and all 4 podiums.
+  - The room's lights are spot or point lights. A Directional Light there also lights the menu while the room is loaded: turn it off or delete it.
+- **If menu scenery shows in the room camera:** move the lobby model's root far away (for example y +2000). Everything moves with it.
+- **Materials:** set the model's materials to the menu's toon shader, or extract them (Materials → Extract Materials). The cork, wood, wall and floor textures (`Assets/Textures/Dispatch`) are already linked.
+- **Art scripts:** re-run `tools/dispatch-art.py` or `tools/dispatch-room.py` after changing them (the GUIDs stay). Ticket text is `#2A1A3A`, the stamp `#D81B3C`.
+- **`displayName`:** filled in on the colour and hat assets (Purple, Red, Green, Yellow, Blue, Orange; Baseball Cap … Trapper Hat). Rename them there if you like.
+- **The menu scene has a copy of the `MultiplayerLobby` model** (dragged in at some point): delete it. The room is its own scene.
 - **Optional:** a short celebration animation on the ghost when a player clocks in.
 - **Check:**
   - Online Play opens Dispatch, with Steam's invite window.

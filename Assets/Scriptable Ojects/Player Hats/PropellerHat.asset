@@ -19,3 +19,4 @@ MonoBehaviour:
   hatPosition: {x: -0.001, y: 0.0131, z: 0}
   hatRotation: {x: -90, y: 0, z: 0}
   hatScale: {x: 0.38136286, y: 0.38136286, z: 0.38136286}
+  displayName: Propeller Hat

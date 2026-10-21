@@ -14,3 +14,4 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   colorMaterial: {fileID: 2100000, guid: 386b78d51ba69154dab24d7a6015b32b, type: 2}
   colorIcon: {fileID: 21300000, guid: 5095321f6bb03364b9c96ab7a7b37142, type: 3}
+  displayName: Purple

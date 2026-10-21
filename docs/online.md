@@ -26,6 +26,27 @@ Online multiplayer is being built in steps (roadmap Phase 3: `docs/superpowers/p
 - **This machine's player moves into its seat**, taking their controller with them. Since Phase 3J several players can share one machine: see Phase 3J below.
 - **Player select is the online lobby, called Dispatch** (`DispatchMenu`, `DispatchBoard`; Local Play's player select is unchanged).
   - Every other player's scooter stands on its podium, in its company's colours, with their ghost colour and hat, which update as they change them.
+  - **The room.**
+    - Online, the scooters stand in the Dispatch room's seats (`PlayerInstantiate.dispatchSeats`, the `SeatN_Spawn` points of `Dispatch_Room.fbx`), all four in one view.
+    - Offline they stand in the menu's own booths (`menuSpawnPositions`), as before.
+    - Players are re-placed whenever player select opens, and when this machine first gets a seat.
+    - Without all four room seats wired, online uses the booths too (`DispatchRules.Podium`).
+    - **The room is its own scene,** `Multiplayerlobby`.
+      - The board loads it alongside the menu as it comes up, and unloads it as it goes (`DispatchRoomLoader`, one load or unload at a time).
+      - A match's own scene load takes it along.
+      - Nothing is unloaded while the game is leaving Play Mode or quitting (`UnityRoomScenes.Leaving`). Stopping Play online ends the session first, which hides the board for one last frame, and unloading a scene during that teardown crashed the editor.
+      - The game's `SceneManager` ignores additive loads, so the room is never taken for a match scene.
+      - Its `DispatchRoom` gives:
+        - the seats (`DispatchRules.RoomSeats`: those wired on `PlayerInstantiate` win when all four are);
+        - the ticket anchors (`SeatN_Ticket`: each ticket sits over its anchor as the room camera sees it);
+        - the camera (depth 10, so `CameraBudget` turns the players' own views off behind it).
+      - It colours each `PodiumN_Rim` in its seat's company colour.
+      - On arriving, it moves the scooters onto its seats.
+      - **Tools → Dead on Arrival → Dispatch** sets the scene up and builds the board (`DispatchLobbyBuilder`).
+    - The board hides the player-select preview panels (`PlayerSelectCanvas.playerViews`), except a local player's while their sliders are open.
+    - It also hides what would cover the room: the old lobby's look (`PlayerSelectCanvas.dispatchHides`) and the title screen's canvas, which only stops drawing (`dispatchHideCanvases`).
+    - The tickets sit over the board's anchors, each sized to `DispatchBoard.TICKET_FILL` of the gap between them. The room dims its backdrop (`DispatchRoom.BACKDROP`); the builder adds a spotlight per podium and scales the model (`ROOM_SCALE`).
+    - The board switches the room's camera (`DispatchBoard.roomCamera`) on and off with itself, for a room built into the menu scene instead.
   - **Tickets.** A corkboard over the podiums has one ticket per seat (`TicketView`): the player's name, their company, and the state. Empty is `HIRING…`, seated but not ready is `GETTING READY…`, ready is stamped `DISPATCHED`. The counter on the top right reads `{ready} / {seated} READY`.
   - **A clocks in** (readies up, the stamp). **X customizes:** the colour and hat sliders are hidden until X shows them, and the ticket follows the choices. B or A hides them again. **Y invites** (Steam's window). **B leaves.**
   - When everyone's ready, the banner says `ALL ORDERS DISPATCHED`, the 3-2-1 runs, and the match starts. After the results the players are back on Dispatch, unstamped.

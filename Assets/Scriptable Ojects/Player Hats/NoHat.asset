@@ -18,3 +18,4 @@ MonoBehaviour:
   hatIcon: {fileID: 21300000, guid: 47848e91ba223ac4d8aedadf859fe6e9, type: 3}
   hatPosition: {x: 0, y: 0, z: 0}
   hatScale: {x: 0, y: 0, z: 0}
+  displayName: No Hat
