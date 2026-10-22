@@ -509,6 +509,59 @@ namespace DoA.Tests
             Assert.AreEqual(new Vector2(0.5f, 1), frame.pivot, "hangs from its top edge");
         }
 
+        [Test]
+        public void Board_Customize_PopsUpThePlayersPreview_AndCloses()
+        {
+            // X on Dispatch: the colour and hat sliders, over everything; B closes them
+            DispatchBoard board = objects.Add<DispatchBoard>();
+            GameObject panel = objects.NewGameObject("Customize");
+            RawImage preview = objects.NewGameObject("Preview").AddComponent<RawImage>();
+            Set(board, "customizePanel", panel);
+            Set(board, "customizePicture", preview);
+            Texture2D seen = new Texture2D(2, 2);
+
+            board.ShowCustomize(seen, 1);
+            Assert.IsTrue(panel.activeSelf, "open");
+            Assert.AreSame(seen, preview.texture, "the player's own preview, sliders and all");
+            Assert.AreEqual(DispatchRules.CustomizeCrop(1), preview.uvRect, "only the ghost and its sliders");
+
+            board.ShowCustomize(null, -1);
+            Assert.IsFalse(panel.activeSelf, "closed");
+            UnityEngine.Object.DestroyImmediate(seen);
+        }
+
+        [Test]
+        public void CustomizeCrop_KeepsTheGhostAndItsSliders_MirroredOnEvenPlayers()
+        {
+            // Players 1 and 3 have their sliders right of the ghost, players 2 and 4 left (PlayerCameraResizer)
+            Rect odd = DispatchRules.CustomizeCrop(0);
+            Rect even = DispatchRules.CustomizeCrop(1);
+
+            Assert.That(odd.width, Is.LessThan(0.8f), "the empty sides are cut");
+            Assert.That(odd.xMin, Is.GreaterThan(0.2f), "player 1: the empty left goes");
+            Assert.That(odd.xMax, Is.GreaterThan(0.95f), "player 1: the sliders on the right stay");
+            Assert.AreEqual(1 - odd.xMax, even.xMin, 1e-5f, "player 2: the same, mirrored");
+            Assert.AreEqual(odd.width, even.width, 1e-5f);
+            Assert.AreEqual(odd, DispatchRules.CustomizeCrop(2), "player 3 as player 1");
+            Assert.AreEqual(even, DispatchRules.CustomizeCrop(3), "player 4 as player 2");
+        }
+
+        [Test]
+        public void Canvas_ViewPicture_IsThatSeatsPreview()
+        {
+            PlayerSelectCanvas canvas = objects.Add<PlayerSelectCanvas>();
+            GameObject[] views = Four("Player Cam");
+            Texture2D seen = new Texture2D(2, 2);
+            views[2].AddComponent<RawImage>().texture = seen;
+            canvas.playerViews = views;
+
+            Assert.AreSame(seen, canvas.ViewPicture(2));
+            Assert.IsNull(canvas.ViewPicture(0), "no picture there");
+            Assert.IsNull(canvas.ViewPicture(-1));
+            Assert.IsNull(canvas.ViewPicture(9));
+            UnityEngine.Object.DestroyImmediate(seen);
+        }
+
         GameObject[] Four(string name)
         {
             GameObject[] four = new GameObject[Constants.MAX_PLAYERS];

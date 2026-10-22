@@ -482,6 +482,38 @@ public static class DispatchLobbyBuilder
         Place(fillPrompt.rectTransform, new Vector2(1, 0), new Vector2(-40, 40), new Vector2(520, 50));
         fillPrompt.gameObject.SetActive(false);
 
+        // X's pop-up, last so it's drawn over the rest: the room dimmed, and a framed panel with the player's preview
+        RectTransform customize = Stretch(Ui("Customize", root));
+        Image dim = customize.gameObject.AddComponent<Image>();
+        dim.color = new Color(0, 0, 0, 0.6f);
+        dim.raycastTarget = false;
+        Image panel = new GameObject("Panel", typeof(RectTransform), typeof(Image), typeof(Outline)).GetComponent<Image>();
+        panel.gameObject.layer = LayerMask.NameToLayer("UI");
+        panel.transform.SetParent(customize, false);
+        panel.color = new Color32(0x3B, 0x0D, 0x6E, 0xFF);
+        panel.raycastTarget = false;
+        Outline edge = panel.GetComponent<Outline>();
+        edge.effectColor = new Color32(0x1F, 0xE3, 0x9A, 0xFF);
+        edge.effectDistance = new Vector2(6, -6);
+        Rect crop = DispatchRules.CustomizeCrop(0);
+        Vector2 shown = new Vector2(960 * crop.width, 540 * crop.height);
+        Place(panel.rectTransform, new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(shown.x + 60, shown.y + 190));
+        TMP_Text title = Label("Title", panel.transform, font, 64, Color.white, "CUSTOMIZE");
+        Place(title.rectTransform, new Vector2(0.5f, 1), new Vector2(0, -16), new Vector2(900, 80));
+        RawImage preview = new GameObject("Preview", typeof(RectTransform), typeof(RawImage)).GetComponent<RawImage>();
+        preview.gameObject.layer = LayerMask.NameToLayer("UI");
+        preview.transform.SetParent(panel.transform, false);
+        preview.raycastTarget = false;
+        Place(preview.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(0, 0), shown);
+        RectTransform done = Ui("Done", panel.transform);
+        Place(done, new Vector2(0.5f, 0), new Vector2(0, 22), new Vector2(240, 64));
+        HorizontalLayoutGroup doneRow = done.gameObject.AddComponent<HorizontalLayoutGroup>();
+        doneRow.childAlignment = TextAnchor.MiddleCenter;
+        doneRow.childControlWidth = doneRow.childControlHeight = false;
+        doneRow.childForceExpandWidth = doneRow.childForceExpandHeight = false;
+        Prompt(done, font, "MenUI_Buttons_4", "DONE");
+        customize.gameObject.SetActive(false);
+
         root.gameObject.SetActive(false);
 
         SerializedObject so = new SerializedObject(board);
@@ -491,6 +523,8 @@ public static class DispatchLobbyBuilder
         so.FindProperty("readyLine").objectReferenceValue = readyLine;
         so.FindProperty("banner").objectReferenceValue = banner.gameObject;
         SetArray(so.FindProperty("avatarFrames"), avatarFrames);
+        so.FindProperty("customizePanel").objectReferenceValue = customize.gameObject;
+        so.FindProperty("customizePicture").objectReferenceValue = preview;
         SetArray(so.FindProperty("avatarPictures"), avatarPictures);
         so.FindProperty("matchmakingLine").objectReferenceValue = matchmakingLine;
         so.FindProperty("fillPrompt").objectReferenceValue = fillPrompt;

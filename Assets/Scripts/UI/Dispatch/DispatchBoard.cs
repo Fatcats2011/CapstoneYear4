@@ -19,6 +19,8 @@ public class DispatchBoard : MonoBehaviour
     [SerializeField] GameObject banner;
     [SerializeField] RectTransform[] avatarFrames; // by seat: each player's Steam profile picture, under their podium
     [SerializeField] RawImage[] avatarPictures;    // by seat: the picture inside each frame
+    [SerializeField] GameObject customizePanel;    // X's pop-up: the player's colour and hat sliders, over the board
+    [SerializeField] RawImage customizePicture;    // inside it, the player's own preview (Player N Cam's picture)
     [SerializeField] TMP_Text matchmakingLine; // optional: searching, open to anyone (with the seconds to a start), friends only
     [SerializeField] TMP_Text fillPrompt; // optional: the right shoulder's label, what pressing it does (host only)
     [Tooltip("Each ticket sits over its seat's anchor on the room's board (DispatchRoom, its own scene) while the room is up")]
@@ -245,6 +247,7 @@ public class DispatchBoard : MonoBehaviour
 
         if (!on)
         {
+            ShowCustomize(null, -1);
             SetBanner(false);
             statusShown = null;
             statusKeyed = false;
@@ -442,7 +445,19 @@ public class DispatchBoard : MonoBehaviour
         }
     }
 
-    // The preview panel of a player here with the sliders open (X): the room hides the rest
+    /// <summary>X's pop-up: open on a seat's preview, cropped to its ghost and sliders (null: closed)</summary>
+    public void ShowCustomize(Texture preview, int seat)
+    {
+        if (customizePicture != null && customizePicture.texture != preview)
+            customizePicture.texture = preview;
+        if (customizePicture != null && preview != null)
+            customizePicture.uvRect = DispatchRules.CustomizeCrop(seat);
+        if (customizePanel != null && customizePanel.activeSelf != (preview != null))
+            customizePanel.SetActive(preview != null);
+    }
+
+    // A player here with the sliders open (X): their preview pops up over the board (the quarter-screen panels stay hidden,
+    // the board would cover them)
     void ShowCustomizingView()
     {
         PlayerSelectCanvas canvas = PlayerSelectCanvas.Instance;
@@ -460,7 +475,8 @@ public class DispatchBoard : MonoBehaviour
                 break;
             }
         }
-        canvas.SetPlayerViews(true, seat);
+        canvas.SetPlayerViews(true, -1);
+        ShowCustomize(seat < 0 ? null : canvas.ViewPicture(seat), seat);
     }
 
     /// <summary>The "all orders dispatched" banner over the countdown: on or off (on twice leaves one)</summary>

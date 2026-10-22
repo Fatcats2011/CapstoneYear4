@@ -11,10 +11,15 @@ Done: the MULTIPLAYER and LOCAL entries are in the scene (Selector Objects: Mult
   - Online Play: Dispatch (no invite window until Y). (Until Dispatch, 1c, is built) the top line says "Y / Triangle: invite friends      B / Circle: leave"; Y reopens the window; B goes back to the title screen.
 - **Check, with Steam closed:** Online Play shows "Start Steam to play online." and goes back to the title screen.
 
-## 1b. Dispatch: X opens the customization sliders (2 minutes, main editor)
+## 1b. Dispatch: X opens the customize pop-up (done: check only)
 
-- **Input asset** (`Assets/Resources/CapstoneYear4.inputactions`): in the UI map add a Button action **West Face** (like North Face), bound to `<Gamepad>/buttonWest` (group Gamepad), gamepad binding only; the keyboard key (Q) comes from `KeyboardControls`. The code wires it by name (`UI/West Face`), so nothing else is needed. Until it exists, X does nothing in online player select, so the sliders can't be opened there.
-- **Check, online player select:** the sliders are hidden; X shows them (d-pad scrolls them); B or A hides them; local player select still shows them all the time, and X does nothing there.
+- **Input asset:** the UI map's **West Face** action is in (`<Gamepad>/buttonWest` and `<Keyboard>/q`; `InputAssetTests` checks it).
+- **Build Board In Menu Scene → Replace** adds the pop-up.
+- **Check, on Dispatch:**
+  - X (or Q) pops up CUSTOMIZE: your ghost with the colour and hat sliders, the room dimmed behind.
+  - The d-pad scrolls them, and your ticket follows.
+  - B (or A) closes it.
+  - Local player select still shows the sliders all the time, and X does nothing there.
 
 ## 1d. Matchmaking buttons and status line (5 minutes, main editor)
 

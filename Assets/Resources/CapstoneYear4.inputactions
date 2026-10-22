@@ -486,6 +486,15 @@
                     "initialStateCheck": false
                 },
                 {
+                    "name": "West Face",
+                    "type": "Button",
+                    "id": "ff19afce-546d-43db-8c45-858b96dc61a3",
+                    "expectedControlType": "",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
+                },
+                {
                     "name": "Left Shoulder",
                     "type": "Button",
                     "id": "be54cb27-20ad-4885-8831-d8366558948e",
@@ -634,6 +643,28 @@
                     "processors": "",
                     "groups": "Gamepad",
                     "action": "North Face",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "67fdf259-7685-4782-ad7a-f6807df13e89",
+                    "path": "<Gamepad>/buttonWest",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "Gamepad",
+                    "action": "West Face",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "09883c9b-98df-40fe-8211-9f61aa96b488",
+                    "path": "<Keyboard>/q",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "Keyboard",
+                    "action": "West Face",
                     "isComposite": false,
                     "isPartOfComposite": false
                 },

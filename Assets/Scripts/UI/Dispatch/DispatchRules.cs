@@ -139,6 +139,18 @@ public static class DispatchRules
         return true;
     }
 
+    /// <summary>
+    /// The part of a player's preview the customize pop-up shows: the ghost and its colour and hat sliders, without the
+    /// empty sides. Players 1 and 3 have their sliders right of the ghost, players 2 and 4 left
+    /// (PlayerCameraResizer.RelocateCustomizationMenu), so the crop mirrors for them
+    /// </summary>
+    public static Rect CustomizeCrop(int seat)
+    {
+        const float left = 0.27f, width = 0.72f, bottom = 0.03f, height = 0.88f;
+        bool mirrored = (seat + 1) % 2 == 0;
+        return new Rect(mirrored ? 1 - left - width : left, bottom, width, height);
+    }
+
     /// <summary>At least one seat is taken and every taken seat is ready (the host alone can start)</summary>
     public static bool EveryoneReady(TicketState[] tickets)
     {

@@ -72,6 +72,7 @@
   - `DispatchRulesTests`: the ticket's state per seat (empty, getting ready, dispatched), the `{ready} / {seated} READY` counter, which changes flash a ticket, and when everyone is ready.
   - `DispatchMenuTests`: which buttons do what on Dispatch, and when the sliders open and close (Local Play being untouched is in `MenuButtonsTests`). `LeftShoulder_…` (Find only when idle), `RightShoulder_FillWhenClosed` and `East_WhileSearching_Cancels` cover matchmaking's buttons.
   - `DispatchRoomTests`: the room's scene loading (once, a change of mind mid-load, a refused load, not in the build), its seats winning order, tickets placed over their anchors, rims in company colours, the preview panels hidden on Dispatch, and additive loads ignored by the match flow.
+  - `InputAssetTests`: the input asset has the menu buttons the code wires by name (X's `UI/West Face`, the shoulders), with X on Q too.
   - `RoomClockTests`: the clock's hand angles, and its hands pointing at the time (also with the model mirrored).
   - `SteamAvatarsTests`: Steam's picture rows turned right way up, and no picture without Steam. `OnlinePlayersNetworkTests.ClientSteamId_ReachesTheHost` (port 7823) checks the Steam ID travels.
   - `DispatchLobbyBuilderTests`: the editor's Dispatch builder wires the room from the model's names (and its camera, listeners and other cameras), builds every board and ticket field with the Dispatch art, and makes the Flash animator.

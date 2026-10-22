@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class PlayerSelectCanvas : SingletonMonobehaviour<PlayerSelectCanvas>
 {
@@ -138,6 +139,15 @@ public class PlayerSelectCanvas : SingletonMonobehaviour<PlayerSelectCanvas>
             if (dispatchHideCanvases[i] != null)
                 dispatchHideCanvases[i].enabled = dispatchCanvasesKept[i];
         }
+    }
+
+    /// <summary>A seat's preview (Player N Cam's picture: the ghost and its colour and hat sliders), or null</summary>
+    public Texture ViewPicture(int seat)
+    {
+        if (playerViews == null || seat < 0 || seat >= playerViews.Length || playerViews[seat] == null)
+            return null;
+        RawImage picture = playerViews[seat].GetComponent<RawImage>();
+        return picture == null ? null : picture.texture;
     }
 
     /// <summary>
