@@ -222,10 +222,31 @@ namespace DoA.Tests
         [Test]
         public void ShowsFor_OnlineOrSwitching_InPlayerSelectOnly()
         {
-            Assert.IsTrue(DispatchBoard.ShowsFor(true, false, GameState.PlayerSelect), "online");
-            Assert.IsTrue(DispatchBoard.ShowsFor(false, true, GameState.PlayerSelect), "between sessions in a switch");
-            Assert.IsFalse(DispatchBoard.ShowsFor(false, false, GameState.PlayerSelect), "Local Play");
-            Assert.IsFalse(DispatchBoard.ShowsFor(true, true, GameState.Menu), "not outside player select");
+            Assert.IsTrue(DispatchBoard.ShowsFor(true, false, false, GameState.PlayerSelect), "online");
+            Assert.IsTrue(DispatchBoard.ShowsFor(false, true, false, GameState.PlayerSelect), "between sessions in a switch");
+            Assert.IsFalse(DispatchBoard.ShowsFor(false, false, false, GameState.PlayerSelect), "Local Play");
+            Assert.IsFalse(DispatchBoard.ShowsFor(true, true, true, GameState.Menu), "not outside player select");
+        }
+
+        // Multiplayer on the title screen: the board is up while the lobby is being made, so Local Play's player select
+        // never flashes up before it
+        [Test]
+        public void ShowsFor_GettingOnline_InPlayerSelect()
+        {
+            Assert.IsTrue(DispatchBoard.ShowsFor(false, false, true, GameState.PlayerSelect));
+        }
+
+        // Until the room's scene is up, a backdrop covers what's behind the board
+        [Test]
+        public void Backdrop_UntilTheRoomIsUp()
+        {
+            GameObject backdrop = objects.NewGameObject("Backdrop");
+            Set(board, "backdrop", backdrop);
+
+            board.ShowBackdrop(false);
+            Assert.IsTrue(backdrop.activeSelf, "no room yet");
+            board.ShowBackdrop(true);
+            Assert.IsFalse(backdrop.activeSelf, "the room is up");
         }
 
         // M-10: the right shoulder's label says what pressing it does, on the host only

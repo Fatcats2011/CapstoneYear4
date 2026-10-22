@@ -24,6 +24,7 @@ public class DispatchRoom : MonoBehaviour
     [SerializeField] internal Camera roomCamera;
     [SerializeField] internal Renderer[] rims = new Renderer[Constants.MAX_PLAYERS];          // PodiumN_Rim, by seat
     [SerializeField] internal Renderer[] dimmed;                                               // the backdrop: all but the podiums
+    [SerializeField] internal Transform[] avatarAnchors = new Transform[Constants.MAX_PLAYERS]; // SeatN_Avatar: under each podium
 
     /// <summary>The room that's loaded, if one is</summary>
     public static DispatchRoom Current { get; private set; }
@@ -31,6 +32,8 @@ public class DispatchRoom : MonoBehaviour
     public GameObject[] Seats { get { return seats; } }
     public Transform[] TicketAnchors { get { return ticketAnchors; } }
     public Camera RoomCamera { get { return roomCamera; } }
+    /// <summary>Under each podium, by seat: where its player's profile picture hangs</summary>
+    public Transform[] AvatarAnchors { get { return avatarAnchors; } }
 
     void OnEnable()
     {

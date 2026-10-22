@@ -145,7 +145,7 @@ namespace DoA.Tests
             Assert.AreEqual("doa", lobbies.Data[42]["game"]);
             Assert.AreEqual(OnlinePlay.BuildTag(), lobbies.GetData(OnlinePlay.Instance.Lobby.Current, LobbyRules.BUILD_KEY),
                 "tagged with this build's version and Netcode setup");
-            CollectionAssert.AreEqual(new[] { 42UL }, lobbies.Invites, "and opens the invite dialog");
+            Assert.IsEmpty(lobbies.Invites, "without opening the invite dialog: Y on Dispatch opens it");
             // Dispatch's board is up, with its own prompts: the old line along the top (what Y and B do) stays hidden
             deadline = Time.realtimeSinceStartup + 2;
             while (!DispatchBoard.Showing && Time.realtimeSinceStartup < deadline)
@@ -390,7 +390,7 @@ namespace DoA.Tests
             Assert.IsTrue(OnlinePlay.Instance.Lobby.IsHost);
             Assert.IsTrue(OnlinePlay.Instance.Lobby.Filling, "open to anyone");
             Assert.AreEqual(2, lobbies.Creates.Count, "in a new lobby");
-            Assert.AreEqual(1, lobbies.Invites.Count, "without opening the invite dialog again");
+            Assert.IsEmpty(lobbies.Invites, "without opening the invite dialog");
             Assert.IsFalse(OnlinePlay.Instance.Match.Searching);
             Assert.AreEqual(GameState.PlayerSelect, State(), "still on Dispatch");
 

@@ -29,6 +29,14 @@ namespace DoA.Tests
             // Laid out as the model comes into Unity: seats 12 apart along x, the board behind them and above
             GameObject model = objects.NewGameObject("MultiplayerLobby");
             Mesh(Child(model, "Depot_Floor"));
+            GameObject clock = Child(model, "Clock_Face");
+            clock.transform.position = new Vector3(-30, 19, 13.5f);
+            foreach (string hand in new[] { "Clock_Hour", "Clock_Minute" })
+            {
+                GameObject h = Child(model, hand);
+                h.transform.position = clock.transform.position;
+                Mesh(Child(h, hand + " Mesh"));
+            }
             for (int i = 4; i >= 1; i--) // out of order: the builder sorts by name
             {
                 float x = -18 + 12 * (i - 1);
@@ -104,6 +112,31 @@ namespace DoA.Tests
             float left = cam.WorldToViewportPoint(roots[0].transform.Find("Seat1_Spawn").position).x;
             float right = cam.WorldToViewportPoint(roots[0].transform.Find("Seat4_Spawn").position).x;
             Assert.That(left, Is.LessThan(right), "seat 1 on the left");
+            // Each player's profile picture hangs under their podium, above the bottom prompts
+            Transform[] avatarAnchors = room.AvatarAnchors;
+            Assert.AreEqual(Constants.MAX_PLAYERS, avatarAnchors.Length);
+            for (int i = 0; i < Constants.MAX_PLAYERS; i++)
+            {
+                Assert.AreEqual("Seat" + (i + 1) + "_Avatar", avatarAnchors[i].name);
+                Vector3 v = cam.WorldToViewportPoint(avatarAnchors[i].position);
+                Assert.That(v.y, Is.GreaterThanOrEqualTo(DispatchLobbyBuilder.PLAYER_BOTTOM), "picture " + (i + 1) + " room above the prompts");
+                Vector3 seat = cam.WorldToViewportPoint(roots[0].transform.Find("Seat" + (i + 1) + "_Spawn").position);
+                Assert.AreEqual(seat.x, v.x, 0.03f, "centred under podium " + (i + 1));
+                Assert.That(v.y, Is.LessThan(seat.y), "below podium " + (i + 1));
+            }
+
+            // Each podium's near edge clears the bottom prompts
+            Vector3 toward = -Vector3.ProjectOnPlane(cam.transform.forward, Vector3.up).normalized;
+            for (int i = 1; i <= 4; i++)
+            {
+                Vector3 seat = roots[0].transform.Find("Seat" + i + "_Spawn").position;
+                Vector3 edge = seat + toward * 0.4f * 12 * DispatchLobbyBuilder.ROOM_SCALE - Vector3.up * 0.1f * 12 * DispatchLobbyBuilder.ROOM_SCALE;
+                Assert.That(cam.WorldToViewportPoint(edge).y, Is.GreaterThanOrEqualTo(DispatchLobbyBuilder.FRAME_BOTTOM), "podium " + i + "'s near edge");
+            }
+            // Close and low: the seats spread across the screen, and the camera looks only a little down at them
+            Assert.That(right - left, Is.GreaterThan(DispatchLobbyBuilder.SEAT_SPREAD), "close: the seats fill the width");
+            float pitch = Vector3.Angle(cam.transform.forward, Vector3.ProjectOnPlane(cam.transform.forward, Vector3.up));
+            Assert.That(pitch, Is.LessThan(DispatchLobbyBuilder.MAX_PITCH), "low: a shallow look down");
 
             Assert.IsTrue(CameraBudget.Covers(false, cam.rect, cam.clearFlags, cam.depth), "draws over the players' views");
             Assert.IsFalse(roots[0].transform.Find("Camera").GetComponent<Camera>().enabled, "the model's camera is off");
@@ -137,6 +170,20 @@ namespace DoA.Tests
                 names.Add(dimmed.GetArrayElementAtIndex(i).objectReferenceValue.name);
             CollectionAssert.Contains(names, "Depot_Floor");
             Assert.IsFalse(names.Any(n => n.StartsWith("Podium")), "the podiums stay bright");
+        }
+
+        [Test]
+        public void SetUpRoom_WiresTheClocksHands()
+        {
+            GameObject[] roots = Room(false);
+
+            DispatchLobbyBuilder.SetUpRoom(roots);
+            DispatchLobbyBuilder.SetUpRoom(roots);
+
+            RoomClock[] clocks = roots[0].GetComponents<RoomClock>();
+            Assert.AreEqual(1, clocks.Length);
+            Assert.AreEqual("Clock_Hour", clocks[0].hourHand.name);
+            Assert.AreEqual("Clock_Minute", clocks[0].minuteHand.name);
         }
 
         [Test]
@@ -234,7 +281,7 @@ namespace DoA.Tests
             objects.Keep(board.transform.root.gameObject);
 
             SerializedObject so = new SerializedObject(board);
-            foreach (string field in new[] { "root", "readyLine", "banner", "matchmakingLine", "fillPrompt" })
+            foreach (string field in new[] { "root", "readyLine", "banner", "matchmakingLine", "fillPrompt", "backdrop" })
                 Assert.IsNotNull(so.FindProperty(field).objectReferenceValue, field);
             Assert.AreEqual(Constants.MAX_PLAYERS, so.FindProperty("tickets").arraySize);
             Assert.IsFalse(((GameObject)so.FindProperty("root").objectReferenceValue).activeSelf);
@@ -249,6 +296,8 @@ namespace DoA.Tests
                 TicketView ticket = (TicketView)so.FindProperty("tickets").GetArrayElementAtIndex(i).objectReferenceValue;
                 Assert.IsNotNull(ticket, "ticket " + i);
                 SerializedObject t = new SerializedObject(ticket);
+                Assert.IsNotNull(so.FindProperty("avatarFrames").GetArrayElementAtIndex(i).objectReferenceValue, "picture frame " + i);
+                Assert.IsNotNull(so.FindProperty("avatarPictures").GetArrayElementAtIndex(i).objectReferenceValue, "picture " + i);
                 foreach (string field in new[] { "header", "company", "playerName", "colourName", "hatName", "colourSwatch",
                     "hatIcon", "filled", "hiring", "stamp", "gettingReady", "mineMarker", "highlight" })
                     Assert.IsNotNull(t.FindProperty(field).objectReferenceValue, "ticket " + i + " " + field);

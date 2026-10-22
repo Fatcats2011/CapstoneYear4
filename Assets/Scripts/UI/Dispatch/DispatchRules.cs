@@ -12,11 +12,13 @@ public struct TicketState : IEquatable<TicketState>
     public int Hat;
     public bool Ready;
     public bool Mine;
+    public ulong SteamId; // their profile picture's owner (0: none, as without Steam)
 
     public bool Equals(TicketState other)
     {
         return Seat == other.Seat && Taken == other.Taken && string.Equals(Name, other.Name, StringComparison.Ordinal)
-               && Colour == other.Colour && Hat == other.Hat && Ready == other.Ready && Mine == other.Mine;
+               && Colour == other.Colour && Hat == other.Hat && Ready == other.Ready && Mine == other.Mine
+               && SteamId == other.SteamId;
     }
 
     public override bool Equals(object obj)
@@ -35,6 +37,7 @@ public struct TicketState : IEquatable<TicketState>
             h = h * 31 + Hat;
             h = h * 31 + (Ready ? 1 : 0);
             h = h * 31 + (Mine ? 1 : 0);
+            h = h * 31 + SteamId.GetHashCode();
             return h;
         }
     }

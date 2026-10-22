@@ -27,7 +27,14 @@ public static class DispatchLobbyBuilder
     public const float ROOM_SCALE = 0.4f;
     /// <summary>The band the seats and tickets are framed in (viewport heights): above the prompts, below the top row</summary>
     public const float FRAME_BOTTOM = 0.12f;
+    /// <summary>The players are framed above this (viewport height): room under the podiums for the profile pictures</summary>
+    public const float PLAYER_BOTTOM = 0.18f;
+    const float AVATAR_BELOW = 0.25f; // a picture's anchor below its seat, in seat gaps
     public const float FRAME_TOP = 0.84f;
+    /// <summary>Close: seat 1 to seat 4 spans at least this much of the screen's width (with room under the podiums for the profile pictures)</summary>
+    public const float SEAT_SPREAD = 0.64f;
+    /// <summary>Low: the camera looks down by less than this (degrees), near the ghosts' height</summary>
+    public const float MAX_PITCH = 8f;
     const float SPOT_HEIGHT = 0.9f;     // above each seat, in seat gaps
     const float SPOT_ANGLE = 75f;
     const float SPOT_BRIGHTNESS = 3f; // at the seat: URP's falloff is inverse-square, so intensity grows with height²
@@ -122,6 +129,8 @@ public static class DispatchLobbyBuilder
         Frame(cam, seats.Select(s => s.transform.position).ToArray(), anchors.Select(a => a.position).ToArray());
         AddColliders(model.transform);
         HideStrays(model.transform);
+        Transform[] avatars = AvatarAnchors(model.transform, seats);
+        WireClock(model);
         Spotlight(model.transform, seats);
         foreach (Light sun in roots.SelectMany(r => r.GetComponentsInChildren<Light>(true)).Where(l => l.type == LightType.Directional))
             sun.intensity = ROOM_FILL;
@@ -134,6 +143,7 @@ public static class DispatchLobbyBuilder
         SetArray(so.FindProperty("seats"), seats);
         SetArray(so.FindProperty("ticketAnchors"), anchors);
         SetArray(so.FindProperty("rims"), rims);
+        SetArray(so.FindProperty("avatarAnchors"), avatars);
         SetArray(so.FindProperty("dimmed"), model.GetComponentsInChildren<Renderer>(true)
             .Where(r => !r.name.StartsWith("Podium")).ToArray());
         so.FindProperty("roomCamera").objectReferenceValue = cam;
@@ -160,36 +170,109 @@ public static class DispatchLobbyBuilder
     }
 
     /// <summary>
-    /// Aims the camera from in front of the seats at the board behind them, level with seat 1 on the left (seat 1 to seat
-    /// 4 is its right), far enough back that every seat and ticket fits, a little from above
+    /// The closest, lowest camera in front of the seats (seat 1 on its left: seat 1 to seat 4 is its right) that still
+    /// shows every player: each podium with its ghost and hat on screen, and each ticket card on the board between the
+    /// top row and the bottom prompts. It looks at most MAX_PITCH up or down
     /// </summary>
     static void Frame(Camera cam, Vector3[] seats, Vector3[] tickets)
     {
-        Vector3[] points = seats.Concat(tickets).ToArray();
-        Vector3 centre = points.Aggregate(Vector3.zero, (a, p) => a + p) / points.Length;
         Vector3 right = Vector3.ProjectOnPlane(seats[seats.Length - 1] - seats[0], Vector3.up).normalized;
         Vector3 forward = Vector3.Cross(right, Vector3.up);
-        Vector3 seatsToBoard = tickets.Aggregate(Vector3.zero, (a, p) => a + p) / tickets.Length
-                             - seats.Aggregate(Vector3.zero, (a, p) => a + p) / seats.Length;
-        if (Vector3.Dot(forward, seatsToBoard) < 0)
+        Vector3 seatsAt = seats.Aggregate(Vector3.zero, (a, p) => a + p) / seats.Length;
+        Vector3 ticketsAt = tickets.Aggregate(Vector3.zero, (a, p) => a + p) / tickets.Length;
+        if (Vector3.Dot(forward, ticketsAt - seatsAt) < 0)
             Debug.LogWarning("Dispatch room: the board is in front of the seats as seat 1 → 4 runs, so the camera sees seat 1 on the right. Is the model mirrored?");
 
-        // The margin is the scooters' and the ticket cards' room around the points: a seat gap's worth
-        float margin = Vector3.Distance(seats[0], seats[1]) * 0.5f;
-        float halfWidth = points.Max(p => Mathf.Abs(Vector3.Dot(p - centre, right))) + margin;
-        float halfHeight = points.Max(p => Mathf.Abs(p.y - centre.y)) + margin;
-        float tan = Mathf.Tan(ROOM_FOV * 0.5f * Mathf.Deg2Rad);
-        float band = FRAME_TOP - FRAME_BOTTOM;
-        float depth = points.Max(p => Mathf.Abs(Vector3.Dot(p - centre, forward)));
-        float distance = Mathf.Max(halfHeight / (tan * band), halfWidth / (tan * ROOM_ASPECT * 0.9f)) + depth;
+        // What has to show: each podium's width, its ghost up to the hat, and each ticket card (sized to the seat gap)
+        float gap = Vector3.Distance(seats[0], seats[1]);
+        List<Vector3> players = new List<Vector3>();
+        foreach (Vector3 s in seats)
+        {
+            players.Add(s - right * gap * 0.4f);
+            players.Add(s + right * gap * 0.4f);
+            players.Add(s + Vector3.up * gap * 0.45f);
+            players.Add(s - forward * gap * 0.4f - Vector3.up * gap * 0.1f); // the podium's near edge
+            players.Add(s - Vector3.up * gap * AVATAR_BELOW);                 // its profile picture's anchor
+        }
+        List<Vector3> cards = new List<Vector3>();
+        foreach (Vector3 a in tickets)
+        {
+            cards.Add(a + Vector3.up * gap * 0.55f);
+            cards.Add(a - Vector3.up * gap * 0.55f);
+        }
 
-        // Aimed so the points' centre sits at the band's centre, not the screen's
-        Vector3 aim = centre + Vector3.up * (0.5f - (FRAME_TOP + FRAME_BOTTOM) * 0.5f) * 2 * tan * distance;
         cam.fieldOfView = ROOM_FOV;
+        cam.aspect = ROOM_ASPECT;
         cam.nearClipPlane = 0.1f;
-        cam.farClipPlane = distance * 4;
-        cam.transform.position = aim - forward * distance + Vector3.up * distance * 0.12f;
-        cam.transform.rotation = Quaternion.LookRotation(aim - cam.transform.position, Vector3.up);
+        for (float distance = gap; distance < gap * 30; distance += gap * 0.1f)
+        {
+            for (float lift = gap * 0.25f; lift <= gap * 2; lift += gap * 0.25f)
+            {
+                for (float pitch = -MAX_PITCH + 0.5f; pitch < MAX_PITCH; pitch += 0.5f)
+                {
+                    cam.transform.position = new Vector3(seatsAt.x, seatsAt.y + lift, seatsAt.z) - forward * distance;
+                    cam.transform.rotation = Quaternion.LookRotation(forward, Vector3.up) * Quaternion.Euler(pitch, 0, 0);
+                    if (Shows(cam, players, PLAYER_BOTTOM, 0.97f) && Shows(cam, cards, FRAME_BOTTOM, FRAME_TOP))
+                    {
+                        cam.farClipPlane = distance * 6;
+                        cam.ResetAspect();
+                        return;
+                    }
+                }
+            }
+        }
+        cam.ResetAspect();
+        Debug.LogWarning("Dispatch room: no camera fits every seat and ticket; check the room camera by hand");
+    }
+
+    // Whether every point is in front of the camera, across the screen, and between bottom and top (viewport heights)
+    static bool Shows(Camera cam, List<Vector3> points, float bottom, float top)
+    {
+        foreach (Vector3 p in points)
+        {
+            Vector3 v = cam.WorldToViewportPoint(p);
+            if (v.z <= cam.nearClipPlane || v.x < 0.03f || v.x > 0.97f || v.y < bottom || v.y > top)
+                return false;
+        }
+        return true;
+    }
+
+    // An empty under each seat (made once, then kept up to date): its player's profile picture hangs below it
+    static Transform[] AvatarAnchors(Transform model, GameObject[] seats)
+    {
+        float gap = Vector3.Distance(seats[0].transform.position, seats[1].transform.position);
+        Transform[] anchors = new Transform[seats.Length];
+        for (int i = 0; i < seats.Length; i++)
+        {
+            string name = "Seat" + (i + 1) + "_Avatar";
+            Transform anchor = model.Find(name);
+            if (anchor == null)
+            {
+                anchor = new GameObject(name).transform;
+                anchor.SetParent(model, false);
+                Undo.RegisterCreatedObjectUndo(anchor.gameObject, "Dispatch avatar anchor");
+            }
+            anchor.position = seats[i].transform.position - Vector3.up * gap * AVATAR_BELOW;
+            anchors[i] = anchor;
+        }
+        return anchors;
+    }
+
+    // The wall clock tells the computer's time (RoomClock), when the model has its hands
+    static void WireClock(GameObject model)
+    {
+        Transform hour = Find(model.transform, "Clock_Hour");
+        Transform minute = Find(model.transform, "Clock_Minute");
+        if (hour == null || minute == null)
+            return;
+
+        RoomClock clock = model.GetComponent<RoomClock>();
+        if (clock == null)
+            clock = Undo.AddComponent<RoomClock>(model);
+        SerializedObject so = new SerializedObject(clock);
+        so.FindProperty("hourHand").objectReferenceValue = hour;
+        so.FindProperty("minuteHand").objectReferenceValue = minute;
+        so.ApplyModifiedPropertiesWithoutUndo();
     }
 
     // Blender's default cube and light, which came along with the export
@@ -329,6 +412,14 @@ public static class DispatchLobbyBuilder
 
         RectTransform root = Stretch(Ui("Dispatch Root", canvasObject.transform));
 
+        // Until the room's scene is up (a few frames after Multiplayer), this covers what's behind the board
+        Image backdrop = new GameObject("Backdrop", typeof(RectTransform), typeof(Image)).GetComponent<Image>();
+        backdrop.gameObject.layer = LayerMask.NameToLayer("UI");
+        backdrop.transform.SetParent(root, false);
+        backdrop.color = new Color32(0x2A, 0x0B, 0x55, 0xFF);
+        backdrop.raycastTarget = false;
+        Stretch(backdrop.rectTransform);
+
         Image wordmark = Picture("Wordmark", root, "Dispatch_Wordmark");
         wordmark.preserveAspect = true;
         Place(wordmark.rectTransform, new Vector2(0, 1), new Vector2(40, -28), new Vector2(560, 113));
@@ -344,9 +435,35 @@ public static class DispatchLobbyBuilder
 
         Image banner = Picture("Banner", root, "Banner");
         banner.type = Image.Type.Sliced;
-        Place(banner.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(0, -60), new Vector2(1150, 210));
+        // Over the tickets (all stamped by then), clear of player select's 3-2-1 at the screen's centre
+        Place(banner.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(0, 190), new Vector2(1150, 190));
         Label("Words", banner.transform, font, 76, Color.white, "ALL ORDERS DISPATCHED");
         banner.gameObject.SetActive(false);
+
+        // Each player's Steam profile picture, hung under their podium by the board (shown once Steam has it)
+        RectTransform[] avatarFrames = new RectTransform[Constants.MAX_PLAYERS];
+        RawImage[] avatarPictures = new RawImage[Constants.MAX_PLAYERS];
+        for (int i = 0; i < avatarFrames.Length; i++)
+        {
+            Image border = new GameObject("Avatar " + (i + 1), typeof(RectTransform), typeof(Image)).GetComponent<Image>();
+            border.gameObject.layer = LayerMask.NameToLayer("UI");
+            border.transform.SetParent(area, false);
+            border.color = new Color32(0xF1, 0xF1, 0xF1, 0xFF);
+            border.raycastTarget = false;
+            Place(border.rectTransform, new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(78, 78));
+            border.rectTransform.pivot = new Vector2(0.5f, 1);
+            avatarFrames[i] = border.rectTransform;
+
+            RawImage picture = new GameObject("Picture", typeof(RectTransform), typeof(RawImage)).GetComponent<RawImage>();
+            picture.gameObject.layer = LayerMask.NameToLayer("UI");
+            picture.transform.SetParent(border.transform, false);
+            picture.raycastTarget = false;
+            Stretch(picture.rectTransform);
+            picture.rectTransform.offsetMin = new Vector2(4, 4);
+            picture.rectTransform.offsetMax = new Vector2(-4, -4);
+            avatarPictures[i] = picture;
+            border.gameObject.SetActive(false);
+        }
 
         RectTransform prompts = Ui("Prompts", root);
         Place(prompts, new Vector2(0.5f, 0), new Vector2(0, 36), new Vector2(1400, 64));
@@ -369,9 +486,12 @@ public static class DispatchLobbyBuilder
 
         SerializedObject so = new SerializedObject(board);
         so.FindProperty("root").objectReferenceValue = root.gameObject;
+        so.FindProperty("backdrop").objectReferenceValue = backdrop.gameObject;
         SetArray(so.FindProperty("tickets"), tickets);
         so.FindProperty("readyLine").objectReferenceValue = readyLine;
         so.FindProperty("banner").objectReferenceValue = banner.gameObject;
+        SetArray(so.FindProperty("avatarFrames"), avatarFrames);
+        SetArray(so.FindProperty("avatarPictures"), avatarPictures);
         so.FindProperty("matchmakingLine").objectReferenceValue = matchmakingLine;
         so.FindProperty("fillPrompt").objectReferenceValue = fillPrompt;
         so.ApplyModifiedPropertiesWithoutUndo();

@@ -78,6 +78,7 @@ public class OnlineGame : MonoBehaviour
     OnlineSceneFlow sceneFlow;
     CustomizationSelector choices; // player select's colours and hats, from the local player's prefab
     string myName; // this machine's Steam name, cleaned (null until first shared, and again after the session ends)
+    ulong myId;    // this machine's Steam ID (0 until first shared, or without Steam)
     readonly List<OnlinePlayer> localPlayers = new List<OnlinePlayer>(); // this machine's players (several can share its screen)
     readonly SeatAsker asker = new SeatAsker(); // the seats asked of the host for this machine's players without one
     PlayerInstantiate hooked;     // the player manager whose seats given back this hears
@@ -279,6 +280,7 @@ public class OnlineGame : MonoBehaviour
         waiting.Clear();
         localPlayers.Clear();
         myName = null;
+        myId = 0;
         asker.Reset();
         countingTo = readiedFor = graceFor = forcedFor = 0; // the next session's server time starts again
         autoStartClock.Reset();
@@ -665,7 +667,10 @@ public class OnlineGame : MonoBehaviour
     {
         // Asked of Steam once per session, not every frame
         if (myName == null)
+        {
             myName = PlayerNames.Clean(SteamNames.Mine());
+            myId = SteamNames.MyId();
+        }
 
         foreach (OnlinePlayer localPlayer in localPlayers)
         {
@@ -679,6 +684,7 @@ public class OnlineGame : MonoBehaviour
             CustomizationSelector picked = slot.Input.GetComponent<PlayerUIHandler>().customizationSelector;
             localPlayer.Share(picked.ColourIndex, picked.HatIndex, players.IsReady(slot.Index));
             localPlayer.ShareName(myName);
+            localPlayer.ShareSteamId(myId);
         }
     }
 

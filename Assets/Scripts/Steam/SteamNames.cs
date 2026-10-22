@@ -20,4 +20,14 @@ public static class SteamNames
 #endif
         return "";
     }
+
+    /// <summary>The Steam ID of whoever is signed in to Steam, or 0 without Steam</summary>
+    public static ulong MyId()
+    {
+#if !DISABLESTEAMWORKS
+        if (SteamManager.Initialized)
+            return SteamUser.GetSteamID().m_SteamID;
+#endif
+        return 0;
+    }
 }

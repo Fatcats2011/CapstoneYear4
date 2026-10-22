@@ -43,6 +43,11 @@ Online multiplayer is being built in steps (roadmap Phase 3: `docs/superpowers/p
       - It colours each `PodiumN_Rim` in its seat's company colour.
       - On arriving, it moves the scooters onto its seats.
       - **Tools → Dead on Arrival → Dispatch** sets the scene up and builds the board (`DispatchLobbyBuilder`).
+    - Picking Multiplayer shows the board at once, while the lobby is still being made (`OnlinePlay.GettingOnline`), and the board re-checks after every Update (`LateUpdate`), so Local Play's player select never flashes up first. Until the room's scene is up, a dark backdrop covers the screen (`DispatchBoard.backdrop`).
+    - **Profile pictures.** Each player's Steam ID travels with their name (`OnlinePlayer.SteamId`, written by its owner). Every machine loads each player's large Steam avatar itself (`SteamAvatars`: asked of Steam until it's there, made into a texture once, none without Steam) and the board hangs it under that player's podium (`DispatchBoard.avatarFrames`, at the room's `SeatN_Avatar` anchors). A free seat, a player without Steam or a picture still loading shows none.
+    - **The wall clock** tells the computer's time (`RoomClock`). Its hands were modelled at ten to two: it works out twelve and three from them, so a mirrored import still reads right.
+    - The "ALL ORDERS DISPATCHED" banner sits over the tickets, clear of player select's 3-2-1 at the screen's centre.
+    - The room's camera is the closest, lowest one (looking at most `MAX_PITCH` up or down) that still shows each podium with its ghost and hat above the prompts, and each ticket between the top row and the prompts (`DispatchLobbyBuilder.Frame`).
     - The board hides the player-select preview panels (`PlayerSelectCanvas.playerViews`), except a local player's while their sliders are open.
     - It also hides what would cover the room: the old lobby's look (`PlayerSelectCanvas.dispatchHides`) and the title screen's canvas, which only stops drawing (`dispatchHideCanvases`).
     - The tickets sit over the board's anchors, each sized to `DispatchBoard.TICKET_FILL` of the gap between them. The room dims its backdrop (`DispatchRoom.BACKDROP`); the builder adds a spotlight per podium and scales the model (`ROOM_SCALE`).
@@ -106,8 +111,8 @@ Online multiplayer is being built in steps (roadmap Phase 3: `docs/superpowers/p
 ### Phase 3D: playing over Steam
 
 - **Y (triangle) in player select plays online** with Steam friends:
-  - It makes a friends-only Steam lobby (four seats, a Steam member cap of 16), hosts the match in it, and opens Steam's invite dialog.
-  - Once online, Y opens the invite dialog again. Without Steam's overlay (the editor has none), a message says to invite from the Steam friends list.
+  - It makes a friends-only Steam lobby (four seats, a Steam member cap of 16), and hosts the match in it. Online Play doesn't open Steam's invite dialog by itself (players found it annoying); the old title screen's Y still does.
+  - Once online, Y opens the invite dialog. Without Steam's overlay (the editor has none), a message says to invite from the Steam friends list.
   - A line along the top of player select says what Y and B do.
 - **Friends join through Steam:** they accept the invite, or pick "Join Game" on the host in their friends list. With the game's own App ID that works whether their game is running or not (Steam starts it with `+connect_lobby`). With the test App ID, start the game first (Known limits).
   - The game answers once its title screen is up, and lands in the host's player select.
@@ -282,7 +287,7 @@ Online multiplayer is being built in steps (roadmap Phase 3: `docs/superpowers/p
 
 - **The title screen** has, top to bottom, MULTIPLAYER (Online Play), LOCAL (Local Play), Options, Credits and Quit. The scene's entries are images, so `TitleEntries` decides what each place does from how many `MainMenu` holds: with 4 (before the Online Play art), it's the old title screen.
 - **Local Play** goes to player select as Play did: split screen, with nothing online. Y does nothing and there's no line along the top.
-- **Online Play** (`MainMenu.SwapToOnline`) goes to player select, then `OnlinePlay.StartOnline` hosts a lobby (`OnlineLobby.Host`), which opens Steam's invite window. Player select comes first: a lobby still being made is kept only there.
+- **Online Play** (`MainMenu.SwapToOnline`) goes to player select, then `OnlinePlay.StartOnline` hosts a lobby (`OnlineLobby.Host(invite: false)`), without opening Steam's invite window: Y on Dispatch opens it. Player select comes first: a lobby still being made is kept only there.
 - **Failure:** no Steam, no lobby, or a session that won't start. `OnlineLobby.HostFailed` fires; the reason shows in the hint bar, and for a host attempt from Online Play, OnlinePlay unreadies this machine's players and goes back to the title screen while the game is still in offline player select (`OnlinePlay.BackToTitle`). A player who moved on is left alone, and Y on the old title screen only says why, as before.
 - **Y** (`OnlinePlay.YAction`):
   - online: reopens the invite window;
@@ -345,7 +350,7 @@ Playing with strangers is opt-in: a lobby is created friends only, exactly as be
 
 - Two PCs, each running Steam, signed in to two accounts that are friends. An account can't join itself, so one PC can't test Steam.
 - A build on each, with a copy of `steam_appid.txt` next to the `.exe`. Start the game on both before inviting (the test App ID: Known limits).
-- PC 1: Online Play → player select, and Steam's invite window opens: invite the friend (Y reopens it). Before the Online Play entry is in the scene: Play → player select, then Y.
+- PC 1: Online Play → Dispatch, then Y opens Steam's invite window: invite the friend. Before the Online Play entry is in the scene: Play → player select, then Y.
 - PC 2: accept the invite (or pick "Join Game" on PC 1's player in the friends list). It lands in PC 1's player select, in the second seat.
 - Ready up on both: the match starts. After it, both are back in player select.
 - PC 1: B. PC 2 shows "The host left the match." and stays in player select.

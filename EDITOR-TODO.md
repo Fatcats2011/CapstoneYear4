@@ -8,7 +8,7 @@ Done: the MULTIPLAYER and LOCAL entries are in the scene (Selector Objects: Mult
 - **Selector Ghost Sprites** (MainMenu) still holds 4, so from Local down each entry shows the next one's ghost. Add one at the top (element 0) so it holds 5, one per entry in the same order: Multiplayer, Local, Options, Credits, Quit. With no Multiplayer ghost art yet, `Play.png` for both Multiplayer and Local is fine.
 - **Check, with Steam running:**
   - Local Play: player select; Y does nothing, and no line along the top.
-  - Online Play: player select, and Steam's invite window opens. (Until Dispatch, 1c, is built) the top line says "Y / Triangle: invite friends      B / Circle: leave"; Y reopens the window; B goes back to the title screen.
+  - Online Play: Dispatch (no invite window until Y). (Until Dispatch, 1c, is built) the top line says "Y / Triangle: invite friends      B / Circle: leave"; Y reopens the window; B goes back to the title screen.
 - **Check, with Steam closed:** Online Play shows "Start Steam to play online." and goes back to the title screen.
 
 ## 1b. Dispatch: X opens the customization sliders (2 minutes, main editor)
@@ -54,6 +54,7 @@ The room is its own scene, `Assets/Scenes/Multiplayerlobby.unity`, loaded alongs
   - It wires `Player Select Canvas`'s **Player Views** (`Player 1–4 Cam`). Dispatch hides them, except your own while the sliders are open.
   - It also wires what Dispatch hides so the room shows: the old lobby's backgrounds, icons and dividers, and the title screen's `Main Menu Canvas` (its drawing only).
   - Running it again replaces the old board.
+- **Profile pictures and the clock:** Set Up Room Scene adds a `SeatN_Avatar` empty under each podium and a `RoomClock` on the model (wired to `Clock_Hour` and `Clock_Minute`). Build Board adds the 4 picture frames. Re-run both after updating.
 - **What happens at runtime:**
   - The tickets sit over the board's `SeatN_Ticket` empties, as the room camera sees them.
   - The scooters stand on `SeatN_Spawn`.
@@ -70,7 +71,7 @@ The room is its own scene, `Assets/Scenes/Multiplayerlobby.unity`, loaded alongs
 - **The menu scene has a copy of the `MultiplayerLobby` model** (dragged in at some point): delete it. The room is its own scene.
 - **Optional:** a short celebration animation on the ghost when a player clocks in.
 - **Check:**
-  - Online Play opens Dispatch, with Steam's invite window.
+  - Online Play opens Dispatch, with no invite window; Y opens it.
   - A friend's ticket and ghost appear.
   - X opens the sliders, and the ticket follows them.
   - A stamps the ticket.

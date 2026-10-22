@@ -23,6 +23,7 @@ namespace DoA.Tests
         const ushort PORT_NAME = 7818;
         const ushort PORT_AUTO_START = 7821;
         const ushort PORT_SEAT_AFTER_FORCE = 7822;
+        const ushort PORT_STEAM_ID = 7823;
         const float WAIT = 10f;
         const double AUTO_START = 2; // MatchRules.AutoStartSecondsOverride, for these tests
         const float COUNTDOWN = 3f; // Dispatch's countdown once everyone is ready (PlayerInstantiate)
@@ -291,6 +292,41 @@ namespace DoA.Tests
             yield return null;
             log.Dispose();
             Assert.IsEmpty(log.Problems, "Errors while machines left:\n\n" + string.Join("\n\n", log.Problems));
+        }
+
+        [UnityTest]
+        public IEnumerator ClientSteamId_ReachesTheHost()
+        {
+            // Each machine fetches a player's profile picture from Steam by their ID (Dispatch shows it under their podium)
+            EditorSceneManager.playModeStartScene = null;
+            EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
+            yield return new EnterPlayMode();
+
+            OnlineSession host = OnlineSession.Create("1.0.0");
+            host.HostDirect(THIS_COMPUTER, PORT_STEAM_ID);
+            OnlineSession client = OnlineSession.Create("1.0.0");
+            client.JoinDirect(THIS_COMPUTER, PORT_STEAM_ID);
+            float deadline = Time.realtimeSinceStartup + WAIT;
+            while (!(Sees(client, 2) && Sees(host, 2)) && Time.realtimeSinceStartup < deadline)
+                yield return null;
+
+            PlayerInSeat(client, 1).ShareSteamId(76561198111505239UL);
+            OnlinePlayer onHost = PlayerInSeat(host, 1);
+            deadline = Time.realtimeSinceStartup + WAIT;
+            while (onHost.SteamId != 76561198111505239UL && Time.realtimeSinceStartup < deadline)
+                yield return null;
+
+            Assert.AreEqual(76561198111505239UL, onHost.SteamId, "the client's Steam ID on the host");
+
+            LogCollector log = new LogCollector();
+            log.MachinesLeave();
+            client.Leave();
+            deadline = Time.realtimeSinceStartup + WAIT;
+            while (host.Players.Count > 1 && Time.realtimeSinceStartup < deadline)
+                yield return null;
+            host.Leave();
+            log.Dispose();
+            yield return null;
         }
 
         [UnityTest]

@@ -4,6 +4,7 @@ using System.Reflection;
 using NUnit.Framework;
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using UnityEngine.UI;
 
 namespace DoA.Tests
 {
@@ -453,6 +454,59 @@ namespace DoA.Tests
             Assert.That(gap, Is.GreaterThan(0));
             for (int i = 0; i < 2; i++)
                 Assert.AreEqual(gap * DispatchBoard.TICKET_FILL, 300 * tickets[i].localScale.x, 0.5f, "ticket " + i);
+        }
+
+        [Test]
+        public void Board_ShowAvatars_OnlyForASeatedPlayerWithAPicture()
+        {
+            DispatchBoard board = objects.Add<DispatchBoard>();
+            RawImage[] pictures = new RawImage[Constants.MAX_PLAYERS];
+            RectTransform[] frames = new RectTransform[Constants.MAX_PLAYERS];
+            for (int i = 0; i < pictures.Length; i++)
+            {
+                frames[i] = objects.NewGameObject("Avatar").AddComponent<RectTransform>();
+                pictures[i] = new GameObject("Picture", typeof(RectTransform), typeof(RawImage)).GetComponent<RawImage>();
+                pictures[i].transform.SetParent(frames[i], false);
+            }
+            Set(board, "avatarFrames", frames);
+            Set(board, "avatarPictures", pictures);
+            Texture2D picture = new Texture2D(2, 2);
+            TicketState[] seats = new TicketState[Constants.MAX_PLAYERS];
+            for (int i = 0; i < seats.Length; i++)
+                seats[i] = new TicketState { Seat = i };
+            seats[0] = new TicketState { Seat = 0, Taken = true, SteamId = 7 };   // a picture
+            seats[1] = new TicketState { Seat = 1, Taken = true, SteamId = 8 };   // still loading
+            seats[2] = new TicketState { Seat = 2, Taken = true };                // no Steam
+
+            board.ShowAvatars(seats, id => id == 7 ? picture : null);
+
+            Assert.IsTrue(frames[0].gameObject.activeSelf);
+            Assert.AreSame(picture, pictures[0].texture);
+            Assert.IsFalse(frames[1].gameObject.activeSelf, "loading: nothing yet");
+            Assert.IsFalse(frames[2].gameObject.activeSelf, "no Steam ID");
+            Assert.IsFalse(frames[3].gameObject.activeSelf, "a free seat");
+            UnityEngine.Object.DestroyImmediate(picture);
+        }
+
+        [Test]
+        public void Board_PlaceAvatars_CentredUnderTheirAnchor()
+        {
+            DispatchBoard board = objects.Add<DispatchBoard>();
+            RectTransform area = objects.NewGameObject("Area").AddComponent<RectTransform>();
+            area.sizeDelta = new Vector2(1920, 1080);
+            RectTransform frame = new GameObject("Avatar", typeof(RectTransform)).GetComponent<RectTransform>();
+            frame.SetParent(area, false);
+            Camera cam = objects.Add<Camera>();
+            cam.transform.position = Vector3.zero;
+            cam.transform.rotation = Quaternion.identity;
+            Transform ahead = objects.NewGameObject("Ahead").transform;
+            ahead.position = new Vector3(0, 0, 10);
+
+            board.PlaceAvatars(cam, new[] { ahead }, new[] { frame });
+
+            Assert.AreEqual(0f, frame.anchoredPosition.x, 0.01f, "centred under it");
+            Assert.AreEqual(-DispatchBoard.AVATAR_DROP, frame.anchoredPosition.y, 0.01f, "just below it");
+            Assert.AreEqual(new Vector2(0.5f, 1), frame.pivot, "hangs from its top edge");
         }
 
         GameObject[] Four(string name)

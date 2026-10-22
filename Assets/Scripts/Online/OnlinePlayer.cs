@@ -16,6 +16,7 @@ public class OnlinePlayer : NetworkBehaviour
     readonly NetworkVariable<int> hat = new NetworkVariable<int>(0, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Owner);
     readonly NetworkVariable<bool> ready = new NetworkVariable<bool>(false, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Owner);
     readonly NetworkVariable<FixedString32Bytes> displayName = new NetworkVariable<FixedString32Bytes>(default, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Owner);
+    readonly NetworkVariable<ulong> steamId = new NetworkVariable<ulong>(0, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Owner);
     readonly NetworkVariable<int> score = new NetworkVariable<int>(0);
 
     OnlineSession session;
@@ -34,6 +35,9 @@ public class OnlinePlayer : NetworkBehaviour
 
     /// <summary>Their name (their Steam name, cleaned): "" until they share one. Show it with PlayerNames.Shown</summary>
     public string Name { get { return displayName.Value.ToString(); } }
+
+    /// <summary>Their Steam ID, for their profile picture (0 without Steam). Only their own machine writes it</summary>
+    public ulong SteamId { get { return steamId.Value; } }
 
     /// <summary>Their score in the match, which only the host writes</summary>
     public int Score { get { return score.Value; } }
@@ -86,6 +90,13 @@ public class OnlinePlayer : NetworkBehaviour
         FixedString32Bytes value = cleaned;
         if (!displayName.Value.Equals(value))
             displayName.Value = value;
+    }
+
+    /// <summary>This machine's player: shares their Steam ID (only a change goes out). Does nothing for another's</summary>
+    public void ShareSteamId(ulong id)
+    {
+        if (IsOwner && steamId.Value != id)
+            steamId.Value = id;
     }
 
     /// <summary>

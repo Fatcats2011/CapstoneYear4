@@ -160,6 +160,44 @@ namespace DoA.Tests
         }
 
         [Test]
+        public void GettingOnline_FromMultiplayer_UntilOnline()
+        {
+            // Dispatch shows while the lobby is being made (no flash of Local Play's player select)
+            FakeLobbyService lobbies = new FakeLobbyService();
+            OnlinePlay play = InPlayerSelect(lobbies, out GameManager game);
+            Assert.IsFalse(play.GettingOnline, "not before");
+
+            play.StartOnline();
+            Assert.IsTrue(play.GettingOnline, "the lobby is being made");
+
+            Reflect.Invoke(play, "ForwardRole", NetworkRole.Host);
+            Assert.IsFalse(play.GettingOnline, "online now: the board shows for that");
+        }
+
+        [Test]
+        public void GettingOnline_EndsWhenThePlayerLeavesPlayerSelect()
+        {
+            // B before the lobby is made: Local Play's player select later mustn't show Dispatch
+            OnlinePlay play = InPlayerSelect(new FakeLobbyService(), out GameManager game);
+            play.StartOnline();
+
+            game.SetGameState(GameState.Menu);
+            Reflect.Invoke(play, "Update");
+
+            Assert.IsFalse(play.GettingOnline);
+        }
+
+        [Test]
+        public void GettingOnline_EndsWhenItFails()
+        {
+            OnlinePlay play = InPlayerSelect(new FakeLobbyService { Available = false }, out GameManager game);
+
+            play.StartOnline();
+
+            Assert.IsFalse(play.GettingOnline);
+        }
+
+        [Test]
         public void Hint_OnlineDispatch_PlayerSelect_OffersNothing()
         {
             // Dispatch's tickets carry their own prompts

@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
+using UnityEngine.UI;
 
 /// <summary>
 /// The Dispatch board: online player select shown as four tickets (one per seat), a ready counter and, once everyone
@@ -11,10 +12,13 @@ using UnityEngine;
 public class DispatchBoard : MonoBehaviour
 {
     [SerializeField] GameObject root;
+    [SerializeField] GameObject backdrop; // optional: covers what's behind the board until the room's scene is up
     [SerializeField] GameObject roomCamera; // optional: the camera on the Dispatch room, on only while the board is up
     [SerializeField] TicketView[] tickets; // by seat
     [SerializeField] TMP_Text readyLine;
     [SerializeField] GameObject banner;
+    [SerializeField] RectTransform[] avatarFrames; // by seat: each player's Steam profile picture, under their podium
+    [SerializeField] RawImage[] avatarPictures;    // by seat: the picture inside each frame
     [SerializeField] TMP_Text matchmakingLine; // optional: searching, open to anyone (with the seconds to a start), friends only
     [SerializeField] TMP_Text fillPrompt; // optional: the right shoulder's label, what pressing it does (host only)
     [Tooltip("Each ticket sits over its seat's anchor on the room's board (DispatchRoom, its own scene) while the room is up")]
@@ -22,6 +26,9 @@ public class DispatchBoard : MonoBehaviour
 
     /// <summary>How much of the gap between two seats' anchors a ticket's width takes</summary>
     public const float TICKET_FILL = 0.8f;
+
+    /// <summary>How far below its anchor (canvas units) a profile picture's top edge hangs</summary>
+    public const float AVATAR_DROP = 14f;
 
     /// <summary>Whether the board is up (OnlinePlay hides its hint bar then)</summary>
     public static bool Showing { get; private set; }
@@ -77,18 +84,18 @@ public class DispatchBoard : MonoBehaviour
         if (hooked == null)
             Hook();
 
-        GameManager game = GameManager.Instance;
-        OnlinePlay play = OnlinePlay.Instance;
-        bool switching = play != null && play.Match != null && play.Match.Switching;
-        bool show = ShowsFor(GameAuthority.IsOnline, switching, game == null ? GameState.Default : game.MainState);
-        if (show != showing)
-            SetShowing(show);
-
+        CheckShowing();
         if (!showing)
             return;
 
+        OnlinePlay play = OnlinePlay.Instance;
+        bool switching = play != null && play.Match != null && play.Match.Switching;
+        DispatchRoom room = DispatchRoom.Current;
+        ShowBackdrop(room != null && room.RoomCamera != null && room.RoomCamera.enabled);
+
         Gather();
         Apply(buffer);
+        ShowAvatars(buffer, SteamAvatars.Get);
         FollowRoom();
         ShowCustomizingView();
 
@@ -104,13 +111,38 @@ public class DispatchBoard : MonoBehaviour
             ShowMatchmaking();
     }
 
-    /// <summary>
-    /// Whether the board is up: in player select, online or between sessions in a lobby switch (Matchmaker.Switching, which
-    /// lasts until B's lobby hosts again), so Local Play's player select never shows through for that moment
-    /// </summary>
-    public static bool ShowsFor(bool online, bool switching, GameState state)
+    // Again after every Update: Multiplayer picked this frame shows the board before the frame is drawn
+    void LateUpdate()
     {
-        return (online || switching) && state == GameState.PlayerSelect;
+        CheckShowing();
+    }
+
+    void CheckShowing()
+    {
+        GameManager game = GameManager.Instance;
+        OnlinePlay play = OnlinePlay.Instance;
+        bool switching = play != null && play.Match != null && play.Match.Switching;
+        bool getting = play != null && play.GettingOnline;
+        bool show = ShowsFor(GameAuthority.IsOnline, switching, getting, game == null ? GameState.Default : game.MainState);
+        if (show != showing)
+            SetShowing(show);
+    }
+
+    /// <summary>
+    /// Whether the board is up: in player select, online, while Multiplayer's lobby is being made (OnlinePlay.GettingOnline),
+    /// or between sessions in a lobby switch (Matchmaker.Switching, which lasts until B's lobby hosts again), so Local
+    /// Play's player select never shows through for those moments
+    /// </summary>
+    public static bool ShowsFor(bool online, bool switching, bool gettingOnline, GameState state)
+    {
+        return (online || switching || gettingOnline) && state == GameState.PlayerSelect;
+    }
+
+    /// <summary>The backdrop covers what's behind the board until the room's scene (and its camera) is up</summary>
+    public void ShowBackdrop(bool roomUp)
+    {
+        if (backdrop != null && backdrop.activeSelf == roomUp)
+            backdrop.SetActive(!roomUp);
     }
 
     /// <summary>
@@ -261,6 +293,7 @@ public class DispatchBoard : MonoBehaviour
                 Hat = p.Hat,
                 Ready = p.Ready,
                 Mine = p.IsOwner,
+                SteamId = p.SteamId,
             };
         }
     }
@@ -319,6 +352,55 @@ public class DispatchBoard : MonoBehaviour
                 ticketRects[i] = tickets[i] == null ? null : tickets[i].transform as RectTransform;
         }
         PlaceTickets(room.RoomCamera, room.TicketAnchors, ticketRects);
+        if (avatarFrames != null)
+            PlaceAvatars(room.RoomCamera, room.AvatarAnchors, avatarFrames);
+    }
+
+    /// <summary>
+    /// Each seated player's profile picture, once Steam has it (a free seat, a player without Steam, or a picture still
+    /// loading shows none)
+    /// </summary>
+    internal void ShowAvatars(TicketState[] states, System.Func<ulong, Texture> picture)
+    {
+        if (avatarFrames == null || avatarPictures == null)
+            return;
+
+        for (int i = 0; i < avatarFrames.Length && i < avatarPictures.Length && i < states.Length; i++)
+        {
+            if (avatarFrames[i] == null || avatarPictures[i] == null)
+                continue;
+
+            Texture shown = states[i].Taken && states[i].SteamId != 0 ? picture(states[i].SteamId) : null;
+            if (avatarPictures[i].texture != shown)
+                avatarPictures[i].texture = shown;
+            if (avatarFrames[i].gameObject.activeSelf != (shown != null))
+                avatarFrames[i].gameObject.SetActive(shown != null);
+        }
+    }
+
+    /// <summary>
+    /// Hangs each picture frame (by its top edge) just below its anchor as the camera sees it, centred under it. An anchor
+    /// that's missing or behind the camera leaves its frame where it is
+    /// </summary>
+    internal void PlaceAvatars(Camera cam, Transform[] anchors, RectTransform[] frames)
+    {
+        if (anchors == null)
+            return;
+
+        for (int i = 0; i < frames.Length && i < anchors.Length; i++)
+        {
+            RectTransform frame = frames[i];
+            RectTransform area = frame == null ? null : frame.parent as RectTransform;
+            if (area == null || anchors[i] == null)
+                continue;
+
+            Vector3 viewport = cam.WorldToViewportPoint(anchors[i].position);
+            if (!DispatchRules.InView(viewport))
+                continue;
+
+            frame.pivot = new Vector2(0.5f, 1);
+            frame.anchoredPosition = DispatchRules.ViewportToCanvas(viewport, area.rect.size) - new Vector2(0, AVATAR_DROP);
+        }
     }
 
     /// <summary>

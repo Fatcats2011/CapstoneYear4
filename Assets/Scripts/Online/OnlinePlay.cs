@@ -42,6 +42,12 @@ public class OnlinePlay : MonoBehaviour, ISessionControl
     ulong joinWaitingFor; // that join's host
     bool leavingForLobby; // the lobby flow is leaving the session itself (ISessionControl.Leave)
     bool startingOnline;  // the host attempt came from Online Play: a failure goes back to the title screen
+
+    /// <summary>
+    /// Multiplayer was picked and the lobby is still being made: Dispatch shows already, so Local Play's player select
+    /// never flashes up first. Ends once online, on a failure, or when the player leaves player select
+    /// </summary>
+    public bool GettingOnline { get { return startingOnline; } }
     bool stateShown;
     GameState shownState;
     string shownHint = "";
@@ -186,13 +192,13 @@ public class OnlinePlay : MonoBehaviour, ISessionControl
     }
 
     /// <summary>
-    /// Online Play on the title screen (MainMenu switches to player select first): hosts a lobby and opens Steam's invite
-    /// window. Every player here plays. A failure goes back to the title screen
+    /// Online Play on the title screen (MainMenu switches to player select first): hosts a lobby, without opening Steam's
+    /// invite window (Y on Dispatch opens it). Every player here plays. A failure goes back to the title screen
     /// </summary>
     public void StartOnline()
     {
         startingOnline = true;
-        Lobby.Host();
+        Lobby.Host(invite: false);
     }
 
     /// <summary>
@@ -310,6 +316,10 @@ public class OnlinePlay : MonoBehaviour, ISessionControl
         GameManager game = GameManager.Instance;
         if (game == null || game.MainState == GameState.Default)
             return;
+
+        // Left player select while the lobby was being made: no Dispatch for a later Local Play
+        if (startingOnline && game.MainState != GameState.PlayerSelect)
+            startingOnline = false;
 
         if (requested != 0)
             AnswerRequest(game);
@@ -457,6 +467,8 @@ public class OnlinePlay : MonoBehaviour, ISessionControl
 
     void ForwardRole(NetworkRole role)
     {
+        if (role != NetworkRole.Offline)
+            startingOnline = false;
         roleChanged?.Invoke(role);
     }
 
