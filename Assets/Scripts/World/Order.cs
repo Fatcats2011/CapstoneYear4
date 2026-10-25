@@ -124,7 +124,7 @@ public class Order : MonoBehaviour
     /// <summary>
     /// Takes this order off whatever carries it and back into the scene it loaded with, so it goes when that scene does.
     /// Scooters and the order manager outlive scenes (DontDestroyOnLoad), and an order under one would go along with it.
-    /// If that scene is gone already, so is the order
+    /// If that scene is gone already, so is the order. Orders that go back to the pool or fall off a scooter come here
     /// </summary>
     public void ReturnHome()
     {
@@ -328,7 +328,7 @@ public class Order : MonoBehaviour
         canPickup = false;
         ResetMesh();
 
-        this.transform.parent = OrderManager.Instance.transform;
+        ReturnHome();
         orderMeshObject.transform.rotation = initMeshRotation;
 
         arrow.SetActive(false);

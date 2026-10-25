@@ -420,7 +420,8 @@ public class OrderManager : SingletonMonobehaviour<OrderManager>
         {
             finalOrderActive = false;
         }
-        order.transform.parent = this.transform;
+        // Back into its own scene, not under this manager: it outlives scenes, and the order would outlive its dropoff
+        order.ReturnHome();
         OnDeleteActiveOrders -= order.EraseOrder;
     }
 
