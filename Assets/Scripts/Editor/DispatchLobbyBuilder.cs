@@ -646,21 +646,29 @@ public static class DispatchLobbyBuilder
     static void Prompt(RectTransform row, TMP_FontAsset font, string buttonSprite, string word)
     {
         RectTransform prompt = Ui(word, row);
-        prompt.sizeDelta = new Vector2(68 + word.Length * 22, 64);
+        // The button, then its word: laid out by their widths, so the button's art can change shape (a keyboard key is
+        // wider than a pad's button: ButtonGlyph) and the word follows it
+        prompt.sizeDelta = new Vector2(0, 64);
+        HorizontalLayoutGroup line = prompt.gameObject.AddComponent<HorizontalLayoutGroup>();
+        line.spacing = 12;
+        line.childAlignment = TextAnchor.MiddleLeft;
+        line.childControlWidth = line.childControlHeight = true;
+        line.childForceExpandWidth = line.childForceExpandHeight = false;
+        ContentSizeFitter fit = prompt.gameObject.AddComponent<ContentSizeFitter>();
+        fit.horizontalFit = ContentSizeFitter.FitMode.PreferredSize;
 
-        Image button = new GameObject("Button", typeof(RectTransform), typeof(Image)).GetComponent<Image>();
+        Image button = new GameObject("Button", typeof(RectTransform), typeof(Image), typeof(LayoutElement)).GetComponent<Image>();
         button.transform.SetParent(prompt, false);
         button.sprite = ButtonSprite(buttonSprite);
         button.preserveAspect = true;
         button.raycastTarget = false;
-        Place(button.rectTransform, new Vector2(0, 0.5f), Vector2.zero, new Vector2(56, 56));
+        LayoutElement size = button.GetComponent<LayoutElement>();
+        size.preferredHeight = 56;
+        size.preferredWidth = 56;
+        ButtonGlyphSetup.Attach(button); // PlayStation and keyboard art, by the device in use
 
         TMP_Text label = Label("Label", prompt, font, 36, Color.white, word);
         label.alignment = TextAlignmentOptions.Left;
-        label.rectTransform.anchorMin = new Vector2(0, 0);
-        label.rectTransform.anchorMax = new Vector2(1, 1);
-        label.rectTransform.offsetMin = new Vector2(68, 0);
-        label.rectTransform.offsetMax = Vector2.zero;
     }
 
     /// <summary>The ticket's Flash: its glow up to full and back over 0.6 s (made once, under Assets/Animations/Dispatch)</summary>

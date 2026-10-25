@@ -10,9 +10,9 @@ using UnityEngine.UI;
 /// </summary>
 public class ControllerPrompts : MonoBehaviour
 {
-    public const string CONNECT_CONTROLLER_HINT = "Connect a controller to play";
-    public const string KEYBOARD_JOIN_HINT = "Press Space to play with the keyboard, or connect a controller";
-    public const string UNSUPPORTED_CONTROLLER_HINT = "That controller isn't supported - try an Xbox, PlayStation or Switch Pro controller";
+    public static string CONNECT_CONTROLLER_HINT => Loc.Get("prompt.connect");
+    public static string KEYBOARD_JOIN_HINT => Loc.Get("prompt.keyboardjoin");
+    public static string UNSUPPORTED_CONTROLLER_HINT => Loc.Get("prompt.unsupported");
     public const float HINT_SECONDS = 3f;
 
     static ControllerPrompts instance;
@@ -49,7 +49,7 @@ public class ControllerPrompts : MonoBehaviour
     ///</summary>
     public static string ReconnectMessage(int slot)
     {
-        return $"P{slot + 1} controller disconnected\nPress a button on any controller to continue";
+        return Loc.Get("prompt.disconnected", slot + 1);
     }
 
     ///<summary>

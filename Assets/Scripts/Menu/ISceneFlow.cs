@@ -16,6 +16,12 @@ public interface ISceneFlow
     /// <summary>Takes everyone back to the menu (from the pause menu or the results)</summary>
     void ReturnToMenu();
 
+    /// <summary>
+    /// Loads the match again with the same players, after the results' rematch vote: scores and the rest reset
+    /// (GameManager.OnNewMatch), no tutorial, and no "press A" on the loading screen
+    /// </summary>
+    void Rematch();
+
     /// <summary>Raised when the game heads back to the menu</summary>
     event Action OnReturnToMenu;
 
@@ -78,5 +84,19 @@ public static class SceneFlow
     public static IMatchLoader Loader
     {
         get { return SceneManager.Instance; }
+    }
+}
+
+/// <summary>
+/// What every machine does when a rematch starts: the next match starts fresh (GameManager.OnNewMatch) and skips its
+/// tutorial (TutorialManager.SkipNextTutorial)
+/// </summary>
+public static class MatchReset
+{
+    public static void ForRematch()
+    {
+        if (GameManager.Instance != null)
+            GameManager.Instance.StartNewMatch();
+        TutorialManager.SkipNextTutorial = true;
     }
 }

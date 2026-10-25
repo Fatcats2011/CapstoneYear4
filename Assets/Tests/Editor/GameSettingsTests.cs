@@ -125,5 +125,72 @@ namespace DoA.Tests
             Assert.AreEqual(GraphicsQuality.MEDIUM, saved.qualityLevel);
             AssertDisplay(0, 1600, 900, 1, 60, saved);
         }
+
+        [Test]
+        public void Language_LoadsBack()
+        {
+            GameSettings saved = new GameSettings(3, 9, 0);
+            saved.language = "pt-BR";
+
+            Assert.AreEqual("pt-BR", GameSettings.Parse(saved.ToText(), Defaults).language);
+        }
+
+        [Test]
+        public void SettingsFromBeforeLanguage_HaveNone()
+        {
+            Assert.AreEqual("", GameSettings.Parse("bgm=3", Defaults).language, "not chosen yet: Steam's language then");
+        }
+
+        [Test]
+        public void OptionsPageKeys_LoadBack()
+        {
+            GameSettings saved = new GameSettings(3, 9, 0);
+            saved.masterPosition = 4;
+            saved.backgroundMute = 0;
+            saved.splitLayout = (int)SplitLayout.SideBySide;
+            saved.reduceMotion = 1;
+
+            GameSettings loaded = GameSettings.Parse(saved.ToText(), Defaults);
+
+            Assert.AreEqual(4, loaded.masterPosition);
+            Assert.AreEqual(0, loaded.backgroundMute);
+            Assert.AreEqual((int)SplitLayout.SideBySide, loaded.splitLayout);
+            Assert.AreEqual(1, loaded.reduceMotion);
+        }
+
+        [Test]
+        public void SettingsFromBeforeTheOptionsPages_KeepTodaysGame()
+        {
+            GameSettings loaded = GameSettings.Parse("bgm=3\nsfx=4\nfullscreen=1", Defaults);
+
+            Assert.AreEqual(GameSettings.MAX_MASTER_POSITION, loaded.masterPosition, "full volume");
+            Assert.AreEqual(0, loaded.backgroundMute, "keeps playing in the background, as before");
+            Assert.AreEqual((int)SplitLayout.Boxed, loaded.splitLayout);
+            Assert.AreEqual(0, loaded.reduceMotion);
+        }
+
+        [Test]
+        public void OptionsPageKeys_AreClamped()
+        {
+            GameSettings loaded = GameSettings.Parse("master=99\nbgmute=7\nsplit=-3\nreducemotion=5", Defaults);
+
+            Assert.AreEqual(GameSettings.MAX_MASTER_POSITION, loaded.masterPosition);
+            Assert.AreEqual(1, loaded.backgroundMute);
+            Assert.AreEqual(0, loaded.splitLayout);
+            Assert.AreEqual(1, loaded.reduceMotion);
+        }
+
+        [Test]
+        public void WithMenuPositions_KeepsTheOptionsPageKeys()
+        {
+            GameSettings loaded = GameSettings.Parse("master=3\nsplit=1\nreducemotion=1\nbgmute=0", Defaults);
+
+            GameSettings saved = loaded.WithMenuPositions(1, 2, 0, GraphicsQuality.MEDIUM);
+
+            Assert.AreEqual(3, saved.masterPosition);
+            Assert.AreEqual(1, saved.splitLayout);
+            Assert.AreEqual(1, saved.reduceMotion);
+            Assert.AreEqual(0, saved.backgroundMute);
+        }
     }
 }

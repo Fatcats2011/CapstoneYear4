@@ -22,6 +22,8 @@ public class CutsceneManager : SingletonMonobehaviour<CutsceneManager>
     [SerializeField] CutsceneInformation currentCutscene;
     [SerializeField] CutsceneInformation[] cutsceneInformation;
 
+    CutsceneSkip skip; // the players' vote to skip, built at the first cutscene
+
     private void OnEnable()
     {
         GameManager.Instance.OnSwapStartingCutscene += StartingCutscene;
@@ -77,9 +79,10 @@ public class CutsceneManager : SingletonMonobehaviour<CutsceneManager>
     }
 
     ///<summary>
-    /// The state a cutscene hands over to: the tutorial after the opening, the golden round after its cutscene
+    /// The state a cutscene hands over to: the tutorial after the opening (a rematch's too: the tutorial state hands
+    /// the players their driving, and goes straight on to the first wave, GameManager), the golden round after its own
     ///</summary>
-    static GameState NextStateOf(int cutscene)
+    internal static GameState NextStateOf(int cutscene)
     {
         return cutscene == 0 ? GameState.Tutorial : GameState.FinalPackage;
     }
@@ -142,6 +145,22 @@ public class CutsceneManager : SingletonMonobehaviour<CutsceneManager>
         cutsceneCanvas.enabled = true;
 
         playableDirector.Play();
+        OpenSkip();
+    }
+
+    // Every player in the match votes to skip (hold A); where states are decided, everyone's vote skips
+    void OpenSkip()
+    {
+        if (skip == null)
+        {
+            skip = gameObject.AddComponent<CutsceneSkip>();
+            skip.PromptParent = cutsceneCanvas.transform;
+        }
+        List<int> seats = new List<int>();
+        if (PlayerInstantiate.Instance != null)
+            foreach (PlayerSlot player in PlayerInstantiate.Instance.Roster.Players)
+                seats.Add(player.Index);
+        skip.Open(seats, GameAuthority.IsAuthority);
     }
 
     ///<summary>
@@ -155,7 +174,7 @@ public class CutsceneManager : SingletonMonobehaviour<CutsceneManager>
         switch (cutsceneBeingPlayed)
         {
             case 0: // Begining Cutscene
-                GameManager.Instance.SetGameState(GameState.Tutorial);
+                GameManager.Instance.SetGameState(NextStateOf(0));
 
                 break;
             case 1:
@@ -172,6 +191,8 @@ public class CutsceneManager : SingletonMonobehaviour<CutsceneManager>
     ///</summary>
     void CloseView()
     {
+        if (skip != null)
+            skip.Close();
         cutsceneCanvas.enabled = false;
         cutsceneCamera.enabled = false;
 

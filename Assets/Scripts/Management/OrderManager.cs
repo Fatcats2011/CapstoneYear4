@@ -22,6 +22,9 @@ public class OrderManager : SingletonMonobehaviour<OrderManager>
 
     [Tooltip("Time it takes in seconds for a wave to be completed")]
     [SerializeField] private float waveLengthInSeconds = 20f;
+
+    // A wave's length in this match: the match rules' Length stretches or shortens it (HouseRules)
+    float WaveLength => waveLengthInSeconds * HouseRules.Playing.WaveFactor;
     internal int wave = 0;
     private float waveTimer = 0f;
     private float gameTimer = 0f;
@@ -73,6 +76,8 @@ public class OrderManager : SingletonMonobehaviour<OrderManager>
     public int FinalOrderValue { get { return (int)finalOrderValue; } set { finalOrderValue = (float)value; } }
 
     private List<Order> activeOrders = new List<Order>(); // list of all the orders in the game at any time
+    /// <summary>Every order in the game now (a CPU driver looks for one to take: BotDriver)</summary>
+    internal IReadOnlyList<Order> ActiveOrders => activeOrders;
 
     private IEnumerator easySpawnCoroutine, mediumSpawnCoroutine, hardSpawnCoroutine; // coroutines for managing cooldowns of the order spawns
 
@@ -248,8 +253,8 @@ public class OrderManager : SingletonMonobehaviour<OrderManager>
 
     internal void InitTutorial()
     {
-        // Online, the host hands out the tutorial orders
-        if (!GameAuthority.IsAuthority)
+        // Online, the host hands out the tutorial orders. A rematch has none: it goes straight on to the first wave
+        if (!GameAuthority.IsAuthority || TutorialManager.SkipNextTutorial)
             return;
 
         TutorialManager.Instance.ShouldTutorialize = true;
@@ -277,11 +282,14 @@ public class OrderManager : SingletonMonobehaviour<OrderManager>
 
         OnDeleteActiveOrders?.Invoke();
 
+        // This match's rules: the host's, or normal in a public lobby (HouseRules)
+        HouseRules.Playing = HouseRules.Current.ForMatch(PublicLobby());
+
         GetOrders();
         finalOrderActive = false;
         spawnNormalPackages = true;
-        waveTimer = waveLengthInSeconds;
-        totalGameTime = waveLengthInSeconds * Mathf.Max(maxEasy.Length, maxMedium.Length, maxHard.Length);
+        waveTimer = WaveLength;
+        totalGameTime = WaveLength * Mathf.Max(maxEasy.Length, maxMedium.Length, maxHard.Length);
         wave = 0;
         canSpawnOrders = true;
         gameStarted = true;
@@ -297,7 +305,7 @@ public class OrderManager : SingletonMonobehaviour<OrderManager>
         if (!GameAuthority.IsAuthority)
             return;
 
-        waveTimer = waveLengthInSeconds;
+        waveTimer = WaveLength;
         try
         {
             // if this throws an error we know the final order should spawn
@@ -326,7 +334,7 @@ public class OrderManager : SingletonMonobehaviour<OrderManager>
 
         if (!finalOrderActive)
         {
-            gameTimer = totalGameTime - (waveLengthInSeconds * wave);
+            gameTimer = totalGameTime - (WaveLength * wave);
             if (wave > 0)
             {
                 SoundManager.Instance.PlaySFX("bells", clockSource);
@@ -673,6 +681,14 @@ public class OrderManager : SingletonMonobehaviour<OrderManager>
         yield return new WaitForSeconds(cooldownTime);
         SpawnOrder(Constants.OrderValue.Hard);
         cooledDown = true;
+    }
+
+    /// <summary>Online, whether this is a public lobby (matchmaking, or the host's open lobby): those play the normal rules</summary>
+    internal static bool PublicLobby()
+    {
+        OnlinePlay play = OnlinePlay.Instance;
+        return GameAuthority.IsOnline && play != null
+            && ((play.Lobby != null && play.Lobby.Filling) || (play.Match != null && play.Match.Searching));
     }
 
     /// <summary>

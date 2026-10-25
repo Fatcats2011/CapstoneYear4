@@ -9,9 +9,9 @@ public static class LobbyRules
     public const string BUILD_KEY = "build";
     public const string CONNECT_LOBBY = "+connect_lobby";
 
-    public const string NOT_THIS_GAME = "That lobby isn't a Dead on Arrival match.";
-    public const string BUSY = "Finish your match before joining a friend's.";
-    public const string ALREADY_ONLINE = "Leave your online match before joining another.";
+    public static string NOT_THIS_GAME => Loc.Get("online.lobbynotthisgame");
+    public static string BUSY => Loc.Get("online.busy");
+    public static string ALREADY_ONLINE => Loc.Get("online.alreadyonline");
 
     /// <summary>
     /// A build's tag: its version, then its Netcode setup (OnlineSession.NetcodeSetup), the hash Netcode compares when a
@@ -39,7 +39,7 @@ public static class LobbyRules
     /// </summary>
     public static string OtherBuild(string version)
     {
-        return "That match is on another build of version " + Shown(version) + ". You both need the same build.";
+        return Loc.Get("online.build", Shown(version));
     }
 
     /// <summary>The most of another machine's version string ever shown or logged</summary>

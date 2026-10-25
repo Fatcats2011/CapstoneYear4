@@ -95,6 +95,9 @@ public class SteamManager : MonoBehaviour
             if (!apiInitialized)
                 apiInitialized = SteamAPI.Init();
             initialized = apiInitialized;
+            // Steam measures its relays from now: matchmaking by distance needs this PC's ping location (MatchRules)
+            if (initialized)
+                SteamNetworkingUtils.InitRelayNetworkAccess();
         }
         catch (DllNotFoundException e) // steam_api64.dll missing next to the game
         {

@@ -10,6 +10,10 @@ using UnityEngine;
 /// - every scooter's pose and what it's doing (OnlineDriving);
 /// - every order and score (OnlineOrders);
 /// - every machine's player finishing the tutorial (OnlineTutorial);
+/// - the results' rematch vote (OnlineRematch);
+/// - the vote to skip a cutscene (OnlineCutsceneSkip);
+/// - the end-of-match awards (OnlineAwards);
+/// - each machine's round trip (OnlinePings);
 /// - steals and clashes between players (OnlineSteals);
 /// - where players who fall in the water rise (OnlineRespawns);
 /// - every player's one-shots, and the host's clock's (OnlineCues);
@@ -183,6 +187,18 @@ public class OnlineGame : MonoBehaviour
 
         // The tutorial ends once every machine's player has finished it
         gameObject.AddComponent<OnlineTutorial>().Begin(session);
+
+        // The results' rematch vote: the host holds it, every machine sees it
+        gameObject.AddComponent<OnlineRematch>().Begin(session);
+
+        // Skipping a cutscene: everyone's vote, counted on the host
+        gameObject.AddComponent<OnlineCutsceneSkip>().Begin(session);
+
+        // The end-of-match awards: picked on the host, shown on every machine
+        gameObject.AddComponent<OnlineAwards>().Begin(session);
+
+        // Each machine's round trip, measured on the host, for the pause menu
+        gameObject.AddComponent<OnlinePings>().Begin(session);
 
         // Steals and clashes between machines' players: the host decides each one
         steals = gameObject.AddComponent<OnlineSteals>();

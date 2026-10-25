@@ -267,6 +267,12 @@ public class Matchmaker
         rehosting = false;
     }
 
+    // How far a found lobby is, from its host's location tag (-1: can't tell)
+    int PingOf(ulong lobby)
+    {
+        return lobbies.PingTo(lobbies.GetData(lobby, MatchRules.LOCATION_KEY));
+    }
+
     void OnFound(int search, ulong[] found)
     {
         // A search cancelled or timed out, answering late (maybe during a newer one), or one that isn't this one's
@@ -299,6 +305,8 @@ public class Matchmaker
         // A Fill host's search again: only the higher Steam ID moves
         if (quiet)
             candidates.RemoveAll(c => !MatchRules.MayYieldTo(lobbies.Me, c.Owner));
+        // Nearby lobbies first: a far one only when every one left is far (quiet hours)
+        candidates = MatchRules.ByDistance(candidates, PingOf);
         next = 0;
         tries = 0;
         attempts = 0;

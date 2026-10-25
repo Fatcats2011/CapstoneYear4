@@ -1,10 +1,11 @@
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using TMPro;
 using UnityEngine.UI;
 using DG.Tweening.Core.Easing;
 
-public class MainMenu : SingletonMonobehaviour<MainMenu>
+public class MainMenu : SingletonMonobehaviour<MainMenu>, IMouseMenu
 {
     GameManager gameManager;
 
@@ -49,7 +50,14 @@ public class MainMenu : SingletonMonobehaviour<MainMenu>
         // The menu scene opens on the title screen. Online (after a match) it opens on player select, the lobby, where Y
         // invites and B leaves; on a client the host's state follows instead
         gameManager.SetGameState(GameAuthority.IsOnline ? GameState.PlayerSelect : GameState.Menu);
+
+        // The language spoken, as a little flag in the title screen's top-right corner
+        Canvas canvas = GetComponentInParent<Canvas>();
+        if (canvas != null)
+            LanguageFlag.Create((RectTransform)canvas.transform, Vector2.one, new Vector2(-80f, -60f), TITLE_FLAG_HEIGHT);
     }
+
+    const float TITLE_FLAG_HEIGHT = 56f;
 
     public void Update()
     {
@@ -64,6 +72,36 @@ public class MainMenu : SingletonMonobehaviour<MainMenu>
             p1ConnectedController.text = "";
 
         }
+    }
+
+    IReadOnlyList<RectTransform> IMouseMenu.MouseRows => RowsOf(selectorObjects);
+    int IMouseMenu.MouseSelected => selectorPos;
+    bool IMouseMenu.MouseRowsSpanTheScreen => false;
+    Camera IMouseMenu.MouseCamera => null;
+
+    void IMouseMenu.MouseSelect(int row)
+    {
+        selectorPos = row;
+        if (selectorPos < selectorGhostSprites.Length)
+            menuGhostImage.sprite = selectorGhostSprites[selectorPos];
+        selector.transform.position = new Vector3(selector.transform.position.x, selectorObjects[selectorPos].transform.position.y, selector.transform.position.z);
+    }
+
+    void IMouseMenu.MouseClick(int row, Vector2 point, Camera camera)
+    {
+        ConfirmMenu();
+    }
+
+    void IMouseMenu.MouseBack() { }
+
+    // The mouse (MouseMenus): the entries as rows
+    static IReadOnlyList<RectTransform> RowsOf(GameObject[] entries)
+    {
+        List<RectTransform> rows = new List<RectTransform>();
+        if (entries != null)
+            foreach (GameObject entry in entries)
+                rows.Add(entry != null ? entry.transform as RectTransform : null);
+        return rows;
     }
 
     public void ScrollMenu(bool direction)

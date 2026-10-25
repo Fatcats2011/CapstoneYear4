@@ -48,8 +48,9 @@ public class OrbitalCamera : MonoBehaviour
     internal void Update()
     {
         IDriveInput driver = DriveInput;
-        // While boosting, the view goes wide after a moment, and stays wide a moment after (BoostFOV)
-        float targetFOV = boostHold.Active(Time.time) ? boostFOV : passInFOV;
+        // While boosting, the view goes wide after a moment, and stays wide a moment after (BoostFOV); never with
+        // Reduce motion on (Comfort)
+        float targetFOV = Comfort.TargetFov(boostHold.Active(Time.time), boostFOV, passInFOV);
         fovValue = Mathf.Lerp(fovValue, targetFOV, changeSpeed);
 
         // Custom joystick camera aim

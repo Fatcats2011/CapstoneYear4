@@ -86,7 +86,7 @@ public static class DispatchRules
             seated++;
             if (t.Ready) ready++;
         }
-        return $"{ready} / {seated} READY";
+        return Loc.Get("dispatch.readycount", ready, seated);
     }
 
     /// <summary>A ticket flashes when it changed and is still held; a seat emptying doesn't</summary>

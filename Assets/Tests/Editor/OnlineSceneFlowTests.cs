@@ -28,13 +28,16 @@ namespace DoA.Tests
         public readonly List<MatchScene> Shows = new List<MatchScene>();
         public readonly List<MatchScene> Reported = new List<MatchScene>();
         public int Returns;
+        public readonly List<string> Calls = new List<string>(); // rematch and load requests, in order
 
         public event Action<MatchScene> LoadRequested;
         public event Action<MatchScene> ShowRequested;
         public event Action ReturnRequested;
+        public event Action RematchRequested;
         public event Action<ulong, MatchScene> MachineLoaded;
 
-        public void RequestLoad(MatchScene scene) { Loads.Add(scene); }
+        public void RequestLoad(MatchScene scene) { Loads.Add(scene); Calls.Add("load " + scene); }
+        public void RequestRematch() { Calls.Add("rematch"); }
         public void RequestShow(MatchScene scene) { Shows.Add(scene); }
         public void RequestReturn() { Returns++; }
         public void ReportLoaded(MatchScene scene) { Reported.Add(scene); }
@@ -42,6 +45,7 @@ namespace DoA.Tests
         public void RaiseLoadRequested(MatchScene scene) { LoadRequested?.Invoke(scene); }
         public void RaiseShowRequested(MatchScene scene) { ShowRequested?.Invoke(scene); }
         public void RaiseReturnRequested() { ReturnRequested?.Invoke(); }
+        public void RaiseRematchRequested() { RematchRequested?.Invoke(); }
         public void RaiseMachineLoaded(ulong machine, MatchScene scene) { MachineLoaded?.Invoke(machine, scene); }
     }
 
@@ -344,6 +348,52 @@ namespace DoA.Tests
             now = 22f; flow.Tick();
 
             CollectionAssert.IsEmpty(reports);
+        }
+
+        [Test]
+        public void Rematch_OnTheHost_AsksClientsToRematchThenLoadsTheMatch()
+        {
+            LinkAsHost();
+            try
+            {
+                flow.Rematch();
+
+                CollectionAssert.AreEqual(new[] { "rematch", "load Game" }, link.Calls, "clients reset before the load reaches them");
+                CollectionAssert.AreEqual(new[] { MatchScene.Game }, loader.HeldLoads);
+                Assert.IsTrue(TutorialManager.SkipNextTutorial, "no tutorial here either");
+            }
+            finally
+            {
+                TutorialManager.SkipNextTutorial = false;
+            }
+        }
+
+        [Test]
+        public void Rematch_OnAClient_DoesNothing()
+        {
+            LinkAsClient();
+
+            flow.Rematch();
+
+            CollectionAssert.IsEmpty(link.Calls);
+            CollectionAssert.IsEmpty(loader.HeldLoads);
+            Assert.IsFalse(TutorialManager.SkipNextTutorial);
+        }
+
+        [Test]
+        public void RematchRequested_OnAClient_SkipsTheNextTutorial()
+        {
+            LinkAsClient();
+            try
+            {
+                link.RaiseRematchRequested();
+
+                Assert.IsTrue(TutorialManager.SkipNextTutorial);
+            }
+            finally
+            {
+                TutorialManager.SkipNextTutorial = false;
+            }
         }
     }
 }

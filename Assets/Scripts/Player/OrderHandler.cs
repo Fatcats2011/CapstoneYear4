@@ -31,6 +31,15 @@ public class OrderHandler : MonoBehaviour
     public bool IsBoosting { get { return ball.Boosting; } }
     private bool hasGoldenOrder;
     public bool HasGoldenOrder { get { return hasGoldenOrder; } set { hasGoldenOrder = value; } }
+    /// <summary>Whether one of the orders on this scooter is the golden order (the orders themselves, for the awards)</summary>
+    public bool HoldsGoldenOrder
+    {
+        get
+        {
+            return (order1 != null && order1.Value == Constants.OrderValue.Golden)
+                || (order2 != null && order2.Value == Constants.OrderValue.Golden);
+        }
+    }
     private bool hasOrder = false;
     public bool HasOrder => hasOrder;
 
@@ -69,6 +78,7 @@ public class OrderHandler : MonoBehaviour
         ball.OnBoostStart += AttemptSteal;
         sceneFlow = SceneFlow.Current;
         sceneFlow.OnReturnToMenu += ResetHandler;
+        GameManager.Instance.OnNewMatch += ResetHandler; // a rematch too: the same reset, safe to run twice
         GameManager.Instance.OnSwapAnything += UpdateScore;
         GameManager.Instance.OnSwapStartingCutscene += InitHandler;
     }
@@ -77,6 +87,7 @@ public class OrderHandler : MonoBehaviour
     {
         ball.OnBoostStart -= AttemptSteal;
         sceneFlow.OnReturnToMenu -= ResetHandler;
+        GameManager.Instance.OnNewMatch -= ResetHandler;
         GameManager.Instance.OnSwapAnything -= UpdateScore;
         GameManager.Instance.OnSwapStartingCutscene -= InitHandler;
     }
@@ -391,11 +402,16 @@ public class OrderHandler : MonoBehaviour
         if (!GameAuthority.IsAuthority)
             return;
 
+        // Steals off (the match rules): the bump still happens, but nothing changes hands. The tutorial still teaches it
+        if (!HouseRules.Playing.Steals && (GameManager.Instance == null || GameManager.Instance.MainState != GameState.Tutorial))
+            return;
+
         Order newOrder = victim.GetBestOrder();
         if (newOrder != null && (order1 == null || order2 == null))
         {
             TakeOrderFrom(victim, newOrder);
             FeatSync.Steal(OrderSync.SeatOf(this), newOrder.Value == Constants.OrderValue.Golden);
+            FeatSync.Rob(OrderSync.SeatOf(victim));
         }
         victim.DropEverything(victim.order1Position.position, victim.order2Position.position);
 

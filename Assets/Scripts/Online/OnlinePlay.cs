@@ -21,9 +21,9 @@ using UnityEngine;
 /// </summary>
 public class OnlinePlay : MonoBehaviour, ISessionControl
 {
-    public const string HINT_PLAY_ONLINE = "Y / Triangle: play online with Steam friends";
-    public const string HINT_IN_LOBBY = "Y / Triangle: invite friends      B / Circle: leave";
-    public const string HINT_LEAVE = "B / Circle: leave online";
+    public static string HINT_PLAY_ONLINE => Loc.Get("online.hint.playonline");
+    public static string HINT_IN_LOBBY => Loc.Get("online.hint.inlobby");
+    public static string HINT_LEAVE => Loc.Get("online.hint.leave");
 
     public static OnlinePlay Instance { get; internal set; }
 
@@ -338,6 +338,7 @@ public class OnlinePlay : MonoBehaviour, ISessionControl
         int seated = Lobby.IsHost ? SeatedCount() : 0;
         if (seated > 0)
             Lobby.ShowOpenSeats(Constants.MAX_PLAYERS - seated);
+        Lobby.ShowLocation();
 
         Match.Tick();
 

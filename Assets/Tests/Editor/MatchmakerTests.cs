@@ -105,6 +105,39 @@ namespace DoA.Tests
         }
 
         [Test]
+        public void Find_AFarLobby_LosesToANearOne_EvenFuller()
+        {
+            Open(70, 170, 1); // the fullest, but across the world
+            Open(71, 171, 2);
+            lobbies.SetData(70, MatchRules.LOCATION_KEY, "far");
+            lobbies.SetData(71, MatchRules.LOCATION_KEY, "near");
+            lobbies.Pings["far"] = MatchRules.MAX_PING + 100;
+            lobbies.Pings["near"] = 40;
+
+            Assert.IsTrue(match.Find());
+            lobbies.AnswerSearch(70, 71);
+
+            CollectionAssert.AreEqual(new[] { 71UL }, lobbies.Joins, "the near one");
+        }
+
+        [Test]
+        public void Host_TagsItsLobbyWithWhereItIs_OnceSteamKnows()
+        {
+            Assert.AreEqual("", lobbies.GetData(OWN, MatchRules.LOCATION_KEY), "Steam doesn't know yet");
+
+            lobbies.MyLocation = "here";
+            lobby.ShowLocation();
+            Assert.AreEqual("here", lobbies.GetData(OWN, MatchRules.LOCATION_KEY));
+
+            lobbies.MyLocation = "moved";
+            lobby.ShowLocation();
+            Assert.AreEqual("here", lobbies.GetData(OWN, MatchRules.LOCATION_KEY), "not every tick");
+            now += MatchRules.LOCATION_EVERY;
+            lobby.ShowLocation();
+            Assert.AreEqual("moved", lobbies.GetData(OWN, MatchRules.LOCATION_KEY), "refreshed now and then");
+        }
+
+        [Test]
         public void Find_NoneFound_TurnsFillOn_AndTellsNone()
         {
             Assert.IsTrue(match.Find());

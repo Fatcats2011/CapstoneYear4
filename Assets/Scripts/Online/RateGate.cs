@@ -4,7 +4,7 @@ using System.Collections.Generic;
 /// <summary>
 /// The requests a client may send the host (OnlineMatch's ServerRpcs)
 /// </summary>
-public enum RpcKind { Cue, Drop, Steal, Respawn, Learnt, Cutout, Loaded, Bump, Seat }
+public enum RpcKind { Cue, Drop, Steal, Respawn, Learnt, Cutout, Loaded, Bump, Seat, Vote, Skip }
 
 /// <summary>
 /// Host: how many requests each machine may send, per kind, as a token bucket: a burst, refilled over time. An honest

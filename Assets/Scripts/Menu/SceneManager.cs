@@ -57,6 +57,7 @@ public class SceneManager : SingletonMonobehaviour<SceneManager>, ISceneFlow, IM
         GameManager.Instance.OnSwapMenu += HideLoadingScreen;
         GameManager.Instance.OnSwapStartingCutscene += HideLoadingScreen;
         GameManager.Instance.OnSwapGoldenCutscene += HideLoadingScreen;
+        GameManager.Instance.OnSwapResults += HideLoadingScreen; // no golden round: the golden scene opens on the results
     }
 
     private void OnDisable()
@@ -70,6 +71,7 @@ public class SceneManager : SingletonMonobehaviour<SceneManager>, ISceneFlow, IM
         GameManager.Instance.OnSwapMenu -= HideLoadingScreen;
         GameManager.Instance.OnSwapStartingCutscene -= HideLoadingScreen;
         GameManager.Instance.OnSwapGoldenCutscene -= HideLoadingScreen;
+        GameManager.Instance.OnSwapResults -= HideLoadingScreen;
     }
 
     public void InvokeMenuSceneEvent() 
@@ -80,6 +82,14 @@ public class SceneManager : SingletonMonobehaviour<SceneManager>, ISceneFlow, IM
     // The local scene flow (ISceneFlow): LoadGameScene, LoadFinalOrderScene, ConfirmLoad and OnReturnToMenu are this
     // class's own public members
     void ISceneFlow.ReturnToMenu() { InvokeMenuSceneEvent(); }
+
+    // A rematch: the same players, a fresh match, no tutorial, and the loading screen shows the match without waiting for A.
+    // The pause menu's Restart is one too, from the game scene itself: the scene loads again
+    void ISceneFlow.Rematch()
+    {
+        MatchReset.ForRematch();
+        StartGameLoad(false, waitForConfirm: false, reload: true);
+    }
     bool ISceneFlow.WaitingForConfirm { get { return enableConfirm; } }
 
     /// <summary>
@@ -179,9 +189,10 @@ public class SceneManager : SingletonMonobehaviour<SceneManager>, ISceneFlow, IM
     }
 
     // Loads the game behind the loading screen: every player presses A to show it, or online the host shows it
-    private void StartGameLoad(bool holdForHost)
+    private void StartGameLoad(bool holdForHost, bool waitForConfirm = true, bool reload = false)
     {
-        if (UnityEngine.SceneManagement.SceneManager.GetActiveScene().buildIndex != GameScene.BuildIndex && PlayerInstantiate.Instance.PlayerCount >= 1)
+        bool inGameScene = UnityEngine.SceneManagement.SceneManager.GetActiveScene().buildIndex == GameScene.BuildIndex;
+        if ((reload || !inGameScene) && PlayerInstantiate.Instance.PlayerCount >= 1)
         {
             // Stops Corutine
             if (sceneLoadCoroutune != null)
@@ -193,7 +204,7 @@ public class SceneManager : SingletonMonobehaviour<SceneManager>, ISceneFlow, IM
             HideLeaderboard();
             tutorialImage.sprite = mainTut;
             ShowLoadingScreen();
-            sceneLoadCoroutune = StartCoroutine(LoadSceneAsync(GameScene.BuildIndex, loadingScreenDelay, true, false, holdForHost));
+            sceneLoadCoroutune = StartCoroutine(LoadSceneAsync(GameScene.BuildIndex, loadingScreenDelay, waitForConfirm, false, holdForHost));
             
             if(OrderManager.Instance != null)
                 OrderManager.Instance.ResetForNextGame();
@@ -217,10 +228,13 @@ public class SceneManager : SingletonMonobehaviour<SceneManager>, ISceneFlow, IM
                 sceneLoadCoroutune = null;
             }
 
-            tutorialImage.sprite = finalTut;
+            // No golden round (the match rules): no golden-round lesson to read, so nobody waits for A
+            bool golden = HouseRules.Playing.GoldenOrder;
+            if (golden)
+                tutorialImage.sprite = finalTut;
             ShowLoadingScreen();
             ShowLeaderboard();
-            sceneLoadCoroutune = StartCoroutine(LoadSceneAsync(FinalOrderScene.BuildIndex, loadingScreenDelay, true, false, holdForHost));
+            sceneLoadCoroutune = StartCoroutine(LoadSceneAsync(FinalOrderScene.BuildIndex, loadingScreenDelay, golden, false, holdForHost));
         }
     }
 

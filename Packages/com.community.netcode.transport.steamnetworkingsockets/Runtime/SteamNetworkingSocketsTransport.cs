@@ -134,8 +134,15 @@ namespace Netcode.Transports
             {
                 if (connectionMapping.ContainsKey(clientId))
                 {
-                    //TODO: We need to figure out how Valve expects you to use ISteamNetworkingUtils ... the issue is no one thought to document WTF a SteamNetworkingPingLocation was or how to get them
-                    return 0ul;
+                    // DoA: the connection's own round trip, from Steam's real-time status (it was a stub returning 0)
+                    SteamNetConnectionRealTimeStatus_t status = default;
+                    SteamNetConnectionRealTimeLaneStatus_t lane = default;
+#if UNITY_SERVER
+                    EResult result = SteamGameServerNetworkingSockets.GetConnectionRealTimeStatus(connectionMapping[clientId].connection, ref status, 0, ref lane);
+#else
+                    EResult result = SteamNetworkingSockets.GetConnectionRealTimeStatus(connectionMapping[clientId].connection, ref status, 0, ref lane);
+#endif
+                    return result == EResult.k_EResultOK && status.m_nPing > 0 ? (ulong)status.m_nPing : 0ul;
                 }
                 else
                 {

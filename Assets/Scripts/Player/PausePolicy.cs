@@ -6,10 +6,10 @@
 public static class PausePolicy
 {
     /// <summary>What pausing says on an online host</summary>
-    public const string HOST_HINT = "Online: the match goes on while you're paused. Main Menu ends it for everyone.";
+    public static string HOST_HINT => Loc.Get("pause.hint.host");
 
     /// <summary>What pausing says on an online client</summary>
-    public const string CLIENT_HINT = "Online: the match goes on while you're paused. Main Menu leaves it.";
+    public static string CLIENT_HINT => Loc.Get("pause.hint.client");
 
     /// <summary>
     /// Whether a pause menu stays open when the game switches to this state: only while players drive (the tutorial, the

@@ -214,6 +214,33 @@ public class SteamLobbyService : ILobbyService
         return search;
     }
 
+    public string MyLocation
+    {
+        get
+        {
+#if !DISABLESTEAMWORKS
+            if (Available && SteamNetworkingUtils.GetLocalPingLocation(out SteamNetworkPingLocation_t location) >= 0)
+            {
+                SteamNetworkingUtils.ConvertPingLocationToString(ref location, out string text, MatchRules.MAX_LOCATION);
+                return MatchRules.LocationTag(text);
+            }
+#endif
+            return "";
+        }
+    }
+
+    public int PingTo(string location)
+    {
+#if !DISABLESTEAMWORKS
+        if (Available && !string.IsNullOrEmpty(location) && SteamNetworkingUtils.ParsePingLocationString(location, out SteamNetworkPingLocation_t remote))
+        {
+            int ms = SteamNetworkingUtils.EstimatePingTimeFromLocalHost(ref remote);
+            return ms >= 0 ? ms : -1;
+        }
+#endif
+        return -1;
+    }
+
     public bool Invite(ulong lobby)
     {
 #if !DISABLESTEAMWORKS

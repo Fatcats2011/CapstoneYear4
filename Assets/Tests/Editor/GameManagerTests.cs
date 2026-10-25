@@ -58,5 +58,47 @@ namespace DoA.Tests
 
             CollectionAssert.AreEqual(new[] { GameState.Tutorial }, applied);
         }
+
+        [Test]
+        public void ApplyGameState_MenuOrPlayerSelect_RaisesNewMatch()
+        {
+            // Online the menu scene opens straight on player select (the lobby), so both start the next match fresh
+            int newMatches = 0;
+            game.OnNewMatch += () => newMatches++;
+
+            game.ApplyGameState(GameState.Menu);
+            game.ApplyGameState(GameState.PlayerSelect);
+
+            Assert.AreEqual(2, newMatches);
+        }
+
+        [Test]
+        public void ApplyGameState_OtherStates_DoNotRaiseNewMatch()
+        {
+            int newMatches = 0;
+            game.OnNewMatch += () => newMatches++;
+
+            game.ApplyGameState(GameState.Results);
+            game.ApplyGameState(GameState.Loading);
+            game.ApplyGameState(GameState.MainLoop);
+
+            Assert.AreEqual(0, newMatches);
+        }
+
+        [Test]
+        public void StartNewMatch_RaisesNewMatchButNoMenuEvent()
+        {
+            // A rematch: the match starts over without the menu's music, title screen or podiums
+            game.ApplyGameState(GameState.Results);
+            int newMatches = 0, menus = 0;
+            game.OnNewMatch += () => newMatches++;
+            game.OnSwapMenu += () => menus++;
+
+            game.StartNewMatch();
+
+            Assert.AreEqual(1, newMatches);
+            Assert.AreEqual(0, menus);
+            Assert.AreEqual(GameState.Results, game.MainState);
+        }
     }
 }

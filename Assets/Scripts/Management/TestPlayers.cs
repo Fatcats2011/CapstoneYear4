@@ -31,6 +31,7 @@ public static class TestPlayers
             removeOnQuitHooked = true;
         }
 
+        BindingStore.UseNoneSaved(); // this PC's rebound controls (bindings.cfg) never reach a test player
         Gamepad pad = InputSystem.AddDevice<Gamepad>(PAD_NAME);
         pads.Add(pad);
         PressSouth(pad);

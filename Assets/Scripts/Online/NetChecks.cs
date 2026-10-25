@@ -44,6 +44,39 @@ public static class NetChecks
         return Mathf.Abs(length - 1f) < 0.01f;
     }
 
+    /// <summary>The host's cutscene skip board: seats 0-3 only, and votes only from seats in it</summary>
+    public static bool Sane(SkipBoard board)
+    {
+        return (board.InMask & ~0b1111) == 0 && (board.VotedMask & ~board.InMask) == 0;
+    }
+
+    /// <summary>The host's round trips: each one a board can carry, or unknown</summary>
+    public static bool Sane(PingBoard board)
+    {
+        return board.InRange;
+    }
+
+    /// <summary>The host's awards: awards the game knows, and counts a card can show</summary>
+    public static bool Sane(AwardBoard board)
+    {
+        for (int seat = 0; seat < Constants.MAX_PLAYERS; seat++)
+        {
+            if (!Defined(board.AwardOf(seat)) || board.CountOf(seat) > AwardBoard.MAX_COUNT)
+                return false;
+        }
+        return true;
+    }
+
+    /// <summary>
+    /// The host's rematch board: seats 0-3 only, votes only from seats still in, no more time than the vote has, and an
+    /// outcome the game knows
+    /// </summary>
+    public static bool Sane(RematchBoard board)
+    {
+        return (board.InMask & ~0b1111) == 0 && (board.VotedMask & ~board.InMask) == 0
+            && board.SecondsLeft <= RematchVote.SECONDS && Defined(board.Outcome);
+    }
+
     /// <summary>An order change from the host: its kind, places and heights</summary>
     public static bool Sane(OrderChange change)
     {

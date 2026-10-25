@@ -4,9 +4,9 @@
 /// </summary>
 public static class JoinRules
 {
-    public const string FULL = "That match is full.";
-    public const string STARTED = "That match has already started.";
-    public const string NOT_THIS_GAME = "That game isn't Dead on Arrival.";
+    public static string FULL => Loc.Get("online.full");
+    public static string STARTED => Loc.Get("online.started");
+    public static string NOT_THIS_GAME => Loc.Get("online.notthisgame");
 
     /// <summary>
     /// Why the host turns a joining player away, or null to let them in
@@ -17,16 +17,25 @@ public static class JoinRules
     /// <param name="hostState">What the host's game is doing</param>
     public static string Refusal(string hostVersion, string joinerVersion, int seatsTaken, GameState hostState)
     {
+        return HostNotice.Shown(RefusalNotice(hostVersion, joinerVersion, seatsTaken, hostState));
+    }
+
+    /// <summary>
+    /// The refusal as the host sends it (HostNotice): a key and its arguments, read in the player's own language. The
+    /// joiner's version, unknown, is the key for "an unknown version" itself, put into words on their machine
+    /// </summary>
+    public static string RefusalNotice(string hostVersion, string joinerVersion, int seatsTaken, GameState hostState)
+    {
         // Both versions come from another machine: what's shown (and logged) is cleaned and cut (LobbyRules.Shown)
         if (joinerVersion != hostVersion)
-            return "That match is on version " + LobbyRules.Shown(hostVersion) + " and you have "
-                + (string.IsNullOrEmpty(joinerVersion) ? "an unknown version" : LobbyRules.Shown(joinerVersion)) + ". You both need the same version.";
+            return HostNotice.Encode("online.version", LobbyRules.Shown(hostVersion),
+                string.IsNullOrEmpty(joinerVersion) ? Loc.Get("online.unknownversion") : LobbyRules.Shown(joinerVersion));
 
         if (seatsTaken >= Constants.MAX_PLAYERS)
-            return FULL;
+            return HostNotice.Encode("online.full");
 
         if (HasStarted(hostState))
-            return STARTED;
+            return HostNotice.Encode("online.started");
 
         return null;
     }

@@ -21,6 +21,14 @@ Done: the MULTIPLAYER and LOCAL entries are in the scene (Selector Objects: Mult
   - B (or A) closes it.
   - Local player select still shows the sliders all the time, and X does nothing there.
 
+## 1e. Button prompts follow the device (2 minutes, main editor)
+
+- **Art is made:** `Assets/Sprites/UI/Buttons` (PlayStation ✕ ○ □ △ L1 R1, keyboard Space Backspace Q Tab F R), drawn by `tools/button-art.py`.
+- **Dispatch:** Build Board In Menu Scene → Replace gives its prompts the switching art.
+- **Everywhere else:** open each scene with button prompts (the menu scene, the game scenes), run **Tools → Dead on Arrival → Add Button Glyphs To Open Scenes**, and save. Every Image showing an Xbox A, B, X, Y, LB or RB gets its PlayStation and keyboard art.
+- **Check:** press a key: the prompts show keys. Press a DualShock / DualSense button: PlayStation buttons. An Xbox pad: Xbox buttons.
+- **With Steam Input on** (Steam's per-game controller setting), Steam hands the game a virtual Xbox pad for every controller, so a PlayStation pad shows Xbox buttons. Turn Steam Input off for the game to see PlayStation buttons.
+
 ## 1d. Matchmaking buttons and status line (5 minutes, main editor)
 
 Code is done (`docs/online.md`, Matchmaking). Neither shoulder nor F/R was used in the UI map, so these are free:
@@ -230,3 +238,19 @@ The room is its own scene, `Assets/Scenes/Multiplayerlobby.unity`, loaded alongs
 - Online safety: `docs/online-safety.md`.
 - How the keyboard and display settings work: `docs/controls.md`. Steam features: `docs/steam/in-game-features.md`.
 - What's next: `docs/superpowers/plans/2026-10-01-remaining-work-handoff.md`.
+
+## Bots: a NavMesh for the scooters (10 minutes, main editor)
+
+Bots phase G1 is code only (`BotBrain`, `BotDriver`; F7 with developer tools hands Player 1's scooter to a bot). Driving straight at an order, a bot gets stuck behind buildings, so it needs paths:
+- In `Design Scene(Main)` (and `FinalAreaScene`), add an agent type for the scooter in Navigation (radius about 1, height 2, step 0.4, slope 30) and bake a NavMesh for it over the roads (not the sidewalks-only mesh `CivilianAgent` uses).
+- Then `BotDriver` can steer along `NavMesh.CalculatePath` corners instead of straight at the target, and `BotDriverPlayTests` (now Explicit) can join the suite.
+- Worth a look meanwhile: with the bot boosting into a building, the scooter rose straight up on the spot (to 400 m). A player holding boost into a wall may be able to do the same.
+
+## Localization: Set Up (2 minutes, main editor)
+
+The strings and translations are in `Assets/Resources/Localization/strings.csv`; the game reads it directly until Unity Localization's tables exist. To make them (Unity's Localization tools and the CSV export then work):
+- Open the project so Unity downloads the Localization package (`Packages/manifest.json` has `com.unity.localization` 1.4.5; it brings Addressables). Commit `Packages/packages-lock.json` with it.
+- **Tools → Dead on Arrival → Localization → Set Up.** It makes `Assets/Localization` (the settings, made active; the 16 locales; the `Game` string table) and fills it from the CSV. Save, and commit `Assets/Localization` and `ProjectSettings` (it registers the settings there).
+- After editing the CSV (`python tools/strings.py`): **Tools → Dead on Arrival → Localization → Reimport Strings.**
+- **Look by eye, in French and Czech say:** the title screen's words and flag, the Options rows and the LANGUAGE row's flag, the pause menu, and a Czech word with accents (ČEŠTINA on the LANGUAGE row) to see the drawn marks sit well on their letters.
+- **Before release:** a native speaker checks each language's column (add the code to `reviewed`).

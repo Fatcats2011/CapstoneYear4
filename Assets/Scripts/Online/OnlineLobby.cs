@@ -14,11 +14,11 @@ using System;
 /// </summary>
 public class OnlineLobby
 {
-    public const string NO_STEAM = "Start Steam to play online.";
-    public const string LOBBY_FAILED = "Steam couldn't open a lobby. Try again.";
-    public const string HOST_FAILED = "Couldn't start the online match. Try again.";
-    public const string JOIN_FAILED = "Couldn't join that match. It may have ended.";
-    public const string INVITE_FROM_STEAM = "Invite friends from your Steam friends list.";
+    public static string NO_STEAM => Loc.Get("online.nosteam");
+    public static string LOBBY_FAILED => Loc.Get("online.lobbyfailed");
+    public static string HOST_FAILED => Loc.Get("online.hostfailed");
+    public static string JOIN_FAILED => Loc.Get("online.joinfailed");
+    public static string INVITE_FROM_STEAM => Loc.Get("online.invitefromsteam");
 
     readonly ILobbyService lobbies;
     readonly ISessionControl session;
@@ -53,6 +53,27 @@ public class OnlineLobby
     public ulong Current { get; private set; }
 
     public bool IsHost { get; private set; }
+
+    string shownLocation = "";
+    double locationAt;
+
+    /// <summary>
+    /// Host, every frame: tags the lobby with where this host is once Steam knows (its ping location can take a few
+    /// seconds after launch), and refreshes it now and then (MatchRules.LOCATION_EVERY), never sending the same again
+    /// </summary>
+    public void ShowLocation()
+    {
+        if (!IsHost || Current == 0)
+            return;
+        if (shownLocation != "" && clock() - locationAt < MatchRules.LOCATION_EVERY)
+            return;
+        string location = lobbies.MyLocation;
+        if (location == "" || location == shownLocation)
+            return;
+        shownLocation = location;
+        locationAt = clock();
+        lobbies.SetData(Current, MatchRules.LOCATION_KEY, location);
+    }
 
     /// <summary>Whether the host's lobby is open to anyone (Fill). Friends only otherwise</summary>
     public bool Filling { get; private set; }
@@ -321,6 +342,11 @@ public class OnlineLobby
         lobbies.SetData(lobby, LobbyRules.BUILD_KEY, build);
         // Searchers can't ask Steam who owns a lobby they haven't joined, so the host says so
         lobbies.SetData(lobby, MatchRules.OWNER_KEY, lobbies.Me.ToString(System.Globalization.CultureInfo.InvariantCulture));
+        // Where this host is, so a searcher can prefer a lobby near it (MatchRules.ByDistance). Steam may not know yet:
+        // ShowLocation tags it once it does
+        shownLocation = lobbies.MyLocation;
+        locationAt = clock();
+        lobbies.SetData(lobby, MatchRules.LOCATION_KEY, shownLocation);
         Current = lobby;
         IsHost = true;
         Filling = false;

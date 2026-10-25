@@ -42,7 +42,7 @@ public class SoundPool : MonoBehaviour
         GameManager.Instance.OnSwapTutorial += InitEngineSource;
         GameManager.Instance.OnSwapFinalPackage += InitEngineSource;
         GameManager.Instance.OnSwapResults += TurnOffPlayerSounds;
-        GameManager.Instance.OnSwapMenu += TurnOffPlayerSounds;
+        GameManager.Instance.OnNewMatch += TurnOffPlayerSounds;
         GameManager.Instance.OnSwapAnything += StopAudio;
     }
 
@@ -51,7 +51,7 @@ public class SoundPool : MonoBehaviour
         GameManager.Instance.OnSwapTutorial -= InitEngineSource;
         GameManager.Instance.OnSwapFinalPackage -= InitEngineSource;
         GameManager.Instance.OnSwapResults -= TurnOffPlayerSounds;
-        GameManager.Instance.OnSwapMenu -= TurnOffPlayerSounds;
+        GameManager.Instance.OnNewMatch -= TurnOffPlayerSounds;
         GameManager.Instance.OnSwapAnything -= StopAudio;
     }
 

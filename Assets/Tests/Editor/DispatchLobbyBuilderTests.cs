@@ -310,6 +310,21 @@ namespace DoA.Tests
         }
 
         [Test]
+        public void BuildBoard_EveryButtonPrompt_FollowsTheDevice()
+        {
+            DispatchBoard board = DispatchLobbyBuilder.BuildBoard();
+            objects.Keep(board.transform.root.gameObject);
+
+            ButtonGlyph[] glyphs = board.GetComponentsInChildren<ButtonGlyph>(true);
+            Assert.AreEqual(5, glyphs.Length, "clock in, customize, invite, leave, and the pop-up's done");
+            foreach (ButtonGlyph glyph in glyphs)
+            {
+                Assert.IsNotNull(glyph.playStation, glyph.name);
+                Assert.IsNotNull(glyph.keyboard, glyph.name);
+            }
+        }
+
+        [Test]
         public void BuildBoard_UsesTheDispatchArt()
         {
             DispatchBoard board = DispatchLobbyBuilder.BuildBoard();

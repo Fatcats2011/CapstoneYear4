@@ -49,7 +49,7 @@ public static class ResolutionRules
     public static string Label(ScreenSize size, bool waitingForA)
     {
         string label = "<  " + size.Width + " x " + size.Height + "  >";
-        return waitingForA ? label + "   A: apply" : label;
+        return waitingForA ? label + "   " + Loc.Get("options.resolution.apply") : label;
     }
 
     static int Compare(ScreenSize a, ScreenSize b)

@@ -91,7 +91,7 @@ Online multiplayer is being built in steps (roadmap Phase 3: `docs/superpowers/p
 - **The host runs the match:** its states (cutscenes, waves, results) and its match clock reach every machine.
   - Until Phase 3F there was no tutorial online, and players started in the city. Now they start in their tutorial lanes.
 - **Back to the menu:**
-  - The host takes everyone back, from the results or its pause menu. On a client, the results screen waits for the host.
+  - The host takes everyone back, from its pause menu, or from the results when the rematch vote ends that way (Rematch, below).
   - Online, the menu opens on player select, the lobby, not the title screen (`MainMenu.Start`). Everyone can ready up again, and Y and B work there.
   - A client picking "main menu" on its own leaves the session.
 - **A machine that leaves mid-match:** its scooter goes on every other machine, and the match goes on. One that leaves on the loading screen: the match starts without it.
@@ -319,6 +319,48 @@ Playing with strangers is opt-in: a lobby is created friends only, exactly as be
 - Wait 60 s without readying. The line counts down (`STARTS IN …`), then the match starts.
 - After the match, both are back in Dispatch. A presses RB (R) again: the line shows `FRIENDS ONLY`.
 - B: B to the title screen, Online Play, then LB (F). B can't find A: it shows `No open matches right now. Your lobby is open to anyone.`
+
+### Notices in each player's language
+
+- What a host tells a player it turns away or sends off (full, started, another version, too many messages, taken out of the rematch) goes in Netcode's reason as a key and its arguments: `#loc:online.version|1.2|1.1` (`HostNotice.Encode`). The player's machine reads it in its own language (`HostNotice.Shown`, through `OnlineSession.EndReason`).
+- A reason without a key (Netcode's own, an older build's) shows as it came, and so does a "key" the game doesn't know: a host's words are never taken for a key or markup. Both sides are cleaned and cut as before (`LobbyRules.Shown`).
+
+### Connection info
+
+- Every 2 s the host measures each seated machine's round trip (`NetworkTransport.GetCurrentRtt`, only for connected machines; its own seats are 0) and shares them (`PingBoard`, `OnlinePings` → `OnlineMatch.SharePings`). Clients check the board (`NetChecks.Sane(PingBoard)`) and keep the last (`PingSync`), with each seat's player's name.
+- The online pause menu lists every seat: `P2  ALEX   II I 96MS` (three bars under 80 ms, two to 150 ms, one above; `PingRules`). Not on the driving HUD, not on the Dispatch tickets yet.
+- `OnlinePingsNetworkTests` (port 7834).
+
+### Matchmaking by distance
+
+- A host tags its lobby with its Steam ping location (`MatchRules.LOCATION_KEY`, `ILobbyService.MyLocation`: `SteamNetworkingUtils.GetLocalPingLocation`).
+- A searcher estimates each found lobby's round trip (`ILobbyService.PingTo`: `EstimatePingTimeFromLocalHost`) and drops those over `MatchRules.MAX_PING` (200 ms), keeping the fullest-first order (`MatchRules.ByDistance`). A lobby with no tag (an older build) stays. When every lobby found is far (quiet hours), it takes them anyway, nearest first, so a search never finds nothing because of distance.
+
+### End-of-match awards
+
+- Each player gets an award card over their score at the results (`docs/superpowers/specs/2026-10-24-awards-design.md`). The host counts what the game raises (`FeatSync`: deliveries, steals, robberies, falls) and who holds the golden order in the golden round (`MatchAwards`, `MatchStats`), and picks the awards as the results start (`AwardRules`).
+- A client's player's fall reaches the host when they ask where to rise (`OnlineRespawns`), so it counts there. A client counts nothing itself.
+- The host sends the picked awards once (`AwardBoard`, `OnlineAwards` → `OnlineMatch.ShareAwards`); clients keep the last ones (`AwardSync.Last`) for their results screen.
+- `OnlineAwardsNetworkTests` (port 7833): the host's awards reach the other machine as picked.
+
+### Cutscene skip
+
+- Every player holds A to vote to skip a cutscene (`docs/controls.md`). The host holds the vote: `CutsceneSkip` runs `SkipVote` there and calls `CutsceneManager.Skip()` once everyone still in has voted. Its next state ends the cutscene on every client, as the developer skip always did.
+- A client's player's vote goes to the host (`SkipSync` → `OnlineCutsceneSkip` → `OnlineMatch.SendSkipVote`) and counts only for the sender's own seat. The host shares the count (`SkipBoard`, `ShareSkipBoard`). A machine that leaves stops counting.
+- `OnlineCutsceneSkipNetworkTests` (port 7832): a vote for another seat refused, a client's own counted and its count shown, and the host skipping once when everyone has voted.
+
+### Rematch
+
+- The results screen's rematch vote (`docs/controls.md`) is the host's: `ResultsVote` runs `RematchVote` there.
+- **Votes:** a client's player's vote (or taking it back) goes to the host (`RematchSync` → `OnlineRematch` → `OnlineMatch.SendVote`). It counts only for the sender's own seat (`OnlineSession.Owns`).
+- **The board:** the host shows every machine the seats still in, the votes, the seconds left and the outcome (`RematchBoard`, `OnlineMatch.ShareBoard`), on each change and every second.
+- **Back to lobby:**
+  - On a client: it leaves the session. The host drops it from the vote, as any machine that leaves.
+  - On the host (or the host running out of time): everyone goes back to Dispatch. The host can't leave alone.
+- **The rematch:** the host tells every client first (`RequestRematch`: the next match starts fresh and skips its tutorial, `MatchReset.ForRematch`), then the match loads on every machine as any other. A machine taken out (no vote when time ran out) is disconnected: "Taken out of the rematch." It isn't banned (`OnlineSession.SendAway`, not `Kick`): it can join the host's lobby again.
+- **No tutorial:** the opening cutscene still hands over to the Tutorial state (it unfreezes the scooters and hands over the driving controls and engines), which goes straight on to the first wave (`GameManager`). The players start in the city, on the respawn point nearest their lane (`SpawnManager.PlacePlayersAtStart`).
+- **The new-match reset** (`GameManager.OnNewMatch`) runs on the menus' Menu and PlayerSelect states and on a rematch. Online the menu opens on PlayerSelect, so scores, boost and the compass reset there too.
+- `OnlineRematchNetworkTests` (port 7831): hosting, a client's vote for another seat refused, its own counted and shown back, the rematch reaching it and starting with no tutorial; the host's Back to lobby taking everyone back; a client that doesn't vote disconnected. Joining, this machine's vote reaching the host and the host's rematch skipping the tutorial here.
 
 ## Two editors on one computer (ParrelSync)
 

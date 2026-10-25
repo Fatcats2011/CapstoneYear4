@@ -17,8 +17,14 @@ public class FinalOrder : MonoBehaviour
     {
         GameManager.Instance.OnSwapAnything -= EraseFinal;
     }
+    /// <summary>Whether the golden order is out in the world (tests)</summary>
+    internal bool Live => finalOrder != null && finalOrder.IsActive;
+
     void Start()
     {
+        // No golden round (the match rules): this scene only shows the results. Only the host's matters: it spawns orders
+        if (!HouseRules.Playing.GoldenOrder || GameManager.Instance.MainState == GameState.Results)
+            return;
         finalOrder.InitOrder();
     }
 

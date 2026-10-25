@@ -349,6 +349,9 @@ public class Respawn : MonoBehaviour
         if (respawnCoroutine == null)
         {
             respawnCoroutine = RespawnPlayer();
+            // A new respawn: a fall, for the awards. Online a client's goes to the host when it asks where to rise
+            if (GameAuthority.IsAuthority)
+                FeatSync.Sink(OrderSync.SeatOf(this));
         }
 
         modelParent.transform.parent.parent.DOComplete();

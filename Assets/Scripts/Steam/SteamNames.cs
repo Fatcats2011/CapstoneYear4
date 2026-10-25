@@ -21,6 +21,16 @@ public static class SteamNames
         return "";
     }
 
+    /// <summary>The language the player runs Steam in ("french", "latam"…), or null without Steam</summary>
+    public static string Language()
+    {
+#if !DISABLESTEAMWORKS
+        if (SteamManager.Initialized)
+            return SteamApps.GetCurrentGameLanguage();
+#endif
+        return null;
+    }
+
     /// <summary>The Steam ID of whoever is signed in to Steam, or 0 without Steam</summary>
     public static ulong MyId()
     {

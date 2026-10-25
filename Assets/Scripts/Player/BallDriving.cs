@@ -280,7 +280,7 @@ public class BallDriving : MonoBehaviour
     {
         GameManager.Instance.OnSwapStartingCutscene += ResetBoost;
         GameManager.Instance.OnSwapGoldenCutscene += ResetBoost;
-        GameManager.Instance.OnSwapMenu += ResetBoost;
+        GameManager.Instance.OnNewMatch += ResetBoost;
 
         GameManager.Instance.OnSwapStartingCutscene += FreezeBallForGameState;
         GameManager.Instance.OnSwapGoldenCutscene += FreezeBallForGameState;
@@ -294,7 +294,7 @@ public class BallDriving : MonoBehaviour
     {
         GameManager.Instance.OnSwapStartingCutscene -= ResetBoost;
         GameManager.Instance.OnSwapGoldenCutscene -= ResetBoost;
-        GameManager.Instance.OnSwapMenu -= ResetBoost;
+        GameManager.Instance.OnNewMatch -= ResetBoost;
 
         GameManager.Instance.OnSwapGoldenCutscene -= FreezeBallForGameState;
         GameManager.Instance.OnSwapStartingCutscene -= FreezeBallForGameState;
@@ -1421,7 +1421,8 @@ public class BallDriving : MonoBehaviour
             float clampedFOVValue = RangeMutations.Map_Linear(currentVelocity, 30, 40, 60f, orbitalCamera.maxFOV);
             clampedFOVValue = Mathf.Clamp(clampedFOVValue, 60f, orbitalCamera.maxFOV);
 
-            orbitalCamera.passInFOV = clampedFOVValue;
+            // Reduce motion keeps the view as it is at any speed (Comfort)
+            orbitalCamera.passInFOV = Comfort.TargetFov(true, clampedFOVValue, 60f);
 
             speedLineValue = clampedSpeedLineValue;
             SetSpeedLines(speedLineValue);
@@ -1434,6 +1435,7 @@ public class BallDriving : MonoBehaviour
     // The speed lines' strength, written to their material only when it changes (every frame otherwise)
     void SetSpeedLines(float value)
     {
+        value = Comfort.SpeedLines(value); // none with Reduce motion on
         if (value == shownSpeedLines)
             return;
 
@@ -1505,8 +1507,8 @@ public class BallDriving : MonoBehaviour
     public void SetSpeedLinesMaterial(int playerIndex)
     {
         speedLinesMain = potentialPlayerSpeedLineMaterials[playerIndex - 1];
-        speedLinesMain.SetFloat(SpeedLinesRemap, speedLineValue);
-        shownSpeedLines = speedLineValue; // a new material: SetSpeedLines writes changes from here
+        shownSpeedLines = Comfort.SpeedLines(speedLineValue); // a new material: SetSpeedLines writes changes from here
+        speedLinesMain.SetFloat(SpeedLinesRemap, shownSpeedLines);
     }
 
     /// <summary>

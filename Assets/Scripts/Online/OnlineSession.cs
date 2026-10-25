@@ -33,9 +33,9 @@ public class OnlineSession : MonoBehaviour
     public const int DIRECT_DISCONNECT_MS = 90000;
 
     /// <summary>Why a session ended, when the host gave no reason of its own</summary>
-    public const string HOST_LEFT = "The host left the match.";
-    public const string HOST_UNREACHABLE = "Couldn't reach the host.";
-    public const string CONNECTION_LOST = "The connection was lost.";
+    public static string HOST_LEFT => Loc.Get("online.hostleft");
+    public static string HOST_UNREACHABLE => Loc.Get("online.hostunreachable");
+    public static string CONNECTION_LOST => Loc.Get("online.connectionlost");
 
     /// <summary>The most of a host's reason for ending a session ever shown or logged</summary>
     public const int MAX_REASON = 160;
@@ -263,16 +263,31 @@ public class OnlineSession : MonoBehaviour
 #endif
 
     /// <summary>
-    /// Host: disconnects a client, telling it why (a machine flooding the host, OnlineMatch)
+    /// Host: disconnects a client, telling it why (a machine flooding the host, OnlineMatch). Over Steam it stays out
+    /// for the session
     /// </summary>
     public void Kick(ulong clientId, string reason)
+    {
+        Disconnect(clientId, reason, true);
+    }
+
+    /// <summary>
+    /// Host: disconnects a client, telling it why, without keeping it out: it may join again (a player taken out of the
+    /// rematch, OnlineRematch)
+    /// </summary>
+    public void SendAway(ulong clientId, string reason)
+    {
+        Disconnect(clientId, reason, false);
+    }
+
+    void Disconnect(ulong clientId, string reason, bool ban)
     {
         if (Network.IsServer && clientId != NetworkManager.ServerClientId && Network.ConnectedClients.ContainsKey(clientId))
         {
             Debug.Log("Online: disconnected player " + clientId + ": " + reason);
 #if !DISABLESTEAMWORKS
             // Over Steam the kicked player stays out for the session: the lobby has no kick, so they could just reconnect
-            if (steam != null && Network.NetworkConfig.NetworkTransport == steam)
+            if (ban && steam != null && Network.NetworkConfig.NetworkTransport == steam)
                 steam.BanOnNextDisconnect = true;
 #endif
             Network.DisconnectClient(clientId, reason);
@@ -314,7 +329,8 @@ public class OnlineSession : MonoBehaviour
         if (reachedHost)
             return HOST_LEFT;
 
-        string shown = LobbyRules.Shown(netcodeReason, MAX_REASON);
+        // The host's notice in this player's own language (HostNotice), cleaned and cut either way
+        string shown = LobbyRules.Shown(HostNotice.Shown(LobbyRules.Shown(netcodeReason, MAX_REASON)), MAX_REASON);
         return string.IsNullOrWhiteSpace(shown) ? HOST_UNREACHABLE : shown;
     }
 
@@ -501,8 +517,8 @@ public class OnlineSession : MonoBehaviour
     void Approve(NetworkManager.ConnectionApprovalRequest request, NetworkManager.ConnectionApprovalResponse response)
     {
         string refusal = request.ClientNetworkId == NetworkManager.ServerClientId ? null
-            : request.Payload != null && request.Payload.Length > MAX_PAYLOAD ? JoinRules.NOT_THIS_GAME // never read
-            : JoinRules.Refusal(Version, ReadVersion(request.Payload), seats.Count, HostState());
+            : request.Payload != null && request.Payload.Length > MAX_PAYLOAD ? HostNotice.Encode("online.notthisgame") // never read
+            : JoinRules.RefusalNotice(Version, ReadVersion(request.Payload), seats.Count, HostState());
 
         response.Approved = refusal == null;
         response.Reason = refusal;

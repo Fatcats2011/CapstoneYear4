@@ -14,7 +14,7 @@ public class GameSettings
     public int fullscreenPosition;
     public int qualityLevel;
 
-    // Display (no Options rows yet: they wait for art, so these change in settings.cfg). See docs/controls.md
+    // Display (rows on the Options pages' DISPLAY page). See docs/controls.md
     public const int MIN_WIDTH = 640;
     public const int MIN_HEIGHT = 360;
     public const int MAX_SIZE = 16384;
@@ -30,6 +30,29 @@ public class GameSettings
     /// <summary>Frames per second at most; 0 means no cap</summary>
     public int frameCap = 0;
 
+    // The Options pages' rows (docs/superpowers/specs/2026-10-24-options-pages-design.md)
+    public const int MAX_MASTER_POSITION = 10;
+
+    /// <summary>Overall volume in tenths (AudioVolume)</summary>
+    public int masterPosition = MAX_MASTER_POSITION;
+    /// <summary>1: silent while the window isn't focused; 0: keeps playing (as the game always has)</summary>
+    public int backgroundMute = 0;
+    /// <summary>How two players share the screen (SplitLayout)</summary>
+    public int splitLayout = (int)SplitLayout.Boxed;
+    /// <summary>1: no boost FOV kick and no speed lines (Comfort)</summary>
+    public int reduceMotion = 0;
+
+    // The match rules (HouseRules): normal is today's game
+    /// <summary>MatchLength: 0 short, 1 normal, 2 long</summary>
+    public int matchLength = (int)MatchLength.Normal;
+    /// <summary>1: boosting into a rival steals</summary>
+    public int steals = 1;
+    /// <summary>1: the match ends with the golden round</summary>
+    public int goldenOrder = 1;
+
+    /// <summary>The language picked on Options → LANGUAGE (a locale code); "" until picked: Steam's then (LanguageRules)</summary>
+    public string language = "";
+
     public GameSettings(int bgmPosition, int sfxPosition, int fullscreenPosition, int qualityLevel = GraphicsQuality.HIGH)
     {
         this.bgmPosition = bgmPosition;
@@ -44,7 +67,10 @@ public class GameSettings
     public string ToText()
     {
         return $"bgm={bgmPosition}\nsfx={sfxPosition}\nfullscreen={fullscreenPosition}\nquality={qualityLevel}\n"
-            + $"exclusive={exclusiveFullscreen}\nwidth={width}\nheight={height}\nvsync={vsync}\nframecap={frameCap}\n";
+            + $"exclusive={exclusiveFullscreen}\nwidth={width}\nheight={height}\nvsync={vsync}\nframecap={frameCap}\n"
+            + $"master={masterPosition}\nbgmute={backgroundMute}\nsplit={splitLayout}\nreducemotion={reduceMotion}\n"
+            + $"length={matchLength}\nsteals={steals}\ngolden={goldenOrder}\n"
+            + $"language={language}\n";
     }
 
     ///<summary>
@@ -68,6 +94,14 @@ public class GameSettings
         copy.height = height;
         copy.vsync = vsync;
         copy.frameCap = frameCap;
+        copy.masterPosition = masterPosition;
+        copy.backgroundMute = backgroundMute;
+        copy.splitLayout = splitLayout;
+        copy.reduceMotion = reduceMotion;
+        copy.matchLength = matchLength;
+        copy.steals = steals;
+        copy.goldenOrder = goldenOrder;
+        copy.language = language;
         return copy;
     }
 
@@ -94,6 +128,12 @@ public class GameSettings
         foreach (string line in (text ?? "").Split('\n'))
         {
             string[] pair = line.Split('=');
+            // The one key that isn't a number: kept as written (LanguageRules.Pick checks it)
+            if (pair.Length == 2 && pair[0].Trim() == "language")
+            {
+                settings.language = pair[1].Trim();
+                continue;
+            }
             if (pair.Length != 2 || !int.TryParse(pair[1].Trim(), NumberStyles.Integer, CultureInfo.InvariantCulture, out int value))
                 continue;
 
@@ -125,6 +165,27 @@ public class GameSettings
                     break;
                 case "framecap":
                     settings.frameCap = ClampFrameCap(value);
+                    break;
+                case "master":
+                    settings.masterPosition = Mathf.Clamp(value, 0, MAX_MASTER_POSITION);
+                    break;
+                case "bgmute":
+                    settings.backgroundMute = Mathf.Clamp(value, 0, 1);
+                    break;
+                case "split":
+                    settings.splitLayout = Mathf.Clamp(value, 0, (int)SplitLayout.SideBySide);
+                    break;
+                case "reducemotion":
+                    settings.reduceMotion = Mathf.Clamp(value, 0, 1);
+                    break;
+                case "length":
+                    settings.matchLength = Mathf.Clamp(value, 0, (int)MatchLength.Long);
+                    break;
+                case "steals":
+                    settings.steals = Mathf.Clamp(value, 0, 1);
+                    break;
+                case "golden":
+                    settings.goldenOrder = Mathf.Clamp(value, 0, 1);
                     break;
             }
         }

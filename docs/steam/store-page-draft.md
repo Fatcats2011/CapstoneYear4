@@ -42,6 +42,8 @@ Built from what the game actually contains (updated 2026-10-20: online play, mat
 - Drift boosts, slipstreams, pedestrians and props to knock around
 - Three waves of rising order difficulty, then a Golden Order showdown
 - Ghost colors, hats and emotes
+- In 16 languages: English, French, German, Italian, Dutch, Spanish, Latin American Spanish, Portuguese, Brazilian Portuguese, Polish, Turkish, Czech, Romanian, Hungarian, Swedish and Danish
+- Rematch with one button, and an award for every player at the results (Kleptoghost, Butterfingers, Fish Food...)
 - Four rival delivery companies ⚠️ (names pending legal review)
 
 ## Content survey notes

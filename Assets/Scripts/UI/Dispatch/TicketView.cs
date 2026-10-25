@@ -8,9 +8,9 @@ using UnityEngine.UI;
 /// </summary>
 public class TicketView : MonoBehaviour
 {
-    public const string DISPATCHED = "DISPATCHED";
-    public const string GETTING_READY = "GETTING READY…";
-    public const string HIRING = "HIRING…";
+    public static string DISPATCHED => Loc.Get("dispatch.dispatched");
+    public static string GETTING_READY => Loc.Get("dispatch.gettingready");
+    public static string HIRING => Loc.Get("dispatch.hiring");
 
     static readonly int FlashTrigger = Animator.StringToHash("Flash");
 

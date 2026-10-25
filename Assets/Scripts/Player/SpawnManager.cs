@@ -44,6 +44,11 @@ public class SpawnManager : SingletonMonobehaviour<SpawnManager>
         {
             gameManager.SetGameState(GameState.StartingCutscene);
         }
+        else if (!HouseRules.Playing.GoldenOrder)
+        {
+            // No golden round (the match rules): this scene's podium shows the results straight away
+            gameManager.SetGameState(GameState.Results);
+        }
         else
         {
             gameManager.SetGameState(GameState.GoldenCutscene);
@@ -66,13 +71,28 @@ public class SpawnManager : SingletonMonobehaviour<SpawnManager>
     }
 
     ///<summary>
-    /// Puts this machine's players on their starting spawn points: the start of their seat's tutorial lane
+    /// Puts this machine's players on their starting spawn points: the start of their seat's tutorial lane. A rematch
+    /// skips the tutorial, whose area goes at the first wave: there each player starts in the city, on the respawn
+    /// point nearest their lane
     ///</summary>
     public void PlacePlayersAtStart()
     {
         // Each machine places its own players: online, another machine's scooter is where its owner puts it
         foreach (PlayerSlot player in playerInstantiate.Roster.LocalPlayers)
-            PlacePlayer(player, SpawnPoint(player.Index, gameSpawnPositions, null));
+        {
+            GameObject lane = SpawnPoint(player.Index, gameSpawnPositions, null);
+            RespawnPoint city = TutorialManager.SkipNextTutorial && lane != null && RespawnManager.Instance != null
+                ? RespawnManager.Instance.GetRespawnPoint(lane.transform.position) : null;
+            if (city == null)
+            {
+                PlacePlayer(player, lane);
+                continue;
+            }
+            city.HoldFor(1f); // the next player gets another point
+            Vector3 facing = city.PlayerFacingDirection;
+            Quaternion heading = facing.sqrMagnitude > 0.0001f ? Quaternion.LookRotation(facing) : city.transform.rotation;
+            PlacePlayer(player, city.PlayerSpawn, heading);
+        }
     }
 
     ///<summary>
@@ -111,6 +131,11 @@ public class SpawnManager : SingletonMonobehaviour<SpawnManager>
             return;
         }
 
+        PlacePlayer(player, spawnPoint.transform.position, spawnPoint.transform.rotation);
+    }
+
+    private static void PlacePlayer(PlayerSlot player, Vector3 position, Quaternion rotation)
+    {
         Rigidbody ball = player.Player.GetComponentInChildren<Rigidbody>();
         Transform scooter = player.Player.GetComponentInChildren<BallDriving>().transform;
 
@@ -118,10 +143,10 @@ public class SpawnManager : SingletonMonobehaviour<SpawnManager>
         ball.velocity = Vector3.zero;
 
         // reset position and rotation of ball and controller
-        ball.transform.position = spawnPoint.transform.position;
-        ball.transform.rotation = spawnPoint.transform.rotation;
+        ball.transform.position = position;
+        ball.transform.rotation = rotation;
 
-        scooter.position = spawnPoint.transform.position;
-        scooter.rotation = spawnPoint.transform.rotation;
+        scooter.position = position;
+        scooter.rotation = rotation;
     }
 }

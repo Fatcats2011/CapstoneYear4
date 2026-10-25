@@ -61,7 +61,9 @@ namespace DoA.Tests
             Assert.IsNotNull(options.ResolutionRow, "the row was built");
             Assert.AreEqual("RESOLUTION", options.ResolutionRow.LabelText);
 
-            // Up from the first row wraps round to the last: the Resolution row
+            // Up from the first row wraps round to the last two: LANGUAGE, then the Resolution row
+            options.ScrollMenuUpDown(false);
+            Assert.AreEqual(OptionsMenu.OptionSelected.LANGUAGE, options.optionSelected);
             options.ScrollMenuUpDown(false);
             Assert.AreEqual(OptionsMenu.OptionSelected.RESOLUTION, options.optionSelected);
             options.ScrollMenuLeftRight(false);
@@ -69,7 +71,8 @@ namespace DoA.Tests
             options.Confirm();
             Assert.AreEqual(options.ResolutionRow.Shown, options.ResolutionRow.Applied);
             options.ScrollMenuUpDown(true);
-            Assert.AreEqual(OptionsMenu.OptionSelected.BGM, options.optionSelected, "down from it: back to the first row");
+            options.ScrollMenuUpDown(true);
+            Assert.AreEqual(OptionsMenu.OptionSelected.BGM, options.optionSelected, "down past LANGUAGE: back to the first row");
 
             yield return null;
             log.Dispose();

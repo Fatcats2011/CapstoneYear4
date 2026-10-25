@@ -166,5 +166,11 @@ public class ButtonGlyph : MonoBehaviour
         Image shownOn = Image;
         Shown = GlyphRules.StyleFor(device);
         shownOn.sprite = GlyphRules.Pick(Shown, xbox, playStation, nintendo, keyboard);
+
+        // A prompt laid out by its button's width (a LayoutElement): a wide key pushes the word along, a round button
+        // leaves no gap
+        LayoutElement size = GetComponent<LayoutElement>();
+        if (size != null && size.preferredHeight > 0 && shownOn.sprite != null && shownOn.sprite.rect.height > 0)
+            size.preferredWidth = size.preferredHeight * shownOn.sprite.rect.width / shownOn.sprite.rect.height;
     }
 }

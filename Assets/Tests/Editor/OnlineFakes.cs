@@ -9,6 +9,11 @@ namespace DoA.Tests
     /// </summary>
     public class FakeLobbyService : ILobbyService
     {
+        /// <summary>This PC's ping location, and each location's round trip (none: can't tell)</summary>
+        public string MyLocation { get; set; } = "";
+        public readonly System.Collections.Generic.Dictionary<string, int> Pings = new System.Collections.Generic.Dictionary<string, int>();
+        public int PingTo(string location) { return location != null && Pings.TryGetValue(location, out int ms) ? ms : -1; }
+
         public readonly List<int> Creates = new List<int>();
         public readonly List<ulong> Joins = new List<ulong>();
         public readonly List<ulong> Left = new List<ulong>();

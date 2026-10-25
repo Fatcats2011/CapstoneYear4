@@ -2,8 +2,17 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class CreditsMenu : SingletonMonobehaviour<CreditsMenu>
+public class CreditsMenu : SingletonMonobehaviour<CreditsMenu>, IMouseMenu
 {
+    // The mouse (MouseMenus): a right click leaves, as B does
+    IReadOnlyList<RectTransform> IMouseMenu.MouseRows => null;
+    int IMouseMenu.MouseSelected => -1;
+    bool IMouseMenu.MouseRowsSpanTheScreen => false;
+    Camera IMouseMenu.MouseCamera => null;
+    void IMouseMenu.MouseSelect(int row) { }
+    void IMouseMenu.MouseClick(int row, Vector2 point, Camera camera) { }
+    void IMouseMenu.MouseBack() { ExitMenu(); }
+
     [SerializeField] GameObject returnButton;
     [SerializeField] MainMenu menu;
     [SerializeField] Animator animator;

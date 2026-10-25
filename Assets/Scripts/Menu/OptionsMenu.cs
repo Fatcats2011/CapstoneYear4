@@ -5,7 +5,7 @@ using System.IO;
 using TMPro;
 using UnityEngine;
 
-public class OptionsMenu : SingletonMonobehaviour<OptionsMenu>
+public class OptionsMenu : SingletonMonobehaviour<OptionsMenu>, IMouseMenu
 {
     const string SETTINGS_FILE_NAME = "settings.cfg";
 
@@ -43,7 +43,8 @@ public class OptionsMenu : SingletonMonobehaviour<OptionsMenu>
         SFX = 1,
         FULLSCREEN = 2,
         QUALITY = 3,
-        RESOLUTION = 4
+        RESOLUTION = 4,
+        LANGUAGE = 5
     }
     public OptionSelected optionSelected;
 
@@ -63,11 +64,314 @@ public class OptionsMenu : SingletonMonobehaviour<OptionsMenu>
     SoundManager soundManager;
     GameSettings current; // the settings loaded or saved last, display keys included
 
+    // The pages after GENERAL (the drawn screen), built by code, turned with the shoulders. See
+    // docs/superpowers/specs/2026-10-24-options-pages-design.md
+    const float HEADER_BELOW_TOP = 60f;
+    static readonly int[] FRAME_CAPS = { 0, 30, 60, 120, 144, 165, 240 };
+    OptionsBook book;
+    readonly List<List<OptionRow>> pageRows = new List<List<OptionRow>>();
+    readonly List<GameObject> pageObjects = new List<GameObject>();
+    OptionsPageHeader header;
+    readonly List<GameObject> drawnPage = new List<GameObject>(); // GENERAL's rows, their selectors and Resolution
+
+    /// <summary>The pages (null until Start)</summary>
+    internal OptionsBook Book => book;
+
+    /// <summary>The code-built rows on a page (none on GENERAL)</summary>
+    internal IReadOnlyList<OptionRow> RowsOn(int page) => page > 0 && page <= pageRows.Count ? pageRows[page - 1] : new List<OptionRow>();
+
     private void Start()
     {
         soundManager = SoundManager.Instance;
         LoadOptions();
         AddResolutionRow();
+        AddLanguageRow();
+        BuildPages();
+    }
+
+    // DISPLAY, AUDIO and ACCESSIBILITY: rows at the drawn rows' spacing, in the screen's font, hidden until turned to
+    void BuildPages()
+    {
+        if (selectorObjects == null || selectorObjects.Length == 0 || !(selectorObjects[0].transform is RectTransform firstRow)
+            || !(firstRow.parent is RectTransform positions) || !(positions.parent is RectTransform screen))
+            return;
+
+        book = new OptionsBook(
+            OptionsPage.Keyed("options.page.general"),
+            OptionsPage.Keyed("options.page.display", FullscreenStyleSetting(), VSyncSetting(), FrameCapSetting(), QualitySetting(), SplitScreenSetting()),
+            OptionsPage.Keyed("options.page.audio", MasterSetting(), BackgroundSetting()),
+            OptionsPage.Keyed("options.page.accessibility", ReduceMotionSetting()));
+
+        TMP_Text style = positions.GetComponentInChildren<TMP_Text>(true);
+        float rowX = resolutionRow != null ? ((RectTransform)resolutionRow.transform).anchoredPosition.x : firstRow.anchoredPosition.x;
+        for (int page = 1; page < book.Pages.Count; page++)
+        {
+            GameObject holder = new GameObject("Page " + book.Pages[page].Name, typeof(RectTransform));
+            RectTransform rect = holder.GetComponent<RectTransform>();
+            rect.SetParent(screen, false);
+            rect.anchorMin = positions.anchorMin;
+            rect.anchorMax = positions.anchorMax;
+            rect.pivot = positions.pivot;
+            rect.sizeDelta = positions.sizeDelta;
+            rect.anchoredPosition = positions.anchoredPosition;
+
+            List<OptionRow> rowsHere = new List<OptionRow>();
+            IReadOnlyList<OptionSetting> settings = book.Pages[page].Settings;
+            for (int i = 0; i < settings.Count; i++)
+                rowsHere.Add(OptionRow.Create(rect, style, settings[i], new Vector2(rowX, firstRow.anchoredPosition.y - i * ResolutionRow.ROW_SPACING)));
+            pageRows.Add(rowsHere);
+            pageObjects.Add(holder);
+            holder.SetActive(false);
+        }
+
+        drawnPage.Add(positions.gameObject);
+        if (bgmSelector != null && bgmSelector.transform.parent != null && bgmSelector.transform.parent != screen)
+            drawnPage.Add(bgmSelector.transform.parent.gameObject);
+
+        string[] names = new string[book.Pages.Count];
+        for (int i = 0; i < names.Length; i++)
+            names[i] = book.Pages[i].Name;
+        header = OptionsPageHeader.Create(screen, style, names, HEADER_BELOW_TOP);
+        Loc.Changed += OnLanguage;
+    }
+
+    // The language changed: the page names and every built row show it
+    void OnLanguage()
+    {
+        if (book == null)
+            return;
+        string[] names = new string[book.Pages.Count];
+        for (int i = 0; i < names.Length; i++)
+            names[i] = book.Pages[i].Name;
+        if (header != null)
+            header.Rename(names);
+        foreach (List<OptionRow> rowsHere in pageRows)
+            foreach (OptionRow row in rowsHere)
+                row.Refresh();
+        if (languageRow != null)
+            languageRow.Refresh();
+    }
+
+    void OnDestroy()
+    {
+        Loc.Changed -= OnLanguage;
+    }
+
+    OptionSetting FullscreenStyleSetting()
+    {
+        OptionSetting setting = OptionSetting.KeyedToggle("options.fullscreenstyle", "options.borderless", "options.exclusive", current.exclusiveFullscreen);
+        setting.Dimmed = () => current.fullscreenPosition == 0; // windowed: no fullscreen to style
+        setting.Changed += value => { current.exclusiveFullscreen = value; DisplaySettings.Apply(current); };
+        return setting;
+    }
+
+    OptionSetting VSyncSetting()
+    {
+        OptionSetting setting = OptionSetting.KeyedToggle("options.vsync", "word.off", "word.on", current.vsync);
+        setting.Changed += value => { current.vsync = value; DisplaySettings.Apply(current); };
+        return setting;
+    }
+
+    OptionSetting FrameCapSetting()
+    {
+        OptionSetting setting = new OptionSetting("FRAME CAP", FRAME_CAPS, cap => cap == 0 ? Loc.Get("word.off") : cap.ToString(), current.frameCap) { LabelKey = "options.framecap" };
+        setting.Dimmed = () => current.vsync == 1; // the cap only applies with VSync off (docs/controls.md)
+        setting.Changed += value => { current.frameCap = value; DisplaySettings.Apply(current); };
+        return setting;
+    }
+
+    OptionSetting QualitySetting()
+    {
+        int[] levels = new int[GraphicsQuality.LEVEL_COUNT];
+        for (int i = 0; i < levels.Length; i++)
+            levels[i] = i;
+        OptionSetting setting = OptionSetting.Keyed("options.quality", levels, level => "options.quality." + GraphicsQuality.LevelNames[level].ToLowerInvariant(), qualityPosition);
+        setting.Changed += value => { qualityPosition = value; GraphicsQuality.Apply(value); };
+        return setting;
+    }
+
+    OptionSetting SplitScreenSetting()
+    {
+        string[] words = { "options.split.boxed", "options.split.stacked", "options.split.sidebyside" };
+        OptionSetting setting = OptionSetting.Keyed("options.split", new[] { 0, 1, 2 }, layout => words[layout], current.splitLayout);
+        setting.Changed += value =>
+        {
+            current.splitLayout = value;
+            SplitScreenLayout.TwoPlayers = (SplitLayout)value;
+            if (PlayerInstantiate.Instance != null)
+                PlayerInstantiate.Instance.RefreshCameraRects();
+        };
+        return setting;
+    }
+
+    OptionSetting MasterSetting()
+    {
+        int[] steps = new int[GameSettings.MAX_MASTER_POSITION + 1];
+        for (int i = 0; i < steps.Length; i++)
+            steps[i] = i;
+        OptionSetting setting = new OptionSetting("MASTER", steps, step => step * 10 + "%", current.masterPosition) { LabelKey = "options.master" };
+        setting.Changed += value => { current.masterPosition = value; ApplyVolume(); };
+        return setting;
+    }
+
+    OptionSetting BackgroundSetting()
+    {
+        OptionSetting setting = OptionSetting.Keyed("options.background", new[] { 1, 0 }, mute => mute == 1 ? "options.background.mute" : "options.background.keep", current.backgroundMute);
+        setting.Changed += value => { current.backgroundMute = value; ApplyVolume(); };
+        return setting;
+    }
+
+    OptionSetting ReduceMotionSetting()
+    {
+        OptionSetting setting = OptionSetting.KeyedToggle("options.reducemotion", "word.off", "word.on", current.reduceMotion);
+        setting.Changed += value => { current.reduceMotion = value; Comfort.ReduceMotion = value == 1; };
+        return setting;
+    }
+
+    void ApplyVolume()
+    {
+        AudioVolume.Set(current.masterPosition, current.backgroundMute == 1);
+    }
+
+    ///<summary>
+    /// LB / RB (F / R): the previous or next page, round from the last to the first
+    ///</summary>
+    public void TurnPage(bool right)
+    {
+        if (book == null)
+            return;
+        book.TurnPage(right);
+        ShowPage();
+    }
+
+    // The page turned to: its rows shown, the others hidden, the selector on its top row
+    void ShowPage()
+    {
+        bool general = book.Page == 0;
+        foreach (GameObject drawn in drawnPage)
+            drawn.SetActive(general);
+        for (int i = 0; i < pageObjects.Count; i++)
+            pageObjects[i].SetActive(book.Page == i + 1);
+        if (header != null)
+            header.Show(book.Page);
+
+        if (general)
+        {
+            selectorPos = 0;
+            optionSelected = rows != null ? rows[0] : 0;
+            MoveSelectorTo(selectorObjects[0].transform);
+        }
+        else
+        {
+            RefreshRows();
+            MoveSelectorTo(pageRows[book.Page - 1][book.Row].transform);
+        }
+    }
+
+    // A row on a code page changed: every row shows its value (one can dim another, as VSync does Frame cap)
+    void RefreshRows()
+    {
+        if (book == null || book.Page == 0)
+            return;
+        foreach (OptionRow row in pageRows[book.Page - 1])
+            row.Refresh();
+    }
+
+    // The mouse (MouseMenus): the page's rows, the width of the screen each (the values sit far right of the labels). A
+    // click on a row steps its value towards the click; on the Resolution row's size it applies it, as A does
+    IReadOnlyList<RectTransform> IMouseMenu.MouseRows
+    {
+        get
+        {
+            List<RectTransform> list = new List<RectTransform>();
+            if (OnCodePage)
+                foreach (OptionRow row in pageRows[book.Page - 1])
+                    list.Add((RectTransform)row.transform);
+            else if (selectorObjects != null)
+                foreach (GameObject row in selectorObjects)
+                    list.Add(row != null ? row.transform as RectTransform : null);
+            return list;
+        }
+    }
+
+    int IMouseMenu.MouseSelected => OnCodePage ? book.Row : selectorPos;
+    bool IMouseMenu.MouseRowsSpanTheScreen => true;
+    Camera IMouseMenu.MouseCamera => null;
+
+    void IMouseMenu.MouseSelect(int row)
+    {
+        if (OnCodePage)
+        {
+            book.Select(row);
+            MoveSelectorTo(pageRows[book.Page - 1][book.Row].transform);
+            return;
+        }
+        selectorPos = row;
+        optionSelected = rows != null ? rows[selectorPos] : (OptionSelected)selectorPos;
+        MoveSelectorTo(selectorObjects[selectorPos].transform);
+    }
+
+    void IMouseMenu.MouseClick(int row, Vector2 point, Camera camera)
+    {
+        // A drawn row: straight to its point nearest the click (Off / On, a volume), one step at a time as the pad does
+        GameObject[] points = OnCodePage ? null
+            : optionSelected == OptionSelected.BGM ? bgmSelectorPositions
+            : optionSelected == OptionSelected.SFX ? sfxSelectorPositions
+            : optionSelected == OptionSelected.FULLSCREEN ? fullscreenSelectorPositions : null;
+        if (points != null)
+        {
+            float[] xs = new float[points.Length];
+            for (int i = 0; i < points.Length; i++)
+                xs[i] = RectTransformUtility.WorldToScreenPoint(camera, points[i].transform.position).x;
+            int target = MouseMenuRules.Nearest(xs, point.x);
+            for (int guard = 0; guard < points.Length && target >= 0 && DrawnPosition() != target; guard++)
+                ScrollMenuLeftRight(target > DrawnPosition());
+            return;
+        }
+
+        // The language: a step towards the click
+        if (!OnCodePage && optionSelected == OptionSelected.LANGUAGE && languageRow != null)
+        {
+            float languageX = RectTransformUtility.WorldToScreenPoint(camera, languageRow.Value.transform.position).x;
+            ScrollMenuLeftRight(MouseMenuRules.StepsRight(point.x, languageX));
+            return;
+        }
+
+        // The Resolution size: a click on it applies it, either side of it steps
+        if (!OnCodePage && optionSelected == OptionSelected.RESOLUTION && resolutionRow != null)
+        {
+            int zone = MouseMenuRules.Zone(point.x, RectTransformUtility.WorldToScreenPoint(camera, resolutionRow.Value.transform.position).x);
+            if (zone == 0)
+                Confirm();
+            else
+                ScrollMenuLeftRight(zone > 0);
+            return;
+        }
+
+        // A built row: a step towards the click
+        if (OnCodePage)
+        {
+            float valueX = RectTransformUtility.WorldToScreenPoint(camera, pageRows[book.Page - 1][book.Row].Value.transform.position).x;
+            ScrollMenuLeftRight(MouseMenuRules.StepsRight(point.x, valueX));
+        }
+    }
+
+    // Where the selected drawn row's selector is
+    int DrawnPosition()
+    {
+        return optionSelected == OptionSelected.BGM ? bgmPosition
+            : optionSelected == OptionSelected.SFX ? sfxPosition
+            : fullscreenPosition;
+    }
+
+    void IMouseMenu.MouseBack()
+    {
+        ExitMenu();
+    }
+
+    void MoveSelectorTo(Transform row)
+    {
+        selector.transform.position = new Vector3(selector.transform.position.x, row.position.y, selector.transform.position.z);
     }
 
     /// <summary>
@@ -105,12 +409,56 @@ public class OptionsMenu : SingletonMonobehaviour<OptionsMenu>
         selectorObjects = spots;
     }
 
+    // GENERAL's LANGUAGE row, under Resolution, with the flag of the language spoken: left and right change the game's
+    // language at once, saved at once (docs/superpowers/specs/2026-10-24-localization-design.md)
+    OptionRow languageRow;
+    OptionSetting languageSetting;
+    const float FLAG_X = 1045f; // right of the value, clear of the longest name
+    const float FLAG_HEIGHT = 44f;
+
+    /// <summary>The LANGUAGE row (null until Start)</summary>
+    internal OptionRow LanguageRow => languageRow;
+
+    void AddLanguageRow()
+    {
+        if (resolutionRow == null || rows == null)
+            return;
+        RectTransform above = (RectTransform)resolutionRow.transform;
+        TMP_Text style = above.parent != null ? above.parent.GetComponentInChildren<TMP_Text>(true) : null;
+
+        int[] languages = new int[LocaleCodes.All.Length];
+        for (int i = 0; i < languages.Length; i++)
+            languages[i] = i;
+        languageSetting = new OptionSetting("LANGUAGE", languages, i => LanguageRules.Name(LocaleCodes.All[i]),
+            Mathf.Max(0, System.Array.IndexOf(LocaleCodes.All, Loc.Language))) { LabelKey = "options.language" };
+        languageSetting.Changed += i =>
+        {
+            current.language = LocaleCodes.All[i];
+            Loc.SetLanguage(current.language);
+            SaveOptions();
+        };
+
+        languageRow = OptionRow.Create((RectTransform)above.parent, style, languageSetting,
+            above.anchoredPosition - new Vector2(0f, ResolutionRow.ROW_SPACING));
+        RectTransform rect = (RectTransform)languageRow.transform;
+        rect.anchorMin = above.anchorMin;
+        rect.anchorMax = above.anchorMax;
+        rect.anchoredPosition = above.anchoredPosition - new Vector2(0f, ResolutionRow.ROW_SPACING);
+        LanguageFlag.Create(rect, new Vector2(0.5f, 0.5f), new Vector2(FLAG_X, 0f), FLAG_HEIGHT);
+
+        rows.Add(OptionSelected.LANGUAGE);
+        GameObject[] spots = new GameObject[selectorObjects.Length + 1];
+        selectorObjects.CopyTo(spots, 0);
+        spots[spots.Length - 1] = languageRow.gameObject;
+        selectorObjects = spots;
+    }
+
     ///<summary>
     /// A in Options: on the Resolution row, applies the size it shows and saves it
     ///</summary>
     public void Confirm()
     {
-        if (optionSelected != OptionSelected.RESOLUTION || resolutionRow == null)
+        if (OnCodePage || optionSelected != OptionSelected.RESOLUTION || resolutionRow == null)
             return;
 
         ScreenSize size = resolutionRow.Apply();
@@ -175,7 +523,30 @@ public class OptionsMenu : SingletonMonobehaviour<OptionsMenu>
         UpdateFullscreen(fullscreenPosition);
 
         GraphicsQuality.Apply(qualityPosition);
+
+        // The Options pages' settings
+        SplitScreenLayout.TwoPlayers = (SplitLayout)settings.splitLayout;
+        AudioVolume.Set(settings.masterPosition, settings.backgroundMute == 1);
+        Comfort.ReduceMotion = settings.reduceMotion == 1;
+        HouseRules.Current = HouseRules.From(settings);
+
+        // The language: the one picked here before, else Steam's, else the PC's, else English (LanguageRules)
+        Loc.SetLanguage(LanguageRules.Pick(settings.language, SteamNames.Language(), Application.systemLanguage));
     }
+
+    ///<summary>
+    /// MATCH RULES changed (RulesPanel): kept in settings.cfg at once
+    ///</summary>
+    public void SetRules(HouseRules rules)
+    {
+        if (current == null)
+            current = new GameSettings(bgmPosition, sfxPosition, fullscreenPosition, qualityPosition);
+        rules.Into(current);
+        SaveOptions();
+    }
+
+    // On DISPLAY, AUDIO or ACCESSIBILITY: the book's rows, not the drawn ones
+    bool OnCodePage => book != null && book.Page > 0;
 
 
     ///<summary>
@@ -199,6 +570,13 @@ public class OptionsMenu : SingletonMonobehaviour<OptionsMenu>
     ///</summary>
     public void ScrollMenuUpDown(bool direction)
     {
+        if (OnCodePage)
+        {
+            book.Move(direction);
+            MoveSelectorTo(pageRows[book.Page - 1][book.Row].transform);
+            return;
+        }
+
         // Positive Scroll
         if (direction)
         {
@@ -235,6 +613,17 @@ public class OptionsMenu : SingletonMonobehaviour<OptionsMenu>
     ///</summary>
     public void ScrollMenuLeftRight(bool direction)
     {
+        if (OnCodePage)
+        {
+            // Saved at once: Options can be left other ways than B (an invite accepted), or the game quit from it
+            if (book.Step(direction))
+            {
+                RefreshRows();
+                SaveOptions();
+            }
+            return;
+        }
+
         if(optionSelected == OptionSelected.BGM)
         {
             // Positive Scroll
@@ -333,6 +722,11 @@ public class OptionsMenu : SingletonMonobehaviour<OptionsMenu>
         {
             resolutionRow.Step(direction);
         }
+        else if (optionSelected == OptionSelected.LANGUAGE && languageRow != null)
+        {
+            if (languageSetting.Step(direction))
+                languageRow.Refresh();
+        }
         else if (optionSelected == OptionSelected.QUALITY && QualityRowExists)
         {
             // Positive Scroll
@@ -364,6 +758,13 @@ public class OptionsMenu : SingletonMonobehaviour<OptionsMenu>
         if (resolutionRow != null)
             resolutionRow.Revert();
         SaveOptions();
+
+        // Options opens on GENERAL next time
+        if (book != null)
+        {
+            book.Reset();
+            ShowPage();
+        }
 
         menu.SwapToMainMenu();
         selectorPos = 0;

@@ -90,10 +90,16 @@ public class SteamFeatures : MonoBehaviour
     void Watch(GameManager gameManager)
     {
         if (watched != null)
+        {
             watched.StateApplied -= OnStateApplied;
+            watched.OnNewMatch -= OnNewMatch;
+        }
         watched = gameManager;
         if (watched != null)
+        {
             watched.StateApplied += OnStateApplied;
+            watched.OnNewMatch += OnNewMatch;
+        }
     }
 
     /// <summary>
@@ -135,11 +141,15 @@ public class SteamFeatures : MonoBehaviour
         get { return GameManager.Instance != null ? GameManager.Instance.MainState : GameState.Default; }
     }
 
+    // The menus and a rematch start the next match fresh (GameManager.OnNewMatch)
+    void OnNewMatch()
+    {
+        feats.NewMatch();
+    }
+
     void OnStateApplied(GameState state)
     {
-        if (state == GameState.Menu || state == GameState.PlayerSelect)
-            feats.NewMatch();
-        else if (state == GameState.GoldenCutscene && GameAuthority.IsAuthority)
+        if (state == GameState.GoldenCutscene && GameAuthority.IsAuthority)
             feats.GoldenRound(Scores());
         else if (state == GameState.Results && GameAuthority.IsAuthority)
             EarnAll(feats.Results(Scores()));

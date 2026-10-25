@@ -25,12 +25,12 @@ public class Compass : MonoBehaviour
 
     private void OnEnable()
     {
-        GameManager.Instance.OnSwapMenu += ResetCompass;
+        GameManager.Instance.OnNewMatch += ResetCompass;
     }
 
     private void OnDisable()
     {
-        GameManager.Instance.OnSwapMenu -= ResetCompass;
+        GameManager.Instance.OnNewMatch -= ResetCompass;
     }
 
     private void Start()

@@ -162,7 +162,7 @@ namespace DoA.Tests
             NetworkManager.ConnectionApprovalResponse response = Approve(session, 1, huge);
 
             Assert.IsFalse(response.Approved);
-            Assert.AreEqual(JoinRules.NOT_THIS_GAME, response.Reason);
+            Assert.AreEqual(JoinRules.NOT_THIS_GAME, HostNotice.Shown(response.Reason), "sent as a key, read in their language");
         }
 
         [Test]
@@ -199,7 +199,7 @@ namespace DoA.Tests
             NetworkManager.ConnectionApprovalResponse late = Approve(session, Constants.MAX_PLAYERS, "1.0.0");
 
             Assert.IsFalse(late.Approved);
-            Assert.AreEqual(JoinRules.FULL, late.Reason);
+            Assert.AreEqual(JoinRules.FULL, HostNotice.Shown(late.Reason));
             Assert.AreEqual(Constants.MAX_PLAYERS, session.PlayersIn);
         }
 
@@ -227,7 +227,7 @@ namespace DoA.Tests
             NetworkManager.ConnectionApprovalResponse response = Approve(session, 1, "0.9.0");
 
             Assert.IsFalse(response.Approved);
-            Assert.AreEqual(JoinRules.Refusal("1.0.0", "0.9.0", 1, GameState.Default), response.Reason);
+            Assert.AreEqual(JoinRules.Refusal("1.0.0", "0.9.0", 1, GameState.Default), HostNotice.Shown(response.Reason));
             Assert.AreEqual(1, session.PlayersIn);
         }
 
@@ -243,17 +243,18 @@ namespace DoA.Tests
             NetworkManager.ConnectionApprovalResponse response = Approve(session, 1, "1.0.0");
 
             Assert.IsFalse(response.Approved);
-            Assert.AreEqual(JoinRules.STARTED, response.Reason);
+            Assert.AreEqual(JoinRules.STARTED, HostNotice.Shown(response.Reason));
         }
 
-        [TestCase(true, "Disconnected due to host shutting down.", OnlineSession.HOST_LEFT)]
-        [TestCase(true, "", OnlineSession.HOST_LEFT)]
-        [TestCase(false, JoinRules.FULL, JoinRules.FULL)]
-        [TestCase(false, "", OnlineSession.HOST_UNREACHABLE)]
-        [TestCase(false, null, OnlineSession.HOST_UNREACHABLE)]
-        public void EndReason_TellsAClientWhatHappened(bool reachedHost, string netcodeReason, string expected)
+        // The reasons are the game's text (Loc), not constants an attribute can hold: one test, case by case
+        [Test]
+        public void EndReason_TellsAClientWhatHappened()
         {
-            Assert.AreEqual(expected, OnlineSession.EndReason(reachedHost, netcodeReason));
+            Assert.AreEqual(OnlineSession.HOST_LEFT, OnlineSession.EndReason(true, "Disconnected due to host shutting down."));
+            Assert.AreEqual(OnlineSession.HOST_LEFT, OnlineSession.EndReason(true, ""));
+            Assert.AreEqual(JoinRules.FULL, OnlineSession.EndReason(false, JoinRules.FULL));
+            Assert.AreEqual(OnlineSession.HOST_UNREACHABLE, OnlineSession.EndReason(false, ""));
+            Assert.AreEqual(OnlineSession.HOST_UNREACHABLE, OnlineSession.EndReason(false, null));
         }
 
         [Test]

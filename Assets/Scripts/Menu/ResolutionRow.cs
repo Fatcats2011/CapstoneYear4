@@ -59,13 +59,15 @@ public class ResolutionRow : MonoBehaviour
         row.shown = row.applied = ResolutionRules.StartIndex(row.choices, saved, current);
 
         row.label = Text(rect, "Label", style, LABEL_SIZE, TextAlignmentOptions.Left, new Vector2(0f, 0.5f), new Vector2(LABEL_LEFT, 0f), 700f);
-        row.label.text = "RESOLUTION";
+        LocalizedText.On(row.label, "options.resolution");
+        Loc.Changed += row.Show; // the apply hint is in the language spoken
         row.Value = Text(rect, "Size", style, VALUE_SIZE, TextAlignmentOptions.Center, new Vector2(0.5f, 0.5f), new Vector2(VALUE_X, 0f), 700f);
         row.Show();
         return row;
     }
 
-    static TMP_Text Text(RectTransform parent, string name, TMP_Text style, float size, TextAlignmentOptions alignment, Vector2 pivot, Vector2 position, float width)
+    // A text in the screen's look (the Options pages' rows use it too)
+    internal static TMP_Text Text(RectTransform parent, string name, TMP_Text style, float size, TextAlignmentOptions alignment, Vector2 pivot, Vector2 position, float width)
     {
         GameObject go = new GameObject(name, typeof(RectTransform));
         RectTransform rect = go.GetComponent<RectTransform>();
@@ -114,6 +116,11 @@ public class ResolutionRow : MonoBehaviour
     {
         shown = applied;
         Show();
+    }
+
+    void OnDestroy()
+    {
+        Loc.Changed -= Show;
     }
 
     void Show()

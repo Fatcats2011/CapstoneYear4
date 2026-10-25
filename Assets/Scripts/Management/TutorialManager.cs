@@ -16,6 +16,12 @@ public class TutorialManager : SingletonMonobehaviour<TutorialManager>
     private bool shouldTutorialize = true;
     public bool ShouldTutorialize { get { return shouldTutorialize; } set { shouldTutorialize = value; } }
 
+    /// <summary>
+    /// The next match skips its tutorial (a rematch, on every machine): the opening cutscene hands straight over to the
+    /// first wave, and every player starts as if they'd learnt it. The first wave uses it up; the menus clear it
+    /// </summary>
+    public static bool SkipNextTutorial;
+
     private List<TutorialHandler> handlers = new List<TutorialHandler>();
 
     // The seats whose players have finished this match's tutorial (online, the host hears about other machines' players)
@@ -28,6 +34,7 @@ public class TutorialManager : SingletonMonobehaviour<TutorialManager>
     {
         GameManager.Instance.OnSwapStartingCutscene += StartOver;
         GameManager.Instance.OnSwapBegin += StartOver;
+        GameManager.Instance.OnSwapBegin += UseUpSkip;
         shouldTutorialize = true;
     }
 
@@ -35,6 +42,7 @@ public class TutorialManager : SingletonMonobehaviour<TutorialManager>
     {
         GameManager.Instance.OnSwapStartingCutscene -= StartOver;
         GameManager.Instance.OnSwapBegin -= StartOver;
+        GameManager.Instance.OnSwapBegin -= UseUpSkip;
     }
 
     // Each match's tutorial starts the count over, and the first wave ends it
@@ -42,6 +50,11 @@ public class TutorialManager : SingletonMonobehaviour<TutorialManager>
     {
         handlers.Clear();
         finished.Clear();
+    }
+
+    private void UseUpSkip()
+    {
+        SkipNextTutorial = false;
     }
 
     private void Update()

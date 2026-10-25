@@ -229,6 +229,11 @@ public class PlayerInstantiate : SingletonMonobehaviour<PlayerInstantiate>
             return;
         }
 
+        // Whoever plays in a seat gets that seat's rebound controls (a seat move joins again, so it lands here too)
+        BindingStore.Current.Apply(slot.Index + 1, playerInput.actions.FindActionMap(BindingStore.PLAYER_MAP));
+        // Its menus' hand-lettered words and placed texts follow the language (they arrive with the player, after the scene)
+        DrawnWords.SwapUnder(playerInput.gameObject);
+
         if (isFirstPlayer)
         {
             MenuInteractions menus = playerInput.gameObject.GetComponent<PlayerUIHandler>().menuInteractions;
@@ -361,12 +366,20 @@ public class PlayerInstantiate : SingletonMonobehaviour<PlayerInstantiate>
     }
 
     ///<summary>
+    /// Lays the views out again (the Split-screen option changed)
+    ///</summary>
+    public void RefreshCameraRects()
+    {
+        UpdatePlayerCameraRects();
+    }
+
+    ///<summary>
     /// Updates the camera rects on all players in scenes
     ///</summary>
     private void UpdatePlayerCameraRects()
     {
-        // Only players on this machine have a split-screen view
-        cameraRects = SplitScreenLayout.CalculateRects(roster.LocalCount);
+        // Only players on this machine have a split-screen view, in the layout picked for two (SplitScreenLayout)
+        cameraRects = SplitScreenLayout.ForPlayers(roster.LocalCount);
 
         int cameraRectCounter = 0;
 
@@ -426,6 +439,48 @@ public class PlayerInstantiate : SingletonMonobehaviour<PlayerInstantiate>
         UpdateControllerPrompts();
 
         CheckReadyUpCount();
+    }
+
+    ///<summary>
+    /// The results' rematch went on without a player on this machine (they picked Back to lobby, or ran out of time):
+    /// their slot is free, their player object goes and the others get the screen. Player select isn't up, so no join
+    /// prompt shows. If they were the menus' host (Player 1, who drives the pause menu), the lowest seat left takes it
+    /// on. Another machine's seat, or an empty one, is left alone
+    ///</summary>
+    public void DropSeat(int seat)
+    {
+        if (seat < 0 || seat >= Constants.MAX_PLAYERS || roster[seat] == null || !roster[seat].IsLocal)
+            return;
+
+        PlayerInput input = roster[seat].Input;
+        MenuInteractions menus = MenusOf(input);
+        bool wasHost = menus != null && menus.hostPlayer;
+
+        roster.Leave(input);
+        playerReadyUp[seat] = false;
+        if (ScoreManager.Instance != null)
+            ScoreManager.Instance.UpdateOrderHandlers(roster);
+        Destroy(input.gameObject);
+        UpdatePlayerCameraRects();
+        UpdateControllerPrompts();
+
+        if (wasHost)
+        {
+            menus.hostPlayer = false;
+            foreach (PlayerSlot left in roster.LocalPlayers)
+            {
+                MenuInteractions next = MenusOf(left.Input);
+                if (next != null)
+                    next.hostPlayer = true;
+                break;
+            }
+        }
+    }
+
+    static MenuInteractions MenusOf(PlayerInput input)
+    {
+        PlayerUIHandler ui = input != null ? input.GetComponent<PlayerUIHandler>() : null;
+        return ui != null ? ui.menuInteractions : null;
     }
 
     ///<summary>

@@ -14,7 +14,7 @@ namespace DoA.Tests
     /// </summary>
     class FakeSceneFlow : ISceneFlow
     {
-        public int GameLoads, FinalOrderLoads, MenuReturns, Confirms;
+        public int GameLoads, FinalOrderLoads, MenuReturns, Confirms, Rematches;
 
         public event Action OnReturnToMenu;
         public bool WaitingForConfirm { get; set; }
@@ -24,6 +24,7 @@ namespace DoA.Tests
         public void LoadFinalOrderScene() { FinalOrderLoads++; }
         public void ReturnToMenu() { MenuReturns++; OnReturnToMenu?.Invoke(); }
         public void ConfirmLoad() { Confirms++; }
+        public void Rematch() { Rematches++; }
     }
 
     public class SceneFlowTests

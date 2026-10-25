@@ -146,6 +146,9 @@ public class MenuInteractions : MonoBehaviour
 
     private void ClearMenuInputs()
     {
+        // MATCH RULES belongs to player select: any other menu closes it
+        if (hostPlayer && RulesPanel.Showing != null)
+            RulesPanel.Showing.Close();
         customizationSelector.gameObject.SetActive(false);
 
         uiHandler.SouthFaceEvent.RemoveAllListeners();
@@ -187,6 +190,8 @@ public class MenuInteractions : MonoBehaviour
         uiHandler.UpPadEvent.AddListener(OptionsScrollUp);
         uiHandler.RightPadEvent.AddListener(OptionsScrollRight);
         uiHandler.LeftPadEvent.AddListener(OptionsScrollLeft);
+        uiHandler.LeftShoulderEvent.AddListener(OptionsPreviousPage);
+        uiHandler.RightShoulderEvent.AddListener(OptionsNextPage);
     }
 
     private void CreditsInteractions()
@@ -207,6 +212,7 @@ public class MenuInteractions : MonoBehaviour
         uiHandler.WestFaceEvent.AddListener(PlayerCustomize);
         uiHandler.LeftShoulderEvent.AddListener(FindMatchButton);
         uiHandler.RightShoulderEvent.AddListener(FillButton);
+        uiHandler.StartPadEvent.AddListener(ToggleRules);
 
         uiHandler.DownPadEvent.AddListener(CustomizationScrollDownButton);
         uiHandler.UpPadEvent.AddListener(CustomizationScrollUpButton);
@@ -245,6 +251,8 @@ public class MenuInteractions : MonoBehaviour
     ///</summary>
     private void PlayerCustomize(bool button)
     {
+        if (RulesTake(null))
+            return;
         if (!GameAuthority.IsOnline)
             return;
 
@@ -261,6 +269,8 @@ public class MenuInteractions : MonoBehaviour
     ///</summary>
     private void FindMatchButton(bool button)
     {
+        if (RulesTake(null))
+            return;
         if (!GameAuthority.IsOnline)
             return;
 
@@ -281,6 +291,8 @@ public class MenuInteractions : MonoBehaviour
     ///</summary>
     private void FillButton(bool button)
     {
+        if (RulesTake(null))
+            return;
         if (!GameAuthority.IsOnline)
             return;
 
@@ -311,6 +323,8 @@ public class MenuInteractions : MonoBehaviour
     ///</summary>
     private void PlayerReadyButton(bool button)
     {
+        if (RulesTake(CloseRules))
+            return;
         if (Switching())
             return;
 
@@ -337,6 +351,9 @@ public class MenuInteractions : MonoBehaviour
     ///</summary>
     public void ReadyAsA()
     {
+        // An open lobby starting by itself readies the host: MATCH RULES, if it's up, closes first rather than taking the A
+        if (hostPlayer && RulesPanel.Showing != null)
+            RulesPanel.Showing.Close();
         PlayerReadyButton(true);
     }
 
@@ -348,6 +365,8 @@ public class MenuInteractions : MonoBehaviour
     ///</summary>
     private void PlayerUnreadyDespawnButton(bool button)
     {
+        if (RulesTake(CloseRules))
+            return;
         OnlinePlay play = OnlinePlay.Instance;
         if (Switching())
         {
@@ -396,24 +415,32 @@ public class MenuInteractions : MonoBehaviour
 
     private void CustomizationScrollDownButton(bool button)
     {
+        if (RulesTake(RulesDown))
+            return;
         if (DispatchScrolls())
             CustomizationScrollDown(button);
     }
 
     private void CustomizationScrollUpButton(bool button)
     {
+        if (RulesTake(RulesUp))
+            return;
         if (DispatchScrolls())
             CustomizationScrollUp(button);
     }
 
     private void CustomizationScrollRightButton(bool button)
     {
+        if (RulesTake(RulesRight))
+            return;
         if (DispatchScrolls())
             CustomizationScrollRight(button);
     }
 
     private void CustomizationScrollLeftButton(bool button)
     {
+        if (RulesTake(RulesLeft))
+            return;
         if (DispatchScrolls())
             CustomizationScrollLeft(button);
     }
@@ -427,6 +454,7 @@ public class MenuInteractions : MonoBehaviour
 
     private void PauseMenuInteractons()
     {
+        pauseMenu.Owner = playerInput; // whose controls its Controls panel edits
 
         uiHandler.StartPadEvent.AddListener(PlayGame);
         drivingHandler.StartPadEvent.AddListener(PauseGame);
@@ -435,6 +463,7 @@ public class MenuInteractions : MonoBehaviour
         uiHandler.UpPadEvent.AddListener(PauseScrollUp);
 
         uiHandler.SouthFaceEvent.AddListener(PauseConfirm);
+        uiHandler.EastFaceEvent.AddListener(PauseBack);
     }
 
 
@@ -445,6 +474,7 @@ public class MenuInteractions : MonoBehaviour
         mainMenu = MainMenu.Instance;
 
         uiHandler.SouthFaceEvent.AddListener(ResultsMenuConfirm);
+        uiHandler.EastFaceEvent.AddListener(ResultsMenuBack);
     }
 
     ///<summary>
@@ -463,11 +493,48 @@ public class MenuInteractions : MonoBehaviour
     }
 
     ///<summary>
+    /// Start in player select: the player who works the menus opens or closes MATCH RULES (offline, or the online host)
+    ///</summary>
+    private void ToggleRules(bool button)
+    {
+        if (!hostPlayer || !GameAuthority.IsAuthority || curentMenuType != MenuType.PlayerSelect)
+            return;
+
+        if (RulesPanel.Showing != null)
+            RulesPanel.Showing.Close();
+        else
+            RulesPanel.Instance.Open(HouseRules.Current, OrderManager.PublicLobby());
+        soundPool.PlayScrollUI();
+    }
+
+    // MATCH RULES takes the menu player's buttons while it's up: the d-pad changes it, A or B close it, the rest wait
+    bool RulesTake(System.Action<RulesPanel> press)
+    {
+        RulesPanel rules = RulesPanel.Showing;
+        if (!hostPlayer || rules == null)
+            return false;
+        if (press != null)
+        {
+            press(rules);
+            soundPool.PlayScrollUI();
+        }
+        return true;
+    }
+
+    static void CloseRules(RulesPanel rules) { rules.Close(); }
+    static void RulesUp(RulesPanel rules) { rules.Move(false); }
+    static void RulesDown(RulesPanel rules) { rules.Move(true); }
+    static void RulesLeft(RulesPanel rules) { rules.Step(false); }
+    static void RulesRight(RulesPanel rules) { rules.Step(true); }
+
+    ///<summary>
     /// Y in player select: online, invites friends (Steam's invite window). In a title screen without Online Play,
     /// offline, it goes online (OnlinePlay.YAction)
     ///</summary>
     private void PlayOnline(bool button)
     {
+        if (RulesTake(null))
+            return;
         if (OnlinePlay.Instance != null)
             OnlinePlay.Instance.PressY(MainMenu.Instance != null && MainMenu.Instance.HasOnlineEntry);
     }
@@ -672,6 +739,32 @@ public class MenuInteractions : MonoBehaviour
     }
 
     ///<summary>
+    /// LB / RB (F / R) on the Options Menu: the previous or next page
+    ///</summary>
+    private void OptionsPreviousPage(bool button)
+    {
+        OptionsTurnPage(false);
+    }
+
+    private void OptionsNextPage(bool button)
+    {
+        OptionsTurnPage(true);
+    }
+
+    private void OptionsTurnPage(bool right)
+    {
+        if (hostPlayer == false)
+            return;
+
+        if (optionsMenu == null)
+            optionsMenu = OptionsMenu.Instance;
+
+        optionsMenu.TurnPage(right);
+
+        soundPool.PlayScrollUI();
+    }
+
+    ///<summary>
     /// Calls method when player exits the options menu
     ///</summary>
     private void OptionsExit(bool button)
@@ -706,20 +799,29 @@ public class MenuInteractions : MonoBehaviour
     }
 
     ///<summary>
-    /// Calls method when player scrolls down on Main Menu
+    /// Every player votes for themselves on the results screen: A is Rematch
     ///</summary>
     private void ResultsMenuConfirm(bool button)
     {
-        if (hostPlayer == false)
+        ResultsVote vote = ResultsVote.Current;
+        if (vote == null)
             return;
 
-        if (resultsMenu == null)
-            resultsMenu = ResultsMenu.Instance;
+        vote.Press(ballDriving.playerIndex - 1, true);
+        soundPool.PlayEnterUI();
+    }
 
-        // Scrolls selector down
-        resultsMenu.ConfirmMenu();
+    ///<summary>
+    /// B takes this player's Rematch vote back, or takes them out (Back to lobby)
+    ///</summary>
+    private void ResultsMenuBack(bool button)
+    {
+        ResultsVote vote = ResultsVote.Current;
+        if (vote == null)
+            return;
 
-        soundPool.PlayScrollUI();
+        vote.Press(ballDriving.playerIndex - 1, false);
+        soundPool.PlayBackUI();
     }
 
     ///<summary>
@@ -771,6 +873,13 @@ public class MenuInteractions : MonoBehaviour
     ///</summary>
     private void PauseScrollUp(bool button)
     {
+        // The Controls panel takes every button while it's up, whoever's pause it is
+        if (pauseMenu.Controls != null)
+        {
+            pauseMenu.Controls.Move(false);
+            soundPool.PlayScrollUI();
+            return;
+        }
         if (hostPause == false)
             return;
 
@@ -785,6 +894,12 @@ public class MenuInteractions : MonoBehaviour
     ///</summary>
     private void PauseScrollDown(bool button)
     {
+        if (pauseMenu.Controls != null)
+        {
+            pauseMenu.Controls.Move(true);
+            soundPool.PlayScrollUI();
+            return;
+        }
         if (hostPause == false)
             return;
 
@@ -799,13 +914,43 @@ public class MenuInteractions : MonoBehaviour
     ///</summary>
     private void PauseConfirm(bool button)
     {
-        if (hostPause == false)
+        if (pauseMenu.Controls != null)
+        {
+            pauseMenu.Controls.Confirm();
+            soundPool.PlayScrollUI();
             return;
+        }
+        // Another player's pause has one entry: Controls
+        if (hostPause == false)
+        {
+            pauseMenu.OpenControls(playerInput);
+            soundPool.PlayScrollUI();
+            return;
+        }
 
         // Scrolls selector down
         pauseMenu.ConfirmMenu();
 
         soundPool.PlayScrollUI();
+    }
+
+    ///<summary>
+    /// B on Pause: while Restart asks, back to the list
+    ///</summary>
+    private void PauseBack(bool button)
+    {
+        if (pauseMenu.Controls != null)
+        {
+            pauseMenu.ControlsBack();
+            soundPool.PlayBackUI();
+            return;
+        }
+        if (hostPause == false || !pauseMenu.Confirming)
+            return;
+
+        pauseMenu.Back();
+
+        soundPool.PlayBackUI();
     }
 
     ///<summary>
@@ -819,6 +964,13 @@ public class MenuInteractions : MonoBehaviour
 
     public void PlayGame(bool button)
     {
+        // Start with this player's Controls panel up closes the panel (and does nothing while it waits for a press)
+        if (pauseMenu != null && pauseMenu.Controls != null)
+        {
+            pauseMenu.CloseControls();
+            return;
+        }
+
         SoundManager.Instance.ChangeSnapshot("gameplay");
 
         PlayerInstantiate.Instance.PlayerPlay();

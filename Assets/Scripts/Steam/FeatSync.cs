@@ -21,6 +21,15 @@ public static class FeatSync
     /// <summary>A player driven on this machine fell in the water</summary>
     public static event Action Fell;
 
+    /// <summary>The machine that runs the rules: a player (their seat) had an order stolen (for the awards)</summary>
+    public static event Action<int> Robbed;
+
+    /// <summary>
+    /// The machine that runs the rules: a player (their seat) fell in the water, once per respawn (for the awards).
+    /// Online the host hears another machine's player's when they ask where to rise
+    /// </summary>
+    public static event Action<int> Sank;
+
     /// <summary>
     /// A player (their seat) delivered an order
     /// </summary>
@@ -54,6 +63,22 @@ public static class FeatSync
     }
 
     /// <summary>
+    /// A player (their seat) had an order stolen
+    /// </summary>
+    public static void Rob(int seat)
+    {
+        Robbed?.Invoke(seat);
+    }
+
+    /// <summary>
+    /// A player (their seat) fell in the water, as the rules' machine hears it
+    /// </summary>
+    public static void Sink(int seat)
+    {
+        Sank?.Invoke(seat);
+    }
+
+    /// <summary>
     /// Forgets every listener (a new Play Mode session)
     /// </summary>
     public static void Reset()
@@ -62,5 +87,7 @@ public static class FeatSync
         Stole = null;
         Learnt = null;
         Fell = null;
+        Robbed = null;
+        Sank = null;
     }
 }

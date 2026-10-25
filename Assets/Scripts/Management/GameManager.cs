@@ -49,6 +49,13 @@ public class GameManager : SingletonMonobehaviour<GameManager>
     /// </summary>
     public event Action<GameState> StateApplied;
 
+    /// <summary>
+    /// The next match starts fresh: scores, boost, held orders, compass, sounds and match stats reset. Raised on the
+    /// way to the menus (Menu, and PlayerSelect, where the menu scene opens online) and by a rematch (StartNewMatch),
+    /// which skips the menu's own steps
+    /// </summary>
+    public event Action OnNewMatch;
+
     // other important events
     public event Action OnFinalOrderDelivered;
 
@@ -82,6 +89,13 @@ public class GameManager : SingletonMonobehaviour<GameManager>
         if(mainState != GameState.Tutorial)
             OnSwapAnything?.Invoke();
 
+        // A match started from the menus teaches again, whatever a rematch left set
+        if (mainState == GameState.Menu || mainState == GameState.PlayerSelect)
+        {
+            TutorialManager.SkipNextTutorial = false;
+            OnNewMatch?.Invoke();
+        }
+
         // Calls an event for the certain state that is swapped to
         switch(mainState)
         {
@@ -105,6 +119,10 @@ public class GameManager : SingletonMonobehaviour<GameManager>
                 break;
             case GameState.Tutorial:
                 OnSwapTutorial?.Invoke();
+                // A rematch skips the tutorial: its state still unfreezes the scooters and hands over the driving
+                // controls and engines, then the first wave starts at once
+                if (TutorialManager.SkipNextTutorial && mainState == GameState.Tutorial)
+                    SetGameState(GameState.Begin);
                 break;
             case GameState.Begin:
                 OnSwapBegin?.Invoke();
@@ -125,6 +143,14 @@ public class GameManager : SingletonMonobehaviour<GameManager>
             default:
                 break;
         }
+    }
+
+    ///<summary>
+    /// A rematch: the next match starts fresh without going through the menus (no state change)
+    ///</summary>
+    public void StartNewMatch()
+    {
+        OnNewMatch?.Invoke();
     }
 
     public void InvokeFinalOrderDelivered()

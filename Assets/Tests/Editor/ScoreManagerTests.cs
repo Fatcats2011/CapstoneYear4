@@ -35,5 +35,29 @@ namespace DoA.Tests
             Assert.AreSame(online, scores.GetHandlerOfIndex(1));
             Assert.IsNull(scores.GetHandlerOfIndex(2));
         }
+
+        [Test]
+        public void StartNewMatch_ZeroesEveryScore()
+        {
+            GameManager game = objects.Add<GameManager>();
+            GameManager.instance = game;
+            try
+            {
+                ScoreManager scores = objects.Add<ScoreManager>();
+                scores.OnEnable();
+                OrderHandler orders = AddOrders(objects.NewGameObject("Player"));
+                orders.Score = 120;
+                scores.AddOrderHandler(orders);
+
+                game.StartNewMatch();
+
+                Assert.AreEqual(0, orders.Score);
+                scores.OnDisable();
+            }
+            finally
+            {
+                GameManager.instance = null;
+            }
+        }
     }
 }

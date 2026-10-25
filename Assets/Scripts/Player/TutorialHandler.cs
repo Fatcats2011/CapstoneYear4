@@ -40,7 +40,7 @@ public class TutorialHandler : MonoBehaviour
         TutorialManager.Instance.OnTutorialComplete -= FinishTutorial;
     }
 
-    private void Start()
+    internal void Start()
     {
         ball = GetComponent<BallDriving>();
     }
@@ -64,7 +64,16 @@ public class TutorialHandler : MonoBehaviour
     public void ResetHandler()
     {
         hasLearnt = false;
-        if (TutorialManager.Instance.ShouldTutorialize)
+        // A rematch skips the tutorial: this player starts as if they'd learnt it (no count: nobody waits on it)
+        if (TutorialManager.SkipNextTutorial)
+        {
+            hasLearnt = true;
+            ball.SetBoostModifier(false);
+            tutorialText.text = "";
+            tutorialTextPurple.text = "";
+            tutorialImage.SetActive(false);
+        }
+        else if (TutorialManager.Instance.ShouldTutorialize)
         {
             ball.HardCodeBoostModifier(tutorialBoostMod);
             tutorialImage.SetActive(true);

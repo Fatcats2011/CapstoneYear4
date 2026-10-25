@@ -59,4 +59,10 @@ public interface ILobbyService
 
     /// <summary>Opens the invite dialog for a lobby. False when it can't open (Steam's overlay is off)</summary>
     bool Invite(ulong lobby);
+
+    /// <summary>This PC's Steam ping location as text, for a lobby tag; "" until Steam knows it (or without Steam)</summary>
+    string MyLocation { get; }
+
+    /// <summary>Steam's estimate of the round trip to a ping location (a lobby's tag) in ms, or -1 when it can't tell</summary>
+    int PingTo(string location);
 }

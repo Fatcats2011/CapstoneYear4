@@ -60,6 +60,24 @@ public class OnlineMatch : NetworkBehaviour, IMatchLink
     /// <summary>Host: a client's player finished the tutorial (the client's id, the player's seat)</summary>
     public event Action<ulong, int> MachineLearnt;
 
+    /// <summary>Host: a client's player voted on the rematch (the client's id, the player's seat, Rematch or taken back)</summary>
+    public event Action<ulong, int, bool> VoteReceived;
+
+    /// <summary>Clients: the host's rematch board</summary>
+    public event Action<RematchBoard> BoardReceived;
+
+    /// <summary>Host: a client's player voted to skip the cutscene (the client's id, the player's seat)</summary>
+    public event Action<ulong, int> SkipVoteReceived;
+
+    /// <summary>Clients: the host's cutscene skip board</summary>
+    public event Action<SkipBoard> SkipBoardReceived;
+
+    /// <summary>Clients: the host's end-of-match awards</summary>
+    public event Action<AwardBoard> AwardsReceived;
+
+    /// <summary>Clients: the host's round trips (every PingRules.EVERY seconds)</summary>
+    public event Action<PingBoard> PingsReceived;
+
     /// <summary>Host: a client's player boosted into a cutout (the client's id, the seat of the cutout's lane)</summary>
     public event Action<ulong, int> CutoutAsked;
 
@@ -114,11 +132,14 @@ public class OnlineMatch : NetworkBehaviour, IMatchLink
     /// <summary>Clients: the host is taking everyone back to the menu</summary>
     public event Action ReturnRequested;
 
+    /// <summary>Clients: the host starts a rematch (the match's load follows)</summary>
+    public event Action RematchRequested;
+
     /// <summary>Host: a client has a scene loaded (its Netcode client id)</summary>
     public event Action<ulong, MatchScene> MachineLoaded;
 
     /// <summary>Why a machine that floods the host with requests is disconnected</summary>
-    public const string KICK_REASON = "Disconnected: too many messages.";
+    public static string KICK_REASON => Loc.Get("online.kicked");
 
     RateGate gate; // host: how many requests each machine may send
     readonly HashSet<ulong> kicked = new HashSet<ulong>(); // host: disconnected for flooding
@@ -175,7 +196,7 @@ public class OnlineMatch : NetworkBehaviour, IMatchLink
         if (gate.ShouldKick(sender) && session != null)
         {
             kicked.Add(sender);
-            session.Kick(sender, KICK_REASON);
+            session.Kick(sender, HostNotice.Encode("online.kicked")); // read in their own language
         }
         return false;
     }
@@ -236,6 +257,55 @@ public class OnlineMatch : NetworkBehaviour, IMatchLink
     {
         if (IsServer)
             ReturnClientRpc();
+    }
+
+    /// <summary>Client: its player in a seat voted Rematch (true) or took it back (false). Does nothing on the host</summary>
+    public void SendVote(int seat, bool rematch)
+    {
+        if (!IsServer)
+            VoteServerRpc(seat, rematch);
+    }
+
+    /// <summary>Client: its player in a seat voted to skip the cutscene. Does nothing on the host</summary>
+    public void SendSkipVote(int seat)
+    {
+        if (!IsServer)
+            SkipServerRpc(seat);
+    }
+
+    /// <summary>Host: shows every client the cutscene skip vote. Does nothing on a client</summary>
+    public void ShareSkipBoard(SkipBoard board)
+    {
+        if (IsServer)
+            SkipBoardClientRpc(board);
+    }
+
+    /// <summary>Host: shows every client the end-of-match awards. Does nothing on a client</summary>
+    public void ShareAwards(AwardBoard board)
+    {
+        if (IsServer)
+            AwardsClientRpc(board);
+    }
+
+    /// <summary>Host: shows every client each machine's round trip. Does nothing on a client</summary>
+    public void SharePings(PingBoard board)
+    {
+        if (IsServer)
+            PingsClientRpc(board);
+    }
+
+    /// <summary>Host: shows every client the rematch vote. Does nothing on a client</summary>
+    public void ShareBoard(RematchBoard board)
+    {
+        if (IsServer)
+            BoardClientRpc(board);
+    }
+
+    /// <summary>Host: tells every client a rematch starts, before the match's load. Does nothing on a client</summary>
+    public void RequestRematch()
+    {
+        if (IsServer)
+            RematchClientRpc();
     }
 
     /// <summary>Client: tells the host it has a scene loaded. Does nothing on the host, which counts itself</summary>
@@ -423,6 +493,13 @@ public class OnlineMatch : NetworkBehaviour, IMatchLink
     }
 
     [ClientRpc]
+    void RematchClientRpc()
+    {
+        if (!IsServer)
+            RematchRequested?.Invoke();
+    }
+
+    [ClientRpc]
     void OrderClientRpc(OrderChange change)
     {
         if (!IsServer && NetChecks.Sane(change))
@@ -497,6 +574,52 @@ public class OnlineMatch : NetworkBehaviour, IMatchLink
             return;
 
         DropAsked?.Invoke(rpc.Receive.SenderClientId, seat, spot1, spot2, spinOut);
+    }
+
+    [ServerRpc(RequireOwnership = false)]
+    void VoteServerRpc(int seat, bool rematch, ServerRpcParams rpc = default)
+    {
+        if (!Allowed(rpc.Receive.SenderClientId, RpcKind.Vote))
+            return;
+
+        VoteReceived?.Invoke(rpc.Receive.SenderClientId, seat, rematch);
+    }
+
+    [ServerRpc(RequireOwnership = false)]
+    void SkipServerRpc(int seat, ServerRpcParams rpc = default)
+    {
+        if (!Allowed(rpc.Receive.SenderClientId, RpcKind.Skip))
+            return;
+
+        SkipVoteReceived?.Invoke(rpc.Receive.SenderClientId, seat);
+    }
+
+    [ClientRpc]
+    void SkipBoardClientRpc(SkipBoard board)
+    {
+        if (!IsServer && NetChecks.Sane(board))
+            SkipBoardReceived?.Invoke(board);
+    }
+
+    [ClientRpc]
+    void PingsClientRpc(PingBoard board)
+    {
+        if (!IsServer && NetChecks.Sane(board))
+            PingsReceived?.Invoke(board);
+    }
+
+    [ClientRpc]
+    void AwardsClientRpc(AwardBoard board)
+    {
+        if (!IsServer && NetChecks.Sane(board))
+            AwardsReceived?.Invoke(board);
+    }
+
+    [ClientRpc]
+    void BoardClientRpc(RematchBoard board)
+    {
+        if (!IsServer && NetChecks.Sane(board))
+            BoardReceived?.Invoke(board);
     }
 
     [ServerRpc(RequireOwnership = false)]

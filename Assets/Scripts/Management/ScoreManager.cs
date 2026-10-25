@@ -9,15 +9,15 @@ public class ScoreManager : SingletonMonobehaviour<ScoreManager>
 {
     [SerializeField] internal List<OrderHandler> orderHandlers = new List<OrderHandler>(); // list of order handlers in the scene
 
-    private void OnEnable()
+    internal void OnEnable()
     {
-        GameManager.Instance.OnSwapMenu += ResetScore;
+        GameManager.Instance.OnNewMatch += ResetScore;
         GameManager.Instance.OnSwapResults += UpdatePlacement;
     }
 
-    private void OnDisable()
+    internal void OnDisable()
     {
-        GameManager.Instance.OnSwapMenu -= ResetScore;
+        GameManager.Instance.OnNewMatch -= ResetScore;
         GameManager.Instance.OnSwapResults -= UpdatePlacement;
     }
 

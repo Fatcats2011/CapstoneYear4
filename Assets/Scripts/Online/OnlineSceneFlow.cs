@@ -19,6 +19,9 @@ public interface IMatchLink
     /// <summary>Clients: the host is taking everyone back to the menu</summary>
     event Action ReturnRequested;
 
+    /// <summary>Clients: the host starts a rematch (the match's load follows): the next match starts fresh</summary>
+    event Action RematchRequested;
+
     /// <summary>Host: a client has a scene loaded (its Netcode client id)</summary>
     event Action<ulong, MatchScene> MachineLoaded;
 
@@ -30,6 +33,9 @@ public interface IMatchLink
 
     /// <summary>Host: takes every client back to the menu</summary>
     void RequestReturn();
+
+    /// <summary>Host: tells every client a rematch starts, before the match's load</summary>
+    void RequestRematch();
 
     /// <summary>Client: tells the host it has a scene loaded</summary>
     void ReportLoaded(MatchScene scene);
@@ -104,6 +110,7 @@ public class OnlineSceneFlow : ISceneFlow
         link.LoadRequested += LoadForHost;
         link.ShowRequested += ShowForHost;
         link.ReturnRequested += ReturnForHost;
+        link.RematchRequested += RematchForHost;
         link.MachineLoaded += MachineHasScene;
         if (loader != null)
         {
@@ -121,6 +128,7 @@ public class OnlineSceneFlow : ISceneFlow
         link.LoadRequested -= LoadForHost;
         link.ShowRequested -= ShowForHost;
         link.ReturnRequested -= ReturnForHost;
+        link.RematchRequested -= RematchForHost;
         link.MachineLoaded -= MachineHasScene;
         if (loader != null)
         {
@@ -143,6 +151,20 @@ public class OnlineSceneFlow : ISceneFlow
     public void LoadFinalOrderScene()
     {
         Begin(MatchScene.FinalOrder);
+    }
+
+    /// <summary>
+    /// Host: the results' vote ended in a rematch. Every client starts the next match fresh, then the match loads on
+    /// every machine as any other. A client's own call does nothing: the host decides
+    /// </summary>
+    public void Rematch()
+    {
+        if (!IsHost || loader == null)
+            return;
+
+        link.RequestRematch();
+        MatchReset.ForRematch();
+        Begin(MatchScene.Game);
     }
 
     public void ReturnToMenu()
@@ -259,6 +281,12 @@ public class OnlineSceneFlow : ISceneFlow
 
         Changing = true;
         loader.ShowHeld();
+    }
+
+    // Client: the host starts a rematch: the match's load follows
+    void RematchForHost()
+    {
+        MatchReset.ForRematch();
     }
 
     // Client: the host is taking everyone back to the menu

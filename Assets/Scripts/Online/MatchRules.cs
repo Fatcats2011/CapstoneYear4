@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Globalization;
 
@@ -39,14 +40,14 @@ public static class MatchRules
     // How long an open lobby waits before it starts by itself
     static double AutoStartSeconds { get { return AutoStartSecondsOverride > 0 ? AutoStartSecondsOverride : AUTO_START; } }
 
-    public const string SEARCHING = "LOOKING FOR A MATCH…";
-    public const string NONE_FOUND = "No open matches right now. Your lobby is open to anyone.";
+    public static string SEARCHING => Loc.Get("matchmaking.searching");
+    public static string NONE_FOUND => Loc.Get("matchmaking.nonefound");
     /// <summary>None found, and the player's lobby couldn't be opened (it was left, and can't be hosted again yet)</summary>
-    public const string NONE_FOUND_CLOSED = "No open matches right now.";
-    public const string OPEN_TO_ANYONE = "OPEN TO ANYONE";
-    public const string FRIENDS_ONLY = "FRIENDS ONLY";
-    public const string FIND_MATCH = "FIND MATCH";
-    public const string FIND_REFUSED = "Find a match before others join your lobby.";
+    public static string NONE_FOUND_CLOSED => Loc.Get("matchmaking.nonefoundclosed");
+    public static string OPEN_TO_ANYONE => Loc.Get("matchmaking.open");
+    public static string FRIENDS_ONLY => Loc.Get("matchmaking.friends");
+    public static string FIND_MATCH => Loc.Get("matchmaking.find");
+    public static string FIND_REFUSED => Loc.Get("matchmaking.findrefused");
 
     /// <summary>A public lobby this machine could join</summary>
     public struct Candidate
@@ -143,6 +144,42 @@ public static class MatchRules
         return result;
     }
 
+    /// <summary>The lobby tag where the host publishes its Steam ping location, so searchers can tell how far it is</summary>
+    public const string LOCATION_KEY = "loc";
+    /// <summary>How far a lobby may be, as Steam estimates the round trip, in milliseconds</summary>
+    public const int MAX_PING = 200;
+    /// <summary>The longest location tag kept (Steam's ping locations are about 100 characters)</summary>
+    /// <summary>How often a host refreshes its location tag once Steam knows it, in seconds</summary>
+    public const double LOCATION_EVERY = 60.0;
+    public const int MAX_LOCATION = 1024; // Steam's own most (k_cchMaxSteamNetworkingPingLocationString): never cut mid-entry
+
+    /// <summary>
+    /// Nearby lobbies only: those Steam estimates further than MAX_PING away go, the rest keep their order (fullest
+    /// first). One whose distance can't be told (no tag: an older build, or no estimate yet) stays. When every lobby is far
+    /// (quiet hours), all are kept, nearest first, rather than finding nothing
+    /// </summary>
+    public static List<Candidate> ByDistance(List<Candidate> candidates, Func<ulong, int> pingOf)
+    {
+        List<Candidate> near = candidates.FindAll(c => { int ms = pingOf(c.Lobby); return ms < 0 || ms <= MAX_PING; });
+        if (near.Count > 0 || candidates.Count == 0)
+            return near;
+
+        // Each measured once; ties keep the fullest-first order
+        List<(Candidate lobby, int ping, int order)> measured = new List<(Candidate, int, int)>();
+        for (int i = 0; i < candidates.Count; i++)
+            measured.Add((candidates[i], pingOf(candidates[i].Lobby), i));
+        measured.Sort((a, b) => a.ping != b.ping ? a.ping.CompareTo(b.ping) : a.order.CompareTo(b.order));
+        return measured.ConvertAll(m => m.lobby);
+    }
+
+    /// <summary>A ping location as the lobby tag carries it</summary>
+    public static string LocationTag(string location)
+    {
+        if (string.IsNullOrEmpty(location))
+            return "";
+        return location.Length > MAX_LOCATION ? location.Substring(0, MAX_LOCATION) : location;
+    }
+
     /// <summary>
     /// Whether a lone Fill host may join another's lobby: only the higher Steam ID yields, so two hosts never join each other.
     /// An unknown owner (0: no readable owner tag) is never yielded to
@@ -187,7 +224,7 @@ public static class MatchRules
         if (!filling)
             return FRIENDS_ONLY;
         if (autoStartRemaining > 0)
-            return OPEN_TO_ANYONE + " · STARTS IN " + ((int)System.Math.Ceiling(autoStartRemaining)).ToString(CultureInfo.InvariantCulture);
+            return Loc.Get("matchmaking.startsin", ((int)System.Math.Ceiling(autoStartRemaining)).ToString(CultureInfo.InvariantCulture));
         return OPEN_TO_ANYONE;
     }
 

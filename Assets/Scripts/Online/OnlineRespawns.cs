@@ -71,6 +71,7 @@ public class OnlineRespawns : MonoBehaviour
         if (match == null || !session.Owns(machine, seat) || handler == null || RespawnManager.Instance == null
             || !NetChecks.InWorld(lastGrounded))
             return;
+        FeatSync.Sink(seat); // their fall, for the awards: only their own machine can say so
 
         RespawnPoint point = RespawnManager.Instance.GetRespawnPoint(lastGrounded);
         if (point == null)

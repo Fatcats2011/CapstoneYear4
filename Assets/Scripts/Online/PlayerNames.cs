@@ -9,7 +9,7 @@ public static class PlayerNames
     /// <summary>The name for a seat with no name of its own: seat 0 is "Player 1"</summary>
     public static string Fallback(int seat)
     {
-        return "Player " + (seat + 1);
+        return Loc.Get("online.player", seat + 1);
     }
 
     /// <summary>
