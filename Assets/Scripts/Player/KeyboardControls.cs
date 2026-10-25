@@ -78,7 +78,7 @@ public static class KeyboardControls
         Keys(asset, "UI/Right D-Pad", "d", "rightArrow");
         Keys(asset, "UI/Up D-Pad", "w", "upArrow");
         Keys(asset, "UI/Down D-Pad", "s", "downArrow");
-        Keys(asset, "UI/UnPause", "escape");
+        Keys(asset, "UI/UnPause", "escape", "m"); // Start: M opens MATCH RULES in player select (MenuInteractions.ToggleRules)
         Keys(asset, "UI/North Face", "tab");
         if (asset.FindAction("UI/West Face") != null) // added by the editor step in EDITOR-TODO.md 1b; Keys throws when missing
             Keys(asset, "UI/West Face", "q");

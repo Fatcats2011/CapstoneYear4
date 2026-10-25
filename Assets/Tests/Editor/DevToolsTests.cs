@@ -22,6 +22,14 @@ namespace DoA.Tests
             DevTools.Enabled = devToolsWereEnabled;
         }
 
+        [TestCase(true, new string[0], ExpectedResult = true)]          // the editor
+        [TestCase(false, new string[0], ExpectedResult = false)]        // every build, development builds too
+        [TestCase(false, new[] { "-DevTools" }, ExpectedResult = true)] // a build launched with -devtools
+        public bool OnFor(bool editor, string[] args)
+        {
+            return DevTools.OnFor(editor, args);
+        }
+
         [Test]
         public void GetKeyDown_WhenDevToolsAreOff_IgnoresEveryKey()
         {

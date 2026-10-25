@@ -106,6 +106,18 @@ def shoulder(name, label):
     save(down(img), name)
 
 
+def start(name, label, size=84):
+    """Start / Options / Menu: a small green pill with its word in white, the size of a face button's art"""
+    w, h = 384, SIZE
+    img = canvas(w, h)
+    d = ImageDraw.Draw(img)
+    pad = 20 * SS
+    d.rounded_rectangle((pad, 64 * SS, w * SS - pad, h * SS - 64 * SS), radius=64 * SS, fill=SLIME_EDGE)
+    d.rounded_rectangle((pad + 12 * SS, 76 * SS, w * SS - pad - 12 * SS, h * SS - 76 * SS), radius=52 * SS, fill=SLIME)
+    text_on(d, (0, 0, w * SS, h * SS), label, size, WHITE)
+    save(down(img), name)
+
+
 def key(name, label, width=SIZE, size=150):
     """A keycap: a pale key on a darker side, its label in the game's deep purple"""
     img = canvas(width, SIZE)
@@ -154,4 +166,7 @@ if __name__ == "__main__":
     key("Key_Tab", "TAB", size=120)
     key("Key_F", "F")
     key("Key_R", "R")
+    key("Key_M", "M")
+    start("Xbox_Start", "START")
+    start("PS_Options", "OPTIONS", size=70)
     write_metas()

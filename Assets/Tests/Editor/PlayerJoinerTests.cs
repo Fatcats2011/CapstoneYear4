@@ -77,6 +77,28 @@ namespace DoA.Tests
             Assert.IsNull(SchemeForPress(keyboard, keyboard.f1Key), "F1, the dev key that adds a test pad");
         }
 
+        static string HandOverForPress(InputDevice device, ButtonControl control)
+        {
+            using (StateEvent.From(device, out InputEventPtr eventPtr))
+            {
+                control.WriteValueIntoEvent(1f, eventPtr);
+                return PlayerJoiner.HandOverSchemeFor(control, eventPtr);
+            }
+        }
+
+        [Test]
+        public void HandOverSchemeFor_AnyPadButton_OrAnyKeyButTheDevKeys()
+        {
+            // The one player here takes up another device by using it (playtest, 2026-10-24: keyboard or controller
+            // locked them in): W to drive on, not only Space
+            Assert.AreEqual(PlayerJoiner.GAMEPAD_SCHEME, HandOverForPress(pad, pad.buttonSouth));
+            Assert.AreEqual(PlayerJoiner.GAMEPAD_SCHEME, HandOverForPress(pad, pad.rightTrigger));
+            Assert.AreEqual(KeyboardControls.SCHEME, HandOverForPress(keyboard, keyboard.wKey));
+            Assert.AreEqual(KeyboardControls.SCHEME, HandOverForPress(keyboard, keyboard.spaceKey));
+            Assert.IsNull(HandOverForPress(keyboard, keyboard.f1Key), "F1, the dev key that adds a test pad");
+            Assert.IsNull(HandOverForPress(keyboard, keyboard.f7Key));
+        }
+
         [Test]
         public void SchemeFor_AReleaseInTheEvent_JoinsNothing()
         {

@@ -41,6 +41,8 @@ public class GameSettings
     public int splitLayout = (int)SplitLayout.Boxed;
     /// <summary>1: no boost FOV kick and no speed lines (Comfort)</summary>
     public int reduceMotion = 0;
+    /// <summary>Distances: 0 metres, 1 feet (Units)</summary>
+    public int units = 0;
 
     // The match rules (HouseRules): normal is today's game
     /// <summary>MatchLength: 0 short, 1 normal, 2 long</summary>
@@ -68,7 +70,7 @@ public class GameSettings
     {
         return $"bgm={bgmPosition}\nsfx={sfxPosition}\nfullscreen={fullscreenPosition}\nquality={qualityLevel}\n"
             + $"exclusive={exclusiveFullscreen}\nwidth={width}\nheight={height}\nvsync={vsync}\nframecap={frameCap}\n"
-            + $"master={masterPosition}\nbgmute={backgroundMute}\nsplit={splitLayout}\nreducemotion={reduceMotion}\n"
+            + $"master={masterPosition}\nbgmute={backgroundMute}\nsplit={splitLayout}\nreducemotion={reduceMotion}\nunits={units}\n"
             + $"length={matchLength}\nsteals={steals}\ngolden={goldenOrder}\n"
             + $"language={language}\n";
     }
@@ -98,6 +100,7 @@ public class GameSettings
         copy.backgroundMute = backgroundMute;
         copy.splitLayout = splitLayout;
         copy.reduceMotion = reduceMotion;
+        copy.units = units;
         copy.matchLength = matchLength;
         copy.steals = steals;
         copy.goldenOrder = goldenOrder;
@@ -177,6 +180,9 @@ public class GameSettings
                     break;
                 case "reducemotion":
                     settings.reduceMotion = Mathf.Clamp(value, 0, 1);
+                    break;
+                case "units":
+                    settings.units = Mathf.Clamp(value, 0, 1);
                     break;
                 case "length":
                     settings.matchLength = Mathf.Clamp(value, 0, (int)MatchLength.Long);

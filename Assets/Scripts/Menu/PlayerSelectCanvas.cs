@@ -31,6 +31,8 @@ public class PlayerSelectCanvas : SingletonMonobehaviour<PlayerSelectCanvas>
     bool[] dispatchCanvasesKept; // each one's enabled before Dispatch hid them
     bool dispatchHidden;
 
+    GameObject rulesPrompt;   // Start: MATCH RULES, along the bottom offline (online, Dispatch's prompt row has it)
+
     bool joinPromptsHidden;   // Dispatch has the join prompts hidden
     bool[] joinPromptsKept;   // each prompt's state under that hiding: what comes back
 
@@ -39,6 +41,18 @@ public class PlayerSelectCanvas : SingletonMonobehaviour<PlayerSelectCanvas>
         playerInstantiate = PlayerInstantiate.Instance;
 
         TogglePressButtonOnAllTexts(playerInstantiate.Roster);
+
+        rulesPrompt = RulesPrompt.Build(transform, countdownText != null ? countdownText.font : null, 56, 36);
+        RectTransform place = (RectTransform)rulesPrompt.transform;
+        place.anchorMin = place.anchorMax = place.pivot = new Vector2(0.5f, 0f);
+        place.anchoredPosition = new Vector2(0, 36);
+    }
+
+    void Update()
+    {
+        bool shown = !GameAuthority.IsOnline && !dispatchHidden;
+        if (rulesPrompt != null && rulesPrompt.activeSelf != shown)
+            rulesPrompt.SetActive(shown);
     }
 
     public void BeginCountdown()

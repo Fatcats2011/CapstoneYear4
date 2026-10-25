@@ -93,16 +93,18 @@ namespace DoA.Tests
             Assert.AreEqual(12, scooter.Sphere.layer, "player 3's ball layer");
             Assert.IsTrue(moved.Input.GetComponent<PlayerUIHandler>().menuInteractions.hostPlayer, "still runs this machine's menus");
 
-            // Online, more players join only in player select: on the title screen another controller is turned away
-            TestPlayers.Add();
+            // Online, more players join only in player select: on the title screen another controller joins nobody, and
+            // the one player here takes it up instead (playtest, 2026-10-24: devices are interchangeable)
+            Gamepad other = TestPlayers.Add();
             for (float until = Time.realtimeSinceStartup + 1f; Time.realtimeSinceStartup < until;)
                 yield return null;
-            Assert.AreEqual(1, players.PlayerCount, "the second controller was turned away outside player select");
+            Assert.AreEqual(1, players.PlayerCount, "the second controller joined nobody outside player select");
+            Assert.IsTrue(moved.Input.devices.Contains(other), "the one player here plays on it now");
 
             // Offline again, a second player joins player select as usual (lowest free slot)
             players.GoOffline();
             GameManager.Instance.SetGameState(GameState.PlayerSelect);
-            Gamepad second = TestPlayers.Pads[1];
+            Gamepad second = pad; // the controller the player put down
             deadline = Time.realtimeSinceStartup + 10;
             float nextPress = 0;
             while (!LocalIn(0) && Time.realtimeSinceStartup < deadline)

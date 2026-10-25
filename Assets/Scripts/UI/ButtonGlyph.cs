@@ -156,6 +156,15 @@ public class ButtonGlyph : MonoBehaviour
         LastDevice.Changed -= Show;
     }
 
+    /// <summary>Shows the device in use again: its art was just set (ButtonGlyphs)</summary>
+    internal void Refresh()
+    {
+        if (player != null)
+            Show(player.devices.Count > 0 ? player.devices[0] : null);
+        else
+            Show(LastDevice.Current);
+    }
+
     void OnControlsChanged(PlayerInput changed)
     {
         Show(changed.devices.Count > 0 ? changed.devices[0] : null);

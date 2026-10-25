@@ -77,6 +77,28 @@ namespace DoA.Tests
         }
 
         [Test]
+        public void SceneManager_HidesTheLoadingScreen_WhenPlayerSelectOpens()
+        {
+            // Online the menu scene opens on player select, not the title screen: the loading screen stayed over the
+            // player menus after the first match (playtest, 2026-10-24)
+            PlayerInstantiate players = objects.Add<PlayerInstantiate>();
+            PlayerInstantiate.instance = players;
+            SceneManager scene = objects.Add<SceneManager>();
+            try
+            {
+                Reflect.Invoke(scene, "Start");
+                Assert.AreEqual(1, Reflect.HandlerCount(gameManager, nameof(GameManager.OnSwapPlayerSelect), scene), "while enabled");
+
+                Reflect.Invoke(scene, "OnDisable");
+                Assert.AreEqual(0, GameStateHandlersOf(scene), "after");
+            }
+            finally
+            {
+                PlayerInstantiate.instance = null;
+            }
+        }
+
+        [Test]
         public void SkideeSkidoo_EnabledThenDisabled_LeavesNoGameStateHandlers()
         {
             SkideeSkidoo skids = objects.Add<SkideeSkidoo>();

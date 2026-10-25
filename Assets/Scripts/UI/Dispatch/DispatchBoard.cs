@@ -47,6 +47,7 @@ public class DispatchBoard : MonoBehaviour
     bool statusKeyed; // the inputs below have been applied since the board came up
     bool statusFilling, statusSearching; // the inputs the matchmaking line was last built from
     int statusSeconds;
+    GameObject rulesPrompt; // Start: MATCH RULES, at the end of the prompt row (host only), built the first time it shows
     string fillPromptShown; // the Fill prompt as last set (null = hidden)
     bool fillPromptSet; // fillPromptShown has been applied since the board came up
     DispatchRoomLoader roomLoader;
@@ -107,6 +108,7 @@ public class DispatchBoard : MonoBehaviour
         {
             bool host = play != null && play.Lobby != null && play.Lobby.IsHost;
             ShowFillPrompt(host, host && play.Lobby.Filling);
+            ShowRulesPrompt(host);
             ShowMatchmaking();
         }
         else if (play.Match.Searching)
@@ -169,6 +171,22 @@ public class DispatchBoard : MonoBehaviour
 
     // The matchmaking line, set only when it changes. A client can't see whether the host's lobby is open, so it shows the
     // host's countdown when there is one
+    /// <summary>
+    /// Start (M on a keyboard): MATCH RULES, in the prompt row, while this machine hosts (only the host changes them)
+    /// </summary>
+    void ShowRulesPrompt(bool host)
+    {
+        if (rulesPrompt == null)
+        {
+            Transform row = root != null ? root.transform.Find("Prompts") : null;
+            if (row == null)
+                return;
+            rulesPrompt = RulesPrompt.Build(row, readyLine != null ? readyLine.font : null, 56, 36);
+        }
+        if (rulesPrompt.activeSelf != host)
+            rulesPrompt.SetActive(host);
+    }
+
     void ShowMatchmaking()
     {
         if (matchmakingLine == null)

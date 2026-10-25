@@ -116,6 +116,18 @@ namespace DoA.Tests
         }
 
         [Test]
+        public void Install_MOpensMatchRules_AsStartDoes()
+        {
+            // M is the menus' Start (MATCH RULES in player select): Escape alone opened it (playtest, 2026-10-24)
+            InputActionAsset asset = PristineCopy();
+            KeyboardControls.Install(asset);
+            InputAction start = asset.FindAction("UI/UnPause", true);
+
+            Assert.IsTrue(HasKey(start, "m"), "M");
+            Assert.IsTrue(HasKey(start, "escape"), "Escape still closes the pause menu");
+        }
+
+        [Test]
         public void Install_BindsFAndR_WhenTheShoulderActionsExist()
         {
             InputActionAsset asset = PristineCopy();

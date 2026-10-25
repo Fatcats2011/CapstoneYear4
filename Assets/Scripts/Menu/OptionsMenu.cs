@@ -50,6 +50,7 @@ public class OptionsMenu : SingletonMonobehaviour<OptionsMenu>, IMouseMenu
 
     // What each selector spot is: the scene's rows in OptionSelected's order, then the Resolution row code adds (RowsFor)
     List<OptionSelected> rows;
+    OptionSelected firstRow = OptionSelected.BGM; // GENERAL's first drawn row: Fullscreen once Music and Effects move to AUDIO
     ResolutionRow resolutionRow;
 
     /// <summary>The Resolution row code added (null until Start)</summary>
@@ -84,6 +85,7 @@ public class OptionsMenu : SingletonMonobehaviour<OptionsMenu>, IMouseMenu
     {
         soundManager = SoundManager.Instance;
         LoadOptions();
+        MoveVolumesOffGeneral();
         AddResolutionRow();
         AddLanguageRow();
         BuildPages();
@@ -98,8 +100,8 @@ public class OptionsMenu : SingletonMonobehaviour<OptionsMenu>, IMouseMenu
 
         book = new OptionsBook(
             OptionsPage.Keyed("options.page.general"),
-            OptionsPage.Keyed("options.page.display", FullscreenStyleSetting(), VSyncSetting(), FrameCapSetting(), QualitySetting(), SplitScreenSetting()),
-            OptionsPage.Keyed("options.page.audio", MasterSetting(), BackgroundSetting()),
+            OptionsPage.Keyed("options.page.display", FullscreenStyleSetting(), VSyncSetting(), FrameCapSetting(), QualitySetting(), SplitScreenSetting(), UnitsSetting()),
+            OptionsPage.Keyed("options.page.audio", MasterSetting(), MusicSetting(), EffectsSetting(), BackgroundSetting()),
             OptionsPage.Keyed("options.page.accessibility", ReduceMotionSetting()));
 
         TMP_Text style = positions.GetComponentInChildren<TMP_Text>(true);
@@ -214,10 +216,88 @@ public class OptionsMenu : SingletonMonobehaviour<OptionsMenu>, IMouseMenu
         return setting;
     }
 
+    // Music and Effects, at the drawn sliders' steps (volumeValues), shown as a share of the loudest
+    OptionSetting MusicSetting()
+    {
+        OptionSetting setting = new OptionSetting("MUSIC", VolumeSteps(), VolumeWords, bgmPosition) { LabelKey = "options.music" };
+        setting.Changed += value => { bgmPosition = value; bgmValue = volumeValues[value]; soundManager.SetMusic(bgmValue); };
+        return setting;
+    }
+
+    OptionSetting EffectsSetting()
+    {
+        OptionSetting setting = new OptionSetting("EFFECTS", VolumeSteps(), VolumeWords, sfxPosition) { LabelKey = "options.effects" };
+        setting.Changed += value => { sfxPosition = value; sfxValue = volumeValues[value]; soundManager.SetSFX(sfxValue); };
+        return setting;
+    }
+
+    int[] VolumeSteps()
+    {
+        int[] steps = new int[volumeValues.Length];
+        for (int i = 0; i < steps.Length; i++)
+            steps[i] = i;
+        return steps;
+    }
+
+    string VolumeWords(int step)
+    {
+        return Mathf.RoundToInt(100f * step / (volumeValues.Length - 1)) + "%";
+    }
+
+    // Music and Effects live on AUDIO (playtest, 2026-10-24: audio settings weren't under Audio). GENERAL's drawn sliders
+    // hide, and Fullscreen (with Resolution and Language, built under it) moves up into their place
+    void MoveVolumesOffGeneral()
+    {
+        if (selectorObjects == null || selectorObjects.Length < 3 || bgmSelector == null || sfxSelector == null)
+            return;
+
+        Transform music = selectorObjects[0].transform, effects = selectorObjects[1].transform;
+        float up = music.position.y - selectorObjects[2].transform.position.y;
+
+        music.gameObject.SetActive(false);
+        effects.gameObject.SetActive(false);
+        bgmSelector.SetActive(false);
+        sfxSelector.SetActive(false);
+        if (bgmSelectorPositions.Length > 0)
+            bgmSelectorPositions[0].transform.parent.gameObject.SetActive(false);
+        if (sfxSelectorPositions.Length > 0)
+            sfxSelectorPositions[0].transform.parent.gameObject.SetActive(false);
+
+        // The rest of the drawn rows: their labels and Off / On, the Fullscreen selector and its points
+        foreach (Transform label in music.parent)
+        {
+            if (label != music && label != effects)
+                label.position += Vector3.up * up;
+        }
+        if (fullscreenSelector != null)
+            fullscreenSelector.transform.position += Vector3.up * up;
+        if (fullscreenSelectorPositions.Length > 0)
+            fullscreenSelectorPositions[0].transform.parent.position += Vector3.up * up;
+        if (QualityRowExists)
+        {
+            qualitySelector.transform.position += Vector3.up * up;
+            qualitySelectorPositions[0].transform.parent.position += Vector3.up * up;
+        }
+
+        GameObject[] spots = new GameObject[selectorObjects.Length - 2];
+        System.Array.Copy(selectorObjects, 2, spots, 0, spots.Length);
+        selectorObjects = spots;
+        firstRow = OptionSelected.FULLSCREEN;
+        optionSelected = firstRow;
+        selector.transform.position = new Vector3(selector.transform.position.x, selectorObjects[0].transform.position.y, selector.transform.position.z);
+    }
+
     OptionSetting BackgroundSetting()
     {
         OptionSetting setting = OptionSetting.Keyed("options.background", new[] { 1, 0 }, mute => mute == 1 ? "options.background.mute" : "options.background.keep", current.backgroundMute);
         setting.Changed += value => { current.backgroundMute = value; ApplyVolume(); };
+        return setting;
+    }
+
+    OptionSetting UnitsSetting()
+    {
+        OptionSetting setting = OptionSetting.Keyed("options.units", new[] { 0, 1 }, imperial => imperial == 1 ? "options.units.imperial" : "options.units.metric", current.units);
+        setting.Changed += value => { current.units = value; Units.Imperial = value == 1; };
         return setting;
     }
 
@@ -378,10 +458,10 @@ public class OptionsMenu : SingletonMonobehaviour<OptionsMenu>, IMouseMenu
     /// What each selector spot is: the scene's rows (in OptionSelected's order: Music, SFX, Fullscreen, then Quality once
     /// the screen has one), then Resolution
     /// </summary>
-    public static List<OptionSelected> RowsFor(int sceneRows)
+    public static List<OptionSelected> RowsFor(int sceneRows, OptionSelected first = OptionSelected.BGM)
     {
         List<OptionSelected> list = new List<OptionSelected>();
-        for (int i = 0; i < sceneRows && i <= (int)OptionSelected.QUALITY; i++)
+        for (int i = (int)first; i < (int)first + sceneRows && i <= (int)OptionSelected.QUALITY; i++)
             list.Add((OptionSelected)i);
         list.Add(OptionSelected.RESOLUTION);
         return list;
@@ -402,7 +482,7 @@ public class OptionsMenu : SingletonMonobehaviour<OptionsMenu>, IMouseMenu
         resolutionRow = ResolutionRow.Create(rowAbove, style, listed, new ScreenSize(current.width, current.height),
             new ScreenSize(Screen.width, Screen.height));
 
-        rows = RowsFor(selectorObjects.Length);
+        rows = RowsFor(selectorObjects.Length, firstRow);
         GameObject[] spots = new GameObject[selectorObjects.Length + 1];
         selectorObjects.CopyTo(spots, 0);
         spots[spots.Length - 1] = resolutionRow.gameObject;
@@ -528,6 +608,7 @@ public class OptionsMenu : SingletonMonobehaviour<OptionsMenu>, IMouseMenu
         SplitScreenLayout.TwoPlayers = (SplitLayout)settings.splitLayout;
         AudioVolume.Set(settings.masterPosition, settings.backgroundMute == 1);
         Comfort.ReduceMotion = settings.reduceMotion == 1;
+        Units.Imperial = settings.units == 1;
         HouseRules.Current = HouseRules.From(settings);
 
         // The language: the one picked here before, else Steam's, else the PC's, else English (LanguageRules)
@@ -768,7 +849,7 @@ public class OptionsMenu : SingletonMonobehaviour<OptionsMenu>, IMouseMenu
 
         menu.SwapToMainMenu();
         selectorPos = 0;
-        optionSelected = 0;
+        optionSelected = rows != null ? rows[0] : firstRow;
         selector.transform.position = new Vector3(selector.transform.position.x, selectorObjects[selectorPos].transform.position.y, selector.transform.position.z);
     }
 

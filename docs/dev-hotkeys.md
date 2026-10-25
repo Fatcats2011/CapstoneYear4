@@ -1,6 +1,6 @@
 # Developer hotkeys
 
-Every key below goes through `DevTools.GetKeyDown`: it works in the Unity editor and in **Development Build** players, and does nothing in release builds (`DevTools.Enabled` is false there).
+Every key below goes through `DevTools.GetKeyDown`: it works in the Unity editor, and in a build only when the game is launched with `-devtools` (Steam: Properties → Launch Options). Without it every build ignores them, development builds too (`DevTools.Enabled` is false there).
 
 ## Testing without enough controllers
 

@@ -15,14 +15,16 @@ namespace DoA.Tests
         GameObject resume, mainMenu;
         static int restarts;
         static int returns;
+        static int leaves;
 
         static void CountRestart() { restarts++; }
         static void CountReturn() { returns++; }
+        static void CountLeave() { leaves++; }
 
         [SetUp]
         public void SetUp()
         {
-            restarts = returns = 0;
+            restarts = returns = leaves = 0;
             GameObject canvas = objects.NewGameObject("Pause Menu");
             canvas.AddComponent<RectTransform>();
             GameObject host = Child(canvas, "Host Pause");
@@ -40,6 +42,7 @@ namespace DoA.Tests
             pause.selectorObjects = new[] { resume, mainMenu };
             pause.Restart = CountRestart;
             pause.Leave = CountReturn;
+            pause.LeaveSession = CountLeave;
         }
 
         [TearDown]
@@ -88,16 +91,67 @@ namespace DoA.Tests
         }
 
         [Test]
-        public void Online_NoRestart()
+        public void Online_TheHost_NoRestart_ButBackToLobbyAndMainMenu()
         {
             GameAuthority.Role = NetworkRole.Host;
+
+            pause.OnPause(PauseMenu.PauseType.Host);
+
+            Assert.AreEqual(4, pause.selectorObjects.Length);
+            Assert.AreSame(pause.ControlsEntry.gameObject, pause.selectorObjects[1]);
+            Assert.AreEqual("BACK TO LOBBY", pause.LobbyEntry.text);
+            Assert.AreSame(pause.LobbyEntry.gameObject, pause.selectorObjects[2]);
+            Assert.AreSame(mainMenu, pause.selectorObjects[3]);
+            Assert.AreEqual(66f, ((RectTransform)pause.ControlsEntry.transform).anchoredPosition.y, 0.01f, "where Main Menu was drawn");
+        }
+
+        [Test]
+        public void Online_AGuest_ResumeControlsMainMenu()
+        {
+            GameAuthority.Role = NetworkRole.Client;
 
             pause.OnPause(PauseMenu.PauseType.Host);
 
             Assert.AreEqual(3, pause.selectorObjects.Length);
             Assert.AreSame(pause.ControlsEntry.gameObject, pause.selectorObjects[1]);
             Assert.AreSame(mainMenu, pause.selectorObjects[2]);
-            Assert.AreEqual(66f, ((RectTransform)pause.ControlsEntry.transform).anchoredPosition.y, 0.01f, "where Main Menu was drawn");
+            Assert.IsFalse(pause.LobbyEntry.gameObject.activeSelf);
+        }
+
+        [Test]
+        public void Online_BackToLobby_TakesEveryoneBack_MainMenu_LeavesTheSession()
+        {
+            // Main Menu online took everyone back to the Dispatch room, not to the title screen (playtest, 2026-10-24)
+            GameAuthority.Role = NetworkRole.Host;
+            pause.OnPause(PauseMenu.PauseType.Host);
+
+            Choose(2);
+            Assert.AreEqual(1, returns, "back to lobby");
+            Assert.AreEqual(0, leaves);
+
+            pause.ResetMenu();
+            Choose(3);
+            Assert.AreEqual(1, leaves, "main menu");
+            Assert.AreEqual(1, returns);
+        }
+
+        [Test]
+        public void Local_MainMenu_GoesBackToTheMenu()
+        {
+            pause.OnPause(PauseMenu.PauseType.Host);
+
+            Choose(3);
+
+            Assert.AreEqual(1, returns);
+            Assert.AreEqual(0, leaves);
+        }
+
+        void Choose(int entry)
+        {
+            for (int i = 0; i < pause.selectorObjects.Length && pause.Selected != pause.selectorObjects[entry]; i++)
+                pause.ScrollMenu(true);
+            Assert.AreSame(pause.selectorObjects[entry], pause.Selected, "picked");
+            pause.ConfirmMenu();
         }
 
         [Test]

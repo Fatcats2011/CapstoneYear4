@@ -66,11 +66,26 @@ namespace DoA.Tests
         }
 
         [Test]
-        public void CompassDistanceText_IsWholeFeet()
+        public void CompassDistanceText_IsWholeMetres_OrFeet()
         {
-            Assert.AreEqual("5ft", CompassIconUI.DistanceText(5));
-            Assert.AreEqual("120ft", CompassIconUI.DistanceText(120));
-            Assert.AreEqual("0ft", CompassIconUI.DistanceText(0));
+            // The world is in metres: it showed them labelled ft (playtest, 2026-10-24: a metric / imperial setting)
+            bool was = Units.Imperial;
+            try
+            {
+                Units.Imperial = false;
+                Assert.AreEqual("5m", CompassIconUI.DistanceText(5));
+                Assert.AreEqual("120m", CompassIconUI.DistanceText(120));
+                Assert.AreEqual("0m", CompassIconUI.DistanceText(0));
+
+                Units.Imperial = true;
+                Assert.AreEqual("16ft", CompassIconUI.DistanceText(5));
+                Assert.AreEqual("394ft", CompassIconUI.DistanceText(120));
+                Assert.AreEqual("0ft", CompassIconUI.DistanceText(0));
+            }
+            finally
+            {
+                Units.Imperial = was;
+            }
         }
 
         [Test]

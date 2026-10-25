@@ -101,7 +101,7 @@ public class PlayerInstantiate : SingletonMonobehaviour<PlayerInstantiate>
         // The game joins players itself: controllers on any button, the keyboard on Space or Enter. Only the kept
         // instance: the menu scene's copy, which a return to the menu brings and destroys, mustn't switch joining off
         if (Instance == this)
-            PlayerJoiner.Enable(TurnAwayKey, WelcomesJoins);
+            PlayerJoiner.Enable(TurnAwayKey, WelcomesJoins, HandOverDevice);
     }
 
     // Whether a new player may join now (PlayerJoiner.Welcomes): nobody is made mid-match only to be destroyed
@@ -109,6 +109,28 @@ public class PlayerInstantiate : SingletonMonobehaviour<PlayerInstantiate>
     {
         return PlayerJoiner.Welcomes(online, allowPlayerSpawn, PlayerCount, roster.LocalCount,
             gameManager != null && gameManager.MainState == GameState.PlayerSelect, OnlineRules.OnePlayerPerMachine);
+    }
+
+    // Nobody new is joining and someone used a device nobody has: the one player on this machine takes it up, keyboard to
+    // controller or back (playtest, 2026-10-24). With two or more here, whose it is can't be told, so nothing changes
+    private void HandOverDevice(InputDevice device, string scheme)
+    {
+        if (roster.LocalCount != 1)
+            return;
+
+        foreach (PlayerSlot slot in roster.LocalPlayers)
+        {
+            PlayerInput input = slot.Input;
+            if (input == null || input.devices.IndexOf(d => d == device) >= 0)
+                return;
+
+            // Pairs the device and lets the old one go (an unused device again, which hands it back the same way). The
+            // player's prompts follow (ButtonGlyph), and rumble goes to the new pad
+            input.SwitchCurrentControlScheme(scheme, device);
+            playerGamepads[slot.Index] = device as Gamepad;
+            UpdateControllerPrompts();
+            return;
+        }
     }
 
     private void Start()
@@ -233,6 +255,8 @@ public class PlayerInstantiate : SingletonMonobehaviour<PlayerInstantiate>
         BindingStore.Current.Apply(slot.Index + 1, playerInput.actions.FindActionMap(BindingStore.PLAYER_MAP));
         // Its menus' hand-lettered words and placed texts follow the language (they arrive with the player, after the scene)
         DrawnWords.SwapUnder(playerInput.gameObject);
+        // Its menus' drawn button prompts follow its device (they arrive with the player, after the scene)
+        ButtonGlyphs.AttachUnder(playerInput.gameObject);
 
         if (isFirstPlayer)
         {

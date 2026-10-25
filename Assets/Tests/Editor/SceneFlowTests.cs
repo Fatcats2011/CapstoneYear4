@@ -23,6 +23,7 @@ namespace DoA.Tests
         public void LoadGameScene() { GameLoads++; }
         public void LoadFinalOrderScene() { FinalOrderLoads++; }
         public void ReturnToMenu() { MenuReturns++; OnReturnToMenu?.Invoke(); }
+        public void LeaveToMenu() { ReturnToMenu(); }
         public void ConfirmLoad() { Confirms++; }
         public void Rematch() { Rematches++; }
     }
@@ -42,6 +43,24 @@ namespace DoA.Tests
             SoundManager.instance = null;
             PlayerInstantiate.instance = null;
             objects.DestroyAll();
+        }
+
+        [Test]
+        public void LoadingScreen_ShowsTheKeyboard_OnlyWhenEveryPlayerHereIsOnOne()
+        {
+            // Playtest, 2026-10-24: the controls screen showed a controller to keyboard players
+            string keys = KeyboardControls.SCHEME, pad = PlayerJoiner.GAMEPAD_SCHEME;
+            Assert.IsTrue(SceneManager.AllOnKeyboard(new[] { keys }));
+            Assert.IsTrue(SceneManager.AllOnKeyboard(new[] { keys, keys }));
+            Assert.IsFalse(SceneManager.AllOnKeyboard(new[] { keys, pad }), "one on a controller");
+            Assert.IsFalse(SceneManager.AllOnKeyboard(new[] { pad }));
+            Assert.IsFalse(SceneManager.AllOnKeyboard(new string[0]), "nobody");
+        }
+
+        [Test]
+        public void LoadingScreen_TheKeyboardArtIsThere()
+        {
+            Assert.IsNotNull(Resources.Load<Sprite>("Loading/DOA_LoadingScreen_Keyboard"));
         }
 
         [Test]

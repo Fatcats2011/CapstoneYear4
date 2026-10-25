@@ -493,11 +493,15 @@ public class MenuInteractions : MonoBehaviour
     }
 
     ///<summary>
-    /// Start in player select: the player who works the menus opens or closes MATCH RULES (offline, or the online host)
+    /// Start (M on a keyboard) in player select: the player who works the menus opens or closes MATCH RULES (offline, or
+    /// the online host)
     ///</summary>
     private void ToggleRules(bool button)
     {
         if (!hostPlayer || !GameAuthority.IsAuthority || curentMenuType != MenuType.PlayerSelect)
+            return;
+        // On a keyboard M opens it. Escape (the same action, the pause key) only closes it
+        if (RulesPanel.Showing == null && Keyboard.current != null && Keyboard.current.escapeKey.wasPressedThisFrame)
             return;
 
         if (RulesPanel.Showing != null)

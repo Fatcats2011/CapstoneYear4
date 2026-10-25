@@ -72,7 +72,7 @@ namespace DoA.Tests
             Assert.AreEqual(options.ResolutionRow.Shown, options.ResolutionRow.Applied);
             options.ScrollMenuUpDown(true);
             options.ScrollMenuUpDown(true);
-            Assert.AreEqual(OptionsMenu.OptionSelected.BGM, options.optionSelected, "down past LANGUAGE: back to the first row");
+            Assert.AreEqual(OptionsMenu.OptionSelected.FULLSCREEN, options.optionSelected, "down past LANGUAGE: back to the first row (Music and Effects are on AUDIO)");
 
             yield return null;
             log.Dispose();

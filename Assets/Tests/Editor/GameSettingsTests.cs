@@ -172,18 +172,26 @@ namespace DoA.Tests
         [Test]
         public void OptionsPageKeys_AreClamped()
         {
-            GameSettings loaded = GameSettings.Parse("master=99\nbgmute=7\nsplit=-3\nreducemotion=5", Defaults);
+            GameSettings loaded = GameSettings.Parse("master=99\nbgmute=7\nsplit=-3\nreducemotion=5\nunits=4", Defaults);
 
             Assert.AreEqual(GameSettings.MAX_MASTER_POSITION, loaded.masterPosition);
             Assert.AreEqual(1, loaded.backgroundMute);
             Assert.AreEqual(0, loaded.splitLayout);
             Assert.AreEqual(1, loaded.reduceMotion);
+            Assert.AreEqual(1, loaded.units);
+        }
+
+        [Test]
+        public void Units_AreMetricUntilPicked_AndSaved()
+        {
+            Assert.AreEqual(0, GameSettings.Parse("", Defaults).units, "metric");
+            Assert.AreEqual(1, GameSettings.Parse(GameSettings.Parse("units=1", Defaults).ToText(), Defaults).units);
         }
 
         [Test]
         public void WithMenuPositions_KeepsTheOptionsPageKeys()
         {
-            GameSettings loaded = GameSettings.Parse("master=3\nsplit=1\nreducemotion=1\nbgmute=0", Defaults);
+            GameSettings loaded = GameSettings.Parse("master=3\nsplit=1\nreducemotion=1\nbgmute=0\nunits=1", Defaults);
 
             GameSettings saved = loaded.WithMenuPositions(1, 2, 0, GraphicsQuality.MEDIUM);
 
@@ -191,6 +199,7 @@ namespace DoA.Tests
             Assert.AreEqual(1, saved.splitLayout);
             Assert.AreEqual(1, saved.reduceMotion);
             Assert.AreEqual(0, saved.backgroundMute);
+            Assert.AreEqual(1, saved.units);
         }
     }
 }

@@ -1,5 +1,6 @@
 using System;
 using System.Collections;
+using System.Collections.Generic;
 using System.Threading;
 using TMPro;
 using Udar.SceneManager;
@@ -55,6 +56,7 @@ public class SceneManager : SingletonMonobehaviour<SceneManager>, ISceneFlow, IM
         UnityEngine.SceneManagement.SceneManager.sceneLoaded += RaiseSceneUp;
 
         GameManager.Instance.OnSwapMenu += HideLoadingScreen;
+        GameManager.Instance.OnSwapPlayerSelect += HideLoadingScreen; // online the menu scene opens on player select
         GameManager.Instance.OnSwapStartingCutscene += HideLoadingScreen;
         GameManager.Instance.OnSwapGoldenCutscene += HideLoadingScreen;
         GameManager.Instance.OnSwapResults += HideLoadingScreen; // no golden round: the golden scene opens on the results
@@ -69,6 +71,7 @@ public class SceneManager : SingletonMonobehaviour<SceneManager>, ISceneFlow, IM
         UnityEngine.SceneManagement.SceneManager.sceneLoaded -= RaiseSceneUp;
 
         GameManager.Instance.OnSwapMenu -= HideLoadingScreen;
+        GameManager.Instance.OnSwapPlayerSelect -= HideLoadingScreen;
         GameManager.Instance.OnSwapStartingCutscene -= HideLoadingScreen;
         GameManager.Instance.OnSwapGoldenCutscene -= HideLoadingScreen;
         GameManager.Instance.OnSwapResults -= HideLoadingScreen;
@@ -82,6 +85,7 @@ public class SceneManager : SingletonMonobehaviour<SceneManager>, ISceneFlow, IM
     // The local scene flow (ISceneFlow): LoadGameScene, LoadFinalOrderScene, ConfirmLoad and OnReturnToMenu are this
     // class's own public members
     void ISceneFlow.ReturnToMenu() { InvokeMenuSceneEvent(); }
+    void ISceneFlow.LeaveToMenu() { InvokeMenuSceneEvent(); }
 
     // A rematch: the same players, a fresh match, no tutorial, and the loading screen shows the match without waiting for A.
     // The pause menu's Restart is one too, from the game scene itself: the scene loads again
@@ -174,7 +178,7 @@ public class SceneManager : SingletonMonobehaviour<SceneManager>, ISceneFlow, IM
                 sceneLoadCoroutune = null;
             }
             HideLeaderboard();
-            tutorialImage.sprite = mainTut; // change this if we have a different loading screen for after results
+            tutorialImage.sprite = ControlsScreen(); // change this if we have a different loading screen for after results
             ShowLoadingScreen();
             sceneLoadCoroutune = StartCoroutine(LoadSceneAsync(PlayerSelectScene.BuildIndex, loadingScreenDelay, false, true));
         }
@@ -202,7 +206,7 @@ public class SceneManager : SingletonMonobehaviour<SceneManager>, ISceneFlow, IM
             }
 
             HideLeaderboard();
-            tutorialImage.sprite = mainTut;
+            tutorialImage.sprite = ControlsScreen();
             ShowLoadingScreen();
             sceneLoadCoroutune = StartCoroutine(LoadSceneAsync(GameScene.BuildIndex, loadingScreenDelay, waitForConfirm, false, holdForHost));
             
@@ -322,6 +326,40 @@ public class SceneManager : SingletonMonobehaviour<SceneManager>, ISceneFlow, IM
 
         // Resets button objects after scene swaps
         StartCoroutine(LoadingScreenManager.Instance.DisableButtonGameobjects());
+    }
+
+    const string KEYBOARD_SCREEN = "Loading/DOA_LoadingScreen_Keyboard"; // tools/loading-keyboard-art.py
+    Sprite keyboardTut;
+
+    // The controls the loading screen shows: the keyboard's when every player here is on one, else the controller's
+    // (playtest, 2026-10-24: it showed a controller to keyboard players)
+    Sprite ControlsScreen()
+    {
+        List<string> schemes = new List<string>();
+        if (PlayerInstantiate.Instance != null)
+        {
+            foreach (PlayerSlot slot in PlayerInstantiate.Instance.Roster.LocalPlayers)
+                schemes.Add(slot.Input != null ? slot.Input.currentControlScheme : null);
+        }
+        if (!AllOnKeyboard(schemes))
+            return mainTut;
+
+        if (keyboardTut == null)
+            keyboardTut = Resources.Load<Sprite>(KEYBOARD_SCREEN);
+        return keyboardTut != null ? keyboardTut : mainTut;
+    }
+
+    /// <summary>Whether every player here plays on a keyboard (their control schemes), and there's at least one</summary>
+    public static bool AllOnKeyboard(IEnumerable<string> schemes)
+    {
+        bool any = false;
+        foreach (string scheme in schemes)
+        {
+            if (scheme != KeyboardControls.SCHEME)
+                return false;
+            any = true;
+        }
+        return any;
     }
 
     private void ShowLoadingScreen()

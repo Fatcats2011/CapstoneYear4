@@ -19,6 +19,7 @@ public static class PlayerJoiner
 
     static Action<InputDevice> turnedAway;
     static Func<bool> welcomes;
+    static Action<InputDevice, string> handOver;
 
     /// <summary>Whether the game joins players now (from PlayerInstantiate's OnEnable to its OnDisable)</summary>
     public static bool Enabled { get; private set; }
@@ -28,10 +29,13 @@ public static class PlayerJoiner
     /// </summary>
     /// <param name="onTurnedAway">A key that doesn't join was pressed on a keyboard nobody uses</param>
     /// <param name="welcomesJoins">Whether the game takes a new player now (null: always)</param>
-    public static void Enable(Action<InputDevice> onTurnedAway, Func<bool> welcomesJoins = null)
+    /// <param name="handsOver">While the game takes nobody new: a device nobody uses was used (HandOverSchemeFor), with
+    /// its scheme. The game gives it to its one player here, if there's one</param>
+    public static void Enable(Action<InputDevice> onTurnedAway, Func<bool> welcomesJoins = null, Action<InputDevice, string> handsOver = null)
     {
         turnedAway = onTurnedAway;
         welcomes = welcomesJoins;
+        handOver = handsOver;
         UseManualJoins();
         if (Enabled)
             return;
@@ -50,6 +54,7 @@ public static class PlayerJoiner
         Enabled = false;
         turnedAway = null;
         welcomes = null;
+        handOver = null;
         InputUser.onUnpairedDeviceUsed -= OnUnpairedDeviceUsed;
         InputUser.listenForUnpairedDeviceActivity--;
     }
@@ -99,6 +104,24 @@ public static class PlayerJoiner
         return null;
     }
 
+    /// <summary>
+    /// The control scheme a press hands a device over with, to a player already here: any controller button, any key but
+    /// the function keys (developer hotkeys), else null
+    /// </summary>
+    public static string HandOverSchemeFor(InputControl control, InputEventPtr eventPtr)
+    {
+        if (!(control is ButtonControl button) || !Pressed(button, eventPtr))
+            return null;
+
+        if (control.device is Gamepad)
+            return GAMEPAD_SCHEME;
+
+        if (control.device is Keyboard && !(control is KeyControl key && key.keyCode >= Key.F1 && key.keyCode <= Key.F12))
+            return KeyboardControls.SCHEME;
+
+        return null;
+    }
+
     static bool Pressed(ButtonControl button, InputEventPtr eventPtr)
     {
         return button.ReadValueFromEvent(eventPtr, out float value) && value >= button.pressPointOrDefault;
@@ -107,8 +130,17 @@ public static class PlayerJoiner
     static void OnUnpairedDeviceUsed(InputControl control, InputEventPtr eventPtr)
     {
         PlayerInputManager manager = PlayerInputManager.instance;
-        if (manager == null || !manager.joiningEnabled || (welcomes != null && !welcomes()))
+        if (manager == null || !manager.joiningEnabled)
             return;
+
+        // Nobody new now: the device may go to the player already here
+        if (welcomes != null && !welcomes())
+        {
+            string handedWith = handOver != null ? HandOverSchemeFor(control, eventPtr) : null;
+            if (handedWith != null)
+                handOver(control.device, handedWith);
+            return;
+        }
 
         string scheme = SchemeFor(control, eventPtr);
         if (scheme != null)

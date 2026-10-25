@@ -50,10 +50,15 @@ ROWS = [
     ("options.split.stacked", "Split-screen layout: top and bottom", "STACKED"),
     ("options.split.sidebyside", "Split-screen layout: left and right", "SIDE BY SIDE"),
     ("options.master", "Options row: overall volume", "MASTER"),
+    ("options.music", "Options row: music volume", "MUSIC"),
+    ("options.effects", "Options row: sound effects volume", "EFFECTS"),
     ("options.background", "Options row: sound while the game window isn't in front", "IN THE BACKGROUND"),
     ("options.background.mute", "Choice", "MUTE"),
     ("options.background.keep", "Choice", "KEEP PLAYING"),
     ("options.reducemotion", "Options row: fewer camera effects", "REDUCE MOTION"),
+    ("options.units", "Options row: how distances are shown", "UNITS"),
+    ("options.units.metric", "Units: metres", "METRIC"),
+    ("options.units.imperial", "Units: feet", "IMPERIAL"),
 
     # Pause menu
     ("pause.restart", "Pause menu entry", "RESTART"),

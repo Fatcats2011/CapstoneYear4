@@ -99,9 +99,15 @@ namespace DoA.Tests
             Assert.AreEqual(4, options.Book.Pages.Count);
             GameObject drawnRow = options.ResolutionRow.gameObject;
 
+            // Music and Effects are on AUDIO, not GENERAL (playtest, 2026-10-24): GENERAL starts at Fullscreen
+            Assert.AreEqual(OptionsMenu.OptionSelected.FULLSCREEN, options.optionSelected);
+            Assert.AreEqual("AUDIO", options.Book.Pages[2].Name);
+            CollectionAssert.AreEqual(new[] { "MASTER", "MUSIC", "EFFECTS", "IN THE BACKGROUND" },
+                System.Linq.Enumerable.Select(options.RowsOn(2), row => row.LabelText));
+
             options.TurnPage(true);
             Assert.AreEqual("DISPLAY", options.Book.Current.Name);
-            Assert.AreEqual(5, options.RowsOn(1).Count);
+            Assert.AreEqual(6, options.RowsOn(1).Count); // ... Split screen, Units
             Assert.IsTrue(options.RowsOn(1)[0].gameObject.activeInHierarchy, "DISPLAY's rows show");
             Assert.IsFalse(drawnRow.activeInHierarchy, "GENERAL's rows hide");
 

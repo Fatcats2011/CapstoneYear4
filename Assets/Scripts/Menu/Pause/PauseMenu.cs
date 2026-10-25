@@ -35,7 +35,8 @@ public class PauseMenu : MonoBehaviour, IMouseMenu
 
     // What the entries do; tests swap them
     internal Action Restart = RestartMatch;
-    internal Action Leave; // null: ReturnToMenu
+    internal Action Leave; // null: ReturnToMenu. Online, Back to Lobby
+    internal Action LeaveSession; // null: LeaveToMenu. Online, Main Menu
 
     const string BANGERS = "Fonts & Materials/Bangers SDF"; // in TextMesh Pro's Examples & Extras Resources
     const float ENTRY_SIZE = 90f;
@@ -47,6 +48,7 @@ public class PauseMenu : MonoBehaviour, IMouseMenu
     float entryStep; // between the drawn entries
     TMP_Text restartEntry;
     TMP_Text controlsEntry;
+    TMP_Text lobbyEntry; // online host only: everyone back to the Dispatch room
     TMP_Text subControlsEntry;
     GameObject restartQuestion;
     bool confirming;
@@ -60,6 +62,12 @@ public class PauseMenu : MonoBehaviour, IMouseMenu
 
     /// <summary>The code-built Controls entry on the host's pause (null until the first host pause)</summary>
     internal TMP_Text ControlsEntry => controlsEntry;
+
+    /// <summary>The code-built Back to Lobby entry, on the online host's pause (null until the first host pause)</summary>
+    internal TMP_Text LobbyEntry => lobbyEntry;
+
+    /// <summary>The entry the selector is on</summary>
+    internal GameObject Selected => selectorObjects[selectorPos];
 
     /// <summary>The other players' pause: its one entry, Controls (null until the first)</summary>
     internal TMP_Text SubControlsEntry => subControlsEntry;
@@ -80,7 +88,8 @@ public class PauseMenu : MonoBehaviour, IMouseMenu
         SceneFlow.Current.Rematch();
     }
 
-    // The entries for this pause: Resume, Restart (a local match only), Controls, Main Menu, a step apart
+    // The entries for this pause, a step apart: Resume, Restart (a local match only), Controls, Back to Lobby (the online
+    // host only), Main Menu
     void ArrangeEntries()
     {
         if (selectorObjects == null || selectorObjects.Length < 2)
@@ -94,15 +103,18 @@ public class PauseMenu : MonoBehaviour, IMouseMenu
             TMP_FontAsset font = Resources.Load<TMP_FontAsset>(BANGERS);
             restartEntry = Entry(drawnMenu, "Restart", "pause.restart", font);
             controlsEntry = Entry(drawnMenu, "Controls", "pause.controls", font);
+            lobbyEntry = Entry(drawnMenu, "Back To Lobby", "results.backtolobby", font);
             BuildQuestion(drawnMenu.parent, drawnMenu, font);
         }
 
         GameObject resume = drawnEntries[0];
         GameObject mainMenu = drawnEntries[drawnEntries.Length - 1];
         bool local = !GameAuthority.IsOnline;
+        bool host = GameAuthority.Role == NetworkRole.Host;
         restartEntry.gameObject.SetActive(local);
-        selectorObjects = local
-            ? new[] { resume, restartEntry.gameObject, controlsEntry.gameObject, mainMenu }
+        lobbyEntry.gameObject.SetActive(host);
+        selectorObjects = local ? new[] { resume, restartEntry.gameObject, controlsEntry.gameObject, mainMenu }
+            : host ? new[] { resume, controlsEntry.gameObject, lobbyEntry.gameObject, mainMenu }
             : new[] { resume, controlsEntry.gameObject, mainMenu };
         for (int i = 1; i < selectorObjects.Length; i++)
         {
@@ -511,6 +523,14 @@ public class PauseMenu : MonoBehaviour, IMouseMenu
             Ask(false);
             Restart();
         }
+        else if (lobbyEntry != null && chosen == lobbyEntry.gameObject) // online host: everyone back to Dispatch
+        {
+            (Leave ?? ReturnToMenu)();
+        }
+        else if (GameAuthority.IsOnline) // Main Menu online: out of the session, to the title screen
+        {
+            (LeaveSession ?? LeaveToMenu)();
+        }
         else // Main Menu, the last
         {
             (Leave ?? ReturnToMenu)();
@@ -522,6 +542,14 @@ public class PauseMenu : MonoBehaviour, IMouseMenu
         SoundManager.Instance.ChangeSnapshot("gameplay");
         PlayerInstantiate.Instance.PlayerPlay();
         SceneFlow.Current.ReturnToMenu();
+        selectorPos = 0;
+    }
+
+    void LeaveToMenu()
+    {
+        SoundManager.Instance.ChangeSnapshot("gameplay");
+        PlayerInstantiate.Instance.PlayerPlay();
+        SceneFlow.Current.LeaveToMenu();
         selectorPos = 0;
     }
 

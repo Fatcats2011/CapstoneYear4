@@ -18,3 +18,25 @@ MonoBehaviour:
   backXbox: {fileID: 683892649, guid: 46ec18ed4c1828e43ba5e1786f04af98, type: 3}
   backPlayStation: {fileID: 21300000, guid: 2c5dbc19415207a21d1c53c1b7084890, type: 3}
   backKeyboard: {fileID: 21300000, guid: 5b6d1825eea3ad796c411d85b6c73383, type: 3}
+  startXbox: {fileID: 21300000, guid: c1c25f34596ce79772ac84479cebf59e, type: 3}
+  startPlayStation: {fileID: 21300000, guid: a10fdbbf0120d9350da91d3cf8c244cd, type: 3}
+  startKeyboard: {fileID: 21300000, guid: 2f34300afc21e612b9c02c83175f3a63, type: 3}
+  glyphs:
+  - xbox: {fileID: -161024827, guid: 46ec18ed4c1828e43ba5e1786f04af98, type: 3}
+    playStation: {fileID: 21300000, guid: 3339f9a908e66a711248f1408c2b7913, type: 3}
+    keyboard: {fileID: 21300000, guid: 2c56c552b18bc39b65f4a886577e7f97, type: 3}
+  - xbox: {fileID: 683892649, guid: 46ec18ed4c1828e43ba5e1786f04af98, type: 3}
+    playStation: {fileID: 21300000, guid: 2c5dbc19415207a21d1c53c1b7084890, type: 3}
+    keyboard: {fileID: 21300000, guid: 5b6d1825eea3ad796c411d85b6c73383, type: 3}
+  - xbox: {fileID: 171654581, guid: 46ec18ed4c1828e43ba5e1786f04af98, type: 3}
+    playStation: {fileID: 21300000, guid: cb1a7eab41e3acefa5769cd7f4399ec1, type: 3}
+    keyboard: {fileID: 21300000, guid: eae505e2a31d0492a2b0cef23d5601fc, type: 3}
+  - xbox: {fileID: -1254781297, guid: 46ec18ed4c1828e43ba5e1786f04af98, type: 3}
+    playStation: {fileID: 21300000, guid: 577e567b47c26505207d932c4afa48ed, type: 3}
+    keyboard: {fileID: 21300000, guid: f8118fc6f7ca3a6e0e66386e64405912, type: 3}
+  - xbox: {fileID: 1377192483, guid: 46ec18ed4c1828e43ba5e1786f04af98, type: 3}
+    playStation: {fileID: 21300000, guid: 36b18607e93ec6f6ea507e2cfc7062fd, type: 3}
+    keyboard: {fileID: 21300000, guid: f89fa8cd432681e572462c42a93d8e2f, type: 3}
+  - xbox: {fileID: -1059551676, guid: 46ec18ed4c1828e43ba5e1786f04af98, type: 3}
+    playStation: {fileID: 21300000, guid: 96720be62aa697f87551155f3dd7ebdd, type: 3}
+    keyboard: {fileID: 21300000, guid: c6b811eb6bc834160163de40cf20ae30, type: 3}

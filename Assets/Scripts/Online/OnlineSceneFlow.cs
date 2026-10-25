@@ -178,6 +178,19 @@ public class OnlineSceneFlow : ISceneFlow
             local.ReturnToMenu();
     }
 
+    /// <summary>
+    /// This machine leaves the session, host or not, and goes back to the menu on its own: offline by the time the menu
+    /// scene is up, so it opens on the title screen
+    /// </summary>
+    public void LeaveToMenu()
+    {
+        if (link != null && leave != null)
+            leave();
+
+        if (local != null)
+            local.ReturnToMenu();
+    }
+
     public event Action OnReturnToMenu
     {
         add

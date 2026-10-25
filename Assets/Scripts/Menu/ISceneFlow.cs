@@ -17,6 +17,12 @@ public interface ISceneFlow
     void ReturnToMenu();
 
     /// <summary>
+    /// Online: leaves the session (the host leaving ends it for everyone) and goes back to the title screen. Offline,
+    /// the same as ReturnToMenu
+    /// </summary>
+    void LeaveToMenu();
+
+    /// <summary>
     /// Loads the match again with the same players, after the results' rematch vote: scores and the rest reset
     /// (GameManager.OnNewMatch), no tutorial, and no "press A" on the loading screen
     /// </summary>

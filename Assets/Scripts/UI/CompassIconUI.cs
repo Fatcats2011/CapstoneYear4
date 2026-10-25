@@ -63,10 +63,10 @@ public class CompassIconUI : MonoBehaviour
         distanceTextChildRight.text = text;
     }
 
-    /// <summary>A distance as the icon shows it, in whole feet</summary>
+    /// <summary>A distance in metres as the icon shows it: whole metres, or whole feet (Units)</summary>
     public static string DistanceText(int distance)
     {
-        return distance + "ft";
+        return Units.Distance(distance);
     }
 
     int shownDistance = int.MinValue; // the distance the texts show
