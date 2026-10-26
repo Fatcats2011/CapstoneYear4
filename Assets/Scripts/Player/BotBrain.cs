@@ -3,8 +3,8 @@ using UnityEngine;
 
 /// <summary>
 /// A CPU driver's choices (bots, phase G1 of docs/superpowers/specs/2026-10-23-modern-features-handoff.md, section 2):
-/// where to go, how to steer, when to boost. It drives straight at its target (there's no road NavMesh yet), boosting
-/// lined up on a far one, which phases it through buildings as it does a player. BotDriver feeds it the scene
+/// where to go, how to steer, when to boost. It steers at the next corner of its path to the target (BotDriver asks the
+/// Scooter NavMesh for it), boosting lined up on a far corner. BotDriver feeds it the scene
 /// </summary>
 public static class BotBrain
 {
@@ -16,6 +16,8 @@ public static class BotBrain
     public const float BOOST_DISTANCE = 40f;
     /// <summary>The least throttle in the sharpest turn</summary>
     public const float TURN_THROTTLE = 0.4f;
+    /// <summary>A path corner this close on the ground (metres) counts as reached</summary>
+    public const float CORNER_REACHED = 4f;
 
     /// <summary>The spot nearest on the ground (height ignored), or -1 with none</summary>
     public static int Nearest(Vector3 from, IReadOnlyList<Vector3> spots)
@@ -32,6 +34,20 @@ public static class BotBrain
             }
         }
         return best;
+    }
+
+    /// <summary>
+    /// Which path corner to steer at, going on from the one it steered at last (1 for a new path: the first corner is
+    /// where the path starts): the first from there not reached yet, else the last. -1 with no corners
+    /// </summary>
+    public static int NextCorner(Vector3 from, IReadOnlyList<Vector3> corners, int current)
+    {
+        if (corners.Count == 0)
+            return -1;
+        int i = Mathf.Clamp(current, 0, corners.Count - 1);
+        while (i < corners.Count - 1 && Flat(corners[i] - from).magnitude <= CORNER_REACHED)
+            i++;
+        return i;
     }
 
     /// <summary>The bearing to a target from the way the scooter faces, in degrees: negative left, positive right</summary>

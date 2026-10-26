@@ -166,13 +166,7 @@ The room scene and the board are set up (`DispatchRoom`, `RoomClock`, the board 
 - Online safety: `docs/online-safety.md`.
 - How the keyboard and display settings work: `docs/controls.md`. Steam features: `docs/steam/in-game-features.md`.
 - What's next: `docs/superpowers/plans/2026-10-01-remaining-work-handoff.md`.
-
-## Bots: a NavMesh for the scooters (10 minutes, main editor)
-
-Bots phase G1 is code only (`BotBrain`, `BotDriver`; F7 with developer tools hands Player 1's scooter to a bot). Driving straight at an order, a bot gets stuck behind buildings, so it needs paths:
-- In `Design Scene(Main)` (and `FinalAreaScene`), add an agent type for the scooter in Navigation (radius about 1, height 2, step 0.4, slope 30) and bake a NavMesh for it over the roads (not the sidewalks-only mesh `CivilianAgent` uses).
-- Then `BotDriver` can steer along `NavMesh.CalculatePath` corners instead of straight at the target, and `BotDriverPlayTests` (now Explicit) can join the suite.
-- Worth a look meanwhile: with the bot boosting into a building, the scooter rose straight up on the spot (to 400 m). A player holding boost into a wall may be able to do the same.
+- Bots path on the **Scooter** NavMesh (agent type Scooter; a NavMesh Surface for it in `Design Scene(Main)` and `FinalAreaScene`). After moving roads, walls or buildings, select that surface and **Bake** again, then save the scene. Its NavMesh Modifiers keep rocks, walls, buildings and the pedestrians' road blockers out; kickables are left out of the bake.
 
 ## Localization: Set Up (2 minutes, main editor)
 

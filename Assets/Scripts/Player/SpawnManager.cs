@@ -89,9 +89,7 @@ public class SpawnManager : SingletonMonobehaviour<SpawnManager>
                 continue;
             }
             city.HoldFor(1f); // the next player gets another point
-            Vector3 facing = city.PlayerFacingDirection;
-            Quaternion heading = facing.sqrMagnitude > 0.0001f ? Quaternion.LookRotation(facing) : city.transform.rotation;
-            PlacePlayer(player, city.PlayerSpawn, heading);
+            PlacePlayer(player, city.PlayerSpawn, city.PlayerFacing);
         }
     }
 

@@ -38,7 +38,6 @@ RenderSettings:
   m_ReflectionIntensity: 0.07
   m_CustomReflection: {fileID: 0}
   m_Sun: {fileID: 0}
-  m_IndirectSpecularColor: {r: 0.0030447352, g: 0.002772325, b: 0.00736833, a: 0.07}
   m_UseRadianceAmbientProbe: 0
 --- !u!157 &3
 LightmapSettings:
@@ -175,7 +174,7 @@ MonoBehaviour:
   m_Size: {x: 32.38394, y: 3, z: 12.291145}
   m_Center: {x: -11.748547, y: 1, z: 24.86356}
   m_Area: 1
-  m_AffectedAgents: ffffffff
+  m_AffectedAgents: 00000000
 --- !u!1001 &3241044
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -1238,7 +1237,7 @@ MonoBehaviour:
   m_Size: {x: 12.937389, y: 3, z: 38.148193}
   m_Center: {x: -0.92443275, y: 1, z: 13.290333}
   m_Area: 1
-  m_AffectedAgents: ffffffff
+  m_AffectedAgents: 00000000
 --- !u!1001 &15953712
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -6588,7 +6587,7 @@ MonoBehaviour:
   m_Size: {x: 32.51757, y: 3, z: 12.377033}
   m_Center: {x: -11.294598, y: 1, z: 17.463278}
   m_Area: 1
-  m_AffectedAgents: ffffffff
+  m_AffectedAgents: 00000000
 --- !u!1 &83126945
 GameObject:
   m_ObjectHideFlags: 0
@@ -15508,7 +15507,7 @@ MonoBehaviour:
   m_Size: {x: 17.90726, y: 3, z: 6.554404}
   m_Center: {x: 2.4441833, y: 1, z: -1.7246788}
   m_Area: 1
-  m_AffectedAgents: ffffffff
+  m_AffectedAgents: 00000000
 --- !u!1001 &171042268
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -22184,6 +22183,69 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 5236729054169099525, guid: ec91aea665ff0d24789e50105b0f02fb, type: 3}
   m_PrefabInstance: {fileID: 241135871}
   m_PrefabAsset: {fileID: 0}
+--- !u!1 &242406525
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 242406526}
+  - component: {fileID: 242406527}
+  m_Layer: 0
+  m_Name: ScooterNavMesh
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &242406526
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 242406525}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 35.925285, y: 8.966783, z: 12.265747}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1871512229}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &242406527
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 242406525}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7a5ac11cc976e418e8d13136b07e1f52, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_AgentTypeID: -1372625422
+  m_CollectObjects: 0
+  m_Size: {x: 10, y: 10, z: 10}
+  m_Center: {x: 0, y: 2, z: 0}
+  m_LayerMask:
+    serializedVersion: 2
+    m_Bits: 1073693615
+  m_UseGeometry: 1
+  m_DefaultArea: 0
+  m_GenerateLinks: 0
+  m_IgnoreNavMeshAgent: 1
+  m_IgnoreNavMeshObstacle: 1
+  m_OverrideTileSize: 0
+  m_TileSize: 256
+  m_OverrideVoxelSize: 0
+  m_VoxelSize: 0.33333334
+  m_MinRegionArea: 2
+  m_NavMeshData: {fileID: 23800000, guid: f03609f88c94c0648bfcad20957a22e0, type: 2}
+  m_BuildHeightMesh: 0
 --- !u!1 &243995995
 GameObject:
   m_ObjectHideFlags: 0
@@ -26371,7 +26433,7 @@ MonoBehaviour:
   m_Size: {x: 22.571815, y: 3, z: 16.591743}
   m_Center: {x: 53.45663, y: 1, z: 24.940632}
   m_Area: 1
-  m_AffectedAgents: ffffffff
+  m_AffectedAgents: 00000000
 --- !u!1001 &286105341
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -37551,7 +37613,7 @@ MonoBehaviour:
   m_Size: {x: 11.685379, y: 3, z: 16.720535}
   m_Center: {x: 7.9619446, y: 1, z: -3.0285873}
   m_Area: 1
-  m_AffectedAgents: ffffffff
+  m_AffectedAgents: 00000000
 --- !u!1001 &406978617
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -46156,6 +46218,7 @@ Terrain:
   m_DetailObjectDensity: 1
   m_HeightmapPixelError: 5
   m_SplatMapDistance: 1000
+  m_HeightmapMinimumLODSimplification: 0
   m_HeightmapMaximumLOD: 0
   m_ShadowCastingMode: 2
   m_DrawHeightmap: 1
@@ -55306,7 +55369,7 @@ MonoBehaviour:
   m_Size: {x: 10.761513, y: 3, z: 27.70203}
   m_Center: {x: -0.41656876, y: 1, z: 9.800779}
   m_Area: 1
-  m_AffectedAgents: ffffffff
+  m_AffectedAgents: 00000000
 --- !u!1 &622386666
 GameObject:
   m_ObjectHideFlags: 0
@@ -71967,7 +72030,7 @@ MonoBehaviour:
   m_Size: {x: 11.585037, y: 3, z: 26.785559}
   m_Center: {x: 16.044163, y: 1, z: 14.447747}
   m_Area: 1
-  m_AffectedAgents: ffffffff
+  m_AffectedAgents: 00000000
 --- !u!1001 &801373403
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -76987,7 +77050,7 @@ MonoBehaviour:
   m_Size: {x: 11.585037, y: 3, z: 31.199898}
   m_Center: {x: 16.044163, y: 1, z: 12.444893}
   m_Area: 1
-  m_AffectedAgents: ffffffff
+  m_AffectedAgents: 00000000
 --- !u!1001 &854361468
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -85504,6 +85567,7 @@ Terrain:
   m_DetailObjectDensity: 1
   m_HeightmapPixelError: 5
   m_SplatMapDistance: 1000
+  m_HeightmapMinimumLODSimplification: 0
   m_HeightmapMaximumLOD: 0
   m_ShadowCastingMode: 2
   m_DrawHeightmap: 1
@@ -86675,7 +86739,7 @@ MonoBehaviour:
   m_Size: {x: 21.34581, y: 3, z: 8.204773}
   m_Center: {x: 42.960274, y: 1, z: 4.299431}
   m_Area: 1
-  m_AffectedAgents: ffffffff
+  m_AffectedAgents: 00000000
 --- !u!1001 &958994126
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -87240,7 +87304,7 @@ MonoBehaviour:
   m_Size: {x: 13.771149, y: 3, z: 118.12224}
   m_Center: {x: -72.5217, y: 1, z: 26.247711}
   m_Area: 1
-  m_AffectedAgents: ffffffff
+  m_AffectedAgents: 00000000
 --- !u!1 &964099746
 GameObject:
   m_ObjectHideFlags: 0
@@ -90919,7 +90983,7 @@ MonoBehaviour:
   m_Size: {x: 11.412447, y: 3, z: 27.781523}
   m_Center: {x: -0.09110165, y: 1, z: 9.761033}
   m_Area: 1
-  m_AffectedAgents: ffffffff
+  m_AffectedAgents: 00000000
 --- !u!1001 &996140446
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -92395,11 +92459,6 @@ MonoBehaviour:
   - {fileID: 766900851}
   - {fileID: 711624295}
   - {fileID: 1049598015}
-  nonTutorialSpawnPositions:
-  - {fileID: 908477326}
-  - {fileID: 1626968235}
-  - {fileID: 499022400}
-  - {fileID: 167708082}
   goldenPackageSpawnPositions:
   - {fileID: 962868413}
   - {fileID: 700977563}
@@ -93079,12 +93138,12 @@ MonoBehaviour:
   m_RequiresColorTexture: 0
   m_Version: 2
   m_TaaSettings:
-    quality: 3
-    frameInfluence: 0.1
-    jitterScale: 1
-    mipBias: 0
-    varianceClampScale: 0.9
-    contrastAdaptiveSharpening: 0
+    m_Quality: 3
+    m_FrameInfluence: 0.1
+    m_JitterScale: 1
+    m_MipBias: 0
+    m_VarianceClampScale: 0.9
+    m_ContrastAdaptiveSharpening: 0
 --- !u!20 &1019436585
 Camera:
   m_ObjectHideFlags: 0
@@ -93564,7 +93623,7 @@ MonoBehaviour:
   m_Size: {x: 5.6020355, y: 3, z: 33.210983}
   m_Center: {x: -2.996317, y: 1, z: 10.821727}
   m_Area: 1
-  m_AffectedAgents: ffffffff
+  m_AffectedAgents: 00000000
 --- !u!1001 &1021463823
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -96170,7 +96229,7 @@ MonoBehaviour:
   m_Size: {x: 12.017253, y: 3, z: 29.435558}
   m_Center: {x: 0.2112937, y: 1, z: 8.934015}
   m_Area: 1
-  m_AffectedAgents: ffffffff
+  m_AffectedAgents: 00000000
 --- !u!1001 &1060386166
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -96977,7 +97036,7 @@ MonoBehaviour:
   m_Size: {x: 85.02238, y: 3, z: 11.608204}
   m_Center: {x: -36.896076, y: 1, z: 8.052225}
   m_Area: 1
-  m_AffectedAgents: ffffffff
+  m_AffectedAgents: 00000000
 --- !u!1001 &1068770464
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -110965,7 +111024,7 @@ MonoBehaviour:
   m_Size: {x: 74.62535, y: 3, z: 12.073204}
   m_Center: {x: 27.429863, y: 1, z: 27.199902}
   m_Area: 1
-  m_AffectedAgents: ffffffff
+  m_AffectedAgents: 00000000
 --- !u!1001 &1224147447
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -118159,7 +118218,7 @@ MonoBehaviour:
   m_Size: {x: 13.115639, y: 3, z: 49.655914}
   m_Center: {x: 38.84519, y: 1, z: 25.025002}
   m_Area: 1
-  m_AffectedAgents: ffffffff
+  m_AffectedAgents: 00000000
 --- !u!1001 &1309586964
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -120694,7 +120753,7 @@ MonoBehaviour:
   m_Size: {x: 16.949472, y: 3, z: 12.517853}
   m_Center: {x: 5.329898, y: 1, z: -5.1299286}
   m_Area: 1
-  m_AffectedAgents: ffffffff
+  m_AffectedAgents: 00000000
 --- !u!1 &1338812961
 GameObject:
   m_ObjectHideFlags: 0
@@ -121454,7 +121513,7 @@ MonoBehaviour:
   m_Size: {x: 107.887405, y: 3, z: 12.482464}
   m_Center: {x: 48.14637, y: 1, z: 0.45746803}
   m_Area: 1
-  m_AffectedAgents: ffffffff
+  m_AffectedAgents: 00000000
 --- !u!1 &1344883415
 GameObject:
   m_ObjectHideFlags: 0
@@ -121902,7 +121961,7 @@ MonoBehaviour:
   m_Size: {x: 5.6020355, y: 3, z: 28.031116}
   m_Center: {x: -2.996317, y: 1, z: 8.231794}
   m_Area: 1
-  m_AffectedAgents: ffffffff
+  m_AffectedAgents: 00000000
 --- !u!1 &1350488417
 GameObject:
   m_ObjectHideFlags: 0
@@ -124108,7 +124167,7 @@ MonoBehaviour:
   m_Size: {x: 11.462456, y: 3, z: 43.548157}
   m_Center: {x: 47.90195, y: 1, z: 11.462425}
   m_Area: 1
-  m_AffectedAgents: ffffffff
+  m_AffectedAgents: 00000000
 --- !u!1001 &1374635651
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -132264,7 +132323,7 @@ MonoBehaviour:
   m_Size: {x: 12.430618, y: 3, z: 20.827492}
   m_Center: {x: 0.41797638, y: 1, z: 4.629982}
   m_Area: 1
-  m_AffectedAgents: ffffffff
+  m_AffectedAgents: 00000000
 --- !u!1001 &1473262538
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -134567,7 +134626,7 @@ MonoBehaviour:
   m_Size: {x: 21.197762, y: 3, z: 11.115444}
   m_Center: {x: 3.2057533, y: 1, z: -0.2260418}
   m_Area: 1
-  m_AffectedAgents: ffffffff
+  m_AffectedAgents: 00000000
 --- !u!1001 &1496380799
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -141365,7 +141424,7 @@ MonoBehaviour:
   m_Size: {x: 5.6020355, y: 3, z: 33.210983}
   m_Center: {x: -2.996317, y: 1, z: 10.821727}
   m_Area: 1
-  m_AffectedAgents: ffffffff
+  m_AffectedAgents: 00000000
 --- !u!1001 &1584566002
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -143797,6 +143856,7 @@ Terrain:
   m_DetailObjectDensity: 1
   m_HeightmapPixelError: 5
   m_SplatMapDistance: 1000
+  m_HeightmapMinimumLODSimplification: 0
   m_HeightmapMaximumLOD: 0
   m_ShadowCastingMode: 2
   m_DrawHeightmap: 1
@@ -148529,7 +148589,7 @@ MonoBehaviour:
   m_Size: {x: 5.6020355, y: 3, z: 28.031116}
   m_Center: {x: -2.996317, y: 1, z: 8.231794}
   m_Area: 1
-  m_AffectedAgents: ffffffff
+  m_AffectedAgents: 00000000
 --- !u!1001 &1667873385
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -164617,7 +164677,7 @@ MonoBehaviour:
   m_Size: {x: 18.87645, y: 3, z: 15.890837}
   m_Center: {x: 38.871727, y: 1, z: 6.509944}
   m_Area: 1
-  m_AffectedAgents: ffffffff
+  m_AffectedAgents: 00000000
 --- !u!1 &1867391180
 GameObject:
   m_ObjectHideFlags: 0
@@ -165122,6 +165182,7 @@ Transform:
   - {fileID: 1613053950}
   - {fileID: 2047910286}
   - {fileID: 151089957}
+  - {fileID: 242406526}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1001 &1871942521
@@ -167668,7 +167729,7 @@ MonoBehaviour:
   m_Size: {x: 12.017253, y: 3, z: 29.435558}
   m_Center: {x: 0.2112937, y: 1, z: 8.934015}
   m_Area: 1
-  m_AffectedAgents: ffffffff
+  m_AffectedAgents: 00000000
 --- !u!1001 &1897096089
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -168097,7 +168158,7 @@ MonoBehaviour:
   m_Size: {x: 32.42019, y: 3, z: 12.371742}
   m_Center: {x: 10.4127655, y: 1, z: 17.465923}
   m_Area: 1
-  m_AffectedAgents: ffffffff
+  m_AffectedAgents: 00000000
 --- !u!1001 &1902753657
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -168944,7 +169005,7 @@ MonoBehaviour:
   m_Size: {x: 12.937389, y: 3, z: 38.148193}
   m_Center: {x: -0.92443275, y: 1, z: 13.290333}
   m_Area: 1
-  m_AffectedAgents: ffffffff
+  m_AffectedAgents: 00000000
 --- !u!1001 &1914660234
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -173480,7 +173541,7 @@ MonoBehaviour:
   m_Size: {x: 11.5069895, y: 3, z: 39.020267}
   m_Center: {x: -1.3100648, y: 1, z: 13.72637}
   m_Area: 1
-  m_AffectedAgents: ffffffff
+  m_AffectedAgents: 00000000
 --- !u!1001 &1968291587
 PrefabInstance:
   m_ObjectHideFlags: 0

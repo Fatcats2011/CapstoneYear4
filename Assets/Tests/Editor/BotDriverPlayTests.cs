@@ -8,8 +8,8 @@ using UnityEngine.TestTools;
 namespace DoA.Tests
 {
     /// <summary>
-    /// Bots phase G1, for real: a CPU driver given Player 1's scooter in a local match heads for an order and picks it
-    /// up. Enters Play Mode and loads the game scene (a minute or two). No lambda captures a local: after EnterPlayMode
+    /// Bots phase G1, for real: a CPU driver given Player 1's scooter in a local match finds a path on the Scooter NavMesh
+    /// to an order, follows it and picks the order up. Enters Play Mode and loads the game scene (a minute or two). No lambda captures a local: after EnterPlayMode
     /// even assigning one throws
     /// </summary>
     public class BotDriverPlayTests
@@ -29,15 +29,31 @@ namespace DoA.Tests
             SceneFlow.Current = null;
         }
 
+        // How it's driving, for the trace: speed, and what the bot presses
+        static string Inputs(BallDriving scooter, BotDriver bot)
+        {
+            IDriveInput input = bot;
+            Rigidbody ball = scooter.Sphere.GetComponent<Rigidbody>();
+            Respawn respawn = scooter.respawn;
+            return (respawn != null && respawn.IsRespawning ? " RESPAWNING" : "") + " speed " + ball.velocity.magnitude.ToString("0.0") + " steer " + input.Steer.ToString("0.0") + " gas " + input.Accelerate.ToString("0.0") + " brake " + input.Brake.ToString("0.0") + " fps " + (1f / Mathf.Max(Time.smoothDeltaTime, 1e-4f)).ToString("0") + " heading " + scooter.transform.eulerAngles.y.ToString("0");
+        }
+
+        // What stands between the scooter and where it's steering, for the trace
+        static string Blocker(BallDriving scooter, BotDriver bot)
+        {
+            Vector3 from = scooter.transform.position + Vector3.up * 0.5f;
+            Vector3 to = bot.Aim + Vector3.up * 0.5f;
+            if (!Physics.Linecast(from, to, out RaycastHit hit, ~0, QueryTriggerInteraction.Ignore))
+                return "";
+            return " blocked " + hit.distance.ToString("0.0") + " m by " + hit.collider.name + " (" + LayerMask.LayerToName(hit.collider.gameObject.layer) + ", under " + (hit.collider.transform.parent != null ? hit.collider.transform.parent.name : "-") + ")";
+        }
+
         static GameState State()
         {
             return GameManager.Instance == null ? GameState.Default : GameManager.Instance.MainState;
         }
 
-        // Not in the suite yet: driving straight at an order, the bot gets stuck behind buildings (and boosting into one
-        // lifts the scooter straight up). It needs the scooter NavMesh (EDITOR-TODO.md, Bots) to path round them. Run it
-        // by hand once that's baked
-        [UnityTest, Explicit("Needs the scooter NavMesh bake: EDITOR-TODO.md, Bots")]
+        [UnityTest]
         public IEnumerator ABot_DrivesToAnOrder_AndPicksItUp()
         {
             EditorSceneManager.playModeStartScene = AssetDatabase.LoadAssetAtPath<SceneAsset>(MENU_SCENE);
@@ -71,13 +87,15 @@ namespace DoA.Tests
             Vector3 last = start;
             float nextTrace = 0f;
             string trace = "";
+            bool pathed = false;
             while (handler.GetBestOrder() == null && Time.realtimeSinceStartup < deadline)
             {
                 if (Time.realtimeSinceStartup > nextTrace)
                 {
-                    nextTrace = Time.realtimeSinceStartup + 3f;
-                    trace += "[" + scooter.transform.position.ToString("0") + (bot.Target != null ? " to " + bot.Target.Value.ToString("0") : "") + " state " + State() + "] ";
+                    nextTrace = Time.realtimeSinceStartup + 1f;
+                    trace += "[" + scooter.transform.position.ToString("0") + (bot.Target != null ? " to " + bot.Target.Value.ToString("0") : "") + " " + bot.PathReport + " state " + State() + Blocker(scooter, bot) + Inputs(scooter, bot) + "] ";
                 }
+                pathed |= bot.HasPath;
                 travelled += Vector3.Distance(last, scooter.transform.position);
                 last = scooter.transform.position;
                 if (bot.Target != null)
@@ -91,6 +109,7 @@ namespace DoA.Tests
                     orders += order.name + " act=" + order.IsActive + " pick=" + order.CanPickup + " y=" + order.transform.position.y.ToString("0") + " live=" + order.gameObject.activeInHierarchy + "; ";
             Debug.Log("[BOT] " + orders);
             Assert.IsNotNull(bot.Target, "it found something to do");
+            Assert.IsTrue(pathed, "it found a path on the Scooter NavMesh");
             Assert.Greater(travelled, 10f, "it drove");
             Assert.IsNotNull(handler.GetBestOrder(), "it picked up an order (drove " + travelled.ToString("0") + " m, came within " + closest.ToString("0.0") + " m of its target, target height " + (bot.Target != null ? (bot.Target.Value.y - last.y).ToString("0.0") : "-") + ") " + orders + " TRACE " + trace);
         }

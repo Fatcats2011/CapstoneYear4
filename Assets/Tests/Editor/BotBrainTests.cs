@@ -52,6 +52,34 @@ namespace DoA.Tests
         }
 
         [Test]
+        public void NextCorner_TheFirstOneNotReachedYet()
+        {
+            List<Vector3> corners = new List<Vector3> { Vector3.zero, new Vector3(2, 0, 0), new Vector3(20, 0, 0), new Vector3(20, 0, 30) };
+
+            Assert.AreEqual(2, BotBrain.NextCorner(Vector3.zero, corners, 1), "a corner within reach is skipped");
+            Assert.AreEqual(2, BotBrain.NextCorner(new Vector3(10, 0, 0), corners, 2), "on its way to the bend");
+            Assert.AreEqual(3, BotBrain.NextCorner(new Vector3(19, 0, 1), corners, 2), "at the bend: on to the next");
+            Assert.AreEqual(3, BotBrain.NextCorner(new Vector3(19, 0, 10), corners, 3), "never back to a corner it passed");
+        }
+
+        [Test]
+        public void NextCorner_AllReached_TheLast_NoneIsMinusOne()
+        {
+            List<Vector3> corners = new List<Vector3> { Vector3.zero, new Vector3(1, 0, 0) };
+
+            Assert.AreEqual(1, BotBrain.NextCorner(Vector3.zero, corners, 1));
+            Assert.AreEqual(-1, BotBrain.NextCorner(Vector3.zero, new List<Vector3>(), 1));
+        }
+
+        [Test]
+        public void NextCorner_IgnoresHeight()
+        {
+            List<Vector3> corners = new List<Vector3> { Vector3.zero, new Vector3(1, 30, 0), new Vector3(30, 0, 0) };
+
+            Assert.AreEqual(2, BotBrain.NextCorner(Vector3.zero, corners, 1), "a corner 30 m up but 1 m along is reached");
+        }
+
+        [Test]
         public void Stuck_NoProgressForAWhile_BacksOut()
         {
             BotStuck stuck = new BotStuck();

@@ -305,6 +305,16 @@ public class BallDriving : MonoBehaviour
     }
 
     /// <summary>
+    /// The control object turned by its share (t) of a turn, in degrees, and levelled out the same share. Each angle levels
+    /// the short way: lerping the euler angles took a scooter pitched a few degrees up (x 357) back down through 270,
+    /// tumbling it until it pushed at the sky
+    /// </summary>
+    internal static Quaternion LevelTurn(Vector3 euler, float turn, float t)
+    {
+        return Quaternion.Euler(Mathf.LerpAngle(euler.x, 0f, t), euler.y + turn * t, Mathf.LerpAngle(euler.z, 0f, t));
+    }
+
+    /// <summary>
     /// Freezes the ball when the game state takes control away from the player (cutscenes, results)
     /// </summary>
     private void FreezeBallForGameState()
@@ -605,7 +615,7 @@ public class BallDriving : MonoBehaviour
         scooterModel.parent.localRotation = newRotation;
 
         //Rotates the control object
-        transform.eulerAngles = Vector3.Lerp(transform.eulerAngles, new Vector3(0, transform.eulerAngles.y + rotationAmount, 0), Time.deltaTime);
+        transform.rotation = LevelTurn(transform.eulerAngles, rotationAmount, Time.deltaTime);
 
         ControlSpeedLines();
 
