@@ -1,0 +1,752 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e9620f8c34305754d8cc9a7e49e852d9, type: 3}
+  m_Name: Game_en
+  m_EditorClassIdentifier: 
+  m_LocaleId:
+    m_Code: en
+  m_SharedData: {fileID: 11400000, guid: 61b958d042748d049905867c9fe4253d, type: 2}
+  m_Metadata:
+    m_Items: []
+  m_TableData:
+  - m_Id: 11136798720
+    m_Localized: RESULTS
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11182936064
+    m_Localized: FULLSCREEN
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11182936065
+    m_Localized: PAUSED
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11182936066
+    m_Localized: SELECT
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130368
+    m_Localized: MENU
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130369
+    m_Localized: ON
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130370
+    m_Localized: OFF
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130371
+    m_Localized: RETURN
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130372
+    m_Localized: RESUME
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130373
+    m_Localized: PRESS
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130374
+    m_Localized: TO BOOST
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130375
+    m_Localized: TO CONFIRM
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130376
+    m_Localized: TO CONTINUE
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130377
+    m_Localized: LOCAL
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130378
+    m_Localized: MULTIPLAYER
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130379
+    m_Localized: OPTIONS
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130380
+    m_Localized: CREDITS
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130381
+    m_Localized: QUIT
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130382
+    m_Localized: MUSIC
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130383
+    m_Localized: PLAY
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130384
+    m_Localized: GO!
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130385
+    m_Localized: READY!!
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130386
+    m_Localized: PRESS ANY BUTTON TO CONTINUE
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130387
+    m_Localized: SFX
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130388
+    m_Localized: GENERAL
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130389
+    m_Localized: DISPLAY
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130390
+    m_Localized: AUDIO
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130391
+    m_Localized: ACCESSIBILITY
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130392
+    m_Localized: RESOLUTION
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130393
+    m_Localized: 'A: apply'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130394
+    m_Localized: LANGUAGE
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130395
+    m_Localized: FULLSCREEN STYLE
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130396
+    m_Localized: BORDERLESS
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130397
+    m_Localized: EXCLUSIVE
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130398
+    m_Localized: VSYNC
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130399
+    m_Localized: FRAME CAP
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130400
+    m_Localized: QUALITY
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130401
+    m_Localized: LOW
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130402
+    m_Localized: MEDIUM
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130403
+    m_Localized: HIGH
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130404
+    m_Localized: SPLIT-SCREEN
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130405
+    m_Localized: BOXED
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130406
+    m_Localized: STACKED
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130407
+    m_Localized: SIDE BY SIDE
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130408
+    m_Localized: MASTER
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130409
+    m_Localized: MUSIC
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130410
+    m_Localized: EFFECTS
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130411
+    m_Localized: IN THE BACKGROUND
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130412
+    m_Localized: MUTE
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130413
+    m_Localized: KEEP PLAYING
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130414
+    m_Localized: REDUCE MOTION
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130415
+    m_Localized: UNITS
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130416
+    m_Localized: METRIC
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130417
+    m_Localized: IMPERIAL
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130418
+    m_Localized: RESTART
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130419
+    m_Localized: CONTROLS
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130420
+    m_Localized: RESTART THE MATCH?
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130421
+    m_Localized: YES
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130422
+    m_Localized: NO
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130423
+    m_Localized: 'Online: the match goes on while you''re paused. Main Menu ends
+      it for everyone.'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130424
+    m_Localized: 'Online: the match goes on while you''re paused. Main Menu leaves
+      it.'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130425
+    m_Localized: "CONTROLS \u2014 KEYBOARD"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130426
+    m_Localized: "CONTROLS \u2014 CONTROLLER"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130427
+    m_Localized: RESET TO DEFAULTS
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130428
+    m_Localized: PRESS A KEY...
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130429
+    m_Localized: PRESS A BUTTON...
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130430
+    m_Localized: ACCELERATE
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130431
+    m_Localized: BRAKE
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130432
+    m_Localized: STEER LEFT
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130433
+    m_Localized: STEER RIGHT
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130434
+    m_Localized: BOOST
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130435
+    m_Localized: DRIFT
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130436
+    m_Localized: SWAP CAMERA
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130437
+    m_Localized: CAMERA LEFT
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130438
+    m_Localized: CAMERA RIGHT
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130439
+    m_Localized: CAMERA UP
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130440
+    m_Localized: CAMERA DOWN
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130441
+    m_Localized: D-PAD UP
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130442
+    m_Localized: D-PAD DOWN
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130443
+    m_Localized: D-PAD LEFT
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130444
+    m_Localized: D-PAD RIGHT
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130445
+    m_Localized: CROSS
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130446
+    m_Localized: CIRCLE
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130447
+    m_Localized: SQUARE
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130448
+    m_Localized: TRIANGLE
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130449
+    m_Localized: MATCH RULES
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130450
+    m_Localized: 'A / B: DONE'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130451
+    m_Localized: LENGTH
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130452
+    m_Localized: SHORT
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130453
+    m_Localized: NORMAL
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324672
+    m_Localized: LONG
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324673
+    m_Localized: STEALS
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324674
+    m_Localized: GOLDEN ORDER
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324675
+    m_Localized: NO STEALS
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324676
+    m_Localized: NO GOLDEN ORDER
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324677
+    m_Localized: 'NO GOLDEN ORDER: GOLDEN WIN, GOLDEN STEAL AND LAST TO FIRST CAN''T
+      BE EARNED'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324678
+    m_Localized: A PUBLIC LOBBY PLAYS THE NORMAL RULES
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324679
+    m_Localized: GOLDEN GRIP
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324680
+    m_Localized: KLEPTOGHOST
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324681
+    m_Localized: BUSY BEE
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324682
+    m_Localized: HIGH ROLLER
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324683
+    m_Localized: BUTTERFINGERS
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324684
+    m_Localized: FISH FOOD
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324685
+    m_Localized: TOURIST
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324686
+    m_Localized: held the gold {0}s
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324687
+    m_Localized: 1 steal
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324688
+    m_Localized: '{0} steals'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324689
+    m_Localized: 1 delivery
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324690
+    m_Localized: '{0} deliveries'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324691
+    m_Localized: 1 hard order
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324692
+    m_Localized: '{0} hard orders'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324693
+    m_Localized: robbed once
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324694
+    m_Localized: robbed {0} times
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324695
+    m_Localized: 1 swim
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324696
+    m_Localized: '{0} swims'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324697
+    m_Localized: enjoyed the view
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324698
+    m_Localized: REMATCH
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324699
+    m_Localized: BACK TO LOBBY
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324700
+    m_Localized: REMATCH!
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324701
+    m_Localized: BACK TO THE LOBBY
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324702
+    m_Localized: WAITING FOR PLAYERS... {0}
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324703
+    m_Localized: READY
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324704
+    m_Localized: OUT
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324705
+    m_Localized: HOLD
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324706
+    m_Localized: TO SKIP  {0}/{1}
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324707
+    m_Localized: Employee of The Month
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324708
+    m_Localized: DISPATCHED
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324709
+    m_Localized: "GETTING READY\u2026"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324710
+    m_Localized: "HIRING\u2026"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324711
+    m_Localized: '{0} / {1} READY'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324712
+    m_Localized: COLOUR
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324713
+    m_Localized: COMPANY
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324714
+    m_Localized: CUSTOMIZE
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324715
+    m_Localized: DONE
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324716
+    m_Localized: HAT
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324717
+    m_Localized: INVITE
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324718
+    m_Localized: LEAVE
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324719
+    m_Localized: PLAYER
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324720
+    m_Localized: CLOCK IN
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324721
+    m_Localized: ALL ORDERS DISPATCHED
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324722
+    m_Localized: "LOOKING FOR A MATCH\u2026"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324723
+    m_Localized: OPEN TO ANYONE
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324724
+    m_Localized: FRIENDS ONLY
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324725
+    m_Localized: FIND MATCH
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324726
+    m_Localized: "OPEN TO ANYONE \xB7 STARTS IN {0}"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324727
+    m_Localized: No open matches right now. Your lobby is open to anyone.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324728
+    m_Localized: No open matches right now.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324729
+    m_Localized: Find a match before others join your lobby.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324730
+    m_Localized: That match is full.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324731
+    m_Localized: That match has already started.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324732
+    m_Localized: That game isn't Dead on Arrival.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324733
+    m_Localized: That lobby isn't a Dead on Arrival match.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324734
+    m_Localized: Finish your match before joining a friend's.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324735
+    m_Localized: Leave your online match before joining another.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324736
+    m_Localized: That match is on version {0} and you have {1}. You both need the
+      same version.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324737
+    m_Localized: an unknown version
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324738
+    m_Localized: That match is on another build of version {0}. You both need the
+      same build.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324739
+    m_Localized: Start Steam to play online.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324740
+    m_Localized: Steam couldn't open a lobby. Try again.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324741
+    m_Localized: Couldn't start the online match. Try again.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324742
+    m_Localized: Couldn't join that match. It may have ended.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324743
+    m_Localized: Invite friends from your Steam friends list.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324744
+    m_Localized: 'Disconnected: too many messages.'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324745
+    m_Localized: Taken out of the rematch.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324746
+    m_Localized: The host left the match.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324747
+    m_Localized: Couldn't reach the host.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324748
+    m_Localized: The connection was lost.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324749
+    m_Localized: 'Y / Triangle: play online with Steam friends'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324750
+    m_Localized: 'Y / Triangle: invite friends      B / Circle: leave'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324751
+    m_Localized: 'B / Circle: leave online'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324752
+    m_Localized: Player {0}
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324753
+    m_Localized: Connect a controller to play
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324754
+    m_Localized: Press Space to play with the keyboard, or connect a controller
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324755
+    m_Localized: That controller isn't supported - try an Xbox, PlayStation or Switch
+      Pro controller
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324756
+    m_Localized: 'P{0} controller disconnected
+
+      Press a button on any controller
+      to continue'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324757
+    m_Localized: Score
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324758
+    m_Localized: Player 1
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324759
+    m_Localized: Golden Order In...
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324760
+    m_Localized: Enable Tutorial
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324761
+    m_Localized: Credits
+    m_Metadata:
+      m_Items: []
+  references:
+    version: 2
+    RefIds: []

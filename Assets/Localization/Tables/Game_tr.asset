@@ -1,0 +1,754 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e9620f8c34305754d8cc9a7e49e852d9, type: 3}
+  m_Name: Game_tr
+  m_EditorClassIdentifier: 
+  m_LocaleId:
+    m_Code: tr
+  m_SharedData: {fileID: 11400000, guid: 61b958d042748d049905867c9fe4253d, type: 2}
+  m_Metadata:
+    m_Items: []
+  m_TableData:
+  - m_Id: 11136798720
+    m_Localized: "SONU\xC7LAR"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11182936064
+    m_Localized: TAM EKRAN
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11182936065
+    m_Localized: DURAKLATILDI
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11182936066
+    m_Localized: "SE\xC7"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130368
+    m_Localized: "MEN\xDC"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130369
+    m_Localized: "A\xC7IK"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130370
+    m_Localized: KAPALI
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130371
+    m_Localized: "GER\u0130"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130372
+    m_Localized: DEVAM
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130373
+    m_Localized: BAS
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130374
+    m_Localized: "HIZLANMAK \u0130\xC7\u0130N"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130375
+    m_Localized: "ONAYLAMAK \u0130\xC7\u0130N"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130376
+    m_Localized: "DEVAM ETMEK \u0130\xC7\u0130N"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130377
+    m_Localized: YEREL
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130378
+    m_Localized: "\xC7OK OYUNCULU"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130379
+    m_Localized: AYARLAR
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130380
+    m_Localized: "EME\u011E\u0130 GE\xC7ENLER"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130381
+    m_Localized: "\xC7IKI\u015E"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130382
+    m_Localized: "M\xDCZ\u0130K"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130383
+    m_Localized: OYNA
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130384
+    m_Localized: "BA\u015ELA!"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130385
+    m_Localized: HAZIR!!
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130386
+    m_Localized: "DEVAM ETMEK \u0130\xC7\u0130N B\u0130R TU\u015EA BAS"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130387
+    m_Localized: EFEKTLER
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130388
+    m_Localized: GENEL
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130389
+    m_Localized: EKRAN
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130390
+    m_Localized: SES
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130391
+    m_Localized: "ER\u0130\u015E\u0130LEB\u0130L\u0130RL\u0130K"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130392
+    m_Localized: "\xC7\xD6Z\xDCN\xDCRL\xDCK"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130393
+    m_Localized: 'A: uygula'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130394
+    m_Localized: "D\u0130L"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130395
+    m_Localized: "TAM EKRAN T\xDCR\xDC"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130396
+    m_Localized: "\xC7ER\xC7EVES\u0130Z"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130397
+    m_Localized: "\xD6ZEL"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130398
+    m_Localized: VSYNC
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130399
+    m_Localized: KARE SINIRI
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130400
+    m_Localized: "KAL\u0130TE"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130401
+    m_Localized: "D\xDC\u015E\xDCK"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130402
+    m_Localized: ORTA
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130403
+    m_Localized: "Y\xDCKSEK"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130404
+    m_Localized: "B\xD6L\xDCNM\xDC\u015E EKRAN"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130405
+    m_Localized: ORTALI
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130406
+    m_Localized: "\xDCST VE ALT"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130407
+    m_Localized: YAN YANA
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130408
+    m_Localized: ANA SES
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130409
+    m_Localized: "M\xDCZ\u0130K"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130410
+    m_Localized: EFEKTLER
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130411
+    m_Localized: ARKA PLANDA
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130412
+    m_Localized: "SESS\u0130Z"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130413
+    m_Localized: "\xC7ALMAYA DEVAM"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130414
+    m_Localized: "HAREKET\u0130 AZALT"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130415
+    m_Localized: "B\u0130R\u0130MLER"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130416
+    m_Localized: "METR\u0130K"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130417
+    m_Localized: "\u0130NG\u0130L\u0130Z"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130418
+    m_Localized: "YEN\u0130DEN BA\u015ELAT"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130419
+    m_Localized: KONTROLLER
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130420
+    m_Localized: "MA\xC7 YEN\u0130DEN BA\u015ELASIN MI?"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130421
+    m_Localized: EVET
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130422
+    m_Localized: HAYIR
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130423
+    m_Localized: "\xC7evrimi\xE7i: duraklatt\u0131\u011F\u0131nda ma\xE7 devam eder.
+      Ana Men\xFC ma\xE7\u0131 herkes i\xE7in bitirir."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130424
+    m_Localized: "\xC7evrimi\xE7i: duraklatt\u0131\u011F\u0131nda ma\xE7 devam eder.
+      Ana Men\xFC ma\xE7tan \xE7\u0131kar."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130425
+    m_Localized: "KONTROLLER \u2014 KLAVYE"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130426
+    m_Localized: "KONTROLLER \u2014 OYUN KUMANDASI"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130427
+    m_Localized: "VARSAYILANA D\xD6N"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130428
+    m_Localized: "B\u0130R TU\u015EA BAS..."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130429
+    m_Localized: "B\u0130R D\xDC\u011EMEYE BAS..."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130430
+    m_Localized: HIZLAN
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130431
+    m_Localized: FREN
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130432
+    m_Localized: "SOLA D\xD6N"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130433
+    m_Localized: "SA\u011EA D\xD6N"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130434
+    m_Localized: TURBO
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130435
+    m_Localized: DRIFT
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130436
+    m_Localized: "KAMERA DE\u011E\u0130\u015ET\u0130R"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130437
+    m_Localized: KAMERA SOLA
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130438
+    m_Localized: "KAMERA SA\u011EA"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130439
+    m_Localized: KAMERA YUKARI
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130440
+    m_Localized: "KAMERA A\u015EA\u011EI"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130441
+    m_Localized: "Y\xD6N TU\u015EU YUKARI"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130442
+    m_Localized: "Y\xD6N TU\u015EU A\u015EA\u011EI"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130443
+    m_Localized: "Y\xD6N TU\u015EU SOL"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130444
+    m_Localized: "Y\xD6N TU\u015EU SA\u011E"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130445
+    m_Localized: "\xC7ARPI"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130446
+    m_Localized: "DA\u0130RE"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130447
+    m_Localized: KARE
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130448
+    m_Localized: "\xDC\xC7GEN"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130449
+    m_Localized: "MA\xC7 KURALLARI"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130450
+    m_Localized: 'A / B: TAMAM'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130451
+    m_Localized: "S\xDCRE"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130452
+    m_Localized: KISA
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130453
+    m_Localized: NORMAL
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324672
+    m_Localized: UZUN
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324673
+    m_Localized: "\xC7ALMA"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324674
+    m_Localized: "ALTIN S\u0130PAR\u0130\u015E"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324675
+    m_Localized: "\xC7ALMA YOK"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324676
+    m_Localized: "ALTIN S\u0130PAR\u0130\u015E YOK"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324677
+    m_Localized: "ALTIN S\u0130PAR\u0130\u015E YOK: ALTIN ZAFER, ALTIN SOYGUN VE
+      SONDAN B\u0130R\u0130NC\u0130L\u0130\u011EE KAZANILAMAZ"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324678
+    m_Localized: "HERKESE A\xC7IK LOB\u0130 NORMAL KURALLARLA OYNAR"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324679
+    m_Localized: ALTIN EL
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324680
+    m_Localized: KLEPTOHAYALET
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324681
+    m_Localized: "\xC7ALI\u015EKAN ARI"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324682
+    m_Localized: KUMARBAZ
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324683
+    m_Localized: "EL\u0130 SAKAR"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324684
+    m_Localized: "BALIK YEM\u0130"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324685
+    m_Localized: "TUR\u0130ST"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324686
+    m_Localized: "{0}sn alt\u0131n elde"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324687
+    m_Localized: "1 \xE7alma"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324688
+    m_Localized: "{0} \xE7alma"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324689
+    m_Localized: 1 teslimat
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324690
+    m_Localized: '{0} teslimat'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324691
+    m_Localized: "1 zor sipari\u015F"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324692
+    m_Localized: "{0} zor sipari\u015F"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324693
+    m_Localized: bir kez soyuldu
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324694
+    m_Localized: '{0} kez soyuldu'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324695
+    m_Localized: "1 dal\u0131\u015F"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324696
+    m_Localized: "{0} dal\u0131\u015F"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324697
+    m_Localized: "manzaran\u0131n tad\u0131n\u0131 \xE7\u0131kard\u0131"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324698
+    m_Localized: "R\xD6VAN\u015E"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324699
+    m_Localized: "LOB\u0130YE D\xD6N"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324700
+    m_Localized: "R\xD6VAN\u015E!"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324701
+    m_Localized: "LOB\u0130YE D\xD6N\xDCL\xDCYOR"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324702
+    m_Localized: "OYUNCULAR BEKLEN\u0130YOR... {0}"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324703
+    m_Localized: HAZIR
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324704
+    m_Localized: "\xC7IKTI"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324705
+    m_Localized: BASILI TUT
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324706
+    m_Localized: "ATLAMAK \u0130\xC7\u0130N  {0}/{1}"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324707
+    m_Localized: "Ay\u0131n \xC7al\u0131\u015Fan\u0131"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324708
+    m_Localized: "YOLA \xC7IKTI"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324709
+    m_Localized: "HAZIRLANIYOR\u2026"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324710
+    m_Localized: "ELEMAN ARANIYOR\u2026"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324711
+    m_Localized: '{0} / {1} HAZIR'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324712
+    m_Localized: RENK
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324713
+    m_Localized: "\u015E\u0130RKET"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324714
+    m_Localized: "\xD6ZELLE\u015ET\u0130R"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324715
+    m_Localized: TAMAM
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324716
+    m_Localized: "\u015EAPKA"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324717
+    m_Localized: DAVET ET
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324718
+    m_Localized: AYRIL
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324719
+    m_Localized: OYUNCU
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324720
+    m_Localized: "MESA\u0130YE BA\u015ELA"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324721
+    m_Localized: "T\xDCM S\u0130PAR\u0130\u015ELER YOLDA"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324722
+    m_Localized: "MA\xC7 ARANIYOR\u2026"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324723
+    m_Localized: "HERKESE A\xC7IK"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324724
+    m_Localized: "SADECE ARKADA\u015ELAR"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324725
+    m_Localized: "MA\xC7 BUL"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324726
+    m_Localized: "HERKESE A\xC7IK \xB7 {0} SN SONRA BA\u015ELIYOR"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324727
+    m_Localized: "\u015Eu an a\xE7\u0131k ma\xE7 yok. Lobin herkese a\xE7\u0131k."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324728
+    m_Localized: "\u015Eu an a\xE7\u0131k ma\xE7 yok."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324729
+    m_Localized: "Ba\u015Fkalar\u0131 lobine kat\u0131lmadan \xF6nce ma\xE7 ara."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324730
+    m_Localized: "O ma\xE7 dolu."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324731
+    m_Localized: "O ma\xE7 \xE7oktan ba\u015Flad\u0131."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324732
+    m_Localized: "O oyun Dead on Arrival de\u011Fil."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324733
+    m_Localized: "O lobi bir Dead on Arrival ma\xE7\u0131 de\u011Fil."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324734
+    m_Localized: "Bir arkada\u015F\u0131na kat\u0131lmadan \xF6nce ma\xE7\u0131n\u0131
+      bitir."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324735
+    m_Localized: "Ba\u015Fka birine kat\u0131lmadan \xF6nce \xE7evrimi\xE7i ma\xE7\u0131ndan
+      \xE7\u0131k."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324736
+    m_Localized: "O ma\xE7 {0} s\xFCr\xFCm\xFCnde, sende {1} var. Ayn\u0131 s\xFCr\xFCme
+      ihtiyac\u0131n\u0131z var."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324737
+    m_Localized: "bilinmeyen bir s\xFCr\xFCm"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324738
+    m_Localized: "O ma\xE7 {0} s\xFCr\xFCm\xFCn\xFCn ba\u015Fka bir derlemesinde.
+      Ayn\u0131 derlemeye ihtiyac\u0131n\u0131z var."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324739
+    m_Localized: "\xC7evrimi\xE7i oynamak i\xE7in Steam'i ba\u015Flat."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324740
+    m_Localized: "Steam bir lobi a\xE7amad\u0131. Tekrar dene."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324741
+    m_Localized: "\xC7evrimi\xE7i ma\xE7 ba\u015Flat\u0131lamad\u0131. Tekrar dene."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324742
+    m_Localized: "O ma\xE7a kat\u0131l\u0131namad\u0131. Bitmi\u015F olabilir."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324743
+    m_Localized: "Steam arkada\u015F listenden arkada\u015Flar\u0131n\u0131 davet
+      et."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324744
+    m_Localized: "Ba\u011Flant\u0131 kesildi: \xE7ok fazla mesaj."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324745
+    m_Localized: "R\xF6van\u015Ftan \xE7\u0131kar\u0131ld\u0131n."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324746
+    m_Localized: "Ev sahibi ma\xE7tan ayr\u0131ld\u0131."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324747
+    m_Localized: "Ev sahibine ula\u015F\u0131lamad\u0131."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324748
+    m_Localized: "Ba\u011Flant\u0131 koptu."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324749
+    m_Localized: "Y / \xDC\xE7gen: Steam arkada\u015Flar\u0131nla \xE7evrimi\xE7i
+      oyna"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324750
+    m_Localized: "Y / \xDC\xE7gen: arkada\u015F davet et      B / Daire: ayr\u0131l"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324751
+    m_Localized: "B / Daire: \xE7evrimi\xE7iden \xE7\u0131k"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324752
+    m_Localized: Oyuncu {0}
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324753
+    m_Localized: "Oynamak i\xE7in bir kumanda ba\u011Fla"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324754
+    m_Localized: "Klavyeyle oynamak i\xE7in Bo\u015Fluk'a bas ya da bir kumanda ba\u011Fla"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324755
+    m_Localized: "Bu kumanda desteklenmiyor - Xbox, PlayStation veya Switch Pro kumandas\u0131
+      dene"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324756
+    m_Localized: "O{0} kumandas\u0131n\u0131n ba\u011Flant\u0131s\u0131 kesildi\nDevam
+      etmek i\xE7in herhangi bir kumandada bir tu\u015Fa bas"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324757
+    m_Localized: Puan
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324758
+    m_Localized: Oyuncu 1
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324759
+    m_Localized: "Alt\u0131n sipari\u015F..."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324760
+    m_Localized: "\xD6\u011Freticiyi a\xE7"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324761
+    m_Localized: "Eme\u011Fi Ge\xE7enler"
+    m_Metadata:
+      m_Items: []
+  references:
+    version: 2
+    RefIds: []

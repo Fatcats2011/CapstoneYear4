@@ -1,0 +1,753 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e9620f8c34305754d8cc9a7e49e852d9, type: 3}
+  m_Name: Game_nl
+  m_EditorClassIdentifier: 
+  m_LocaleId:
+    m_Code: nl
+  m_SharedData: {fileID: 11400000, guid: 61b958d042748d049905867c9fe4253d, type: 2}
+  m_Metadata:
+    m_Items: []
+  m_TableData:
+  - m_Id: 11136798720
+    m_Localized: UITSLAG
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11182936064
+    m_Localized: VOLLEDIG SCHERM
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11182936065
+    m_Localized: GEPAUZEERD
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11182936066
+    m_Localized: KIES
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130368
+    m_Localized: MENU
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130369
+    m_Localized: AAN
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130370
+    m_Localized: UIT
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130371
+    m_Localized: TERUG
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130372
+    m_Localized: HERVATTEN
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130373
+    m_Localized: DRUK
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130374
+    m_Localized: OM TE BOOSTEN
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130375
+    m_Localized: OM TE BEVESTIGEN
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130376
+    m_Localized: OM DOOR TE GAAN
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130377
+    m_Localized: LOKAAL
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130378
+    m_Localized: MULTIPLAYER
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130379
+    m_Localized: OPTIES
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130380
+    m_Localized: CREDITS
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130381
+    m_Localized: STOPPEN
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130382
+    m_Localized: MUZIEK
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130383
+    m_Localized: SPELEN
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130384
+    m_Localized: GO!
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130385
+    m_Localized: KLAAR!!
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130386
+    m_Localized: DRUK OP EEN KNOP OM DOOR TE GAAN
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130387
+    m_Localized: EFFECTEN
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130388
+    m_Localized: ALGEMEEN
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130389
+    m_Localized: BEELD
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130390
+    m_Localized: GELUID
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130391
+    m_Localized: TOEGANKELIJKHEID
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130392
+    m_Localized: RESOLUTIE
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130393
+    m_Localized: 'A: toepassen'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130394
+    m_Localized: TAAL
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130395
+    m_Localized: SOORT VOLLEDIG SCHERM
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130396
+    m_Localized: RANDLOOS
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130397
+    m_Localized: EXCLUSIEF
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130398
+    m_Localized: VSYNC
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130399
+    m_Localized: MAX. FPS
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130400
+    m_Localized: KWALITEIT
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130401
+    m_Localized: LAAG
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130402
+    m_Localized: GEMIDDELD
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130403
+    m_Localized: HOOG
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130404
+    m_Localized: GEDEELD SCHERM
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130405
+    m_Localized: GECENTREERD
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130406
+    m_Localized: BOVEN EN ONDER
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130407
+    m_Localized: NAAST ELKAAR
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130408
+    m_Localized: HOOFDVOLUME
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130409
+    m_Localized: MUZIEK
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130410
+    m_Localized: EFFECTEN
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130411
+    m_Localized: OP DE ACHTERGROND
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130412
+    m_Localized: DEMPEN
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130413
+    m_Localized: DOORSPELEN
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130414
+    m_Localized: MINDER BEWEGING
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130415
+    m_Localized: EENHEDEN
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130416
+    m_Localized: METRISCH
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130417
+    m_Localized: IMPERIAAL
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130418
+    m_Localized: OPNIEUW
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130419
+    m_Localized: BEDIENING
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130420
+    m_Localized: POTJE OPNIEUW?
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130421
+    m_Localized: JA
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130422
+    m_Localized: NEE
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130423
+    m_Localized: "Online: het potje gaat door terwijl je pauzeert. Hoofdmenu be\xEBindigt
+      het voor iedereen."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130424
+    m_Localized: 'Online: het potje gaat door terwijl je pauzeert. Hoofdmenu verlaat
+      het.'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130425
+    m_Localized: "BEDIENING \u2014 TOETSENBORD"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130426
+    m_Localized: "BEDIENING \u2014 CONTROLLER"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130427
+    m_Localized: STANDAARD HERSTELLEN
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130428
+    m_Localized: DRUK OP EEN TOETS...
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130429
+    m_Localized: DRUK OP EEN KNOP...
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130430
+    m_Localized: GAS GEVEN
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130431
+    m_Localized: REMMEN
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130432
+    m_Localized: LINKS STUREN
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130433
+    m_Localized: RECHTS STUREN
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130434
+    m_Localized: BOOST
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130435
+    m_Localized: DRIFTEN
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130436
+    m_Localized: CAMERA WISSELEN
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130437
+    m_Localized: CAMERA LINKS
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130438
+    m_Localized: CAMERA RECHTS
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130439
+    m_Localized: CAMERA OMHOOG
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130440
+    m_Localized: CAMERA OMLAAG
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130441
+    m_Localized: D-PAD OMHOOG
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130442
+    m_Localized: D-PAD OMLAAG
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130443
+    m_Localized: D-PAD LINKS
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130444
+    m_Localized: D-PAD RECHTS
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130445
+    m_Localized: KRUIS
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130446
+    m_Localized: RONDJE
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130447
+    m_Localized: VIERKANT
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130448
+    m_Localized: DRIEHOEK
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130449
+    m_Localized: SPELREGELS
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130450
+    m_Localized: 'A / B: KLAAR'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130451
+    m_Localized: DUUR
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130452
+    m_Localized: KORT
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130453
+    m_Localized: NORMAAL
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324672
+    m_Localized: LANG
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324673
+    m_Localized: STELEN
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324674
+    m_Localized: GOUDEN BESTELLING
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324675
+    m_Localized: ZONDER STELEN
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324676
+    m_Localized: ZONDER GOUDEN BESTELLING
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324677
+    m_Localized: 'ZONDER GOUDEN BESTELLING: GOUDEN WINST, GOUDEN ROOF EN VAN LAATSTE
+      NAAR EERSTE ZIJN NIET TE HALEN'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324678
+    m_Localized: EEN OPENBARE LOBBY SPEELT MET DE NORMALE REGELS
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324679
+    m_Localized: GOUDEN GREEP
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324680
+    m_Localized: KLEPTOSPOOK
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324681
+    m_Localized: BEZIG BIJTJE
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324682
+    m_Localized: GROTE GOKKER
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324683
+    m_Localized: BOTERVINGERS
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324684
+    m_Localized: VISSENVOER
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324685
+    m_Localized: TOERIST
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324686
+    m_Localized: '{0}s goud vastgehouden'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324687
+    m_Localized: 1 keer gestolen
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324688
+    m_Localized: '{0} keer gestolen'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324689
+    m_Localized: 1 bezorging
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324690
+    m_Localized: '{0} bezorgingen'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324691
+    m_Localized: 1 lastige bestelling
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324692
+    m_Localized: '{0} lastige bestellingen'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324693
+    m_Localized: "\xE9\xE9n keer beroofd"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324694
+    m_Localized: '{0} keer beroofd'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324695
+    m_Localized: 1 duik
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324696
+    m_Localized: '{0} duiken'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324697
+    m_Localized: genoot van het uitzicht
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324698
+    m_Localized: REVANCHE
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324699
+    m_Localized: TERUG NAAR DE LOBBY
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324700
+    m_Localized: REVANCHE!
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324701
+    m_Localized: TERUG NAAR DE LOBBY
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324702
+    m_Localized: WACHTEN OP SPELERS... {0}
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324703
+    m_Localized: KLAAR
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324704
+    m_Localized: WEG
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324705
+    m_Localized: HOUD
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324706
+    m_Localized: OM OVER TE SLAAN  {0}/{1}
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324707
+    m_Localized: Werknemer van de maand
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324708
+    m_Localized: VERZONDEN
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324709
+    m_Localized: "MAAKT ZICH KLAAR\u2026"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324710
+    m_Localized: "VACATURE\u2026"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324711
+    m_Localized: '{0} / {1} KLAAR'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324712
+    m_Localized: KLEUR
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324713
+    m_Localized: BEDRIJF
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324714
+    m_Localized: AANPASSEN
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324715
+    m_Localized: KLAAR
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324716
+    m_Localized: HOED
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324717
+    m_Localized: UITNODIGEN
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324718
+    m_Localized: VERLATEN
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324719
+    m_Localized: SPELER
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324720
+    m_Localized: INKLOKKEN
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324721
+    m_Localized: ALLE BESTELLINGEN VERZONDEN
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324722
+    m_Localized: "POTJE ZOEKEN\u2026"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324723
+    m_Localized: OPEN VOOR IEDEREEN
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324724
+    m_Localized: ALLEEN VRIENDEN
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324725
+    m_Localized: POTJE ZOEKEN
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324726
+    m_Localized: "OPEN VOOR IEDEREEN \xB7 START OVER {0}"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324727
+    m_Localized: Er zijn nu geen open potjes. Je lobby staat open voor iedereen.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324728
+    m_Localized: Er zijn nu geen open potjes.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324729
+    m_Localized: Zoek een potje voordat anderen je lobby binnenkomen.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324730
+    m_Localized: Dat potje is vol.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324731
+    m_Localized: Dat potje is al begonnen.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324732
+    m_Localized: Dat spel is geen Dead on Arrival.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324733
+    m_Localized: Die lobby is geen Dead on Arrival-potje.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324734
+    m_Localized: Maak je potje af voordat je bij een vriend meedoet.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324735
+    m_Localized: Verlaat je online potje voordat je een ander binnengaat.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324736
+    m_Localized: Dat potje draait versie {0} en jij hebt {1}. Jullie hebben dezelfde
+      versie nodig.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324737
+    m_Localized: een onbekende versie
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324738
+    m_Localized: Dat potje draait een andere build van versie {0}. Jullie hebben
+      dezelfde build nodig.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324739
+    m_Localized: Start Steam om online te spelen.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324740
+    m_Localized: Steam kon geen lobby openen. Probeer het opnieuw.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324741
+    m_Localized: Het online potje kon niet starten. Probeer het opnieuw.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324742
+    m_Localized: Kon niet meedoen aan dat potje. Het is misschien afgelopen.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324743
+    m_Localized: Nodig vrienden uit via je Steam-vriendenlijst.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324744
+    m_Localized: 'Verbinding verbroken: te veel berichten.'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324745
+    m_Localized: Uit de revanche gehaald.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324746
+    m_Localized: De host heeft het potje verlaten.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324747
+    m_Localized: Kon de host niet bereiken.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324748
+    m_Localized: De verbinding is verbroken.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324749
+    m_Localized: 'Y / Driehoek: online spelen met Steam-vrienden'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324750
+    m_Localized: 'Y / Driehoek: vrienden uitnodigen      B / Rondje: verlaten'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324751
+    m_Localized: 'B / Rondje: online verlaten'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324752
+    m_Localized: Speler {0}
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324753
+    m_Localized: Sluit een controller aan om te spelen
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324754
+    m_Localized: Druk op Spatie om met het toetsenbord te spelen, of sluit een controller
+      aan
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324755
+    m_Localized: Die controller wordt niet ondersteund - probeer een Xbox-, PlayStation-
+      of Switch Pro-controller
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324756
+    m_Localized: 'Controller van S{0} losgekoppeld
+
+      Druk op een knop van een
+      controller om verder te gaan'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324757
+    m_Localized: Score
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324758
+    m_Localized: Speler 1
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324759
+    m_Localized: Gouden bestelling over...
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324760
+    m_Localized: Tutorial aanzetten
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324761
+    m_Localized: Credits
+    m_Metadata:
+      m_Items: []
+  references:
+    version: 2
+    RefIds: []

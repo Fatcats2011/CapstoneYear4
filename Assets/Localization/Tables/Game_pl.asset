@@ -1,0 +1,753 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e9620f8c34305754d8cc9a7e49e852d9, type: 3}
+  m_Name: Game_pl
+  m_EditorClassIdentifier: 
+  m_LocaleId:
+    m_Code: pl
+  m_SharedData: {fileID: 11400000, guid: 61b958d042748d049905867c9fe4253d, type: 2}
+  m_Metadata:
+    m_Items: []
+  m_TableData:
+  - m_Id: 11136798720
+    m_Localized: WYNIKI
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11182936064
+    m_Localized: "PE\u0141NY EKRAN"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11182936065
+    m_Localized: PAUZA
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11182936066
+    m_Localized: WYBIERZ
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130368
+    m_Localized: MENU
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130369
+    m_Localized: "W\u0141."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130370
+    m_Localized: "WY\u0141."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130371
+    m_Localized: "WR\xD3\u0106"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130372
+    m_Localized: "WZN\xD3W"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130373
+    m_Localized: "WCI\u015ANIJ"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130374
+    m_Localized: "BY PRZYSPIESZY\u0106"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130375
+    m_Localized: "BY POTWIERDZI\u0106"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130376
+    m_Localized: "BY KONTYNUOWA\u0106"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130377
+    m_Localized: LOKALNIE
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130378
+    m_Localized: WIELU GRACZY
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130379
+    m_Localized: OPCJE
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130380
+    m_Localized: "TW\xD3RCY"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130381
+    m_Localized: "WYJD\u0179"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130382
+    m_Localized: MUZYKA
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130383
+    m_Localized: GRAJ
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130384
+    m_Localized: START!
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130385
+    m_Localized: GOTOWI!!
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130386
+    m_Localized: "WCI\u015ANIJ PRZYCISK, BY KONTYNUOWA\u0106"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130387
+    m_Localized: EFEKTY
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130388
+    m_Localized: "OG\xD3LNE"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130389
+    m_Localized: OBRAZ
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130390
+    m_Localized: "D\u0179WI\u0118K"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130391
+    m_Localized: "DOST\u0118PNO\u015A\u0106"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130392
+    m_Localized: "ROZDZIELCZO\u015A\u0106"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130393
+    m_Localized: 'A: zastosuj'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130394
+    m_Localized: "J\u0118ZYK"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130395
+    m_Localized: "RODZAJ PE\u0141NEGO EKRANU"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130396
+    m_Localized: BEZ RAMEK
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130397
+    m_Localized: "WY\u0141\u0104CZNY"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130398
+    m_Localized: VSYNC
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130399
+    m_Localized: LIMIT KLATEK
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130400
+    m_Localized: "JAKO\u015A\u0106"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130401
+    m_Localized: NISKA
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130402
+    m_Localized: "\u015AREDNIA"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130403
+    m_Localized: WYSOKA
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130404
+    m_Localized: PODZIELONY EKRAN
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130405
+    m_Localized: "WY\u015ARODKOWANY"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130406
+    m_Localized: "G\xD3RA I D\xD3\u0141"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130407
+    m_Localized: OBOK SIEBIE
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130408
+    m_Localized: "OG\xD3LNA"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130409
+    m_Localized: MUZYKA
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130410
+    m_Localized: EFEKTY
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130411
+    m_Localized: W TLE
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130412
+    m_Localized: WYCISZ
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130413
+    m_Localized: GRAJ DALEJ
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130414
+    m_Localized: MNIEJ RUCHU
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130415
+    m_Localized: JEDNOSTKI
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130416
+    m_Localized: METRYCZNE
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130417
+    m_Localized: IMPERIALNE
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130418
+    m_Localized: OD NOWA
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130419
+    m_Localized: STEROWANIE
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130420
+    m_Localized: "ZACZ\u0104\u0106 MECZ OD NOWA?"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130421
+    m_Localized: TAK
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130422
+    m_Localized: NIE
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130423
+    m_Localized: "Online: mecz trwa, gdy pauzujesz. Menu g\u0142\xF3wne ko\u0144czy
+      go dla wszystkich."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130424
+    m_Localized: "Online: mecz trwa, gdy pauzujesz. Menu g\u0142\xF3wne go opuszcza."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130425
+    m_Localized: "STEROWANIE \u2014 KLAWIATURA"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130426
+    m_Localized: "STEROWANIE \u2014 PAD"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130427
+    m_Localized: "PRZYWR\xD3\u0106 DOMY\u015ALNE"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130428
+    m_Localized: "WCI\u015ANIJ KLAWISZ..."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130429
+    m_Localized: "WCI\u015ANIJ PRZYCISK..."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130430
+    m_Localized: GAZ
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130431
+    m_Localized: HAMULEC
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130432
+    m_Localized: "SKR\u0118\u0106 W LEWO"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130433
+    m_Localized: "SKR\u0118\u0106 W PRAWO"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130434
+    m_Localized: TURBO
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130435
+    m_Localized: DRIFT
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130436
+    m_Localized: "ZMIE\u0143 KAMER\u0118"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130437
+    m_Localized: KAMERA W LEWO
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130438
+    m_Localized: KAMERA W PRAWO
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130439
+    m_Localized: "KAMERA W G\xD3R\u0118"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130440
+    m_Localized: "KAMERA W D\xD3\u0141"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130441
+    m_Localized: "KRZY\u017BAK W G\xD3R\u0118"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130442
+    m_Localized: "KRZY\u017BAK W D\xD3\u0141"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130443
+    m_Localized: "KRZY\u017BAK W LEWO"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130444
+    m_Localized: "KRZY\u017BAK W PRAWO"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130445
+    m_Localized: "KRZY\u017BYK"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130446
+    m_Localized: "K\xD3\u0141KO"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130447
+    m_Localized: KWADRAT
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130448
+    m_Localized: "TR\xD3JK\u0104T"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130449
+    m_Localized: ZASADY MECZU
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130450
+    m_Localized: 'A / B: GOTOWE'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130451
+    m_Localized: "D\u0141UGO\u015A\u0106"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130452
+    m_Localized: "KR\xD3TKI"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130453
+    m_Localized: NORMALNY
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324672
+    m_Localized: "D\u0141UGI"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324673
+    m_Localized: "KRADZIE\u017BE"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324674
+    m_Localized: "Z\u0141OTE ZAM\xD3WIENIE"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324675
+    m_Localized: "BEZ KRADZIE\u017BY"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324676
+    m_Localized: "BEZ Z\u0141OTEGO ZAM\xD3WIENIA"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324677
+    m_Localized: "BEZ Z\u0141OTEGO ZAM\xD3WIENIA: Z\u0141OTA WYGRANA, Z\u0141OTA
+      KRADZIE\u017B I Z OSTATNIEGO NA PIERWSZE S\u0104 NIEDOST\u0118PNE"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324678
+    m_Localized: "PUBLICZNA POCZEKALNIA GRA NA ZWYK\u0141YCH ZASADACH"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324679
+    m_Localized: "Z\u0141OTA R\u0104CZKA"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324680
+    m_Localized: KLEPTODUCH
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324681
+    m_Localized: "PRACOWITA PSZCZ\xD3\u0141KA"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324682
+    m_Localized: GRUBA RYBA
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324683
+    m_Localized: "DZIURAWE R\u0118CE"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324684
+    m_Localized: KARMA DLA RYB
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324685
+    m_Localized: TURYSTA
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324686
+    m_Localized: "z\u0142oto przez {0}s"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324687
+    m_Localized: "1 kradzie\u017C"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324688
+    m_Localized: "{0} kradzie\u017Cy"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324689
+    m_Localized: 1 dostawa
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324690
+    m_Localized: '{0} dostaw'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324691
+    m_Localized: "1 trudne zam\xF3wienie"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324692
+    m_Localized: "{0} trudnych zam\xF3wie\u0144"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324693
+    m_Localized: okradziony raz
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324694
+    m_Localized: okradziony {0} razy
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324695
+    m_Localized: "1 k\u0105piel"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324696
+    m_Localized: "{0} k\u0105pieli"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324697
+    m_Localized: "podziwia\u0142 widoki"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324698
+    m_Localized: "REWAN\u017B"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324699
+    m_Localized: "WR\xD3\u0106 DO POCZEKALNI"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324700
+    m_Localized: "REWAN\u017B!"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324701
+    m_Localized: "POWR\xD3T DO POCZEKALNI"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324702
+    m_Localized: CZEKAMY NA GRACZY... {0}
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324703
+    m_Localized: GOTOWY
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324704
+    m_Localized: "ODPAD\u0141"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324705
+    m_Localized: PRZYTRZYMAJ
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324706
+    m_Localized: "BY POMIN\u0104\u0106  {0}/{1}"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324707
+    m_Localized: "Pracownik miesi\u0105ca"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324708
+    m_Localized: "WYS\u0141ANY"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324709
+    m_Localized: "SZYKUJE SI\u0118\u2026"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324710
+    m_Localized: "ZATRUDNIMY\u2026"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324711
+    m_Localized: '{0} / {1} GOTOWYCH'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324712
+    m_Localized: KOLOR
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324713
+    m_Localized: FIRMA
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324714
+    m_Localized: "WYGL\u0104D"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324715
+    m_Localized: GOTOWE
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324716
+    m_Localized: KAPELUSZ
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324717
+    m_Localized: "ZAPRO\u015A"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324718
+    m_Localized: "WYJD\u0179"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324719
+    m_Localized: GRACZ
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324720
+    m_Localized: "ODBIJ KART\u0118"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324721
+    m_Localized: "WSZYSTKIE ZAM\xD3WIENIA WYS\u0141ANE"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324722
+    m_Localized: "SZUKAM MECZU\u2026"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324723
+    m_Localized: OTWARTE DLA WSZYSTKICH
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324724
+    m_Localized: TYLKO ZNAJOMI
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324725
+    m_Localized: SZUKAJ MECZU
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324726
+    m_Localized: "OTWARTE DLA WSZYSTKICH \xB7 START ZA {0}"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324727
+    m_Localized: "Brak otwartych mecz\xF3w. Twoja poczekalnia jest otwarta dla wszystkich."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324728
+    m_Localized: "Brak otwartych mecz\xF3w."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324729
+    m_Localized: "Szukaj meczu, zanim inni do\u0142\u0105cz\u0105 do twojej poczekalni."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324730
+    m_Localized: "Ten mecz jest pe\u0142ny."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324731
+    m_Localized: "Ten mecz ju\u017C si\u0119 zacz\u0105\u0142."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324732
+    m_Localized: To nie jest Dead on Arrival.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324733
+    m_Localized: Ta poczekalnia to nie mecz Dead on Arrival.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324734
+    m_Localized: "Sko\u0144cz sw\xF3j mecz, zanim do\u0142\u0105czysz do znajomego."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324735
+    m_Localized: "Opu\u015B\u0107 sw\xF3j mecz online, zanim do\u0142\u0105czysz
+      do innego."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324736
+    m_Localized: "Ten mecz ma wersj\u0119 {0}, a ty {1}. Potrzebujecie tej samej
+      wersji."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324737
+    m_Localized: "nieznan\u0105 wersj\u0119"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324738
+    m_Localized: Ten mecz ma inny build wersji {0}. Potrzebujecie tego samego buildu.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324739
+    m_Localized: "Uruchom Steam, by gra\u0107 online."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324740
+    m_Localized: "Steam nie otworzy\u0142 poczekalni. Spr\xF3buj ponownie."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324741
+    m_Localized: "Nie uda\u0142o si\u0119 rozpocz\u0105\u0107 meczu online. Spr\xF3buj
+      ponownie."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324742
+    m_Localized: "Nie uda\u0142o si\u0119 do\u0142\u0105czy\u0107. Mecz m\xF3g\u0142
+      si\u0119 sko\u0144czy\u0107."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324743
+    m_Localized: "Zapro\u015B znajomych z listy znajomych Steam."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324744
+    m_Localized: "Roz\u0142\u0105czono: za du\u017Co wiadomo\u015Bci."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324745
+    m_Localized: "Wypad\u0142e\u015B z rewan\u017Cu."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324746
+    m_Localized: "Gospodarz opu\u015Bci\u0142 mecz."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324747
+    m_Localized: "Nie uda\u0142o si\u0119 po\u0142\u0105czy\u0107 z gospodarzem."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324748
+    m_Localized: "Po\u0142\u0105czenie zosta\u0142o utracone."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324749
+    m_Localized: "Y / Tr\xF3jk\u0105t: graj online ze znajomymi ze Steam"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324750
+    m_Localized: "Y / Tr\xF3jk\u0105t: zapro\u015B znajomych      B / K\xF3\u0142ko:
+      wyjd\u017A"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324751
+    m_Localized: "B / K\xF3\u0142ko: wyjd\u017A z gry online"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324752
+    m_Localized: Gracz {0}
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324753
+    m_Localized: "Pod\u0142\u0105cz pad, by gra\u0107"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324754
+    m_Localized: "Wci\u015Bnij Spacj\u0119, by gra\u0107 na klawiaturze, albo pod\u0142\u0105cz
+      pad"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324755
+    m_Localized: "Ten pad nie jest obs\u0142ugiwany - spr\xF3buj pada Xbox, PlayStation
+      lub Switch Pro"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324756
+    m_Localized: "Pad G{0} od\u0142\u0105czony\nWci\u015Bnij przycisk na dowolnym
+      padzie, by kontynuowa\u0107"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324757
+    m_Localized: Wynik
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324758
+    m_Localized: Gracz 1
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324759
+    m_Localized: "Z\u0142ote zam\xF3wienie za..."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324760
+    m_Localized: "W\u0142\u0105cz samouczek"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324761
+    m_Localized: "Tw\xF3rcy"
+    m_Metadata:
+      m_Items: []
+  references:
+    version: 2
+    RefIds: []

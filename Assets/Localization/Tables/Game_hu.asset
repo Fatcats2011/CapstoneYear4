@@ -1,0 +1,755 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e9620f8c34305754d8cc9a7e49e852d9, type: 3}
+  m_Name: Game_hu
+  m_EditorClassIdentifier: 
+  m_LocaleId:
+    m_Code: hu
+  m_SharedData: {fileID: 11400000, guid: 61b958d042748d049905867c9fe4253d, type: 2}
+  m_Metadata:
+    m_Items: []
+  m_TableData:
+  - m_Id: 11136798720
+    m_Localized: "EREDM\xC9NYEK"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11182936064
+    m_Localized: "TELJES K\xC9PERNY\u0150"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11182936065
+    m_Localized: "SZ\xDCNET"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11182936066
+    m_Localized: "V\xC1LASSZ"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130368
+    m_Localized: "MEN\xDC"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130369
+    m_Localized: BE
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130370
+    m_Localized: KI
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130371
+    m_Localized: VISSZA
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130372
+    m_Localized: "FOLYTAT\xC1S"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130373
+    m_Localized: NYOMD
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130374
+    m_Localized: "A TURB\xD3HOZ"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130375
+    m_Localized: "A MEGER\u0150S\xCDT\xC9SHEZ"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130376
+    m_Localized: "A FOLYTAT\xC1SHOZ"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130377
+    m_Localized: HELYI
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130378
+    m_Localized: "T\xD6BBJ\xC1T\xC9KOS"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130379
+    m_Localized: "BE\xC1LL\xCDT\xC1SOK"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130380
+    m_Localized: "ST\xC1B"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130381
+    m_Localized: "KIL\xC9P\xC9S"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130382
+    m_Localized: ZENE
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130383
+    m_Localized: "J\xC1T\xC9K"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130384
+    m_Localized: RAJT!
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130385
+    m_Localized: "K\xC9SZ!!"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130386
+    m_Localized: "NYOMJ MEG EGY GOMBOT A FOLYTAT\xC1SHOZ"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130387
+    m_Localized: EFFEKTEK
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130388
+    m_Localized: "\xC1LTAL\xC1NOS"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130389
+    m_Localized: "KIJELZ\u0150"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130390
+    m_Localized: HANG
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130391
+    m_Localized: "AKAD\xC1LYMENTESS\xC9G"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130392
+    m_Localized: "FELBONT\xC1S"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130393
+    m_Localized: 'A: alkalmaz'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130394
+    m_Localized: NYELV
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130395
+    m_Localized: "TELJES K\xC9PERNY\u0150 T\xCDPUSA"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130396
+    m_Localized: "KERET N\xC9LK\xDCL"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130397
+    m_Localized: "KIZ\xC1R\xD3LAGOS"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130398
+    m_Localized: VSYNC
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130399
+    m_Localized: "FPS-KORL\xC1T"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130400
+    m_Localized: "MIN\u0150S\xC9G"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130401
+    m_Localized: ALACSONY
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130402
+    m_Localized: "K\xD6ZEPES"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130403
+    m_Localized: MAGAS
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130404
+    m_Localized: "OSZTOTT K\xC9PERNY\u0150"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130405
+    m_Localized: "K\xD6Z\xC9PEN"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130406
+    m_Localized: "FENT \xC9S LENT"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130407
+    m_Localized: "EGYM\xC1S MELLETT"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130408
+    m_Localized: "F\u0150"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130409
+    m_Localized: ZENE
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130410
+    m_Localized: EFFEKTEK
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130411
+    m_Localized: "A H\xC1TT\xC9RBEN"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130412
+    m_Localized: "N\xC9M\xCDT\xC1S"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130413
+    m_Localized: "SZ\xD3LJON TOV\xC1BB"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130414
+    m_Localized: "MOZG\xC1S CS\xD6KKENT\xC9SE"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130415
+    m_Localized: "M\xC9RT\xC9KEGYS\xC9G"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130416
+    m_Localized: METRIKUS
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130417
+    m_Localized: "ANGOLSZ\xC1SZ"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130418
+    m_Localized: "\xDAJRAKEZD\xC9S"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130419
+    m_Localized: "IR\xC1NY\xCDT\xC1S"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130420
+    m_Localized: "\xDAJRAKEZDED A MECCSET?"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130421
+    m_Localized: IGEN
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130422
+    m_Localized: NEM
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130423
+    m_Localized: "Online: a meccs megy tov\xE1bb, am\xEDg sz\xFCnetelsz. A f\u0151men\xFC
+      mindenkinek v\xE9get vet neki."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130424
+    m_Localized: "Online: a meccs megy tov\xE1bb, am\xEDg sz\xFCnetelsz. A f\u0151men\xFC
+      kil\xE9ptet bel\u0151le."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130425
+    m_Localized: "IR\xC1NY\xCDT\xC1S \u2014 BILLENTY\u0170ZET"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130426
+    m_Localized: "IR\xC1NY\xCDT\xC1S \u2014 KONTROLLER"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130427
+    m_Localized: "ALAP\xC9RTELMEZETT"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130428
+    m_Localized: "NYOMJ EGY BILLENTY\u0170T..."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130429
+    m_Localized: NYOMJ EGY GOMBOT...
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130430
+    m_Localized: "G\xC1Z"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130431
+    m_Localized: "F\xC9K"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130432
+    m_Localized: BALRA
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130433
+    m_Localized: JOBBRA
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130434
+    m_Localized: "TURB\xD3"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130435
+    m_Localized: DRIFT
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130436
+    m_Localized: "KAMERAV\xC1LT\xC1S"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130437
+    m_Localized: KAMERA BALRA
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130438
+    m_Localized: KAMERA JOBBRA
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130439
+    m_Localized: KAMERA FEL
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130440
+    m_Localized: KAMERA LE
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130441
+    m_Localized: "IR\xC1NYGOMB FEL"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130442
+    m_Localized: "IR\xC1NYGOMB LE"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130443
+    m_Localized: "IR\xC1NYGOMB BALRA"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130444
+    m_Localized: "IR\xC1NYGOMB JOBBRA"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130445
+    m_Localized: X
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130446
+    m_Localized: "K\xD6R"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130447
+    m_Localized: "N\xC9GYZET"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130448
+    m_Localized: "H\xC1ROMSZ\xD6G"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130449
+    m_Localized: "MECCSSZAB\xC1LYOK"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130450
+    m_Localized: "A / B: K\xC9SZ"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130451
+    m_Localized: HOSSZ
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130452
+    m_Localized: "R\xD6VID"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130453
+    m_Localized: "NORM\xC1L"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324672
+    m_Localized: "HOSSZ\xDA"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324673
+    m_Localized: "LOP\xC1S"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324674
+    m_Localized: "ARANYRENDEL\xC9S"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324675
+    m_Localized: "LOP\xC1S N\xC9LK\xDCL"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324676
+    m_Localized: "ARANYRENDEL\xC9S N\xC9LK\xDCL"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324677
+    m_Localized: "ARANYRENDEL\xC9S N\xC9LK\xDCL: AZ ARANYGY\u0150ZELEM, AZ ARANYLOP\xC1S
+      \xC9S AZ UTOLS\xD3B\xD3L ELS\u0150 NEM SZEREZHET\u0150 MEG"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324678
+    m_Localized: "A NYILV\xC1NOS V\xC1R\xD3 A SZOK\xC1SOS SZAB\xC1LYOKKAL J\xC1TSZIK"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324679
+    m_Localized: "ARANYKEZ\u0170"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324680
+    m_Localized: KLEPTOSZELLEM
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324681
+    m_Localized: "SZORGOS M\xC9HECSKE"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324682
+    m_Localized: NAGYVAD
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324683
+    m_Localized: "VAJKEZ\u0170"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324684
+    m_Localized: "HALELES\xC9G"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324685
+    m_Localized: TURISTA
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324686
+    m_Localized: '{0}mp-ig fogta az aranyat'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324687
+    m_Localized: "1 lop\xE1s"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324688
+    m_Localized: "{0} lop\xE1s"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324689
+    m_Localized: "1 kisz\xE1ll\xEDt\xE1s"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324690
+    m_Localized: "{0} kisz\xE1ll\xEDt\xE1s"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324691
+    m_Localized: "1 neh\xE9z rendel\xE9s"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324692
+    m_Localized: "{0} neh\xE9z rendel\xE9s"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324693
+    m_Localized: "egyszer kirabolt\xE1k"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324694
+    m_Localized: "{0}-szor kirabolt\xE1k"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324695
+    m_Localized: "1 f\xFCrd\xE9s"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324696
+    m_Localized: "{0} f\xFCrd\xE9s"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324697
+    m_Localized: "\xE9lvezte a kil\xE1t\xE1st"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324698
+    m_Localized: "VISSZAV\xC1G\xD3"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324699
+    m_Localized: "VISSZA A V\xC1R\xD3BA"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324700
+    m_Localized: "VISSZAV\xC1G\xD3!"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324701
+    m_Localized: "VISSZA A V\xC1R\xD3BA"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324702
+    m_Localized: "J\xC1T\xC9KOSOKRA V\xC1RUNK... {0}"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324703
+    m_Localized: "K\xC9SZ"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324704
+    m_Localized: KIESETT
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324705
+    m_Localized: TARTSD
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324706
+    m_Localized: "A KIHAGY\xC1SHOZ  {0}/{1}"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324707
+    m_Localized: "A h\xF3nap dolgoz\xF3ja"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324708
+    m_Localized: "KIK\xDCLDVE"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324709
+    m_Localized: "K\xC9SZ\xDCL\u0150DIK\u2026"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324710
+    m_Localized: "FELV\xC9TEL\u2026"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324711
+    m_Localized: "{0} / {1} K\xC9SZ"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324712
+    m_Localized: "SZ\xCDN"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324713
+    m_Localized: "C\xC9G"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324714
+    m_Localized: "TESTRESZAB\xC1S"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324715
+    m_Localized: "K\xC9SZ"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324716
+    m_Localized: KALAP
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324717
+    m_Localized: "MEGH\xCDV\xC1S"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324718
+    m_Localized: "KIL\xC9P\xC9S"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324719
+    m_Localized: "J\xC1T\xC9KOS"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324720
+    m_Localized: "BLOKKOL\xC1S"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324721
+    m_Localized: "MINDEN RENDEL\xC9S KIK\xDCLDVE"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324722
+    m_Localized: "MECCS KERES\xC9SE\u2026"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324723
+    m_Localized: "B\xC1RKI BEJ\xD6HET"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324724
+    m_Localized: "CSAK BAR\xC1TOK"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324725
+    m_Localized: "MECCS KERES\xC9SE"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324726
+    m_Localized: "B\xC1RKI BEJ\xD6HET \xB7 INDUL\xC1S: {0}"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324727
+    m_Localized: "Most nincs nyitott meccs. A v\xE1r\xF3d b\xE1rki sz\xE1m\xE1ra
+      nyitva \xE1ll."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324728
+    m_Localized: Most nincs nyitott meccs.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324729
+    m_Localized: "Keress meccset, miel\u0151tt m\xE1sok bel\xE9pnek a v\xE1r\xF3dba."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324730
+    m_Localized: Az a meccs megtelt.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324731
+    m_Localized: "Az a meccs m\xE1r elkezd\u0151d\xF6tt."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324732
+    m_Localized: Az nem a Dead on Arrival.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324733
+    m_Localized: "Az a v\xE1r\xF3 nem Dead on Arrival-meccs."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324734
+    m_Localized: "Fejezd be a meccsed, miel\u0151tt csatlakozol egy bar\xE1todhoz."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324735
+    m_Localized: "L\xE9pj ki az online meccsedb\u0151l, miel\u0151tt egy m\xE1sikhoz
+      csatlakozol."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324736
+    m_Localized: "Az a meccs a(z) {0} verzi\xF3n fut, neked {1} van. Ugyanaz a verzi\xF3
+      kell."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324737
+    m_Localized: "ismeretlen verzi\xF3"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324738
+    m_Localized: "Az a meccs a(z) {0} verzi\xF3 egy m\xE1sik buildj\xE9n fut. Ugyanaz
+      a build kell."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324739
+    m_Localized: "Ind\xEDtsd el a Steamet az online j\xE1t\xE9khoz."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324740
+    m_Localized: "A Steam nem tudott v\xE1r\xF3t nyitni. Pr\xF3b\xE1ld \xFAjra."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324741
+    m_Localized: "Nem siker\xFClt elind\xEDtani az online meccset. Pr\xF3b\xE1ld
+      \xFAjra."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324742
+    m_Localized: "Nem siker\xFClt csatlakozni. Lehet, hogy v\xE9get \xE9rt."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324743
+    m_Localized: "H\xEDvd meg a bar\xE1taidat a Steam-bar\xE1tlist\xE1dr\xF3l."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324744
+    m_Localized: "Lecsatlakoztatva: t\xFAl sok \xFCzenet."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324745
+    m_Localized: "Kimaradt\xE1l a visszav\xE1g\xF3b\xF3l."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324746
+    m_Localized: "A h\xE1zigazda kil\xE9pett a meccsb\u0151l."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324747
+    m_Localized: "A h\xE1zigazda nem \xE9rhet\u0151 el."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324748
+    m_Localized: Megszakadt a kapcsolat.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324749
+    m_Localized: "Y / H\xE1romsz\xF6g: online j\xE1t\xE9k Steam-bar\xE1tokkal"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324750
+    m_Localized: "Y / H\xE1romsz\xF6g: bar\xE1tok megh\xEDv\xE1sa      B / K\xF6r:
+      kil\xE9p\xE9s"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324751
+    m_Localized: "B / K\xF6r: kil\xE9p\xE9s az online j\xE1t\xE9kb\xF3l"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324752
+    m_Localized: "{0}. j\xE1t\xE9kos"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324753
+    m_Localized: "Csatlakoztass egy kontrollert a j\xE1t\xE9khoz"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324754
+    m_Localized: "Nyomd meg a Sz\xF3k\xF6zt a billenty\u0171zetes j\xE1t\xE9khoz,
+      vagy csatlakoztass kontrollert"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324755
+    m_Localized: "Ez a kontroller nem t\xE1mogatott - pr\xF3b\xE1lj Xbox, PlayStation
+      vagy Switch Pro kontrollert"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324756
+    m_Localized: "A {0}. j\xE1t\xE9kos kontrollere lecsatlakozott\nNyomj meg egy
+      gombot b\xE1rmelyik kontrolleren a folytat\xE1shoz"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324757
+    m_Localized: "Pontsz\xE1m"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324758
+    m_Localized: "1. j\xE1t\xE9kos"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324759
+    m_Localized: "Aranyrendel\xE9s..."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324760
+    m_Localized: "Oktat\xF3anyag bekapcsol\xE1sa"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324761
+    m_Localized: "St\xE1b"
+    m_Metadata:
+      m_Items: []
+  references:
+    version: 2
+    RefIds: []

@@ -1,0 +1,752 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e9620f8c34305754d8cc9a7e49e852d9, type: 3}
+  m_Name: Game_it
+  m_EditorClassIdentifier: 
+  m_LocaleId:
+    m_Code: it
+  m_SharedData: {fileID: 11400000, guid: 61b958d042748d049905867c9fe4253d, type: 2}
+  m_Metadata:
+    m_Items: []
+  m_TableData:
+  - m_Id: 11136798720
+    m_Localized: RISULTATI
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11182936064
+    m_Localized: SCHERMO INTERO
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11182936065
+    m_Localized: IN PAUSA
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11182936066
+    m_Localized: SCEGLI
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130368
+    m_Localized: MENU
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130369
+    m_Localized: "S\xCC"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130370
+    m_Localized: NO
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130371
+    m_Localized: INDIETRO
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130372
+    m_Localized: RIPRENDI
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130373
+    m_Localized: PREMI
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130374
+    m_Localized: PER IL TURBO
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130375
+    m_Localized: PER CONFERMARE
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130376
+    m_Localized: PER CONTINUARE
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130377
+    m_Localized: LOCALE
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130378
+    m_Localized: MULTIGIOCATORE
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130379
+    m_Localized: OPZIONI
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130380
+    m_Localized: RICONOSCIMENTI
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130381
+    m_Localized: ESCI
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130382
+    m_Localized: MUSICA
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130383
+    m_Localized: GIOCA
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130384
+    m_Localized: VIA!
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130385
+    m_Localized: PRONTI!!
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130386
+    m_Localized: PREMI UN TASTO PER CONTINUARE
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130387
+    m_Localized: EFFETTI
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130388
+    m_Localized: GENERALE
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130389
+    m_Localized: SCHERMO
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130390
+    m_Localized: AUDIO
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130391
+    m_Localized: "ACCESSIBILIT\xC0"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130392
+    m_Localized: RISOLUZIONE
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130393
+    m_Localized: 'A: applica'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130394
+    m_Localized: LINGUA
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130395
+    m_Localized: TIPO DI SCHERMO INTERO
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130396
+    m_Localized: SENZA BORDI
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130397
+    m_Localized: ESCLUSIVO
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130398
+    m_Localized: VSYNC
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130399
+    m_Localized: LIMITE FPS
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130400
+    m_Localized: "QUALIT\xC0"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130401
+    m_Localized: BASSA
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130402
+    m_Localized: MEDIA
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130403
+    m_Localized: ALTA
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130404
+    m_Localized: SCHERMO CONDIVISO
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130405
+    m_Localized: AL CENTRO
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130406
+    m_Localized: SOPRA E SOTTO
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130407
+    m_Localized: AFFIANCATI
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130408
+    m_Localized: GENERALE
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130409
+    m_Localized: MUSICA
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130410
+    m_Localized: EFFETTI
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130411
+    m_Localized: IN SECONDO PIANO
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130412
+    m_Localized: MUTO
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130413
+    m_Localized: CONTINUA
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130414
+    m_Localized: RIDUCI MOVIMENTO
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130415
+    m_Localized: "UNIT\xC0"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130416
+    m_Localized: METRICO
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130417
+    m_Localized: IMPERIALE
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130418
+    m_Localized: RICOMINCIA
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130419
+    m_Localized: COMANDI
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130420
+    m_Localized: RICOMINCIARE LA PARTITA?
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130421
+    m_Localized: "S\xCC"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130422
+    m_Localized: NO
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130423
+    m_Localized: 'Online: la partita continua mentre sei in pausa. Menu principale
+      la chiude per tutti.'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130424
+    m_Localized: 'Online: la partita continua mentre sei in pausa. Menu principale
+      ti fa uscire.'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130425
+    m_Localized: "COMANDI \u2014 TASTIERA"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130426
+    m_Localized: "COMANDI \u2014 CONTROLLER"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130427
+    m_Localized: RIPRISTINA
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130428
+    m_Localized: PREMI UN TASTO...
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130429
+    m_Localized: PREMI UN PULSANTE...
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130430
+    m_Localized: ACCELERA
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130431
+    m_Localized: FRENA
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130432
+    m_Localized: STERZA A SINISTRA
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130433
+    m_Localized: STERZA A DESTRA
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130434
+    m_Localized: TURBO
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130435
+    m_Localized: DERAPATA
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130436
+    m_Localized: CAMBIA VISUALE
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130437
+    m_Localized: VISUALE A SINISTRA
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130438
+    m_Localized: VISUALE A DESTRA
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130439
+    m_Localized: VISUALE IN ALTO
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130440
+    m_Localized: VISUALE IN BASSO
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130441
+    m_Localized: CROCE SU
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130442
+    m_Localized: "CROCE GI\xD9"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130443
+    m_Localized: CROCE SINISTRA
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130444
+    m_Localized: CROCE DESTRA
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130445
+    m_Localized: CROCE
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130446
+    m_Localized: CERCHIO
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130447
+    m_Localized: QUADRATO
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130448
+    m_Localized: TRIANGOLO
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130449
+    m_Localized: REGOLE DELLA PARTITA
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130450
+    m_Localized: 'A / B: FATTO'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130451
+    m_Localized: DURATA
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130452
+    m_Localized: BREVE
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130453
+    m_Localized: NORMALE
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324672
+    m_Localized: LUNGA
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324673
+    m_Localized: FURTI
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324674
+    m_Localized: ORDINE D'ORO
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324675
+    m_Localized: SENZA FURTI
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324676
+    m_Localized: SENZA ORDINE D'ORO
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324677
+    m_Localized: 'SENZA ORDINE D''ORO: VITTORIA D''ORO, FURTO D''ORO E DA ULTIMO
+      A PRIMO NON SI POSSONO OTTENERE'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324678
+    m_Localized: UNA LOBBY PUBBLICA GIOCA CON LE REGOLE NORMALI
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324679
+    m_Localized: PRESA D'ORO
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324680
+    m_Localized: CLEPTOFANTASMA
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324681
+    m_Localized: APE OPERAIA
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324682
+    m_Localized: PEZZO GROSSO
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324683
+    m_Localized: MANI DI BURRO
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324684
+    m_Localized: CIBO PER PESCI
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324685
+    m_Localized: TURISTA
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324686
+    m_Localized: oro tenuto {0}s
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324687
+    m_Localized: 1 furto
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324688
+    m_Localized: '{0} furti'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324689
+    m_Localized: 1 consegna
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324690
+    m_Localized: '{0} consegne'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324691
+    m_Localized: 1 ordine difficile
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324692
+    m_Localized: '{0} ordini difficili'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324693
+    m_Localized: derubato una volta
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324694
+    m_Localized: derubato {0} volte
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324695
+    m_Localized: 1 tuffo
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324696
+    m_Localized: '{0} tuffi'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324697
+    m_Localized: "si \xE8 goduto il panorama"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324698
+    m_Localized: RIVINCITA
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324699
+    m_Localized: TORNA ALLA LOBBY
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324700
+    m_Localized: RIVINCITA!
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324701
+    m_Localized: SI TORNA ALLA LOBBY
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324702
+    m_Localized: IN ATTESA DEI GIOCATORI... {0}
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324703
+    m_Localized: PRONTO
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324704
+    m_Localized: FUORI
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324705
+    m_Localized: TIENI
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324706
+    m_Localized: PER SALTARE  {0}/{1}
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324707
+    m_Localized: Impiegato del mese
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324708
+    m_Localized: SPEDITO
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324709
+    m_Localized: "SI PREPARA\u2026"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324710
+    m_Localized: "CERCASI\u2026"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324711
+    m_Localized: '{0} / {1} PRONTI'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324712
+    m_Localized: COLORE
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324713
+    m_Localized: AZIENDA
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324714
+    m_Localized: PERSONALIZZA
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324715
+    m_Localized: FATTO
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324716
+    m_Localized: CAPPELLO
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324717
+    m_Localized: INVITA
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324718
+    m_Localized: ESCI
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324719
+    m_Localized: GIOCATORE
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324720
+    m_Localized: TIMBRA
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324721
+    m_Localized: TUTTI GLI ORDINI SPEDITI
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324722
+    m_Localized: "CERCO UNA PARTITA\u2026"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324723
+    m_Localized: APERTO A TUTTI
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324724
+    m_Localized: SOLO AMICI
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324725
+    m_Localized: TROVA PARTITA
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324726
+    m_Localized: "APERTO A TUTTI \xB7 INIZIA TRA {0}"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324727
+    m_Localized: "Nessuna partita aperta al momento. La tua lobby \xE8 aperta a tutti."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324728
+    m_Localized: Nessuna partita aperta al momento.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324729
+    m_Localized: Cerca una partita prima che altri entrino nella tua lobby.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324730
+    m_Localized: "Quella partita \xE8 piena."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324731
+    m_Localized: "Quella partita \xE8 gi\xE0 iniziata."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324732
+    m_Localized: "Quel gioco non \xE8 Dead on Arrival."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324733
+    m_Localized: "Quella lobby non \xE8 una partita di Dead on Arrival."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324734
+    m_Localized: Finisci la tua partita prima di unirti a quella di un amico.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324735
+    m_Localized: Esci dalla tua partita online prima di unirti a un'altra.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324736
+    m_Localized: "Quella partita \xE8 alla versione {0} e tu hai {1}. Vi serve la
+      stessa versione."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324737
+    m_Localized: una versione sconosciuta
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324738
+    m_Localized: "Quella partita \xE8 su un'altra build della versione {0}. Vi serve
+      la stessa build."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324739
+    m_Localized: Avvia Steam per giocare online.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324740
+    m_Localized: "Steam non \xE8 riuscito ad aprire una lobby. Riprova."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324741
+    m_Localized: Impossibile avviare la partita online. Riprova.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324742
+    m_Localized: "Impossibile unirsi a quella partita. Forse \xE8 finita."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324743
+    m_Localized: Invita gli amici dalla tua lista amici di Steam.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324744
+    m_Localized: 'Disconnesso: troppi messaggi.'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324745
+    m_Localized: Escluso dalla rivincita.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324746
+    m_Localized: L'host ha lasciato la partita.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324747
+    m_Localized: Impossibile raggiungere l'host.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324748
+    m_Localized: "La connessione si \xE8 interrotta."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324749
+    m_Localized: 'Y / Triangolo: gioca online con gli amici di Steam'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324750
+    m_Localized: 'Y / Triangolo: invita amici      B / Cerchio: esci'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324751
+    m_Localized: 'B / Cerchio: esci dall''online'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324752
+    m_Localized: Giocatore {0}
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324753
+    m_Localized: Collega un controller per giocare
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324754
+    m_Localized: Premi Spazio per giocare con la tastiera, o collega un controller
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324755
+    m_Localized: "Questo controller non \xE8 supportato - prova un controller Xbox,
+      PlayStation o Switch Pro"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324756
+    m_Localized: 'Controller del G{0} scollegato
+
+      Premi un pulsante su un controller
+      qualsiasi per continuare'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324757
+    m_Localized: Punti
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324758
+    m_Localized: Giocatore 1
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324759
+    m_Localized: Ordine d'oro tra...
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324760
+    m_Localized: Attiva il tutorial
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324761
+    m_Localized: Riconoscimenti
+    m_Metadata:
+      m_Items: []
+  references:
+    version: 2
+    RefIds: []

@@ -1,0 +1,752 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e9620f8c34305754d8cc9a7e49e852d9, type: 3}
+  m_Name: Game_sv
+  m_EditorClassIdentifier: 
+  m_LocaleId:
+    m_Code: sv
+  m_SharedData: {fileID: 11400000, guid: 61b958d042748d049905867c9fe4253d, type: 2}
+  m_Metadata:
+    m_Items: []
+  m_TableData:
+  - m_Id: 11136798720
+    m_Localized: RESULTAT
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11182936064
+    m_Localized: "HELSK\xC4RM"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11182936065
+    m_Localized: PAUSAT
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11182936066
+    m_Localized: "V\xC4LJ"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130368
+    m_Localized: MENY
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130369
+    m_Localized: "P\xC5"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130370
+    m_Localized: AV
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130371
+    m_Localized: TILLBAKA
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130372
+    m_Localized: "FORTS\xC4TT"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130373
+    m_Localized: TRYCK
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130374
+    m_Localized: "F\xD6R ATT BOOSTA"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130375
+    m_Localized: "F\xD6R ATT BEKR\xC4FTA"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130376
+    m_Localized: "F\xD6R ATT FORTS\xC4TTA"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130377
+    m_Localized: LOKALT
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130378
+    m_Localized: FLERSPELARE
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130379
+    m_Localized: "INST\xC4LLNINGAR"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130380
+    m_Localized: MEDVERKANDE
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130381
+    m_Localized: AVSLUTA
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130382
+    m_Localized: MUSIK
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130383
+    m_Localized: SPELA
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130384
+    m_Localized: "K\xD6R!"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130385
+    m_Localized: REDO!!
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130386
+    m_Localized: "TRYCK P\xC5 EN KNAPP F\xD6R ATT FORTS\xC4TTA"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130387
+    m_Localized: EFFEKTER
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130388
+    m_Localized: "ALLM\xC4NT"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130389
+    m_Localized: BILD
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130390
+    m_Localized: LJUD
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130391
+    m_Localized: "TILLG\xC4NGLIGHET"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130392
+    m_Localized: "UPPL\xD6SNING"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130393
+    m_Localized: "A: verkst\xE4ll"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130394
+    m_Localized: "SPR\xC5K"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130395
+    m_Localized: "HELSK\xC4RMSL\xC4GE"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130396
+    m_Localized: "KANTL\xD6S"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130397
+    m_Localized: EXKLUSIV
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130398
+    m_Localized: VSYNC
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130399
+    m_Localized: "BILDGR\xC4NS"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130400
+    m_Localized: KVALITET
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130401
+    m_Localized: "L\xC5G"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130402
+    m_Localized: MEDEL
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130403
+    m_Localized: "H\xD6G"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130404
+    m_Localized: "DELAD SK\xC4RM"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130405
+    m_Localized: CENTRERAD
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130406
+    m_Localized: "OVANF\xD6R OCH UNDER"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130407
+    m_Localized: SIDA VID SIDA
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130408
+    m_Localized: HUVUDVOLYM
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130409
+    m_Localized: MUSIK
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130410
+    m_Localized: EFFEKTER
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130411
+    m_Localized: I BAKGRUNDEN
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130412
+    m_Localized: TYST
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130413
+    m_Localized: "FORTS\xC4TT SPELA"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130414
+    m_Localized: "MINSKA R\xD6RELSE"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130415
+    m_Localized: ENHETER
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130416
+    m_Localized: METRISKT
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130417
+    m_Localized: BRITTISKT
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130418
+    m_Localized: "B\xD6RJA OM"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130419
+    m_Localized: KONTROLLER
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130420
+    m_Localized: "B\xD6RJA OM MATCHEN?"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130421
+    m_Localized: JA
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130422
+    m_Localized: NEJ
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130423
+    m_Localized: "Online: matchen forts\xE4tter medan du pausar. Huvudmenyn avslutar
+      den f\xF6r alla."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130424
+    m_Localized: "Online: matchen forts\xE4tter medan du pausar. Huvudmenyn l\xE4mnar
+      den."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130425
+    m_Localized: "KONTROLLER \u2014 TANGENTBORD"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130426
+    m_Localized: "KONTROLLER \u2014 HANDKONTROLL"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130427
+    m_Localized: "\xC5TERST\xC4LL"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130428
+    m_Localized: "TRYCK P\xC5 EN TANGENT..."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130429
+    m_Localized: "TRYCK P\xC5 EN KNAPP..."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130430
+    m_Localized: GASA
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130431
+    m_Localized: BROMSA
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130432
+    m_Localized: "STYR V\xC4NSTER"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130433
+    m_Localized: "STYR H\xD6GER"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130434
+    m_Localized: BOOST
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130435
+    m_Localized: DRIFTA
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130436
+    m_Localized: BYT KAMERA
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130437
+    m_Localized: "KAMERA V\xC4NSTER"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130438
+    m_Localized: "KAMERA H\xD6GER"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130439
+    m_Localized: KAMERA UPP
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130440
+    m_Localized: KAMERA NER
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130441
+    m_Localized: STYRKORS UPP
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130442
+    m_Localized: STYRKORS NER
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130443
+    m_Localized: "STYRKORS V\xC4NSTER"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130444
+    m_Localized: "STYRKORS H\xD6GER"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130445
+    m_Localized: KRYSS
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130446
+    m_Localized: CIRKEL
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130447
+    m_Localized: FYRKANT
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130448
+    m_Localized: TRIANGEL
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130449
+    m_Localized: MATCHREGLER
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130450
+    m_Localized: 'A / B: KLAR'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130451
+    m_Localized: "L\xC4NGD"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130452
+    m_Localized: KORT
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130453
+    m_Localized: NORMAL
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324672
+    m_Localized: "L\xC5NG"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324673
+    m_Localized: "ST\xD6LDER"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324674
+    m_Localized: "GULDBEST\xC4LLNING"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324675
+    m_Localized: "INGA ST\xD6LDER"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324676
+    m_Localized: "INGEN GULDBEST\xC4LLNING"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324677
+    m_Localized: "INGEN GULDBEST\xC4LLNING: GULDVINST, GULDST\xD6LD OCH FR\xC5N SIST
+      TILL F\xD6RST G\xC5R INTE ATT TA"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324678
+    m_Localized: "EN \xD6PPEN LOBBY SPELAR MED VANLIGA REGLER"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324679
+    m_Localized: GULDGREPPET
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324680
+    m_Localized: "KLEPTOSP\xD6KE"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324681
+    m_Localized: FLITIGA BIET
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324682
+    m_Localized: STORSPELARE
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324683
+    m_Localized: "SM\xD6RFINGRAR"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324684
+    m_Localized: FISKMAT
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324685
+    m_Localized: TURIST
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324686
+    m_Localized: "h\xF6ll guldet {0}s"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324687
+    m_Localized: "1 st\xF6ld"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324688
+    m_Localized: "{0} st\xF6lder"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324689
+    m_Localized: 1 leverans
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324690
+    m_Localized: '{0} leveranser'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324691
+    m_Localized: "1 sv\xE5r best\xE4llning"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324692
+    m_Localized: "{0} sv\xE5ra best\xE4llningar"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324693
+    m_Localized: "r\xE5nad en g\xE5ng"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324694
+    m_Localized: "r\xE5nad {0} g\xE5nger"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324695
+    m_Localized: 1 dopp
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324696
+    m_Localized: '{0} dopp'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324697
+    m_Localized: "nj\xF6t av utsikten"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324698
+    m_Localized: RETURMATCH
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324699
+    m_Localized: TILLBAKA TILL LOBBYN
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324700
+    m_Localized: RETURMATCH!
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324701
+    m_Localized: TILLBAKA TILL LOBBYN
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324702
+    m_Localized: "V\xC4NTAR P\xC5 SPELARE... {0}"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324703
+    m_Localized: REDO
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324704
+    m_Localized: UTE
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324705
+    m_Localized: "H\xC5LL"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324706
+    m_Localized: "F\xD6R ATT HOPPA \xD6VER  {0}/{1}"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324707
+    m_Localized: "M\xE5nadens anst\xE4lld"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324708
+    m_Localized: UTSKICKAD
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324709
+    m_Localized: "G\xD6R SIG REDO\u2026"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324710
+    m_Localized: "VI ANST\xC4LLER\u2026"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324711
+    m_Localized: '{0} / {1} REDO'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324712
+    m_Localized: "F\xC4RG"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324713
+    m_Localized: "F\xD6RETAG"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324714
+    m_Localized: ANPASSA
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324715
+    m_Localized: KLAR
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324716
+    m_Localized: HATT
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324717
+    m_Localized: BJUD IN
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324718
+    m_Localized: "L\xC4MNA"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324719
+    m_Localized: SPELARE
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324720
+    m_Localized: "ST\xC4MPLA IN"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324721
+    m_Localized: "ALLA BEST\xC4LLNINGAR UTSKICKADE"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324722
+    m_Localized: "LETAR EFTER MATCH\u2026"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324723
+    m_Localized: "\xD6PPEN F\xD6R ALLA"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324724
+    m_Localized: "BARA V\xC4NNER"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324725
+    m_Localized: HITTA MATCH
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324726
+    m_Localized: "\xD6PPEN F\xD6R ALLA \xB7 STARTAR OM {0}"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324727
+    m_Localized: "Inga \xF6ppna matcher just nu. Din lobby \xE4r \xF6ppen f\xF6r
+      alla."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324728
+    m_Localized: "Inga \xF6ppna matcher just nu."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324729
+    m_Localized: "Leta efter en match innan andra g\xE5r med i din lobby."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324730
+    m_Localized: "Den matchen \xE4r full."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324731
+    m_Localized: "Den matchen har redan b\xF6rjat."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324732
+    m_Localized: "Det spelet \xE4r inte Dead on Arrival."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324733
+    m_Localized: "Den lobbyn \xE4r ingen Dead on Arrival-match."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324734
+    m_Localized: "Avsluta din match innan du g\xE5r med i en v\xE4ns."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324735
+    m_Localized: "L\xE4mna din onlinematch innan du g\xE5r med i en annan."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324736
+    m_Localized: "Den matchen k\xF6r version {0} och du har {1}. Ni beh\xF6ver samma
+      version."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324737
+    m_Localized: "en ok\xE4nd version"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324738
+    m_Localized: "Den matchen k\xF6r ett annat bygge av version {0}. Ni beh\xF6ver
+      samma bygge."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324739
+    m_Localized: "Starta Steam f\xF6r att spela online."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324740
+    m_Localized: "Steam kunde inte \xF6ppna en lobby. F\xF6rs\xF6k igen."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324741
+    m_Localized: "Det gick inte att starta onlinematchen. F\xF6rs\xF6k igen."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324742
+    m_Localized: "Kunde inte g\xE5 med i matchen. Den kan ha tagit slut."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324743
+    m_Localized: "Bjud in v\xE4nner fr\xE5n din v\xE4nlista p\xE5 Steam."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324744
+    m_Localized: "Fr\xE5nkopplad: f\xF6r m\xE5nga meddelanden."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324745
+    m_Localized: "Borttagen fr\xE5n returmatchen."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324746
+    m_Localized: "V\xE4rden l\xE4mnade matchen."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324747
+    m_Localized: "Kunde inte n\xE5 v\xE4rden."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324748
+    m_Localized: "Anslutningen br\xF6ts."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324749
+    m_Localized: "Y / Triangel: spela online med Steam-v\xE4nner"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324750
+    m_Localized: "Y / Triangel: bjud in v\xE4nner      B / Cirkel: l\xE4mna"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324751
+    m_Localized: "B / Cirkel: l\xE4mna online"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324752
+    m_Localized: Spelare {0}
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324753
+    m_Localized: "Anslut en handkontroll f\xF6r att spela"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324754
+    m_Localized: "Tryck p\xE5 blanksteg f\xF6r att spela med tangentbord, eller anslut
+      en handkontroll"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324755
+    m_Localized: "Handkontrollen st\xF6ds inte - prova en Xbox-, PlayStation- eller
+      Switch Pro-kontroll"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324756
+    m_Localized: "S{0}:s handkontroll fr\xE5nkopplad\nTryck p\xE5 en knapp p\xE5
+      valfri handkontroll f\xF6r att forts\xE4tta"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324757
+    m_Localized: "Po\xE4ng"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324758
+    m_Localized: Spelare 1
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324759
+    m_Localized: "Guldbest\xE4llning om..."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324760
+    m_Localized: "Sl\xE5 p\xE5 handledningen"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324761
+    m_Localized: Medverkande
+    m_Metadata:
+      m_Items: []
+  references:
+    version: 2
+    RefIds: []

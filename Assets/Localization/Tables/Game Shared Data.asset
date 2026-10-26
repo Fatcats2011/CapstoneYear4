@@ -1,0 +1,748 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5b11a58205ec3474ca216360e9fa74a8, type: 3}
+  m_Name: Game Shared Data
+  m_EditorClassIdentifier: 
+  m_TableCollectionName: Game
+  m_TableCollectionNameGuidString: 61b958d042748d049905867c9fe4253d
+  m_Entries:
+  - m_Id: 11136798720
+    m_Key: word.results
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11182936064
+    m_Key: word.fullscreen
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11182936065
+    m_Key: word.paused
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11182936066
+    m_Key: word.select
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130368
+    m_Key: word.menu
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130369
+    m_Key: word.on
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130370
+    m_Key: word.off
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130371
+    m_Key: word.return
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130372
+    m_Key: word.resume
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130373
+    m_Key: word.press
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130374
+    m_Key: word.toboost
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130375
+    m_Key: word.toconfirm
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130376
+    m_Key: word.tocontinue
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130377
+    m_Key: word.local
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130378
+    m_Key: word.multiplayer
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130379
+    m_Key: word.options
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130380
+    m_Key: word.credits
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130381
+    m_Key: word.quit
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130382
+    m_Key: word.music
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130383
+    m_Key: word.play
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130384
+    m_Key: word.go
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130385
+    m_Key: word.ready
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130386
+    m_Key: word.pressanybutton
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130387
+    m_Key: word.sfx
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130388
+    m_Key: options.page.general
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130389
+    m_Key: options.page.display
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130390
+    m_Key: options.page.audio
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130391
+    m_Key: options.page.accessibility
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130392
+    m_Key: options.resolution
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130393
+    m_Key: options.resolution.apply
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130394
+    m_Key: options.language
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130395
+    m_Key: options.fullscreenstyle
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130396
+    m_Key: options.borderless
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130397
+    m_Key: options.exclusive
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130398
+    m_Key: options.vsync
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130399
+    m_Key: options.framecap
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130400
+    m_Key: options.quality
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130401
+    m_Key: options.quality.low
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130402
+    m_Key: options.quality.medium
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130403
+    m_Key: options.quality.high
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130404
+    m_Key: options.split
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130405
+    m_Key: options.split.boxed
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130406
+    m_Key: options.split.stacked
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130407
+    m_Key: options.split.sidebyside
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130408
+    m_Key: options.master
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130409
+    m_Key: options.music
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130410
+    m_Key: options.effects
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130411
+    m_Key: options.background
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130412
+    m_Key: options.background.mute
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130413
+    m_Key: options.background.keep
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130414
+    m_Key: options.reducemotion
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130415
+    m_Key: options.units
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130416
+    m_Key: options.units.metric
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130417
+    m_Key: options.units.imperial
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130418
+    m_Key: pause.restart
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130419
+    m_Key: pause.controls
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130420
+    m_Key: pause.restart.question
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130421
+    m_Key: pause.yes
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130422
+    m_Key: pause.no
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130423
+    m_Key: pause.hint.host
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130424
+    m_Key: pause.hint.client
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130425
+    m_Key: controls.title.keyboard
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130426
+    m_Key: controls.title.controller
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130427
+    m_Key: controls.reset
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130428
+    m_Key: controls.waiting.key
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130429
+    m_Key: controls.waiting.button
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130430
+    m_Key: controls.accelerate
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130431
+    m_Key: controls.brake
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130432
+    m_Key: controls.steerleft
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130433
+    m_Key: controls.steerright
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130434
+    m_Key: controls.boost
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130435
+    m_Key: controls.drift
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130436
+    m_Key: controls.swapcamera
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130437
+    m_Key: controls.cameraleft
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130438
+    m_Key: controls.cameraright
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130439
+    m_Key: controls.cameraup
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130440
+    m_Key: controls.cameradown
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130441
+    m_Key: controls.dpad.up
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130442
+    m_Key: controls.dpad.down
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130443
+    m_Key: controls.dpad.left
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130444
+    m_Key: controls.dpad.right
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130445
+    m_Key: controls.ps.cross
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130446
+    m_Key: controls.ps.circle
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130447
+    m_Key: controls.ps.square
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130448
+    m_Key: controls.ps.triangle
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130449
+    m_Key: rules.title
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130450
+    m_Key: rules.done
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130451
+    m_Key: rules.length
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130452
+    m_Key: rules.length.short
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130453
+    m_Key: rules.length.normal
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324672
+    m_Key: rules.length.long
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324673
+    m_Key: rules.steals
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324674
+    m_Key: rules.golden
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324675
+    m_Key: rules.nosteals
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324676
+    m_Key: rules.nogolden
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324677
+    m_Key: rules.note.nogolden
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324678
+    m_Key: rules.note.public
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324679
+    m_Key: award.goldengrip
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324680
+    m_Key: award.kleptoghost
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324681
+    m_Key: award.busybee
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324682
+    m_Key: award.highroller
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324683
+    m_Key: award.butterfingers
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324684
+    m_Key: award.fishfood
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324685
+    m_Key: award.tourist
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324686
+    m_Key: award.line.goldengrip
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324687
+    m_Key: award.line.steal.one
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324688
+    m_Key: award.line.steal.many
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324689
+    m_Key: award.line.delivery.one
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324690
+    m_Key: award.line.delivery.many
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324691
+    m_Key: award.line.hard.one
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324692
+    m_Key: award.line.hard.many
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324693
+    m_Key: award.line.robbed.one
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324694
+    m_Key: award.line.robbed.many
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324695
+    m_Key: award.line.swim.one
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324696
+    m_Key: award.line.swim.many
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324697
+    m_Key: award.line.tourist
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324698
+    m_Key: results.rematch
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324699
+    m_Key: results.backtolobby
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324700
+    m_Key: results.rematching
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324701
+    m_Key: results.tolobby
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324702
+    m_Key: results.waiting
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324703
+    m_Key: results.ready
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324704
+    m_Key: results.out
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324705
+    m_Key: cutscene.hold
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324706
+    m_Key: cutscene.toskip
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324707
+    m_Key: results.employee
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324708
+    m_Key: dispatch.dispatched
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324709
+    m_Key: dispatch.gettingready
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324710
+    m_Key: dispatch.hiring
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324711
+    m_Key: dispatch.readycount
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324712
+    m_Key: dispatch.colour
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324713
+    m_Key: dispatch.company
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324714
+    m_Key: dispatch.customize
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324715
+    m_Key: dispatch.done
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324716
+    m_Key: dispatch.hat
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324717
+    m_Key: dispatch.invite
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324718
+    m_Key: dispatch.leave
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324719
+    m_Key: dispatch.player
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324720
+    m_Key: dispatch.clockin
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324721
+    m_Key: dispatch.alldispatched
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324722
+    m_Key: matchmaking.searching
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324723
+    m_Key: matchmaking.open
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324724
+    m_Key: matchmaking.friends
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324725
+    m_Key: matchmaking.find
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324726
+    m_Key: matchmaking.startsin
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324727
+    m_Key: matchmaking.nonefound
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324728
+    m_Key: matchmaking.nonefoundclosed
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324729
+    m_Key: matchmaking.findrefused
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324730
+    m_Key: online.full
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324731
+    m_Key: online.started
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324732
+    m_Key: online.notthisgame
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324733
+    m_Key: online.lobbynotthisgame
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324734
+    m_Key: online.busy
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324735
+    m_Key: online.alreadyonline
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324736
+    m_Key: online.version
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324737
+    m_Key: online.unknownversion
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324738
+    m_Key: online.build
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324739
+    m_Key: online.nosteam
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324740
+    m_Key: online.lobbyfailed
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324741
+    m_Key: online.hostfailed
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324742
+    m_Key: online.joinfailed
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324743
+    m_Key: online.invitefromsteam
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324744
+    m_Key: online.kicked
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324745
+    m_Key: online.takenout
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324746
+    m_Key: online.hostleft
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324747
+    m_Key: online.hostunreachable
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324748
+    m_Key: online.connectionlost
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324749
+    m_Key: online.hint.playonline
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324750
+    m_Key: online.hint.inlobby
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324751
+    m_Key: online.hint.leave
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324752
+    m_Key: online.player
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324753
+    m_Key: prompt.connect
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324754
+    m_Key: prompt.keyboardjoin
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324755
+    m_Key: prompt.unsupported
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324756
+    m_Key: prompt.disconnected
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324757
+    m_Key: hud.score
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324758
+    m_Key: hud.player1
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324759
+    m_Key: hud.goldenin
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324760
+    m_Key: menu.enabletutorial
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324761
+    m_Key: menu.credits
+    m_Metadata:
+      m_Items: []
+  m_Metadata:
+    m_Items: []
+  m_KeyGenerator:
+    rid: 7408093226035576856
+  references:
+    version: 2
+    RefIds:
+    - rid: 7408093226035576856
+      type: {class: DistributedUIDGenerator, ns: UnityEngine.Localization.Tables, asm: Unity.Localization}
+      data:
+        m_CustomEpoch: 1792988471544

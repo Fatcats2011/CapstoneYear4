@@ -1,0 +1,755 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e9620f8c34305754d8cc9a7e49e852d9, type: 3}
+  m_Name: Game_cs
+  m_EditorClassIdentifier: 
+  m_LocaleId:
+    m_Code: cs
+  m_SharedData: {fileID: 11400000, guid: 61b958d042748d049905867c9fe4253d, type: 2}
+  m_Metadata:
+    m_Items: []
+  m_TableData:
+  - m_Id: 11136798720
+    m_Localized: "V\xDDSLEDKY"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11182936064
+    m_Localized: "CEL\xC1 OBRAZOVKA"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11182936065
+    m_Localized: POZASTAVENO
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11182936066
+    m_Localized: VYBER
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130368
+    m_Localized: MENU
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130369
+    m_Localized: ZAP.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130370
+    m_Localized: VYP.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130371
+    m_Localized: "ZP\u011AT"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130372
+    m_Localized: "POKRA\u010COVAT"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130373
+    m_Localized: STISKNI
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130374
+    m_Localized: PRO TURBO
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130375
+    m_Localized: "PRO POTVRZEN\xCD"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130376
+    m_Localized: "PRO POKRA\u010COV\xC1N\xCD"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130377
+    m_Localized: "M\xCDSTN\u011A"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130378
+    m_Localized: "HRA V\xCDCE HR\xC1\u010C\u016E"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130379
+    m_Localized: "NASTAVEN\xCD"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130380
+    m_Localized: TITULKY
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130381
+    m_Localized: KONEC
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130382
+    m_Localized: HUDBA
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130383
+    m_Localized: "HR\xC1T"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130384
+    m_Localized: "TE\u010E!"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130385
+    m_Localized: "P\u0158IPRAVENI!!"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130386
+    m_Localized: "STISKNI TLA\u010C\xCDTKO PRO POKRA\u010COV\xC1N\xCD"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130387
+    m_Localized: EFEKTY
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130388
+    m_Localized: "OBECN\xC9"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130389
+    m_Localized: OBRAZ
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130390
+    m_Localized: ZVUK
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130391
+    m_Localized: "P\u0158\xCDSTUPNOST"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130392
+    m_Localized: "ROZLI\u0160EN\xCD"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130393
+    m_Localized: "A: pou\u017E\xEDt"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130394
+    m_Localized: JAZYK
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130395
+    m_Localized: "TYP CEL\xC9 OBRAZOVKY"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130396
+    m_Localized: "BEZ OKRAJ\u016E"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130397
+    m_Localized: "EXKLUZIVN\xCD"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130398
+    m_Localized: VSYNC
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130399
+    m_Localized: "LIMIT SN\xCDMK\u016E"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130400
+    m_Localized: KVALITA
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130401
+    m_Localized: "N\xCDZK\xC1"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130402
+    m_Localized: "ST\u0158EDN\xCD"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130403
+    m_Localized: "VYSOK\xC1"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130404
+    m_Localized: "ROZD\u011ALEN\xC1 OBRAZOVKA"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130405
+    m_Localized: "NA ST\u0158ED"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130406
+    m_Localized: "NAHO\u0158E A DOLE"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130407
+    m_Localized: VEDLE SEBE
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130408
+    m_Localized: "CELKOV\xC1"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130409
+    m_Localized: HUDBA
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130410
+    m_Localized: EFEKTY
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130411
+    m_Localized: "NA POZAD\xCD"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130412
+    m_Localized: ZTLUMIT
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130413
+    m_Localized: "HR\xC1T D\xC1L"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130414
+    m_Localized: OMEZIT POHYB
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130415
+    m_Localized: JEDNOTKY
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130416
+    m_Localized: "METRICK\xC9"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130417
+    m_Localized: "IMPERI\xC1LN\xCD"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130418
+    m_Localized: ZNOVU
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130419
+    m_Localized: "OVL\xC1D\xC1N\xCD"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130420
+    m_Localized: "ZA\u010C\xCDT Z\xC1PAS ZNOVU?"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130421
+    m_Localized: ANO
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130422
+    m_Localized: NE
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130423
+    m_Localized: "Online: z\xE1pas b\u011B\u017E\xED d\xE1l, i kdy\u017E m\xE1\u0161
+      pauzu. Hlavn\xED menu ho ukon\u010D\xED v\u0161em."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130424
+    m_Localized: "Online: z\xE1pas b\u011B\u017E\xED d\xE1l, i kdy\u017E m\xE1\u0161
+      pauzu. Hlavn\xED menu t\u011B z n\u011Bj odpoj\xED."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130425
+    m_Localized: "OVL\xC1D\xC1N\xCD \u2014 KL\xC1VESNICE"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130426
+    m_Localized: "OVL\xC1D\xC1N\xCD \u2014 OVLADA\u010C"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130427
+    m_Localized: "V\xDDCHOZ\xCD NASTAVEN\xCD"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130428
+    m_Localized: "STISKNI KL\xC1VESU..."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130429
+    m_Localized: "STISKNI TLA\u010C\xCDTKO..."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130430
+    m_Localized: PLYN
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130431
+    m_Localized: BRZDA
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130432
+    m_Localized: "ZATO\u010CIT VLEVO"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130433
+    m_Localized: "ZATO\u010CIT VPRAVO"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130434
+    m_Localized: TURBO
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130435
+    m_Localized: DRIFT
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130436
+    m_Localized: "P\u0158EPNOUT KAMERU"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130437
+    m_Localized: KAMERA VLEVO
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130438
+    m_Localized: KAMERA VPRAVO
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130439
+    m_Localized: KAMERA NAHORU
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130440
+    m_Localized: "KAMERA DOL\u016E"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130441
+    m_Localized: "K\u0158\xCD\u017DEK NAHORU"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130442
+    m_Localized: "K\u0158\xCD\u017DEK DOL\u016E"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130443
+    m_Localized: "K\u0158\xCD\u017DEK VLEVO"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130444
+    m_Localized: "K\u0158\xCD\u017DEK VPRAVO"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130445
+    m_Localized: "K\u0158\xCD\u017DEK"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130446
+    m_Localized: "KOLE\u010CKO"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130447
+    m_Localized: "\u010CTVEREC"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130448
+    m_Localized: "TROJ\xDAHELN\xCDK"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130449
+    m_Localized: "PRAVIDLA Z\xC1PASU"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130450
+    m_Localized: 'A / B: HOTOVO'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130451
+    m_Localized: "D\xC9LKA"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130452
+    m_Localized: "KR\xC1TK\xDD"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130453
+    m_Localized: "NORM\xC1LN\xCD"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324672
+    m_Localized: "DLOUH\xDD"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324673
+    m_Localized: "KR\xC1DE\u017DE"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324674
+    m_Localized: "ZLAT\xC1 ZAK\xC1ZKA"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324675
+    m_Localized: "BEZ KR\xC1DE\u017D\xCD"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324676
+    m_Localized: "BEZ ZLAT\xC9 ZAK\xC1ZKY"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324677
+    m_Localized: "BEZ ZLAT\xC9 ZAK\xC1ZKY: ZLAT\xC9 V\xCDT\u011AZSTV\xCD, ZLAT\xC1
+      KR\xC1DE\u017D A Z POSLEDN\xCDHO PRVN\xCD NELZE Z\xCDSKAT"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324678
+    m_Localized: "VE\u0158EJN\xC1 M\xCDSTNOST HRAJE PODLE B\u011A\u017DN\xDDCH PRAVIDEL"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324679
+    m_Localized: "ZLAT\xC1 RU\u010CKA"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324680
+    m_Localized: KLEPTODUCH
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324681
+    m_Localized: "PILN\xC1 V\u010CELKA"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324682
+    m_Localized: "VELK\xDD HR\xC1\u010C"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324683
+    m_Localized: "M\xC1SLOV\xC9 RUCE"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324684
+    m_Localized: KRMIVO PRO RYBY
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324685
+    m_Localized: TURISTA
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324686
+    m_Localized: "zlato dr\u017Eeno {0}s"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324687
+    m_Localized: "1 kr\xE1de\u017E"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324688
+    m_Localized: "{0} kr\xE1de\u017E\xED"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324689
+    m_Localized: "1 doru\u010Den\xED"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324690
+    m_Localized: "{0} doru\u010Den\xED"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324691
+    m_Localized: "1 t\u011B\u017Ek\xE1 zak\xE1zka"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324692
+    m_Localized: "{0} t\u011B\u017Ek\xFDch zak\xE1zek"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324693
+    m_Localized: okraden jednou
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324694
+    m_Localized: "okraden {0}\xD7"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324695
+    m_Localized: 1 koupel
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324696
+    m_Localized: "{0} koupel\xED"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324697
+    m_Localized: "kochal se v\xFDhledem"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324698
+    m_Localized: ODVETA
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324699
+    m_Localized: "ZP\u011AT DO M\xCDSTNOSTI"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324700
+    m_Localized: ODVETA!
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324701
+    m_Localized: "ZP\u011AT DO M\xCDSTNOSTI"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324702
+    m_Localized: "\u010CEK\xC1 SE NA HR\xC1\u010CE... {0}"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324703
+    m_Localized: "P\u0158IPRAVEN"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324704
+    m_Localized: "PRY\u010C"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324705
+    m_Localized: "PODR\u017D"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324706
+    m_Localized: "PRO P\u0158ESKO\u010CEN\xCD  {0}/{1}"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324707
+    m_Localized: "Zam\u011Bstnanec m\u011Bs\xEDce"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324708
+    m_Localized: "ODESL\xC1NO"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324709
+    m_Localized: "CHYST\xC1 SE\u2026"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324710
+    m_Localized: "P\u0158IJ\xCDM\xC1ME\u2026"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324711
+    m_Localized: "{0} / {1} P\u0158IPRAVENO"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324712
+    m_Localized: BARVA
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324713
+    m_Localized: FIRMA
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324714
+    m_Localized: "P\u0158IZP\u016ESOBIT"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324715
+    m_Localized: HOTOVO
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324716
+    m_Localized: KLOBOUK
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324717
+    m_Localized: POZVAT
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324718
+    m_Localized: "ODEJ\xCDT"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324719
+    m_Localized: "HR\xC1\u010C"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324720
+    m_Localized: "P\xCDCHNOUT SI"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324721
+    m_Localized: "V\u0160ECHNY ZAK\xC1ZKY ODESL\xC1NY"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324722
+    m_Localized: "HLED\xC1M Z\xC1PAS\u2026"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324723
+    m_Localized: "OTEV\u0158ENO V\u0160EM"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324724
+    m_Localized: "JEN P\u0158\xC1TEL\xC9"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324725
+    m_Localized: "NAJ\xCDT Z\xC1PAS"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324726
+    m_Localized: "OTEV\u0158ENO V\u0160EM \xB7 ZA\u010C\xC1TEK ZA {0}"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324727
+    m_Localized: "Te\u010F nejsou \u017E\xE1dn\xE9 otev\u0159en\xE9 z\xE1pasy. Tvoje
+      m\xEDstnost je otev\u0159en\xE1 v\u0161em."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324728
+    m_Localized: "Te\u010F nejsou \u017E\xE1dn\xE9 otev\u0159en\xE9 z\xE1pasy."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324729
+    m_Localized: "Hledej z\xE1pas d\u0159\xEDv, ne\u017E se ostatn\xED p\u0159ipoj\xED
+      do tv\xE9 m\xEDstnosti."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324730
+    m_Localized: "Ten z\xE1pas je pln\xFD."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324731
+    m_Localized: "Ten z\xE1pas u\u017E za\u010Dal."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324732
+    m_Localized: "Tohle nen\xED Dead on Arrival."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324733
+    m_Localized: "Tahle m\xEDstnost nen\xED z\xE1pas Dead on Arrival."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324734
+    m_Localized: "Dohraj sv\u016Fj z\xE1pas, ne\u017E se p\u0159ipoj\xED\u0161 ke
+      kamar\xE1dovi."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324735
+    m_Localized: "Opus\u0165 sv\u016Fj online z\xE1pas, ne\u017E se p\u0159ipoj\xED\u0161
+      k jin\xE9mu."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324736
+    m_Localized: "Ten z\xE1pas b\u011B\u017E\xED ve verzi {0} a ty m\xE1\u0161 {1}.
+      Pot\u0159ebujete stejnou verzi."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324737
+    m_Localized: "nezn\xE1mou verzi"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324738
+    m_Localized: "Ten z\xE1pas b\u011B\u017E\xED na jin\xE9m sestaven\xED verze {0}.
+      Pot\u0159ebujete stejn\xE9 sestaven\xED."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324739
+    m_Localized: "Spus\u0165 Steam, abys mohl hr\xE1t online."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324740
+    m_Localized: "Steam nedok\xE1zal otev\u0159\xEDt m\xEDstnost. Zkus to znovu."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324741
+    m_Localized: "Online z\xE1pas se nepoda\u0159ilo spustit. Zkus to znovu."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324742
+    m_Localized: "K z\xE1pasu se nepoda\u0159ilo p\u0159ipojit. Mo\u017En\xE1 skon\u010Dil."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324743
+    m_Localized: "Pozvi p\u0159\xE1tele ze seznamu p\u0159\xE1tel na Steamu."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324744
+    m_Localized: "Odpojeno: p\u0159\xEDli\u0161 mnoho zpr\xE1v."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324745
+    m_Localized: "Vy\u0159azen z odvety."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324746
+    m_Localized: "Hostitel opustil z\xE1pas."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324747
+    m_Localized: "Hostitel nen\xED dostupn\xFD."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324748
+    m_Localized: "Spojen\xED se ztratilo."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324749
+    m_Localized: "Y / Troj\xFAheln\xEDk: hr\xE1t online s p\u0159\xE1teli ze Steamu"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324750
+    m_Localized: "Y / Troj\xFAheln\xEDk: pozvat p\u0159\xE1tele      B / Kole\u010Dko:
+      odej\xEDt"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324751
+    m_Localized: "B / Kole\u010Dko: opustit online"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324752
+    m_Localized: "Hr\xE1\u010D {0}"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324753
+    m_Localized: "P\u0159ipoj ovlada\u010D a hraj"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324754
+    m_Localized: "Stiskni mezern\xEDk a hraj na kl\xE1vesnici, nebo p\u0159ipoj ovlada\u010D"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324755
+    m_Localized: "Tento ovlada\u010D nen\xED podporov\xE1n - zkus ovlada\u010D Xbox,
+      PlayStation nebo Switch Pro"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324756
+    m_Localized: "Ovlada\u010D H{0} odpojen\nPokra\u010Duj stiskem tla\u010D\xEDtka
+      na libovoln\xE9m ovlada\u010Di"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324757
+    m_Localized: "Sk\xF3re"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324758
+    m_Localized: "Hr\xE1\u010D 1"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324759
+    m_Localized: "Zlat\xE1 zak\xE1zka za..."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324760
+    m_Localized: "Zapnout v\xFDuku"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324761
+    m_Localized: Titulky
+    m_Metadata:
+      m_Items: []
+  references:
+    version: 2
+    RefIds: []

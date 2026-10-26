@@ -1,0 +1,753 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e9620f8c34305754d8cc9a7e49e852d9, type: 3}
+  m_Name: Game_ro
+  m_EditorClassIdentifier: 
+  m_LocaleId:
+    m_Code: ro
+  m_SharedData: {fileID: 11400000, guid: 61b958d042748d049905867c9fe4253d, type: 2}
+  m_Metadata:
+    m_Items: []
+  m_TableData:
+  - m_Id: 11136798720
+    m_Localized: REZULTATE
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11182936064
+    m_Localized: ECRAN COMPLET
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11182936065
+    m_Localized: "PAUZ\u0102"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11182936066
+    m_Localized: ALEGE
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130368
+    m_Localized: MENIU
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130369
+    m_Localized: DA
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130370
+    m_Localized: NU
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130371
+    m_Localized: "\xCENAPOI"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130372
+    m_Localized: "CONTINU\u0102"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130373
+    m_Localized: "APAS\u0102"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130374
+    m_Localized: PENTRU TURBO
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130375
+    m_Localized: PENTRU A CONFIRMA
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130376
+    m_Localized: PENTRU A CONTINUA
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130377
+    m_Localized: LOCAL
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130378
+    m_Localized: MULTIPLAYER
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130379
+    m_Localized: "OP\u021AIUNI"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130380
+    m_Localized: CREDITE
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130381
+    m_Localized: "IE\u0218IRE"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130382
+    m_Localized: "MUZIC\u0102"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130383
+    m_Localized: "JOAC\u0102"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130384
+    m_Localized: START!
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130385
+    m_Localized: GATA!!
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130386
+    m_Localized: "APAS\u0102 ORICE BUTON PENTRU A CONTINUA"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130387
+    m_Localized: EFECTE
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130388
+    m_Localized: GENERAL
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130389
+    m_Localized: "AFI\u0218ARE"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130390
+    m_Localized: SUNET
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130391
+    m_Localized: ACCESIBILITATE
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130392
+    m_Localized: "REZOLU\u021AIE"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130393
+    m_Localized: "A: aplic\u0103"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130394
+    m_Localized: "LIMB\u0102"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130395
+    m_Localized: TIP ECRAN COMPLET
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130396
+    m_Localized: "F\u0102R\u0102 MARGINI"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130397
+    m_Localized: EXCLUSIV
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130398
+    m_Localized: VSYNC
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130399
+    m_Localized: "LIMIT\u0102 FPS"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130400
+    m_Localized: CALITATE
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130401
+    m_Localized: "SC\u0102ZUT\u0102"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130402
+    m_Localized: MEDIE
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130403
+    m_Localized: "RIDICAT\u0102"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130404
+    m_Localized: "ECRAN \xCEMP\u0102R\u021AIT"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130405
+    m_Localized: CENTRAT
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130406
+    m_Localized: "SUS \u0218I JOS"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130407
+    m_Localized: "UNUL L\xC2NG\u0102 ALTUL"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130408
+    m_Localized: GENERAL
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130409
+    m_Localized: "MUZIC\u0102"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130410
+    m_Localized: EFECTE
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130411
+    m_Localized: "\xCEN FUNDAL"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130412
+    m_Localized: "F\u0102R\u0102 SUNET"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130413
+    m_Localized: "CONTINU\u0102"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130414
+    m_Localized: "REDU MI\u0218CAREA"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130415
+    m_Localized: "UNIT\u0102\u021AI"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130416
+    m_Localized: METRIC
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130417
+    m_Localized: IMPERIAL
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130418
+    m_Localized: "REPORNE\u0218TE"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130419
+    m_Localized: CONTROALE
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130420
+    m_Localized: "REPORNE\u0218TI MECIUL?"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130421
+    m_Localized: DA
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130422
+    m_Localized: NU
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130423
+    m_Localized: "Online: meciul continu\u0103 c\xE2t e\u0219ti \xEEn pauz\u0103.
+      Meniul principal \xEEl \xEEncheie pentru to\u021Bi."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130424
+    m_Localized: "Online: meciul continu\u0103 c\xE2t e\u0219ti \xEEn pauz\u0103.
+      Meniul principal te scoate din el."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130425
+    m_Localized: "CONTROALE \u2014 TASTATUR\u0102"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130426
+    m_Localized: "CONTROALE \u2014 CONTROLLER"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130427
+    m_Localized: "RESETEAZ\u0102"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130428
+    m_Localized: "APAS\u0102 O TAST\u0102..."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130429
+    m_Localized: "APAS\u0102 UN BUTON..."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130430
+    m_Localized: ACCELERARE
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130431
+    m_Localized: "FR\xC2N\u0102"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130432
+    m_Localized: "VIRAJ ST\xC2NGA"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130433
+    m_Localized: VIRAJ DREAPTA
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130434
+    m_Localized: TURBO
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130435
+    m_Localized: DRIFT
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130436
+    m_Localized: "SCHIMB\u0102 CAMERA"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130437
+    m_Localized: "CAMERA ST\xC2NGA"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130438
+    m_Localized: CAMERA DREAPTA
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130439
+    m_Localized: CAMERA SUS
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130440
+    m_Localized: CAMERA JOS
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130441
+    m_Localized: D-PAD SUS
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130442
+    m_Localized: D-PAD JOS
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130443
+    m_Localized: "D-PAD ST\xC2NGA"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130444
+    m_Localized: D-PAD DREAPTA
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130445
+    m_Localized: X
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130446
+    m_Localized: CERC
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130447
+    m_Localized: "P\u0102TRAT"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130448
+    m_Localized: TRIUNGHI
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130449
+    m_Localized: REGULILE MECIULUI
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130450
+    m_Localized: 'A / B: GATA'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130451
+    m_Localized: "DURAT\u0102"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130452
+    m_Localized: SCURT
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130453
+    m_Localized: NORMAL
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324672
+    m_Localized: LUNG
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324673
+    m_Localized: FURTURI
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324674
+    m_Localized: COMANDA DE AUR
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324675
+    m_Localized: "F\u0102R\u0102 FURTURI"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324676
+    m_Localized: "F\u0102R\u0102 COMANDA DE AUR"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324677
+    m_Localized: "F\u0102R\u0102 COMANDA DE AUR: VICTORIA DE AUR, FURTUL DE AUR \u0218I
+      DIN ULTIMUL PRIMUL NU POT FI OB\u021AINUTE"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324678
+    m_Localized: "UN LOBBY PUBLIC JOAC\u0102 DUP\u0102 REGULILE NORMALE"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324679
+    m_Localized: "M\xC2N\u0102 DE AUR"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324680
+    m_Localized: "CLEPTOFANTOM\u0102"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324681
+    m_Localized: "ALBINU\u021A\u0102 HARNIC\u0102"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324682
+    m_Localized: "\u0218MECHER DE TOP"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324683
+    m_Localized: "M\xC2INI DE UNT"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324684
+    m_Localized: "HRAN\u0102 DE PE\u0218TI"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324685
+    m_Localized: TURIST
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324686
+    m_Localized: "aur \u021Binut {0}s"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324687
+    m_Localized: 1 furt
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324688
+    m_Localized: '{0} furturi'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324689
+    m_Localized: 1 livrare
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324690
+    m_Localized: "{0} livr\u0103ri"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324691
+    m_Localized: "1 comand\u0103 grea"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324692
+    m_Localized: '{0} comenzi grele'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324693
+    m_Localized: "furat o dat\u0103"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324694
+    m_Localized: furat de {0} ori
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324695
+    m_Localized: 1 baie
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324696
+    m_Localized: "{0} b\u0103i"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324697
+    m_Localized: "s-a bucurat de priveli\u0219te"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324698
+    m_Localized: "REVAN\u0218\u0102"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324699
+    m_Localized: "\xCENAPOI \xCEN LOBBY"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324700
+    m_Localized: "REVAN\u0218\u0102!"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324701
+    m_Localized: "\xCENAPOI \xCEN LOBBY"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324702
+    m_Localized: "SE A\u0218TEAPT\u0102 JUC\u0102TORII... {0}"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324703
+    m_Localized: GATA
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324704
+    m_Localized: "AFAR\u0102"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324705
+    m_Localized: "\u021AINE"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324706
+    m_Localized: "CA S\u0102 SARI  {0}/{1}"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324707
+    m_Localized: Angajatul lunii
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324708
+    m_Localized: EXPEDIAT
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324709
+    m_Localized: "SE PREG\u0102TE\u0218TE\u2026"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324710
+    m_Localized: "ANGAJ\u0102M\u2026"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324711
+    m_Localized: '{0} / {1} GATA'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324712
+    m_Localized: CULOARE
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324713
+    m_Localized: COMPANIE
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324714
+    m_Localized: "PERSONALIZEAZ\u0102"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324715
+    m_Localized: GATA
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324716
+    m_Localized: "P\u0102L\u0102RIE"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324717
+    m_Localized: "INVIT\u0102"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324718
+    m_Localized: "PLEAC\u0102"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324719
+    m_Localized: "JUC\u0102TOR"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324720
+    m_Localized: "PONTEAZ\u0102"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324721
+    m_Localized: TOATE COMENZILE EXPEDIATE
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324722
+    m_Localized: "SE CAUT\u0102 UN MECI\u2026"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324723
+    m_Localized: DESCHIS TUTUROR
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324724
+    m_Localized: DOAR PRIETENI
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324725
+    m_Localized: "G\u0102SE\u0218TE UN MECI"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324726
+    m_Localized: "DESCHIS TUTUROR \xB7 \xCENCEPE \xCEN {0}"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324727
+    m_Localized: "Nu exist\u0103 meciuri deschise acum. Lobby-ul t\u0103u e deschis
+      tuturor."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324728
+    m_Localized: "Nu exist\u0103 meciuri deschise acum."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324729
+    m_Localized: "Caut\u0103 un meci \xEEnainte s\u0103 intre al\u021Bii \xEEn lobby-ul
+      t\u0103u."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324730
+    m_Localized: Meciul e plin.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324731
+    m_Localized: "Meciul a \xEEnceput deja."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324732
+    m_Localized: Jocul acela nu e Dead on Arrival.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324733
+    m_Localized: Lobby-ul acela nu e un meci Dead on Arrival.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324734
+    m_Localized: "Termin\u0103-\u021Bi meciul \xEEnainte s\u0103 intri la un prieten."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324735
+    m_Localized: "Ie\u0219i din meciul online \xEEnainte s\u0103 intri \xEEn altul."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324736
+    m_Localized: "Meciul e pe versiunea {0} \u0219i tu ai {1}. V\u0103 trebuie aceea\u0219i
+      versiune."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324737
+    m_Localized: "o versiune necunoscut\u0103"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324738
+    m_Localized: "Meciul e pe alt build al versiunii {0}. V\u0103 trebuie acela\u0219i
+      build."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324739
+    m_Localized: "Porne\u0219te Steam ca s\u0103 joci online."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324740
+    m_Localized: "Steam n-a putut deschide un lobby. \xCEncearc\u0103 din nou."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324741
+    m_Localized: "Meciul online nu a putut porni. \xCEncearc\u0103 din nou."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324742
+    m_Localized: "Nu ai putut intra \xEEn meci. Poate s-a terminat."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324743
+    m_Localized: "Invit\u0103 prieteni din lista ta de prieteni Steam."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324744
+    m_Localized: 'Deconectat: prea multe mesaje.'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324745
+    m_Localized: "Scos din revan\u0219\u0103."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324746
+    m_Localized: "Gazda a p\u0103r\u0103sit meciul."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324747
+    m_Localized: "Gazda nu a putut fi contactat\u0103."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324748
+    m_Localized: Conexiunea s-a pierdut.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324749
+    m_Localized: "Y / Triunghi: joac\u0103 online cu prietenii de pe Steam"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324750
+    m_Localized: "Y / Triunghi: invit\u0103 prieteni      B / Cerc: pleac\u0103"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324751
+    m_Localized: "B / Cerc: ie\u0219i din online"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324752
+    m_Localized: "Juc\u0103torul {0}"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324753
+    m_Localized: "Conecteaz\u0103 un controller ca s\u0103 joci"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324754
+    m_Localized: "Apas\u0103 Space ca s\u0103 joci cu tastatura sau conecteaz\u0103
+      un controller"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324755
+    m_Localized: "Controllerul acesta nu e acceptat - \xEEncearc\u0103 unul Xbox,
+      PlayStation sau Switch Pro"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324756
+    m_Localized: "Controllerul J{0} s-a deconectat\nApas\u0103 un buton pe orice
+      controller ca s\u0103 continui"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324757
+    m_Localized: Scor
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324758
+    m_Localized: "Juc\u0103torul 1"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324759
+    m_Localized: "Comanda de aur \xEEn..."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324760
+    m_Localized: "Activeaz\u0103 tutorialul"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324761
+    m_Localized: Credite
+    m_Metadata:
+      m_Items: []
+  references:
+    version: 2
+    RefIds: []

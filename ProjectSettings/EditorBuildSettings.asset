@@ -24,4 +24,6 @@ EditorBuildSettings:
     path: Assets/Scenes/Multiplayerlobby.unity
     guid: 24ced0b12ea0f4a489903e4c7fc23e28
   m_configObjects:
+    com.unity.addressableassets: {fileID: 11400000, guid: 55ac7e3e81e337849aff542accc219b5, type: 2}
     com.unity.input.settings: {fileID: 11400000, guid: 1b5427a78b1c46c4ba3209eac398a038, type: 2}
+    com.unity.localization.settings: {fileID: 11400000, guid: 3b02b28fda7c93d46823517e520373d0, type: 2}

@@ -1,0 +1,751 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e9620f8c34305754d8cc9a7e49e852d9, type: 3}
+  m_Name: Game_pt
+  m_EditorClassIdentifier: 
+  m_LocaleId:
+    m_Code: pt
+  m_SharedData: {fileID: 11400000, guid: 61b958d042748d049905867c9fe4253d, type: 2}
+  m_Metadata:
+    m_Items: []
+  m_TableData:
+  - m_Id: 11136798720
+    m_Localized: RESULTADOS
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11182936064
+    m_Localized: "ECR\xC3 INTEIRO"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11182936065
+    m_Localized: EM PAUSA
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11182936066
+    m_Localized: ESCOLHA
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130368
+    m_Localized: MENU
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130369
+    m_Localized: SIM
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130370
+    m_Localized: "N\xC3O"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130371
+    m_Localized: VOLTAR
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130372
+    m_Localized: CONTINUAR
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130373
+    m_Localized: CARREGA
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130374
+    m_Localized: PARA ACELERAR
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130375
+    m_Localized: PARA CONFIRMAR
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130376
+    m_Localized: PARA CONTINUAR
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130377
+    m_Localized: LOCAL
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130378
+    m_Localized: MULTIJOGADOR
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130379
+    m_Localized: "OP\xC7\xD5ES"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130380
+    m_Localized: "CR\xC9DITOS"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130381
+    m_Localized: SAIR
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130382
+    m_Localized: "M\xDASICA"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130383
+    m_Localized: JOGAR
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130384
+    m_Localized: VAI!
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130385
+    m_Localized: PRONTOS!!
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130386
+    m_Localized: "CARREGA NUM BOT\xC3O PARA CONTINUAR"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130387
+    m_Localized: EFEITOS
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130388
+    m_Localized: GERAL
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130389
+    m_Localized: "ECR\xC3"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130390
+    m_Localized: "\xC1UDIO"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130391
+    m_Localized: ACESSIBILIDADE
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130392
+    m_Localized: "RESOLU\xC7\xC3O"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130393
+    m_Localized: 'A: aplicar'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130394
+    m_Localized: IDIOMA
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130395
+    m_Localized: "TIPO DE ECR\xC3 INTEIRO"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130396
+    m_Localized: SEM BORDAS
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130397
+    m_Localized: EXCLUSIVA
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130398
+    m_Localized: VSYNC
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130399
+    m_Localized: LIMITE DE FPS
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130400
+    m_Localized: QUALIDADE
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130401
+    m_Localized: BAIXA
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130402
+    m_Localized: "M\xC9DIA"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130403
+    m_Localized: ALTA
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130404
+    m_Localized: "ECR\xC3 DIVIDIDO"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130405
+    m_Localized: CENTRALIZADA
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130406
+    m_Localized: EM CIMA E EM BAIXO
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130407
+    m_Localized: LADO A LADO
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130408
+    m_Localized: GERAL
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130409
+    m_Localized: "M\xDASICA"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130410
+    m_Localized: EFEITOS
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130411
+    m_Localized: EM SEGUNDO PLANO
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130412
+    m_Localized: MUDO
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130413
+    m_Localized: CONTINUAR A TOCAR
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130414
+    m_Localized: REDUZIR MOVIMENTO
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130415
+    m_Localized: UNIDADES
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130416
+    m_Localized: "M\xC9TRICO"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130417
+    m_Localized: IMPERIAL
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130418
+    m_Localized: REINICIAR
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130419
+    m_Localized: CONTROLOS
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130420
+    m_Localized: REINICIAR A PARTIDA?
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130421
+    m_Localized: SIM
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130422
+    m_Localized: "N\xC3O"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130423
+    m_Localized: "Online: a partida continua enquanto voc\xEA pausa. Menu principal
+      encerra para todos."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130424
+    m_Localized: "Online: a partida continua enquanto voc\xEA pausa. Menu principal
+      sai dela."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130425
+    m_Localized: "CONTROLOS \u2014 TECLADO"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130426
+    m_Localized: "CONTROLOS \u2014 COMANDO"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130427
+    m_Localized: "RESTAURAR PADR\xC3O"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130428
+    m_Localized: CARREGA NUMA TECLA...
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130429
+    m_Localized: "CARREGA NUM BOT\xC3O..."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130430
+    m_Localized: ACELERAR
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130431
+    m_Localized: FREAR
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130432
+    m_Localized: "VIRAR \xC0 ESQUERDA"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130433
+    m_Localized: "VIRAR \xC0 DIREITA"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130434
+    m_Localized: TURBO
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130435
+    m_Localized: DERRAPAR
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130436
+    m_Localized: "TROCAR C\xC2MERA"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130437
+    m_Localized: "C\xC2MERA ESQUERDA"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130438
+    m_Localized: "C\xC2MERA DIREITA"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130439
+    m_Localized: "C\xC2MERA PARA CIMA"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130440
+    m_Localized: "C\xC2MERA PARA BAIXO"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130441
+    m_Localized: DIRECIONAL CIMA
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130442
+    m_Localized: DIRECIONAL BAIXO
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130443
+    m_Localized: DIRECIONAL ESQUERDA
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130444
+    m_Localized: DIRECIONAL DIREITA
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130445
+    m_Localized: XIS
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130446
+    m_Localized: "C\xCDRCULO"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130447
+    m_Localized: QUADRADO
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130448
+    m_Localized: "TRI\xC2NGULO"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130449
+    m_Localized: REGRAS DO JOGO
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130450
+    m_Localized: 'A / B: PRONTO'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130451
+    m_Localized: "DURA\xC7\xC3O"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130452
+    m_Localized: CURTA
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130453
+    m_Localized: NORMAL
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324672
+    m_Localized: LONGA
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324673
+    m_Localized: ROUBOS
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324674
+    m_Localized: PEDIDO DOURADO
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324675
+    m_Localized: SEM ROUBOS
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324676
+    m_Localized: SEM PEDIDO DOURADO
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324677
+    m_Localized: "SEM PEDIDO DOURADO: VIT\xD3RIA DOURADA, ROUBO DOURADO E DE \xDALTIMO
+      A PRIMEIRO N\xC3O PODEM SER CONQUISTADOS"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324678
+    m_Localized: "UMA SALA P\xDABLICA JOGA COM AS REGRAS NORMAIS"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324679
+    m_Localized: "M\xC3O DE OURO"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324680
+    m_Localized: CLEPTOFANTASMA
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324681
+    m_Localized: "ABELHA OPER\xC1RIA"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324682
+    m_Localized: APOSTADOR NATO
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324683
+    m_Localized: "M\xC3OS DE MANTEIGA"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324684
+    m_Localized: COMIDA DE PEIXE
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324685
+    m_Localized: TURISTA
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324686
+    m_Localized: "ouro na m\xE3o {0}s"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324687
+    m_Localized: 1 roubo
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324688
+    m_Localized: '{0} roubos'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324689
+    m_Localized: 1 entrega
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324690
+    m_Localized: '{0} entregas'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324691
+    m_Localized: "1 pedido dif\xEDcil"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324692
+    m_Localized: "{0} pedidos dif\xEDceis"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324693
+    m_Localized: roubado uma vez
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324694
+    m_Localized: roubado {0} vezes
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324695
+    m_Localized: 1 mergulho
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324696
+    m_Localized: '{0} mergulhos'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324697
+    m_Localized: aproveitou a vista
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324698
+    m_Localized: REVANCHE
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324699
+    m_Localized: VOLTAR AO LOBBY
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324700
+    m_Localized: REVANCHE!
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324701
+    m_Localized: DE VOLTA AO LOBBY
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324702
+    m_Localized: AGUARDANDO JOGADORES... {0}
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324703
+    m_Localized: PRONTO
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324704
+    m_Localized: FORA
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324705
+    m_Localized: SEGURE
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324706
+    m_Localized: PARA PULAR  {0}/{1}
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324707
+    m_Localized: "Funcion\xE1rio do M\xEAs"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324708
+    m_Localized: DESPACHADO
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324709
+    m_Localized: "A PREPARAR-SE\u2026"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324710
+    m_Localized: "A CONTRATAR\u2026"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324711
+    m_Localized: '{0} / {1} PRONTOS'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324712
+    m_Localized: COR
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324713
+    m_Localized: EMPRESA
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324714
+    m_Localized: PERSONALIZAR
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324715
+    m_Localized: PRONTO
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324716
+    m_Localized: "CHAP\xC9U"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324717
+    m_Localized: CONVIDAR
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324718
+    m_Localized: SAIR
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324719
+    m_Localized: JOGADOR
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324720
+    m_Localized: PICAR O PONTO
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324721
+    m_Localized: TODOS OS PEDIDOS DESPACHADOS
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324722
+    m_Localized: "\xC0 PROCURA DE PARTIDA\u2026"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324723
+    m_Localized: ABERTO A TODOS
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324724
+    m_Localized: "S\xD3 AMIGOS"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324725
+    m_Localized: PROCURAR PARTIDA
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324726
+    m_Localized: "ABERTO A TODOS \xB7 COME\xC7A EM {0}"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324727
+    m_Localized: "N\xE3o h\xE1 partidas abertas agora. O teu lobby est\xE1 aberto
+      a todos."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324728
+    m_Localized: Nenhuma partida aberta agora.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324729
+    m_Localized: Procura uma partida antes que outros entrem no teu lobby.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324730
+    m_Localized: "Essa partida est\xE1 cheia."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324731
+    m_Localized: "Essa partida j\xE1 come\xE7ou."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324732
+    m_Localized: "Esse jogo n\xE3o \xE9 Dead on Arrival."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324733
+    m_Localized: "Essa sala n\xE3o \xE9 uma partida de Dead on Arrival."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324734
+    m_Localized: "Acaba a tua partida antes de te juntares \xE0 de um amigo."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324735
+    m_Localized: Sai da tua partida online antes de entrares noutra.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324736
+    m_Localized: "Essa partida est\xE1 na vers\xE3o {0} e tu tens {1}. Precisam da
+      mesma vers\xE3o."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324737
+    m_Localized: "uma vers\xE3o desconhecida"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324738
+    m_Localized: "Essa partida est\xE1 noutra build da vers\xE3o {0}. Precisam da
+      mesma build."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324739
+    m_Localized: Abre o Steam para jogar online.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324740
+    m_Localized: "O Steam n\xE3o conseguiu abrir um lobby. Tenta de novo."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324741
+    m_Localized: "N\xE3o foi poss\xEDvel iniciar a partida online. Tenta de novo."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324742
+    m_Localized: "N\xE3o foi poss\xEDvel entrar nessa partida. Talvez tenha acabado."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324743
+    m_Localized: Convida amigos a partir da tua lista de amigos do Steam.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324744
+    m_Localized: 'Desconectado: mensagens demais.'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324745
+    m_Localized: Fora da revanche.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324746
+    m_Localized: "O anfitri\xE3o saiu da partida."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324747
+    m_Localized: "N\xE3o foi poss\xEDvel alcan\xE7ar o anfitri\xE3o."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324748
+    m_Localized: "A conex\xE3o caiu."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324749
+    m_Localized: "Y / Tri\xE2ngulo: jogar online com amigos da Steam"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324750
+    m_Localized: "Y / Tri\xE2ngulo: convidar amigos      B / C\xEDrculo: sair"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324751
+    m_Localized: "B / C\xEDrculo: sair do online"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324752
+    m_Localized: Jogador {0}
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324753
+    m_Localized: Liga um comando para jogar
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324754
+    m_Localized: "Carrega em Espa\xE7o para jogar com o teclado ou liga um comando"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324755
+    m_Localized: "Esse comando n\xE3o \xE9 compat\xEDvel - experimenta um comando
+      Xbox, PlayStation ou Switch Pro"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324756
+    m_Localized: "Comando do J{0} desligado\nCarrega num bot\xE3o de qualquer comando
+      para continuar"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324757
+    m_Localized: Pontos
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324758
+    m_Localized: Jogador 1
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324759
+    m_Localized: Pedido dourado em...
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324760
+    m_Localized: Ativar tutorial
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324761
+    m_Localized: "Cr\xE9ditos"
+    m_Metadata:
+      m_Items: []
+  references:
+    version: 2
+    RefIds: []

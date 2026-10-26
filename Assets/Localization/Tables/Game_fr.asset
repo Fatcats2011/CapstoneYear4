@@ -1,0 +1,751 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e9620f8c34305754d8cc9a7e49e852d9, type: 3}
+  m_Name: Game_fr
+  m_EditorClassIdentifier: 
+  m_LocaleId:
+    m_Code: fr
+  m_SharedData: {fileID: 11400000, guid: 61b958d042748d049905867c9fe4253d, type: 2}
+  m_Metadata:
+    m_Items: []
+  m_TableData:
+  - m_Id: 11136798720
+    m_Localized: "R\xC9SULTATS"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11182936064
+    m_Localized: "PLEIN \xC9CRAN"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11182936065
+    m_Localized: PAUSE
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11182936066
+    m_Localized: CHOISIR
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130368
+    m_Localized: MENU
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130369
+    m_Localized: OUI
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130370
+    m_Localized: NON
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130371
+    m_Localized: RETOUR
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130372
+    m_Localized: REPRENDRE
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130373
+    m_Localized: APPUIE
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130374
+    m_Localized: POUR FONCER
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130375
+    m_Localized: POUR VALIDER
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130376
+    m_Localized: POUR CONTINUER
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130377
+    m_Localized: LOCAL
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130378
+    m_Localized: MULTIJOUEUR
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130379
+    m_Localized: OPTIONS
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130380
+    m_Localized: "CR\xC9DITS"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130381
+    m_Localized: QUITTER
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130382
+    m_Localized: MUSIQUE
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130383
+    m_Localized: JOUER
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130384
+    m_Localized: PARTEZ !
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130385
+    m_Localized: "PR\xCATS !!"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130386
+    m_Localized: APPUIE SUR UN BOUTON POUR CONTINUER
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130387
+    m_Localized: EFFETS
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130388
+    m_Localized: "G\xC9N\xC9RAL"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130389
+    m_Localized: AFFICHAGE
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130390
+    m_Localized: SON
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130391
+    m_Localized: "ACCESSIBILIT\xC9"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130392
+    m_Localized: "R\xC9SOLUTION"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130393
+    m_Localized: 'A : appliquer'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130394
+    m_Localized: LANGUE
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130395
+    m_Localized: "TYPE DE PLEIN \xC9CRAN"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130396
+    m_Localized: SANS BORDURE
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130397
+    m_Localized: EXCLUSIF
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130398
+    m_Localized: SYNCHRO VERTICALE
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130399
+    m_Localized: LIMITE D'IMAGES
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130400
+    m_Localized: "QUALIT\xC9"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130401
+    m_Localized: BASSE
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130402
+    m_Localized: MOYENNE
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130403
+    m_Localized: HAUTE
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130404
+    m_Localized: "\xC9CRAN PARTAG\xC9"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130405
+    m_Localized: "CENTR\xC9"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130406
+    m_Localized: EN HAUT ET EN BAS
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130407
+    m_Localized: "C\xD4TE \xC0 C\xD4TE"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130408
+    m_Localized: "G\xC9N\xC9RAL"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130409
+    m_Localized: MUSIQUE
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130410
+    m_Localized: EFFETS
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130411
+    m_Localized: "EN ARRI\xC8RE-PLAN"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130412
+    m_Localized: MUET
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130413
+    m_Localized: CONTINUER
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130414
+    m_Localized: "R\xC9DUIRE LES MOUVEMENTS"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130415
+    m_Localized: "UNIT\xC9S"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130416
+    m_Localized: "M\xC9TRIQUE"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130417
+    m_Localized: "IMP\xC9RIAL"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130418
+    m_Localized: RECOMMENCER
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130419
+    m_Localized: COMMANDES
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130420
+    m_Localized: RECOMMENCER LA PARTIE ?
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130421
+    m_Localized: OUI
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130422
+    m_Localized: NON
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130423
+    m_Localized: 'En ligne : la partie continue pendant ta pause. Menu principal
+      la termine pour tout le monde.'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130424
+    m_Localized: 'En ligne : la partie continue pendant ta pause. Menu principal
+      te fait la quitter.'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130425
+    m_Localized: "COMMANDES \u2014 CLAVIER"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130426
+    m_Localized: "COMMANDES \u2014 MANETTE"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130427
+    m_Localized: "R\xC9INITIALISER"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130428
+    m_Localized: APPUIE SUR UNE TOUCHE...
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130429
+    m_Localized: APPUIE SUR UN BOUTON...
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130430
+    m_Localized: "ACC\xC9L\xC9RER"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130431
+    m_Localized: FREINER
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130432
+    m_Localized: GAUCHE
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130433
+    m_Localized: DROITE
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130434
+    m_Localized: TURBO
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130435
+    m_Localized: "D\xC9RAPAGE"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130436
+    m_Localized: "CHANGER DE CAM\xC9RA"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130437
+    m_Localized: "CAM\xC9RA \xC0 GAUCHE"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130438
+    m_Localized: "CAM\xC9RA \xC0 DROITE"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130439
+    m_Localized: "CAM\xC9RA EN HAUT"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130440
+    m_Localized: "CAM\xC9RA EN BAS"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130441
+    m_Localized: CROIX HAUT
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130442
+    m_Localized: CROIX BAS
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130443
+    m_Localized: CROIX GAUCHE
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130444
+    m_Localized: CROIX DROITE
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130445
+    m_Localized: CROIX
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130446
+    m_Localized: ROND
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130447
+    m_Localized: "CARR\xC9"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130448
+    m_Localized: TRIANGLE
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130449
+    m_Localized: "R\xC8GLES DE LA PARTIE"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130450
+    m_Localized: "A / B : TERMIN\xC9"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130451
+    m_Localized: "DUR\xC9E"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130452
+    m_Localized: COURTE
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130453
+    m_Localized: NORMALE
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324672
+    m_Localized: LONGUE
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324673
+    m_Localized: VOLS
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324674
+    m_Localized: COMMANDE EN OR
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324675
+    m_Localized: SANS VOLS
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324676
+    m_Localized: SANS COMMANDE EN OR
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324677
+    m_Localized: "SANS COMMANDE EN OR : VICTOIRE EN OR, VOL EN OR ET DERNIER \xC0
+      PREMIER NE PEUVENT PAS \xCATRE OBTENUS"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324678
+    m_Localized: "UN SALON PUBLIC JOUE AVEC LES R\xC8GLES NORMALES"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324679
+    m_Localized: MAIN EN OR
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324680
+    m_Localized: "KLEPTOFANT\xD4ME"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324681
+    m_Localized: "ABEILLE OUVRI\xC8RE"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324682
+    m_Localized: GROS JOUEUR
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324683
+    m_Localized: MAIN DE BEURRE
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324684
+    m_Localized: "NOURRITURE \xC0 POISSONS"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324685
+    m_Localized: TOURISTE
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324686
+    m_Localized: l'or tenu {0}s
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324687
+    m_Localized: 1 vol
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324688
+    m_Localized: '{0} vols'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324689
+    m_Localized: 1 livraison
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324690
+    m_Localized: '{0} livraisons'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324691
+    m_Localized: 1 commande difficile
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324692
+    m_Localized: '{0} commandes difficiles'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324693
+    m_Localized: "vol\xE9 une fois"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324694
+    m_Localized: "vol\xE9 {0} fois"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324695
+    m_Localized: 1 plongeon
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324696
+    m_Localized: '{0} plongeons'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324697
+    m_Localized: "a profit\xE9 de la vue"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324698
+    m_Localized: REVANCHE
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324699
+    m_Localized: RETOUR AU SALON
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324700
+    m_Localized: REVANCHE !
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324701
+    m_Localized: RETOUR AU SALON
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324702
+    m_Localized: EN ATTENTE DES JOUEURS... {0}
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324703
+    m_Localized: "PR\xCAT"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324704
+    m_Localized: PARTI
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324705
+    m_Localized: MAINTIENS
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324706
+    m_Localized: POUR PASSER  {0}/{1}
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324707
+    m_Localized: "Employ\xE9 du mois"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324708
+    m_Localized: "EXP\xC9DI\xC9"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324709
+    m_Localized: "SE PR\xC9PARE\u2026"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324710
+    m_Localized: "ON EMBAUCHE\u2026"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324711
+    m_Localized: "{0} / {1} PR\xCATS"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324712
+    m_Localized: COULEUR
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324713
+    m_Localized: ENTREPRISE
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324714
+    m_Localized: PERSONNALISER
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324715
+    m_Localized: "TERMIN\xC9"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324716
+    m_Localized: CHAPEAU
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324717
+    m_Localized: INVITER
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324718
+    m_Localized: PARTIR
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324719
+    m_Localized: JOUEUR
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324720
+    m_Localized: POINTER
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324721
+    m_Localized: "TOUTES LES COMMANDES EXP\xC9DI\xC9ES"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324722
+    m_Localized: "RECHERCHE D'UNE PARTIE\u2026"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324723
+    m_Localized: "OUVERT \xC0 TOUS"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324724
+    m_Localized: AMIS SEULEMENT
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324725
+    m_Localized: TROUVER UNE PARTIE
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324726
+    m_Localized: "OUVERT \xC0 TOUS \xB7 D\xC9BUT DANS {0}"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324727
+    m_Localized: "Aucune partie ouverte pour l'instant. Ton salon est ouvert \xE0
+      tous."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324728
+    m_Localized: Aucune partie ouverte pour l'instant.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324729
+    m_Localized: Cherche une partie avant que d'autres rejoignent ton salon.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324730
+    m_Localized: "Cette partie est compl\xE8te."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324731
+    m_Localized: "Cette partie a d\xE9j\xE0 commenc\xE9."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324732
+    m_Localized: Ce jeu n'est pas Dead on Arrival.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324733
+    m_Localized: Ce salon n'est pas une partie de Dead on Arrival.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324734
+    m_Localized: Finis ta partie avant de rejoindre celle d'un ami.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324735
+    m_Localized: Quitte ta partie en ligne avant d'en rejoindre une autre.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324736
+    m_Localized: "Cette partie est en version {0} et tu as {1}. Il vous faut la m\xEAme
+      version."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324737
+    m_Localized: une version inconnue
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324738
+    m_Localized: "Cette partie est sur une autre build de la version {0}. Il vous
+      faut la m\xEAme build."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324739
+    m_Localized: Lance Steam pour jouer en ligne.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324740
+    m_Localized: "Steam n'a pas pu ouvrir de salon. R\xE9essaie."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324741
+    m_Localized: "Impossible de lancer la partie en ligne. R\xE9essaie."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324742
+    m_Localized: "Impossible de rejoindre cette partie. Elle est peut-\xEAtre finie."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324743
+    m_Localized: Invite des amis depuis ta liste d'amis Steam.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324744
+    m_Localized: "D\xE9connect\xE9 : trop de messages."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324745
+    m_Localized: "Retir\xE9 de la revanche."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324746
+    m_Localized: "L'h\xF4te a quitt\xE9 la partie."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324747
+    m_Localized: "Impossible de joindre l'h\xF4te."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324748
+    m_Localized: "La connexion a \xE9t\xE9 perdue."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324749
+    m_Localized: 'Y / Triangle : jouer en ligne avec tes amis Steam'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324750
+    m_Localized: 'Y / Triangle : inviter des amis      B / Rond : partir'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324751
+    m_Localized: 'B / Rond : quitter le jeu en ligne'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324752
+    m_Localized: Joueur {0}
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324753
+    m_Localized: Branche une manette pour jouer
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324754
+    m_Localized: Appuie sur Espace pour jouer au clavier, ou branche une manette
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324755
+    m_Localized: Cette manette n'est pas prise en charge - essaie une manette Xbox,
+      PlayStation ou Switch Pro
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324756
+    m_Localized: "Manette du J{0} d\xE9connect\xE9e\nAppuie sur un bouton de n'importe
+      quelle manette pour continuer"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324757
+    m_Localized: Score
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324758
+    m_Localized: Joueur 1
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324759
+    m_Localized: Commande en or dans...
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324760
+    m_Localized: Activer le tutoriel
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324761
+    m_Localized: "Cr\xE9dits"
+    m_Metadata:
+      m_Items: []
+  references:
+    version: 2
+    RefIds: []

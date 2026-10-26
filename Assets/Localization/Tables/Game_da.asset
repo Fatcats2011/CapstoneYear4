@@ -1,0 +1,751 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e9620f8c34305754d8cc9a7e49e852d9, type: 3}
+  m_Name: Game_da
+  m_EditorClassIdentifier: 
+  m_LocaleId:
+    m_Code: da
+  m_SharedData: {fileID: 11400000, guid: 61b958d042748d049905867c9fe4253d, type: 2}
+  m_Metadata:
+    m_Items: []
+  m_TableData:
+  - m_Id: 11136798720
+    m_Localized: RESULTATER
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11182936064
+    m_Localized: "FULDSK\xC6RM"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11182936065
+    m_Localized: PAUSE
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11182936066
+    m_Localized: "V\xC6LG"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130368
+    m_Localized: MENU
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130369
+    m_Localized: TIL
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130370
+    m_Localized: FRA
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130371
+    m_Localized: TILBAGE
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130372
+    m_Localized: "FORTS\xC6T"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130373
+    m_Localized: TRYK
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130374
+    m_Localized: FOR AT BOOSTE
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130375
+    m_Localized: "FOR AT BEKR\xC6FTE"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130376
+    m_Localized: "FOR AT FORTS\xC6TTE"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130377
+    m_Localized: LOKALT
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130378
+    m_Localized: MULTIPLAYER
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130379
+    m_Localized: INDSTILLINGER
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130380
+    m_Localized: MEDVIRKENDE
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130381
+    m_Localized: AFSLUT
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130382
+    m_Localized: MUSIK
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130383
+    m_Localized: SPIL
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130384
+    m_Localized: AFSTED!
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130385
+    m_Localized: KLAR!!
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130386
+    m_Localized: "TRYK P\xC5 EN KNAP FOR AT FORTS\xC6TTE"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130387
+    m_Localized: EFFEKTER
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130388
+    m_Localized: GENERELT
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130389
+    m_Localized: "SK\xC6RM"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130390
+    m_Localized: LYD
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130391
+    m_Localized: "TILG\xC6NGELIGHED"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130392
+    m_Localized: "OPL\xD8SNING"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130393
+    m_Localized: 'A: anvend'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130394
+    m_Localized: SPROG
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130395
+    m_Localized: "FULDSK\xC6RMSTYPE"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130396
+    m_Localized: UDEN RAMME
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130397
+    m_Localized: EKSKLUSIV
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130398
+    m_Localized: VSYNC
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130399
+    m_Localized: "BILLEDGR\xC6NSE"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130400
+    m_Localized: KVALITET
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130401
+    m_Localized: LAV
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130402
+    m_Localized: MIDDEL
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130403
+    m_Localized: "H\xD8J"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130404
+    m_Localized: "DELT SK\xC6RM"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130405
+    m_Localized: CENTRERET
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130406
+    m_Localized: OVER OG UNDER
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130407
+    m_Localized: SIDE OM SIDE
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130408
+    m_Localized: SAMLET
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130409
+    m_Localized: MUSIK
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130410
+    m_Localized: EFFEKTER
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130411
+    m_Localized: I BAGGRUNDEN
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130412
+    m_Localized: "LYDL\xD8S"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130413
+    m_Localized: "FORTS\xC6T"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130414
+    m_Localized: "MINDRE BEV\xC6GELSE"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130415
+    m_Localized: ENHEDER
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130416
+    m_Localized: METRISK
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130417
+    m_Localized: BRITISK
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130418
+    m_Localized: GENSTART
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130419
+    m_Localized: STYRING
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130420
+    m_Localized: GENSTARTE KAMPEN?
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130421
+    m_Localized: JA
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130422
+    m_Localized: NEJ
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130423
+    m_Localized: "Online: kampen forts\xE6tter, mens du holder pause. Hovedmenu afslutter
+      den for alle."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130424
+    m_Localized: "Online: kampen forts\xE6tter, mens du holder pause. Hovedmenu forlader
+      den."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130425
+    m_Localized: "STYRING \u2014 TASTATUR"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130426
+    m_Localized: "STYRING \u2014 CONTROLLER"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130427
+    m_Localized: NULSTIL
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130428
+    m_Localized: "TRYK P\xC5 EN TAST..."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130429
+    m_Localized: "TRYK P\xC5 EN KNAP..."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130430
+    m_Localized: GIV GAS
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130431
+    m_Localized: BREMS
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130432
+    m_Localized: STYR TIL VENSTRE
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130433
+    m_Localized: "STYR TIL H\xD8JRE"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130434
+    m_Localized: BOOST
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130435
+    m_Localized: DRIFT
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130436
+    m_Localized: SKIFT KAMERA
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130437
+    m_Localized: KAMERA VENSTRE
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130438
+    m_Localized: "KAMERA H\xD8JRE"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130439
+    m_Localized: KAMERA OP
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130440
+    m_Localized: KAMERA NED
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130441
+    m_Localized: D-PAD OP
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130442
+    m_Localized: D-PAD NED
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130443
+    m_Localized: D-PAD VENSTRE
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130444
+    m_Localized: "D-PAD H\xD8JRE"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130445
+    m_Localized: KRYDS
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130446
+    m_Localized: CIRKEL
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130447
+    m_Localized: FIRKANT
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130448
+    m_Localized: TREKANT
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130449
+    m_Localized: KAMPREGLER
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130450
+    m_Localized: "A / B: F\xC6RDIG"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130451
+    m_Localized: "L\xC6NGDE"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130452
+    m_Localized: KORT
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11187130453
+    m_Localized: NORMAL
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324672
+    m_Localized: LANG
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324673
+    m_Localized: TYVERI
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324674
+    m_Localized: GULDORDRE
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324675
+    m_Localized: INGEN TYVERI
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324676
+    m_Localized: INGEN GULDORDRE
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324677
+    m_Localized: "INGEN GULDORDRE: GULDSEJR, GULDTYVERI OG FRA SIDST TIL F\xD8RST
+      KAN IKKE OPN\xC5S"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324678
+    m_Localized: EN OFFENTLIG LOBBY SPILLER MED NORMALE REGLER
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324679
+    m_Localized: GULDGREBET
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324680
+    m_Localized: "KLEPTOSP\xD8GELSE"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324681
+    m_Localized: FLITTIG BI
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324682
+    m_Localized: STORSPILLER
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324683
+    m_Localized: "SM\xD8RFINGRE"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324684
+    m_Localized: FISKEFODER
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324685
+    m_Localized: TURIST
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324686
+    m_Localized: holdt guldet {0}s
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324687
+    m_Localized: 1 tyveri
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324688
+    m_Localized: '{0} tyverier'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324689
+    m_Localized: 1 levering
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324690
+    m_Localized: '{0} leveringer'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324691
+    m_Localized: "1 sv\xE6r ordre"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324692
+    m_Localized: "{0} sv\xE6re ordrer"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324693
+    m_Localized: "r\xF8vet \xE9n gang"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324694
+    m_Localized: "r\xF8vet {0} gange"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324695
+    m_Localized: 1 dukkert
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324696
+    m_Localized: '{0} dukkerter'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324697
+    m_Localized: "n\xF8d udsigten"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324698
+    m_Localized: REVANCHE
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324699
+    m_Localized: TILBAGE TIL LOBBYEN
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324700
+    m_Localized: REVANCHE!
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324701
+    m_Localized: TILBAGE TIL LOBBYEN
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324702
+    m_Localized: "VENTER P\xC5 SPILLERE... {0}"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324703
+    m_Localized: KLAR
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324704
+    m_Localized: UDE
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324705
+    m_Localized: HOLD
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324706
+    m_Localized: FOR AT SPRINGE OVER  {0}/{1}
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324707
+    m_Localized: "M\xE5nedens medarbejder"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324708
+    m_Localized: AFSENDT
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324709
+    m_Localized: "G\xD8R SIG KLAR\u2026"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324710
+    m_Localized: "VI ANS\xC6TTER\u2026"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324711
+    m_Localized: '{0} / {1} KLAR'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324712
+    m_Localized: FARVE
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324713
+    m_Localized: FIRMA
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324714
+    m_Localized: TILPAS
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324715
+    m_Localized: "F\xC6RDIG"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324716
+    m_Localized: HAT
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324717
+    m_Localized: INVITER
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324718
+    m_Localized: FORLAD
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324719
+    m_Localized: SPILLER
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324720
+    m_Localized: STEMPL IND
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324721
+    m_Localized: ALLE ORDRER AFSENDT
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324722
+    m_Localized: "LEDER EFTER KAMP\u2026"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324723
+    m_Localized: "\xC5BEN FOR ALLE"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324724
+    m_Localized: KUN VENNER
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324725
+    m_Localized: FIND KAMP
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324726
+    m_Localized: "\xC5BEN FOR ALLE \xB7 STARTER OM {0}"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324727
+    m_Localized: "Ingen \xE5bne kampe lige nu. Din lobby er \xE5ben for alle."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324728
+    m_Localized: "Ingen \xE5bne kampe lige nu."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324729
+    m_Localized: "Find en kamp, f\xF8r andre slutter sig til din lobby."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324730
+    m_Localized: Den kamp er fuld.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324731
+    m_Localized: "Den kamp er allerede g\xE5et i gang."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324732
+    m_Localized: Det spil er ikke Dead on Arrival.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324733
+    m_Localized: Den lobby er ikke en Dead on Arrival-kamp.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324734
+    m_Localized: "G\xF8r din kamp f\xE6rdig, f\xF8r du slutter dig til en vens."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324735
+    m_Localized: "Forlad din onlinekamp, f\xF8r du slutter dig til en anden."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324736
+    m_Localized: "Den kamp k\xF8rer version {0}, og du har {1}. I skal have samme
+      version."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324737
+    m_Localized: en ukendt version
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324738
+    m_Localized: "Den kamp k\xF8rer et andet build af version {0}. I skal have samme
+      build."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324739
+    m_Localized: Start Steam for at spille online.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324740
+    m_Localized: "Steam kunne ikke \xE5bne en lobby. Pr\xF8v igen."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324741
+    m_Localized: "Onlinekampen kunne ikke starte. Pr\xF8v igen."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324742
+    m_Localized: "Kunne ikke deltage i kampen. Den er m\xE5ske slut."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324743
+    m_Localized: Inviter venner fra din Steam-venneliste.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324744
+    m_Localized: 'Afbrudt: for mange beskeder.'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324745
+    m_Localized: Taget ud af revanchen.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324746
+    m_Localized: "V\xE6rten forlod kampen."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324747
+    m_Localized: "Kunne ikke n\xE5 v\xE6rten."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324748
+    m_Localized: Forbindelsen blev afbrudt.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324749
+    m_Localized: 'Y / Trekant: spil online med Steam-venner'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324750
+    m_Localized: 'Y / Trekant: inviter venner      B / Cirkel: forlad'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324751
+    m_Localized: 'B / Cirkel: forlad online'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324752
+    m_Localized: Spiller {0}
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324753
+    m_Localized: Tilslut en controller for at spille
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324754
+    m_Localized: "Tryk p\xE5 mellemrum for at spille med tastatur, eller tilslut
+      en controller"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324755
+    m_Localized: "Den controller underst\xF8ttes ikke - pr\xF8v en Xbox-, PlayStation-
+      eller Switch Pro-controller"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324756
+    m_Localized: "S{0}s controller er afbrudt\nTryk p\xE5 en knap p\xE5 en vilk\xE5rlig
+      controller for at forts\xE6tte"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324757
+    m_Localized: Point
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324758
+    m_Localized: Spiller 1
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324759
+    m_Localized: Guldordre om...
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324760
+    m_Localized: "Sl\xE5 vejledningen til"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11191324761
+    m_Localized: Medvirkende
+    m_Metadata:
+      m_Items: []
+  references:
+    version: 2
+    RefIds: []
