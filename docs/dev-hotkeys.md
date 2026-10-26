@@ -27,12 +27,12 @@ The keyboard joins as a player only on Space or Enter (`docs/controls.md`). Any 
 | 5 | During a match | Jumps to wave 3 | `OrderManager.cs` |
 | Y | During a match | Deletes every active order | `OrderManager.cs` |
 | P | During a match | Pauses / resumes the wave timer | `OrderManager.cs` |
-| S | Tutorial | Skips the tutorial (every player) | `TutorialManager.cs`, `TutorialHandler.cs` |
+| F9 | Tutorial | Skips the tutorial (every player; not S: that brakes on the keyboard) | `TutorialManager.cs`, `TutorialHandler.cs` |
 | L | Cutscenes | Skips the cutscene | `CutsceneManager.cs` |
 | L | Main menu | Removes every joined player | `MainMenu.cs` |
 | B | Driving | Refills every player's boost | `BallDriving.cs` |
 | T | Driving | Every player drops the orders they carry | `OrderHandler.cs` |
-| R | Driving | Respawns every player | `Respawn.cs` |
+| F5 | Driving | Respawns every player (not R: that's RB on the keyboard) | `Respawn.cs` |
 
 ## Adding a hotkey
 

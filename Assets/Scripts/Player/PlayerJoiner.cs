@@ -5,19 +5,18 @@ using UnityEngine.InputSystem.LowLevel;
 using UnityEngine.InputSystem.Users;
 
 /// <summary>
-/// Joins players: a controller nobody uses joins on any button, a keyboard only on Space or Enter. The game asks
-/// PlayerInputManager for each join itself (its joins are set to manual), so another key makes no player at all, where
-/// Unity used to make one for any key and the game destroyed it. A key that doesn't join is reported (PlayerInstantiate
-/// says how to join). Joins wait while PlayerInputManager's joining is off (ReplacementControllerListener turns it off
-/// while a lost controller's player waits for a replacement), and while the game takes nobody new (Welcomes: mid-match,
-/// or a full player select), so no player is made only to be destroyed. See docs/controls.md
+/// Joins players: a controller nobody uses joins on any button, a keyboard on any key but the function keys (the
+/// developer hotkeys). The game asks PlayerInputManager for each join itself (its joins are set to manual). While the game
+/// takes nobody new (Welcomes: mid-match, the title screen once someone's in, a full player select), the device goes to
+/// the one player here instead, so whatever they last used is what they play on (playtest, 2026-10-24). Nothing happens
+/// while PlayerInputManager's joining is off (ReplacementControllerListener turns it off while a lost controller's player
+/// waits for a replacement). See docs/controls.md
 /// </summary>
 public static class PlayerJoiner
 {
     /// <summary>The control scheme a controller joins with</summary>
     public const string GAMEPAD_SCHEME = "Gamepad";
 
-    static Action<InputDevice> turnedAway;
     static Func<bool> welcomes;
     static Action<InputDevice, string> handOver;
 
@@ -27,13 +26,11 @@ public static class PlayerJoiner
     /// <summary>
     /// Starts joining players, and sets PlayerInputManager's own joins to manual
     /// </summary>
-    /// <param name="onTurnedAway">A key that doesn't join was pressed on a keyboard nobody uses</param>
     /// <param name="welcomesJoins">Whether the game takes a new player now (null: always)</param>
-    /// <param name="handsOver">While the game takes nobody new: a device nobody uses was used (HandOverSchemeFor), with
-    /// its scheme. The game gives it to its one player here, if there's one</param>
-    public static void Enable(Action<InputDevice> onTurnedAway, Func<bool> welcomesJoins = null, Action<InputDevice, string> handsOver = null)
+    /// <param name="handsOver">While the game takes nobody new: a device nobody uses was used (SchemeFor), with its
+    /// scheme. The game gives it to its one player here, if there's one</param>
+    public static void Enable(Func<bool> welcomesJoins = null, Action<InputDevice, string> handsOver = null)
     {
-        turnedAway = onTurnedAway;
         welcomes = welcomesJoins;
         handOver = handsOver;
         UseManualJoins();
@@ -52,7 +49,6 @@ public static class PlayerJoiner
             return;
 
         Enabled = false;
-        turnedAway = null;
         welcomes = null;
         handOver = null;
         InputUser.onUnpairedDeviceUsed -= OnUnpairedDeviceUsed;
@@ -86,29 +82,11 @@ public static class PlayerJoiner
     }
 
     /// <summary>
-    /// The control scheme a press joins with: a controller's for any of its buttons, the keyboard's for Space or Enter,
-    /// else null. The press is read from its event: a tap can be up again by the time the join runs
+    /// The control scheme a press joins with, or hands its device over with: a controller's for any of its buttons, the
+    /// keyboard's for any key but the function keys (developer hotkeys), else null. The press is read from its event: a
+    /// tap can be up again by the time the join runs
     /// </summary>
     public static string SchemeFor(InputControl control, InputEventPtr eventPtr)
-    {
-        if (!(control is ButtonControl button) || !Pressed(button, eventPtr))
-            return null;
-
-        if (control.device is Gamepad)
-            return GAMEPAD_SCHEME;
-
-        if (control.device is Keyboard keyboard
-            && (control == keyboard.spaceKey || control == keyboard.enterKey || control == keyboard.numpadEnterKey))
-            return KeyboardControls.SCHEME;
-
-        return null;
-    }
-
-    /// <summary>
-    /// The control scheme a press hands a device over with, to a player already here: any controller button, any key but
-    /// the function keys (developer hotkeys), else null
-    /// </summary>
-    public static string HandOverSchemeFor(InputControl control, InputEventPtr eventPtr)
     {
         if (!(control is ButtonControl button) || !Pressed(button, eventPtr))
             return null;
@@ -136,7 +114,7 @@ public static class PlayerJoiner
         // Nobody new now: the device may go to the player already here
         if (welcomes != null && !welcomes())
         {
-            string handedWith = handOver != null ? HandOverSchemeFor(control, eventPtr) : null;
+            string handedWith = handOver != null ? SchemeFor(control, eventPtr) : null;
             if (handedWith != null)
                 handOver(control.device, handedWith);
             return;
@@ -144,13 +122,6 @@ public static class PlayerJoiner
 
         string scheme = SchemeFor(control, eventPtr);
         if (scheme != null)
-        {
             manager.JoinPlayer(-1, -1, scheme, control.device);
-            return;
-        }
-
-        // Another key on a keyboard nobody uses: the game says how to join
-        if (control.device is Keyboard && control is ButtonControl key && Pressed(key, eventPtr))
-            turnedAway?.Invoke(control.device);
     }
 }

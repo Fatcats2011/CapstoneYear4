@@ -48,7 +48,7 @@ public class TutorialHandler : MonoBehaviour
     private void Update()
     {
         // HOTKEY
-        if(DevTools.GetKeyDown(KeyCode.S))
+        if(DevTools.GetKeyDown(KeyCode.F9)) // not S: that brakes on the keyboard
         {
             if(!hasLearnt)
             {

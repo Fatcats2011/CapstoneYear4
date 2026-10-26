@@ -116,6 +116,26 @@ namespace DoA.Tests
         }
 
         [Test]
+        public void NoDevKey_IsAKeyThePlayersUse()
+        {
+            // R respawned (a dev key in the editor) and was also RB: in the lobby it hid the player's ghost for good
+            InputActionAsset asset = PristineCopy();
+            KeyboardControls.Install(asset);
+            HashSet<string> played = new HashSet<string>(asset.SelectMany(action => action.bindings)
+                .Where(binding => binding.path != null && binding.path.StartsWith("<Keyboard>/"))
+                .Select(binding => binding.path.Substring("<Keyboard>/".Length).ToLowerInvariant()));
+
+            foreach (string file in System.IO.Directory.GetFiles("Assets/Scripts", "*.cs", System.IO.SearchOption.AllDirectories))
+            {
+                if (file.Contains("OUTDATED"))
+                    continue;
+                foreach (System.Text.RegularExpressions.Match key in System.Text.RegularExpressions.Regex.Matches(
+                    System.IO.File.ReadAllText(file), @"DevTools\.GetKeyDown\(KeyCode\.(\w+)\)"))
+                    Assert.IsFalse(played.Contains(key.Groups[1].Value.ToLowerInvariant()), key.Groups[1].Value + " in " + file);
+            }
+        }
+
+        [Test]
         public void Install_MOpensMatchRules_AsStartDoes()
         {
             // M is the menus' Start (MATCH RULES in player select): Escape alone opened it (playtest, 2026-10-24)

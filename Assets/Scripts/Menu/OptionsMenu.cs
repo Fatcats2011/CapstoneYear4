@@ -252,7 +252,9 @@ public class OptionsMenu : SingletonMonobehaviour<OptionsMenu>, IMouseMenu
             return;
 
         Transform music = selectorObjects[0].transform, effects = selectorObjects[1].transform;
-        float up = music.position.y - selectorObjects[2].transform.position.y;
+        // In local units: the canvas is saved at scale 0 and only scaled once it draws, so world distances are 0 at Start.
+        // The rows' holder (Positions) and the sliders' (Audio Sliders) share the canvas at scale 1
+        Vector3 up = Vector3.up * (music.localPosition.y - selectorObjects[2].transform.localPosition.y);
 
         music.gameObject.SetActive(false);
         effects.gameObject.SetActive(false);
@@ -267,24 +269,23 @@ public class OptionsMenu : SingletonMonobehaviour<OptionsMenu>, IMouseMenu
         foreach (Transform label in music.parent)
         {
             if (label != music && label != effects)
-                label.position += Vector3.up * up;
+                label.localPosition += up;
         }
         if (fullscreenSelector != null)
-            fullscreenSelector.transform.position += Vector3.up * up;
+            fullscreenSelector.transform.localPosition += up;
         if (fullscreenSelectorPositions.Length > 0)
-            fullscreenSelectorPositions[0].transform.parent.position += Vector3.up * up;
+            fullscreenSelectorPositions[0].transform.parent.localPosition += up;
         if (QualityRowExists)
         {
-            qualitySelector.transform.position += Vector3.up * up;
-            qualitySelectorPositions[0].transform.parent.position += Vector3.up * up;
+            qualitySelector.transform.localPosition += up;
+            qualitySelectorPositions[0].transform.parent.localPosition += up;
         }
 
         GameObject[] spots = new GameObject[selectorObjects.Length - 2];
         System.Array.Copy(selectorObjects, 2, spots, 0, spots.Length);
         selectorObjects = spots;
         firstRow = OptionSelected.FULLSCREEN;
-        optionSelected = firstRow;
-        selector.transform.position = new Vector3(selector.transform.position.x, selectorObjects[0].transform.position.y, selector.transform.position.z);
+        optionSelected = firstRow; // the ghost selector stays put: Fullscreen moved up to the row it's on
     }
 
     OptionSetting BackgroundSetting()

@@ -101,7 +101,7 @@ public class PlayerInstantiate : SingletonMonobehaviour<PlayerInstantiate>
         // The game joins players itself: controllers on any button, the keyboard on Space or Enter. Only the kept
         // instance: the menu scene's copy, which a return to the menu brings and destroys, mustn't switch joining off
         if (Instance == this)
-            PlayerJoiner.Enable(TurnAwayKey, WelcomesJoins, HandOverDevice);
+            PlayerJoiner.Enable(WelcomesJoins, HandOverDevice);
     }
 
     // Whether a new player may join now (PlayerJoiner.Welcomes): nobody is made mid-match only to be destroyed
@@ -137,13 +137,6 @@ public class PlayerInstantiate : SingletonMonobehaviour<PlayerInstantiate>
     {
         // The scene's PlayerInputManager is enabled by now: it stops joining by itself
         PlayerJoiner.UseManualJoins();
-    }
-
-    // A key that doesn't join was pressed on a keyboard nobody uses: outside a match, the player hears how to join
-    private void TurnAwayKey(InputDevice device)
-    {
-        if (allowPlayerSpawn || PlayerCount == 0)
-            ShowUnsupportedDeviceHint(device);
     }
 
     ///<summary>

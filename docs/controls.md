@@ -74,7 +74,7 @@ Up to 4 players, one controller each (Xbox, PlayStation and Switch Pro controlle
 
 ## Keyboard (one player)
 
-One player can use the keyboard, alongside up to 3 controllers. **Press Space or Enter to join.** Any other key shows "Press Space to play with the keyboard, or connect a controller". This stops the dev keys (F1 and others) from joining the keyboard by accident.
+One player can use the keyboard, alongside up to 3 controllers. **Press any key to join** (not F1–F12: those are the dev keys). With one player on this PC, using the keyboard or another controller switches that player over to it, so they play on whatever they used last (outside offline player select, where a new device joins as a new player).
 
 The game joins players itself (`PlayerJoiner`, Phase 5A): the scene's `PlayerInputManager` is switched to manual joins, so another key makes no player at all (Unity used to make one for any key, which the game then destroyed).
 
@@ -98,7 +98,7 @@ The game joins players itself (`PlayerJoiner`, Phase 5A): the scene's `PlayerInp
 | Loading screen: ready | Space or Enter |
 
 - **Button prompts still show controller buttons:** read A as Space, B as Backspace and Start as Escape. Keyboard prompt art is still to come.
-- **The mouse works the menus, not the driving:** on the title screen, Options (every page), Credits and the pause menu of whoever paused, moving over a row selects it, a left click does what A does there (on an Options row it steps the value towards the click; on the Resolution size it applies it), and a right click does what B does. A click only counts while the cursor shows (it moved in the last 2 s), so a click that brings the window back never quits or leaves a match. On a drawn Options row a click goes to the choice nearest it; on the Resolution size it applies it, either side steps. Join first (Space / Enter, or any pad button): with nobody in, the mouse does nothing. Player select, Dispatch, the Controls panel, Restart's question and the results still need a pad or the keyboard.
+- **The mouse works the menus, not the driving:** on the title screen, Options (every page), Credits and the pause menu of whoever paused, moving over a row selects it, a left click does what A does there (on an Options row it steps the value towards the click; on the Resolution size it applies it), and a right click does what B does. A click only counts while the cursor shows (it moved in the last 2 s), so a click that brings the window back never quits or leaves a match. On a drawn Options row a click goes to the choice nearest it; on the Resolution size it applies it, either side steps. Join first (any key, or any pad button): with nobody in, the mouse does nothing. Player select, Dispatch, the Controls panel, Restart's question and the results still need a pad or the keyboard.
 - **A lost controller:** if a player's controller is unplugged mid-match, only another controller can take their place, not the keyboard.
 - **Dev hotkeys:** in the editor and in development builds, some letters double as dev hotkeys (`docs/dev-hotkeys.md`): S skips the tutorial, B refills boost, R respawns everyone, and T drops everyone's orders. Drive with the arrows when testing there. Release builds have no dev hotkeys.
 - **How it works:**

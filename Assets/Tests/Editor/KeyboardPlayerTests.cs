@@ -148,7 +148,7 @@ namespace DoA.Tests
         }
 
         [UnityTest]
-        public IEnumerator PressingOtherKeys_SpawnsNothing()
+        public IEnumerator PressingTheUnusedDevKeys_SpawnsNothing()
         {
             EditorSceneManager.playModeStartScene = AssetDatabase.LoadAssetAtPath<SceneAsset>(MENU_SCENE);
             yield return new EnterPlayMode();
@@ -156,8 +156,8 @@ namespace DoA.Tests
             yield return ToTheTitleScreen();
             JoinCounter counter = new JoinCounter();
 
-            // Unity used to make a player for any key, which the game then destroyed: now no key but Space or Enter makes one
-            for (Key key = Key.A; key <= Key.Z; key++)
+            // Any key joins the keyboard but the function keys, the dev keys (these four do nothing on the title screen)
+            foreach (Key key in new[] { Key.F8, Key.F10, Key.F11, Key.F12 })
             {
                 Press(key);
                 yield return null;
@@ -191,7 +191,7 @@ namespace DoA.Tests
         }
 
         [UnityTest]
-        public IEnumerator AKeyboard_DoesntJoinOnOtherKeys()
+        public IEnumerator AKeyboard_JoinsOnAnyKey_ButTheDevKeys()
         {
             EditorSceneManager.playModeStartScene = AssetDatabase.LoadAssetAtPath<SceneAsset>(MENU_SCENE);
             yield return new EnterPlayMode();
@@ -203,11 +203,12 @@ namespace DoA.Tests
             yield return WaitSeconds(1f);
             Assert.IsFalse(AnyKeyboardPlayer(), "F1 doesn't join the keyboard");
 
+            // No "Press Space to play" hint any more: X joins (playtest, 2026-10-24)
             Press(Key.X);
             yield return WaitSeconds(1f);
-            Assert.IsFalse(AnyKeyboardPlayer(), "X doesn't join the keyboard");
-            Assert.IsTrue(ControllerPrompts.Instance.IsHintShown, "a hint says how to join");
-            Assert.AreEqual(ControllerPrompts.KEYBOARD_JOIN_HINT, ControllerPrompts.Instance.HintText);
+            Assert.IsTrue(AnyKeyboardPlayer(), "X joins the keyboard");
+            Assert.IsFalse(ControllerPrompts.Instance.IsHintShown && ControllerPrompts.Instance.HintText == ControllerPrompts.KEYBOARD_JOIN_HINT,
+                "no hint about Space");
         }
 
         [UnityTest]

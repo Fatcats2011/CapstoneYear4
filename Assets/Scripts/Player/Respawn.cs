@@ -112,7 +112,7 @@ public class Respawn : MonoBehaviour
 
     private void Update()
     {
-        if(DevTools.GetKeyDown(KeyCode.R))
+        if(DevTools.GetKeyDown(KeyCode.F5)) // not R: that's RB on the keyboard
         {
             StartRespawnCoroutine();
         }
@@ -336,6 +336,10 @@ public class Respawn : MonoBehaviour
 
     public void StartRespawnCoroutine()
     {
+        // Nowhere to rise (the menus, the Dispatch room): a respawn there hid the ghost and never brought it back
+        if (RespawnManager.Instance == null)
+            return;
+
         isRespawning = true;
         soundPool.PlayDeathSound();
 
