@@ -121,6 +121,7 @@ public class OptionsMenu : SingletonMonobehaviour<OptionsMenu>, IMouseMenu
             IReadOnlyList<OptionSetting> settings = book.Pages[page].Settings;
             for (int i = 0; i < settings.Count; i++)
                 rowsHere.Add(OptionRow.Create(rect, style, settings[i], new Vector2(rowX, firstRow.anchoredPosition.y - i * ResolutionRow.ROW_SPACING)));
+            OptionRow.AlignColumn(rowsHere);
             pageRows.Add(rowsHere);
             pageObjects.Add(holder);
             holder.SetActive(false);
@@ -148,8 +149,11 @@ public class OptionsMenu : SingletonMonobehaviour<OptionsMenu>, IMouseMenu
         if (header != null)
             header.Rename(names);
         foreach (List<OptionRow> rowsHere in pageRows)
+        {
             foreach (OptionRow row in rowsHere)
                 row.Refresh();
+            OptionRow.AlignColumn(rowsHere); // a translation's labels can be far longer
+        }
         if (languageRow != null)
             languageRow.Refresh();
     }
@@ -356,6 +360,7 @@ public class OptionsMenu : SingletonMonobehaviour<OptionsMenu>, IMouseMenu
             return;
         foreach (OptionRow row in pageRows[book.Page - 1])
             row.Refresh();
+        OptionRow.AlignColumn(pageRows[book.Page - 1]);
     }
 
     // The mouse (MouseMenus): the page's rows, the width of the screen each (the values sit far right of the labels). A

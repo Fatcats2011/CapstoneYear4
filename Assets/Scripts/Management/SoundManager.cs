@@ -35,6 +35,9 @@ public class SoundManager : SingletonMonobehaviour<SoundManager>
     public GameObject AudioSourcePrefab { get { return audioSourcePrefab; } }
     public int PoolSize { get { return playerPoolSize; } }
 
+    /// <summary>The sound's state for the log (AudioHealth)</summary>
+    public string HealthLine() { return AudioHealth.Now(mainMixer, musicSource); }
+
     [Header("Audio Clips")]
     [Header("Music")]
     [SerializeField] private AudioObject mainGameLoop;

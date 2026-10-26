@@ -65,6 +65,8 @@ public class PerfOverlay : MonoBehaviour
         {
             nextLog = Time.realtimeSinceStartup + LOG_EVERY;
             Debug.Log(FrameStats.Line(stats.AverageFps, stats.OnePercentLowFps, Players, Camera.allCamerasCount));
+            if (SoundManager.Instance != null)
+                Debug.Log(SoundManager.Instance.HealthLine());
         }
     }
 

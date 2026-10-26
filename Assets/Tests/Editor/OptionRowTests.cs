@@ -51,6 +51,34 @@ namespace DoA.Tests
         }
 
         [Test]
+        public void AlignColumn_MovesAPagesValuesClearOfItsLongestLabel_WithoutShrinkingIt()
+        {
+            // Hungarian: TELJES KÉPERNYŐ TÍPUSA ran into its value (playtest, 2026-10-24: text failed to fit)
+            OptionRow shortRow = OptionRow.Create(page, style, OptionSetting.Toggle("VSYNC", "OFF", "ON", 1), Vector2.zero);
+            OptionRow longRow = OptionRow.Create(page, style, OptionSetting.Toggle("TELJES KÉPERNYŐ TÍPUSA", "KERET NÉLKÜL", "KIZÁRÓLAGOS", 0), new Vector2(0f, -110f));
+            float sizeBefore = longRow.Label.fontSize;
+
+            OptionRow.AlignColumn(new[] { shortRow, longRow });
+
+            float labelEnd = longRow.Label.rectTransform.anchoredPosition.x + longRow.Label.GetPreferredValues(longRow.Label.text).x;
+            float valueStart = longRow.Value.rectTransform.anchoredPosition.x - longRow.Value.GetPreferredValues(longRow.Value.text).x / 2f;
+            Assert.Less(labelEnd, valueStart, "the label ends before its value starts");
+            Assert.AreEqual(shortRow.Value.rectTransform.anchoredPosition.x, longRow.Value.rectTransform.anchoredPosition.x, "one column");
+            Assert.AreEqual(sizeBefore, longRow.Label.fontSize, "not shrunk");
+        }
+
+        [Test]
+        public void AlignColumn_ShortLabels_KeepTheUsualColumn()
+        {
+            OptionRow row = OptionRow.Create(page, style, OptionSetting.Toggle("VSYNC", "OFF", "ON", 1), Vector2.zero);
+            float usual = row.Value.rectTransform.anchoredPosition.x;
+
+            OptionRow.AlignColumn(new[] { row });
+
+            Assert.AreEqual(usual, row.Value.rectTransform.anchoredPosition.x);
+        }
+
+        [Test]
         public void Refresh_ShowsTheNewValue()
         {
             OptionSetting vsync = OptionSetting.Toggle("VSYNC", "OFF", "ON", 1);
