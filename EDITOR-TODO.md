@@ -1,6 +1,6 @@
 # Editor to-do (master list)
 
-Things only you can do in the Unity editor (and on two PCs), top to bottom. Updated 2026-10-13 (the Dispatch lobby; Local Play and Online Play on the title screen; Phase 5A: the deferred fixes and bumps online; Phase 3J: several players on one machine online).
+Things only you can do in the Unity editor (and on two PCs), top to bottom. Updated 2026-10-26 (finished steps removed).
 
 ## 1. Local Play and Online Play on the title screen (5 minutes, main editor)
 
@@ -13,8 +13,6 @@ Done: the MULTIPLAYER and LOCAL entries are in the scene (Selector Objects: Mult
 
 ## 1b. Dispatch: X opens the customize pop-up (done: check only)
 
-- **Input asset:** the UI map's **West Face** action is in (`<Gamepad>/buttonWest` and `<Keyboard>/q`; `InputAssetTests` checks it).
-- **Build Board In Menu Scene → Replace** adds the pop-up.
 - **Check, on Dispatch:**
   - X (or Q) pops up CUSTOMIZE: your ghost with the colour and hat sliders, the room dimmed behind.
   - The d-pad scrolls them, and your ticket follows.
@@ -29,59 +27,15 @@ Done: the MULTIPLAYER and LOCAL entries are in the scene (Selector Objects: Mult
 - **Check:** press a key: the prompts show keys. Press a DualShock / DualSense button: PlayStation buttons. An Xbox pad: Xbox buttons.
 - **With Steam Input on** (Steam's per-game controller setting), Steam hands the game a virtual Xbox pad for every controller, so a PlayStation pad shows Xbox buttons. Turn Steam Input off for the game to see PlayStation buttons.
 
-## 1d. Matchmaking buttons and status line (5 minutes, main editor)
+## 1d. Matchmaking: check only
 
-Code is done (`docs/online.md`, Matchmaking). Neither shoulder nor F/R was used in the UI map, so these are free:
-- **Input asset** (`Assets/Resources/CapstoneYear4.inputactions`): in the UI map add two Button actions, like North Face:
-  - **Left Shoulder**, bound to `<Gamepad>/leftShoulder` (group Gamepad); the keyboard key (F) comes from `KeyboardControls`.
-  - **Right Shoulder**, bound to `<Gamepad>/rightShoulder` (group Gamepad); the keyboard key (R) comes from `KeyboardControls`.
-  - The code wires them by name (`UI/Left Shoulder`, `UI/Right Shoulder`). Until they exist, the buttons do nothing.
-- **The Dispatch board:** add a text for `matchmakingLine` (below the ready counter, say) and wire it. It shows `LOOKING FOR A MATCH…`, `OPEN TO ANYONE`, `OPEN TO ANYONE · STARTS IN 42` or `FRIENDS ONLY`. Optional: with none wired, the line is just not shown.
-- **Two prompts** with the shoulder button art, in the bottom prompts: `FIND MATCH` (left shoulder) and the right shoulder's Fill prompt. For the Fill prompt, add a text and wire it to the board's `fillPrompt`, with its right-shoulder art as a child of that text: the code sets it to what pressing does (`OPEN TO ANYONE` or `FRIENDS ONLY`) and hides it (art included) on a client. Nothing to swap by hand.
+The Left/Right Shoulder actions, the status line and the Fill prompt are in.
 - **Check, online player select (the host):** R opens the lobby to anyone and the line and the R prompt follow; R again closes it. F searches (`LOOKING FOR A MATCH…`) and B cancels. A client's R does nothing, and it shows no R prompt. Two machines seated in an open lobby show the countdown from 60.
 
-## 1c. Dispatch lobby: online player select (2-3 hours, main editor, mostly art)
+## 1c. Dispatch lobby: materials, then check
 
-The room is its own scene, `Assets/Scenes/Multiplayerlobby.unity`, loaded alongside the menu while Dispatch is up. Code and art are done (`docs/online.md`, Phase 3B). Needs step 1b first (the West Face action), then:
-- **Room scene, one click:** **Tools → Dead on Arrival → Dispatch → Set Up Room Scene**.
-  - It finds `Seat1–4_Spawn`, `Seat1–4_Ticket` and `Podium1–4_Rim` in the lobby model and wires them to a `DispatchRoom` on the model.
-  - It uses the model's own `Camera` (else Main Camera):
-    - depth 10 or more, so it covers the players' views;
-    - it doesn't render the menu layers.
-  - It turns the scene's other cameras off and removes its Audio Listeners (the menu has its own).
-  - It also does the room's look (matching the W3 mockup):
-    - scales the model to 0.4, so the scooters are the right size on the podiums (`DispatchLobbyBuilder.ROOM_SCALE`);
-    - frames its own camera between the top row (wordmark, pills) and the bottom prompts;
-    - hides Blender's default `Cube` and `Light`;
-    - adds a spotlight over each podium, dims the scene's Directional Light, and dims the backdrop (walls, floor, board, props) to 65% at runtime (`DispatchRoom.BACKDROP`).
-  - It saves the scene and adds it to Build Settings.
-  - Run it again after changing the model.
-- **Board UI, one click:** **Tools → Dead on Arrival → Dispatch → Build Board In Menu Scene**.
-  - It builds the `Dispatch Board` canvas in `Alex Player Testing`:
-    - wordmark, ready and matchmaking pills;
-    - 4 tickets with the Dispatch art;
-    - the banner;
-    - the A / X / Y / B prompts;
-    - the Fill prompt;
-    - a `Flash` animator (`Assets/Animations/Dispatch`).
-  - It wires `Player Select Canvas`'s **Player Views** (`Player 1–4 Cam`). Dispatch hides them, except your own while the sliders are open.
-  - It also wires what Dispatch hides so the room shows: the old lobby's backgrounds, icons and dividers, and the title screen's `Main Menu Canvas` (its drawing only).
-  - Running it again replaces the old board.
-- **Profile pictures and the clock:** Set Up Room Scene adds a `SeatN_Avatar` empty under each podium and a `RoomClock` on the model (wired to `Clock_Hour` and `Clock_Minute`). Build Board adds the 4 picture frames. Re-run both after updating.
-- **What happens at runtime:**
-  - The tickets sit over the board's `SeatN_Ticket` empties, as the room camera sees them.
-  - The scooters stand on `SeatN_Spawn`.
-  - Each `PodiumN_Rim` glows in its seat's company colour.
-  - Leave **Dispatch Seats** on `PlayerInstantiate` empty: the room scene gives them.
-- **Check in the room scene:**
-  - Seat 1 is on the camera's left.
-  - The camera frames the board and all 4 podiums.
-  - The room's lights are spot or point lights. A Directional Light there also lights the menu while the room is loaded: turn it off or delete it.
-- **If menu scenery shows in the room camera:** move the lobby model's root far away (for example y +2000). Everything moves with it.
+The room scene and the board are set up (`DispatchRoom`, `RoomClock`, the board and the build entry are in; the menu's spare lobby model is gone).
 - **Materials:** set the model's materials to the menu's toon shader, or extract them (Materials → Extract Materials). The cork, wood, wall and floor textures (`Assets/Textures/Dispatch`) are already linked.
-- **Art scripts:** re-run `tools/dispatch-art.py` or `tools/dispatch-room.py` after changing them (the GUIDs stay). Ticket text is `#2A1A3A`, the stamp `#D81B3C`.
-- **`displayName`:** filled in on the colour and hat assets (Purple, Red, Green, Yellow, Blue, Orange; Baseball Cap … Trapper Hat). Rename them there if you like.
-- **The menu scene has a copy of the `MultiplayerLobby` model** (dragged in at some point): delete it. The room is its own scene.
 - **Optional:** a short celebration animation on the ghost when a player clocks in.
 - **Check:**
   - Online Play opens Dispatch, with no invite window; Y opens it.
@@ -93,9 +47,8 @@ The room is its own scene, `Assets/Scenes/Multiplayerlobby.unity`, loaded alongs
   - A second pad can't join online.
   - Local Play's player select is unchanged.
 
-## 2. Phases 5A and 3J: import, then check (40 minutes)
+## 2. Phases 5A and 3J: check (40 minutes)
 
-- **Import:** click into the main editor, then the ParrelSync clone. The patched Steam transport changed again (`Packages/.../CHANGES-DOA.md` items 6 and 7). No scene or prefab changes. The Console should end with no red errors.
 - **Joining:** in player select, press keys other than Space and Enter: no player appears, and the hint says to press Space. A controller still joins on any button, the keyboard on Space or Enter.
 - **Fullscreen:** with exclusive fullscreen on (`settings.cfg`), finish a match and return to the menu: no flicker.
 - **Bumps, in two editors:** drive into the other editor's scooter without boosting. It's pushed away in that editor too (a round trip later). If the push feels too weak or too strong, change `BumpRules.MAX_SPEED` (a bump that fast pushes as hard as a clash).
@@ -109,11 +62,6 @@ The room is its own scene, `Assets/Scenes/Multiplayerlobby.unity`, loaded alongs
 - **Two PCs over Steam, optional:** two players on each PC, playing together.
 - **Phase 5B, in two editors:** start a match just as a client's second controller joins player select: its player never flashes up in the match on either editor.
 
-## 3. Let both editors import Phases 4C and 4D (2 minutes)
-
-- Click into the **main editor**, then into the **ParrelSync clone**. The Package Manager re-resolves once: the Steam transport is now a copy inside the project (`Packages/com.community.netcode.transport.steamnetworkingsockets`, patched; see `docs/online-safety.md`). No scene or prefab changes.
-- The Console should end with no red errors.
-
 ## 4. Measure the frame rate, then the editor changes (30–60 minutes)
 
 - **A first number:** play a 4-player match (F1 three times in player select), press F6, drive for a minute, and note the FPS and 1% low at High, then at Medium (F4). In a build, the same numbers are in `Player.log` as `Perf:` lines every 30 s.
@@ -126,21 +74,12 @@ The room is its own scene, `Assets/Scenes/Multiplayerlobby.unity`, loaded alongs
   - Prefabs: animator culling; the compass on its own Canvas; static scenery and an occlusion rebake per scene.
 - **For 120 FPS** you need a 120 Hz+ monitor, or `vsync=0` in `settings.cfg`.
 
-## 5. Online safety checks (15 minutes)
+## 5. Online safety checks (10 minutes)
 
-- **Unity Hub:** confirm the editor is 2022.3.62f3 or later (Unity's October 2025 runtime advisory, CVE-2025-59489, is fixed from 62f2). Rebuild any build made before.
 - **Two PCs over Steam** (`docs/online.md`, Two PCs over Steam):
   - A friend joins through the invite as before, and the match plays normally.
   - Steam's overlay network view (Shift+Tab, then the connection info) shows the connection as relayed, not direct.
   - Optional: a third Steam account that isn't in the lobby can't connect.
-
-## 6. Let both editors import Phase 1C (1 minute)
-
-- Click into the **main editor**, then into the **ParrelSync clone**. No scene or prefab changes:
-  - New scripts: `DisplayRules`, `DisplaySettings`, `KeyboardControls`.
-  - Changed: `GameSettings`, `OptionsMenu`, `PlayerInstantiate`, `ControllerPrompts`.
-  - New tests: `DisplayRulesTests`, `KeyboardControlsTests`, `KeyboardPlayerTests`.
-- The Console should end with no red errors.
 
 ## 7. Keyboard and display settings (15 minutes)
 
@@ -221,19 +160,8 @@ The room is its own scene, `Assets/Scenes/Multiplayerlobby.unity`, loaded alongs
 - Community → Rich Presence: upload `docs/steam/rich-presence-english.vdf`.
 - Store page and tags: `docs/steam/store-page-draft.md`. Steam Deck: `docs/steam/steam-deck.md`.
 
-## 16. When there's art
-
-- Options rows for the display settings (screen size, borderless or exclusive, VSync, frame cap), and for Quality. The code reads and saves them already: wire each row's selector like the existing rows (`OptionsMenu`).
-- Keyboard button prompts (Space, Backspace, Escape), and PlayStation/Nintendo button prompts. The code that swaps them is ready (`ButtonGlyph`):
-  - Add a **Button Glyph** component to each prompt Image. Today `MenUI_Buttons.png` is used 5 times: 3 in `Alex Player Testing` (one may be a prefab override), and 1 each in `Menu Canvas.prefab` and `Loading Screen World Canvas.prefab`. New Dispatch prompts get one too.
-  - Fill in **PlayStation**, **Nintendo** and **Keyboard** with the new art. Leave **Xbox** empty: it takes the Image's current sprite.
-  - Empty slots fall back to Xbox, so adding the component before the art exists changes nothing.
-  - Inside a player's hierarchy, a prompt follows that player's controller. Elsewhere it follows whichever device was used last.
-  - With Steam Input on, Steam turns every pad into an Xbox pad, so the prompts stay Xbox (fine on the Steam Deck).
-
 ## 17. Reference
 
-- Committed on `steam-phase1a` up to Phase 1C (`8ce31e85`). Not committed: Phase 4C (online safety) and Phase 4D (frame rate). Suggested titles: "Phase 4C: online safety", "Phase 4D: frame rate" (or one commit for both).
 - Frame rate: `docs/performance.md`.
 - Online safety: `docs/online-safety.md`.
 - How the keyboard and display settings work: `docs/controls.md`. Steam features: `docs/steam/in-game-features.md`.
