@@ -87,6 +87,31 @@ namespace DoA.Tests
         }
 
         [Test]
+        public void ACard_SitsOverItsScoresText_AndNamesItsPlayer()
+        {
+            // The results' scores are left-aligned in boxes far wider than "$975": cards centred on the box sat over the
+            // next player's score (playtest, 2026-10-24: whose award it was wasn't clear)
+            TMP_Text[] scores = Scores(1, out Transform canvas);
+            RectTransform box = scores[0].rectTransform;
+            box.sizeDelta = new Vector2(771, 47);
+            box.localScale = Vector3.one * 1.778f;
+            box.anchoredPosition = new Vector2(495, -422);
+            scores[0].alignment = TextAlignmentOptions.Left;
+            scores[0].text = "$975";
+            ResultsAwardsView view = ResultsAwardsView.Build(canvas, scores);
+
+            view.Show(Board(), new[] { 0 });
+
+            float textWidth = scores[0].GetPreferredValues("$975").x;
+            float textMiddle = box.anchoredPosition.x + (box.rect.xMin + textWidth / 2f) * box.localScale.x;
+            RectTransform card = (RectTransform)view.CardOf(0).transform;
+            Assert.AreEqual(textMiddle, card.anchoredPosition.x, 1f, "over the text, not the box's middle");
+            Assert.Less(card.anchoredPosition.x, box.anchoredPosition.x, "the text is in the box's left part");
+            Assert.Greater(card.anchoredPosition.y, box.anchoredPosition.y, "above the score");
+            Assert.AreEqual("P1", Text(view, 0, "Player"));
+        }
+
+        [Test]
         public void ACard_IsSizedInTheCanvas_NotScaledUpWithItsScore()
         {
             TMP_Text[] scores = Scores(1, out Transform canvas);

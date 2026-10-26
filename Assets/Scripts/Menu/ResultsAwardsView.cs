@@ -4,9 +4,10 @@ using UnityEngine.UI;
 
 /// <summary>
 /// The end-of-match award cards on the results screen, built by code (no prefab edits): one above each player's score,
-/// the award's joke name over its plain count (AwardRules), in the scores' font. Each card sits beside its score, not
-/// under it, so it's sized in the canvas: the scores are drawn scaled up, and cards that grew with them overlapped
-/// their neighbours. The scores are in finishing order, so each card is told which seat its score shows. Awards that
+/// the player it's for, then the award's joke name over its plain count (AwardRules), in the scores' font. Each card sits
+/// beside its score, not under it, so it's sized in the canvas: the scores are drawn scaled up, and cards that grew with
+/// them overlapped their neighbours. It sits over the score's text, which is left-aligned in a far wider box: a card
+/// centred on the box sat over the next player's score (playtest, 2026-10-24). The scores are in finishing order, so each card is told which seat its score shows. Awards that
 /// arrive after the scores are up still show (Follow). See docs/superpowers/specs/2026-10-24-awards-design.md
 /// </summary>
 public class ResultsAwardsView : MonoBehaviour
@@ -19,6 +20,8 @@ public class ResultsAwardsView : MonoBehaviour
     static readonly Color GOLD = new Color(1f, 0.82f, 0.25f);
 
     GameObject[] cards;
+    TMP_Text[] scores;
+    TMP_Text[] players; // whose award: P1 ... in their score's colour
     TMP_Text[] names;
     TMP_Text[] lines;
     int[] following; // the seats Follow shows, while it listens
@@ -33,6 +36,8 @@ public class ResultsAwardsView : MonoBehaviour
         TMP_FontAsset font = scores.Length > 0 && scores[0] != null ? scores[0].font : null;
 
         view.cards = new GameObject[scores.Length];
+        view.scores = scores;
+        view.players = new TMP_Text[scores.Length];
         view.names = new TMP_Text[scores.Length];
         view.lines = new TMP_Text[scores.Length];
         for (int i = 0; i < scores.Length; i++)
@@ -48,10 +53,6 @@ public class ResultsAwardsView : MonoBehaviour
             rect.anchorMin = score.anchorMin;
             rect.anchorMax = score.anchorMax;
             rect.pivot = new Vector2(0.5f, 0f);
-            // Just above the score's top edge, in the parent's units
-            float scoreTop = score.rect.height * (1f - score.pivot.y) * score.localScale.y;
-            rect.anchoredPosition = score.anchoredPosition + new Vector2(
-                score.rect.width * (0.5f - score.pivot.x) * score.localScale.x, scoreTop + ABOVE_SCORE);
 
             Image back = card.GetComponent<Image>();
             back.color = CARD;
@@ -64,12 +65,42 @@ public class ResultsAwardsView : MonoBehaviour
             ContentSizeFitter fit = card.AddComponent<ContentSizeFitter>();
             fit.horizontalFit = fit.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
 
+            view.players[i] = Text(card.transform, "Player", font, LINE_SIZE, scores[i].color);
             view.names[i] = Text(card.transform, "Name", font, NAME_SIZE, GOLD);
             view.lines[i] = Text(card.transform, "Line", font, LINE_SIZE, Color.white);
             card.SetActive(false);
             view.cards[i] = card;
+            view.PlaceOver(i);
         }
         return view;
+    }
+
+    // Just above the score's text, in the parent's units. The scores' text changes after the cards are made, so they
+    // follow it (LateUpdate)
+    void PlaceOver(int i)
+    {
+        RectTransform score = scores[i].rectTransform;
+        // The text lays out inside its margins: the scene's scores keep a wide right margin
+        Rect box = score.rect;
+        Vector4 margin = scores[i].margin;
+        box.xMin += margin.x;
+        box.xMax -= margin.z;
+        box.yMax -= margin.y;
+        float width = Mathf.Min(scores[i].GetPreferredValues(scores[i].text).x, box.width);
+        float middle = scores[i].horizontalAlignment == HorizontalAlignmentOptions.Left ? box.xMin + width / 2f
+            : scores[i].horizontalAlignment == HorizontalAlignmentOptions.Right ? box.xMax - width / 2f
+            : box.center.x;
+        Vector2 top = new Vector2(middle * score.localScale.x, box.yMax * score.localScale.y);
+        ((RectTransform)cards[i].transform).anchoredPosition = score.anchoredPosition + top + new Vector2(0f, ABOVE_SCORE);
+    }
+
+    void LateUpdate()
+    {
+        for (int i = 0; i < cards.Length; i++)
+        {
+            if (cards[i] != null && cards[i].activeSelf)
+                PlaceOver(i);
+        }
     }
 
     /// <summary>The card over a score (finishing order); tests</summary>
@@ -88,6 +119,8 @@ public class ResultsAwardsView : MonoBehaviour
             int seat = seatOfScore != null && i < seatOfScore.Length ? seatOfScore[i] : -1;
             Award award = board.AwardOf(seat);
             cards[i].SetActive(award != Award.None);
+            players[i].text = seat >= 0 ? "P" + (seat + 1) : "";
+            PlaceOver(i);
             names[i].text = AwardRules.Name(award);
             lines[i].text = AwardRules.Line(award, board.CountOf(seat));
         }
