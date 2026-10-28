@@ -148,6 +148,39 @@ namespace DoA.Tests
         }
 
         [Test]
+        public void BoostToHit_CloseAndLinedUp_Only()
+        {
+            Assert.IsTrue(BotTactics.BoostToHit(5f, 8f));
+            Assert.IsTrue(BotTactics.BoostToHit(-5f, 8f));
+            Assert.IsFalse(BotTactics.BoostToHit(30f, 8f), "not lined up");
+            Assert.IsFalse(BotTactics.BoostToHit(5f, 20f), "too far");
+        }
+
+        [Test]
+        public void Dodge_NoThreats_AimUnchanged()
+        {
+            Vector3 aim = new Vector3(0, 0, 20);
+
+            Assert.AreEqual(aim, BotTactics.Dodge(Vector3.zero, aim, new List<Vector3>()));
+        }
+
+        [Test]
+        public void Dodge_ThreatOnTheRight_AimMovesLeft()
+        {
+            Vector3 dodged = BotTactics.Dodge(Vector3.zero, new Vector3(0, 0, 20), new List<Vector3> { new Vector3(5, 0, 10) });
+
+            Assert.Less(dodged.x, 0f);
+        }
+
+        [Test]
+        public void Dodge_FarThreat_Ignored()
+        {
+            Vector3 aim = new Vector3(0, 0, 20);
+
+            Assert.AreEqual(aim, BotTactics.Dodge(Vector3.zero, aim, new List<Vector3> { new Vector3(40, 0, 0) }));
+        }
+
+        [Test]
         public void ChaseSeconds_LongerWhenDesperate_ShorterWhenLeading()
         {
             BotSituation level = Level(BotKind.Thief);

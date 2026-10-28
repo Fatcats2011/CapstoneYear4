@@ -111,6 +111,38 @@ public static class BotTactics
         return best;
     }
 
+    /// <summary>Boost-to-hit: within this many degrees of the victim...</summary>
+    public const float HIT_ANGLE = 20f;
+    /// <summary>...and this close, in metres, the boost carries it into them</summary>
+    public const float HIT_DISTANCE = 12f;
+    /// <summary>The courier swerves from boosting rivals this close, in metres</summary>
+    public const float DANGER_RADIUS = 15f;
+
+    /// <summary>Whether a chasing bot boosts into its victim now: lined up (bearing in degrees) and close (metres)</summary>
+    public static bool BoostToHit(float bearing, float distance)
+    {
+        return Mathf.Abs(bearing) <= HIT_ANGLE && distance <= HIT_DISTANCE;
+    }
+
+    /// <summary>
+    /// The courier's swerve: its aim pushed away from each threat (a boosting rival) within DANGER_RADIUS on the ground,
+    /// more the closer the threat (DANGER_RADIUS metres at contact). Height ignored
+    /// </summary>
+    public static Vector3 Dodge(Vector3 position, Vector3 aim, IReadOnlyList<Vector3> threats)
+    {
+        Vector3 push = Vector3.zero;
+        for (int i = 0; i < threats.Count; i++)
+        {
+            Vector3 away = position - threats[i];
+            away.y = 0f;
+            float distance = away.magnitude;
+            if (distance >= DANGER_RADIUS || distance < 1e-4f)
+                continue;
+            push += away / distance * (DANGER_RADIUS - distance);
+        }
+        return aim + push;
+    }
+
     /// <summary>How long it chases one victim, in seconds: longer desperate, half as long leading</summary>
     public static float ChaseSeconds(BotSituation s)
     {
