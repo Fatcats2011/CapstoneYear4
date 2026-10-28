@@ -288,8 +288,65 @@ namespace DoA.Tests
         [Test]
         public void Sane_RejectsATooLongReel()
         {
-            Assert.IsFalse(NetChecks.Sane(Broken((ref ReelList l) => l.Length = 30.5f)));
-            Assert.IsTrue(NetChecks.Sane(Broken((ref ReelList l) => l.Length = 30f)));
+            // Clips of 8 s each (their real length too), so the length can match what they take: 4 x 8 = 32 s
+            Assert.IsFalse(NetChecks.Sane(Broken((ref ReelList l) =>
+            {
+                l.Clips = new[] { Longer(10), Longer(30), Longer(50), Longer(70) };
+                l.Length = 32f;
+            })));
+            Assert.IsTrue(NetChecks.Sane(Broken((ref ReelList l) =>
+            {
+                l.Clips = new[] { Longer(10), Longer(30), Longer(50) };
+                l.Length = 24f;
+            })));
+        }
+
+        static ReelClip Longer(double start)
+        {
+            ReelClip clip = AClip(start);
+            clip.End = start + 8.0;
+            clip.Shots = new[] { AShot(ShotKind.Low, start, 1f) };
+            return clip;
+        }
+
+        [Test]
+        public void Sane_RejectsAClipRunningOverTwelveSeconds()
+        {
+            Assert.IsFalse(NetChecks.Sane(Broken((ref ReelList l) => l.Clips[0].End = l.Clips[0].Start + 1e9)), "a billion seconds");
+            Assert.IsFalse(NetChecks.Sane(Broken((ref ReelList l) =>
+            {
+                l.Clips[0].End = l.Clips[0].Start + 12.5;
+                l.Clips[0].Shots = new[] { AShot(ShotKind.Low, l.Clips[0].Start, 1f) };
+                l.Length = l.Clips[0].RealLength + l.Clips[1].RealLength;
+            })), "12.5 s, even with a matching length");
+            Assert.IsTrue(NetChecks.Sane(Broken((ref ReelList l) =>
+            {
+                l.Clips[0].End = l.Clips[0].Start + 12.0;
+                l.Clips[0].Shots = new[] { AShot(ShotKind.Low, l.Clips[0].Start, 1f) };
+                l.Length = l.Clips[0].RealLength + l.Clips[1].RealLength;
+            })), "12 s is allowed");
+        }
+
+        [Test]
+        public void Sane_RejectsALengthThatIsNotWhatTheClipsTake()
+        {
+            Assert.IsFalse(NetChecks.Sane(Broken((ref ReelList l) => l.Length -= 0.1f)), "shorter than the clips");
+            Assert.IsFalse(NetChecks.Sane(Broken((ref ReelList l) => l.Length += 0.1f)), "longer than the clips");
+            Assert.IsFalse(NetChecks.Sane(Broken((ref ReelList l) => l.Length = 0f)), "none claimed");
+            Assert.IsTrue(NetChecks.Sane(Broken((ref ReelList l) => l.Length += 0.04f)), "within the tolerance");
+        }
+
+        [Test]
+        public void Sane_RejectsAClipsSlowShotsTakingTooLong()
+        {
+            // 12 s at a hundredth of the speed would take 1200 s, however short the claimed length
+            Assert.IsFalse(NetChecks.Sane(Broken((ref ReelList l) =>
+            {
+                l.Clips[0].End = l.Clips[0].Start + 12.0;
+                l.Clips[0].Shots[1].Cut = l.Clips[0].Start;
+                l.Clips[0].Shots[1].Speed = 0.01f;
+                l.Length = 8f;
+            })));
         }
 
         [Test]

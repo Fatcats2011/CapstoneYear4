@@ -92,10 +92,17 @@ public static class NetChecks
     /// <summary>The longest reel a client plays, in real seconds</summary>
     public const float MAX_REEL_LENGTH = 30f;
 
+    /// <summary>The longest a reel clip's recorded stretch can be (merged clips go past 6 s)</summary>
+    public const double MAX_CLIP_SPAN = 12.0;
+
+    /// <summary>How far a reel's length may be from what its clips take to play</summary>
+    public const double LENGTH_TOLERANCE = 0.05;
+
     /// <summary>
     /// The host's highlight reel: no missing arrays, no more clips or shots than the reel allows, times and places that
     /// are finite, clips that run forwards, seats 0-3 only, enum values the game knows, a length a reel can have and a
-    /// playback speed above 0 and at most 1
+    /// playback speed above 0 and at most 1. A clip runs at most MAX_CLIP_SPAN seconds, and the length is what the clips
+    /// take to play (within LENGTH_TOLERANCE), so no list can hold a client's players hidden for long
     /// </summary>
     public static bool Sane(ReelList reel)
     {
@@ -109,6 +116,8 @@ public static class NetChecks
             if (clip.Shots == null || clip.Shots.Length > ReelList.MAX_SHOTS)
                 return false;
             if (!Finite(clip.Start) || !Finite(clip.End) || !Finite(clip.KeyTime) || !Finite(clip.TimeLeftAtStart) || clip.Start >= clip.End)
+                return false;
+            if (clip.End - clip.Start > MAX_CLIP_SPAN)
                 return false;
             if ((clip.SeatsMask & ~0b1111) != 0 || !Defined(clip.Caption))
                 return false;
@@ -125,7 +134,11 @@ public static class NetChecks
                     return false;
             }
         }
-        return true;
+
+        double played = 0;
+        foreach (ReelClip clip in reel.Clips)
+            played += clip.RealSeconds;
+        return played <= MAX_REEL_LENGTH && Math.Abs(played - reel.Length) <= LENGTH_TOLERANCE;
     }
 
     static bool Within(float value)

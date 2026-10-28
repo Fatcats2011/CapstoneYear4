@@ -30,6 +30,9 @@ public class HighlightDirector : MonoBehaviour
     /// <summary>Seconds after it's picked that the reel starts, so the list can reach every machine first</summary>
     internal const float START_DELAY = 0.5f;
 
+    /// <summary>How far ahead of the game's clock a client accepts a reel's start; further is nonsense that would hold the first frame</summary>
+    internal const double MAX_LEAD = 5.0;
+
     public static HighlightDirector Instance { get; private set; }
 
     /// <summary>Every seat's samples in the round being played (null before the first)</summary>
@@ -65,7 +68,7 @@ public class HighlightDirector : MonoBehaviour
     bool listening;
     bool active; // a main round is being recorded
     float sinceSample;
-    HighlightReel clientReel; // the host's reel, playing here (a client)
+    bool clientPlayed; // a client has played the host's reel this round
 
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
     static void ResetStatics()
@@ -187,6 +190,7 @@ public class HighlightDirector : MonoBehaviour
     void StartRound()
     {
         Moments.Clear();
+        clientPlayed = false;
         seats.Clear();
         FindSeats(seats);
 
@@ -279,20 +283,20 @@ public class HighlightDirector : MonoBehaviour
     /// <summary>
     /// Client: the host's reel list arrived. While the main round is up it plays from where its start time puts it,
     /// without deciding the skip (votes go to the host); late, it joins at the same moment as the rest, and a reel
-    /// already over plays nothing. It ends with the scene when the host loads the next. The host never plays what it shares
+    /// already over plays nothing. One reel a round; nothing starting more than MAX_LEAD ahead. It ends with the scene when the host loads the next. The host never plays what it shares
     /// </summary>
     internal void OnReelArrived(ReelList list)
     {
         if (GameAuthority.IsAuthority || Recording == null || !InMainRound())
             return;
-        if (clientReel != null && !clientReel.Done)
-            return;
-        if (double.IsPositiveInfinity(HighlightReel.StartClock(list, Now())))
+        double now = Now();
+        if (clientPlayed || list.StartAt > now + MAX_LEAD || double.IsPositiveInfinity(HighlightReel.StartClock(list, now)))
             return;
 
+        clientPlayed = true; // one reel a round, whatever else arrives
         try
         {
-            clientReel = PlayReel(list, Recording, false);
+            PlayReel(list, Recording, false);
         }
         catch (Exception e)
         {
@@ -341,6 +345,7 @@ public class HighlightDirector : MonoBehaviour
     internal void NewMatch()
     {
         active = false;
+        clientPlayed = false;
         Recording?.Clear();
         Moments.Clear();
     }

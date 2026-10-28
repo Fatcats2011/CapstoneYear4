@@ -638,6 +638,60 @@ namespace DoA.Tests
         }
 
         [UnityTest]
+        public IEnumerator Client_ArrivedList_StartingFarAhead_PlaysNothing()
+        {
+            yield return InTheMenu();
+            yield return OnePlayer();
+            HighlightDirector director = ClientWithARecording();
+            inTheRound = true;
+
+            director.OnReelArrived(StartingIn(HighlightDirector.MAX_LEAD + 60));
+
+            Assert.IsNull(played);
+            GameAuthority.Role = NetworkRole.Offline;
+        }
+
+        [UnityTest]
+        public IEnumerator Client_SecondListInTheRound_PlaysNothing_EvenAfterTheFirstIsDone()
+        {
+            yield return InTheMenu();
+            yield return OnePlayer();
+            HighlightDirector director = ClientWithARecording();
+            inTheRound = true;
+
+            director.OnReelArrived(StartingIn(5));
+            Assert.IsNotNull(played);
+            played.End();
+            yield return null;
+            played = null;
+            director.OnReelArrived(StartingIn(5));
+            Assert.IsNull(played, "one reel a round");
+
+            director.OnStateApplied(GameState.Begin); // the next round's waves
+            director.OnReelArrived(StartingIn(5));
+            Assert.IsNotNull(played, "a new round plays again");
+            played.End();
+            GameAuthority.Role = NetworkRole.Offline;
+        }
+
+        [UnityTest]
+        public IEnumerator Arrive_ReachesTheClientsDirector()
+        {
+            yield return InTheMenu();
+            yield return OnePlayer();
+            HighlightDirector director = ClientWithARecording();
+            director.End(); // as a fresh launch: the tests above may have reset the seam's listeners
+            director.Begin();
+            inTheRound = true;
+
+            HighlightSync.Arrive(StartingIn(5));
+
+            Assert.IsNotNull(played, "HighlightSync.Arrive plays the reel");
+            played.End();
+            GameAuthority.Role = NetworkRole.Offline;
+        }
+
+        [UnityTest]
         public IEnumerator Client_TwoListsArrive_OnlyTheFirstPlays()
         {
             yield return InTheMenu();
