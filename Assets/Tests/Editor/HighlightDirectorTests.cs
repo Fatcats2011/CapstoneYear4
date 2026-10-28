@@ -52,7 +52,7 @@ namespace DoA.Tests
         [Test]
         public void Sample_RecordsEverySeatsPoseAndFlags()
         {
-            director.OnStateApplied(GameState.MainLoop);
+            director.OnStateApplied(GameState.Begin);
 
             director.Sample(10.0);
 
@@ -66,9 +66,9 @@ namespace DoA.Tests
         }
 
         [Test]
-        public void Struck_DuringMainLoop_OnAuthority_AddsASteal()
+        public void Struck_DuringTheRound_OnAuthority_AddsASteal()
         {
-            director.OnStateApplied(GameState.MainLoop);
+            director.OnStateApplied(GameState.Begin);
             double before = HighlightDirector.Now();
 
             FeatSync.Strike(1, 0, true, false);
@@ -85,9 +85,92 @@ namespace DoA.Tests
         }
 
         [Test]
+        public void TheRealFlow_StartingCutscene_MainLoop_Tutorial_Begin_RecordsAndLogs()
+        {
+            director.OnStateApplied(GameState.StartingCutscene);
+            director.OnStateApplied(GameState.MainLoop);
+            director.OnStateApplied(GameState.Tutorial);
+            FeatSync.Sink(0);
+            Assert.AreEqual(0, director.Moments.Count, "nothing before Begin");
+
+            director.OnStateApplied(GameState.Begin);
+            director.Sample(5.0);
+            FeatSync.Sink(0);
+
+            Assert.IsTrue(director.Recording.TryGet(1, 5.0, out _));
+            Assert.AreEqual(1, director.Moments.Count);
+        }
+
+        [Test]
+        public void ARematch_Tutorial_Begin_RecordsAndLogs()
+        {
+            director.OnStateApplied(GameState.Tutorial);
+            director.OnStateApplied(GameState.Begin);
+
+            director.Sample(5.0);
+            FeatSync.Sink(1);
+
+            Assert.IsTrue(director.Recording.TryGet(0, 5.0, out _));
+            Assert.AreEqual(1, director.Moments.Count);
+        }
+
+        [Test]
+        public void MainLoopAfterBegin_IsNotTheRound()
+        {
+            director.OnStateApplied(GameState.Begin);
+            director.OnStateApplied(GameState.MainLoop);
+
+            FeatSync.Sink(0);
+
+            Assert.AreEqual(0, director.Moments.Count);
+        }
+
+        static void Raise(OrderManager orders)
+        {
+            // The event has no public raiser; its backing field is the delegate
+            var field = typeof(OrderManager).GetField("OnMainGameFinishes", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic);
+            ((Action)field.GetValue(orders))?.Invoke();
+        }
+
+        OrderManager NewOrders()
+        {
+            GameObject holder = objects.NewGameObject("Orders");
+            holder.SetActive(false); // its OnEnable needs the game's managers, which these tests haven't got
+            return holder.AddComponent<OrderManager>();
+        }
+
+        [Test]
+        public void Hook_FollowsOnlyTheLatestOrderManager()
+        {
+            OrderManager first = NewOrders();
+            OrderManager second = NewOrders();
+            director.OnStateApplied(GameState.Begin);
+
+            director.Hook(first);
+            director.Hook(second);
+            Raise(first);
+            FeatSync.Sink(0);
+            Assert.AreEqual(1, director.Moments.Count, "the first manager no longer ends the round");
+
+            Raise(second);
+            FeatSync.Sink(0);
+            Assert.AreEqual(1, director.Moments.Count, "the second one does");
+        }
+
+        [Test]
+        public void Hook_Null_AfterTheManagerIsDestroyed_DoesNotThrow()
+        {
+            OrderManager orders = NewOrders();
+            director.Hook(orders);
+            UnityEngine.Object.DestroyImmediate(orders.gameObject);
+
+            Assert.DoesNotThrow(() => director.Hook(null));
+        }
+
+        [Test]
         public void EachEvent_BecomesItsKindOfMoment()
         {
-            director.OnStateApplied(GameState.MainLoop);
+            director.OnStateApplied(GameState.Begin);
 
             FeatSync.Strike(0, 1, true, true);
             FeatSync.Strike(0, 1, false, false);
@@ -114,7 +197,7 @@ namespace DoA.Tests
         public void Events_OnAClient_AddNoMoments()
         {
             GameAuthority.Role = NetworkRole.Client;
-            director.OnStateApplied(GameState.MainLoop);
+            director.OnStateApplied(GameState.Begin);
 
             FeatSync.Strike(1, 0, true, false);
             FeatSync.Sink(0);
@@ -136,7 +219,7 @@ namespace DoA.Tests
         [Test]
         public void Events_InTheGoldenRound_AddNoMoments()
         {
-            director.OnStateApplied(GameState.MainLoop);
+            director.OnStateApplied(GameState.Begin);
             director.OnStateApplied(GameState.FinalPackage);
 
             FeatSync.Strike(1, 0, true, false);
@@ -147,7 +230,7 @@ namespace DoA.Tests
         [Test]
         public void MainGameFinishes_StopsSampling_AndLogging()
         {
-            director.OnStateApplied(GameState.MainLoop);
+            director.OnStateApplied(GameState.Begin);
             director.Sample(1.0);
 
             director.MainGameFinishes();
@@ -162,7 +245,7 @@ namespace DoA.Tests
         [Test]
         public void NewMatch_ClearsRecordingAndMoments()
         {
-            director.OnStateApplied(GameState.MainLoop);
+            director.OnStateApplied(GameState.Begin);
             director.Sample(1.0);
             FeatSync.Sink(0);
 
@@ -173,34 +256,34 @@ namespace DoA.Tests
         }
 
         [Test]
-        public void EnteringMainLoop_StartsFresh()
+        public void EnteringBegin_StartsFresh()
         {
-            director.OnStateApplied(GameState.MainLoop);
+            director.OnStateApplied(GameState.Begin);
             director.Sample(1.0);
             FeatSync.Sink(0);
 
-            director.OnStateApplied(GameState.MainLoop);
+            director.OnStateApplied(GameState.Begin);
 
             Assert.IsFalse(director.Recording.TryGet(0, 1.0, out _));
             Assert.AreEqual(0, director.Moments.Count);
         }
 
         [Test]
-        public void MainLoop_Offline_PutsABumpWatcherOnEveryBall_Once()
+        public void Begin_Offline_PutsABumpWatcherOnEveryBall_Once()
         {
-            director.OnStateApplied(GameState.MainLoop);
-            director.OnStateApplied(GameState.MainLoop);
+            director.OnStateApplied(GameState.Begin);
+            director.OnStateApplied(GameState.Begin);
 
             foreach (BallDriving scooter in scooters)
                 Assert.AreEqual(1, scooter.Sphere.GetComponents<BumpWatcher>().Length);
         }
 
         [Test]
-        public void MainLoop_Online_AddsNoBumpWatcher()
+        public void Begin_Online_AddsNoBumpWatcher()
         {
             GameAuthority.Role = NetworkRole.Host;
 
-            director.OnStateApplied(GameState.MainLoop);
+            director.OnStateApplied(GameState.Begin);
 
             foreach (BallDriving scooter in scooters)
                 Assert.AreEqual(0, scooter.Sphere.GetComponents<BumpWatcher>().Length);
@@ -209,7 +292,7 @@ namespace DoA.Tests
         [Test]
         public void Sample_AllocatesNothing()
         {
-            director.OnStateApplied(GameState.MainLoop);
+            director.OnStateApplied(GameState.Begin);
             director.Sample(0.5); // warms it up
 
             long before = GC.GetAllocatedBytesForCurrentThread();

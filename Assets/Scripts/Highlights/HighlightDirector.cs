@@ -8,7 +8,7 @@ using UnityEngine.Profiling;
 /// The highlight reel on this machine, once per launch. Through the main round it records every seat's scooter
 /// (ReelRecording), and where the rules run (this PC offline, the host online) it logs what the game raises (FeatSync:
 /// strikes, bumps, deliveries, falls) as moments for the rules to pick clips from (HighlightRules). An online client logs
-/// none: it can only replay clips of what the host picked. Recording starts as the main round does, and stops when its
+/// none: it can only replay clips of what the host picked. Recording starts as the main round's waves do (state Begin), and stops when its
 /// time is up (OrderManager.OnMainGameFinishes, which is the scene's, so it is hooked afresh each game scene). A new
 /// match forgets the last round. Made once the first scene has loaded, as MatchAwards.
 /// See docs/superpowers/specs/2026-10-28-highlight-reel-design.md
@@ -23,11 +23,8 @@ public class HighlightDirector : MonoBehaviour
         public OrderHandler Handler;
     }
 
-    /// <summary>Samples kept per seat when the round's length isn't known: 10 minutes</summary>
-    const int FALLBACK_CAPACITY = 12000;
-
-    /// <summary>Seconds kept beyond the round's length, for the linger at its end</summary>
-    const float SPARE_SECONDS = 30f;
+    /// <summary>Samples kept per seat: 10 minutes. A ring, so a longer round keeps its latest stretch</summary>
+    const int CAPACITY = 12000;
 
     public static HighlightDirector Instance { get; private set; }
 
@@ -45,9 +42,6 @@ public class HighlightDirector : MonoBehaviour
 
     /// <summary>How long is left of the round now; tests swap it</summary>
     internal Func<float> TimeLeft = RoundTimeLeft;
-
-    /// <summary>The round's length in seconds, or 0 when unknown; tests swap it</summary>
-    internal Func<float> RoundLength = () => 0f;
 
     readonly List<Seat> seats = new List<Seat>();
     GameManager watched; // the game manager whose states this follows
@@ -169,16 +163,14 @@ public class HighlightDirector : MonoBehaviour
         Profiler.EndSample();
     }
 
-    /// <summary>The main round starts: a fresh recording of every seat, and a bump watcher on each ball offline</summary>
+    /// <summary>The main round starts (Begin): a fresh recording of every seat, and a bump watcher on each ball offline</summary>
     void StartRound()
     {
         Moments.Clear();
         seats.Clear();
         FindSeats(seats);
 
-        float length = RoundLength();
-        int capacity = length > 0f ? Mathf.CeilToInt((length + SPARE_SECONDS) * ReelRecording.SAMPLE_RATE) : FALLBACK_CAPACITY;
-        Recording = new ReelRecording(Mathf.Max(1, capacity));
+        Recording = new ReelRecording(CAPACITY);
         sinceSample = 0f;
         active = true;
 
@@ -228,7 +220,7 @@ public class HighlightDirector : MonoBehaviour
         }
     }
 
-    void Hook(OrderManager orders)
+    internal void Hook(OrderManager orders)
     {
         if (hooked != null)
             hooked.OnMainGameFinishes -= MainGameFinishes;
@@ -237,10 +229,13 @@ public class HighlightDirector : MonoBehaviour
             hooked.OnMainGameFinishes += MainGameFinishes;
     }
 
-    /// <summary>A game state is applied: the main round is recorded, nothing else (not the tutorial or the golden round)</summary>
+    /// <summary>
+    /// A game state is applied. The round is recorded from Begin (when the waves start; MainLoop is only the opening
+    /// cutscene's), nothing else: not the tutorial or the golden round
+    /// </summary>
     internal void OnStateApplied(GameState state)
     {
-        if (state == GameState.MainLoop)
+        if (state == GameState.Begin)
         {
             StartRound();
             Hook(OrderManager.Instance);
