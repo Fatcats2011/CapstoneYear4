@@ -92,8 +92,8 @@ public static class NetChecks
     /// <summary>The longest reel a client plays, in real seconds</summary>
     public const float MAX_REEL_LENGTH = 30f;
 
-    /// <summary>The longest a reel clip's recorded stretch can be (merged clips go past 6 s)</summary>
-    public const double MAX_CLIP_SPAN = 12.0;
+    /// <summary>The longest a reel clip's recorded stretch can be: a merged clip can fill the whole reel (HighlightRules.MAX_REEL)</summary>
+    public const double MAX_CLIP_SPAN = HighlightRules.MAX_REEL;
 
     /// <summary>How far a reel's length may be from what its clips take to play</summary>
     public const double LENGTH_TOLERANCE = 0.05;

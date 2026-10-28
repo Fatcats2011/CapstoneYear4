@@ -310,21 +310,49 @@ namespace DoA.Tests
         }
 
         [Test]
-        public void Sane_RejectsAClipRunningOverTwelveSeconds()
+        public void Sane_RejectsAClipRunningOverTwentySeconds()
         {
             Assert.IsFalse(NetChecks.Sane(Broken((ref ReelList l) => l.Clips[0].End = l.Clips[0].Start + 1e9)), "a billion seconds");
             Assert.IsFalse(NetChecks.Sane(Broken((ref ReelList l) =>
             {
-                l.Clips[0].End = l.Clips[0].Start + 12.5;
+                l.Clips[0].End = l.Clips[0].Start + 20.5;
                 l.Clips[0].Shots = new[] { AShot(ShotKind.Low, l.Clips[0].Start, 1f) };
                 l.Length = l.Clips[0].RealLength + l.Clips[1].RealLength;
-            })), "12.5 s, even with a matching length");
+            })), "20.5 s, even with a matching length");
             Assert.IsTrue(NetChecks.Sane(Broken((ref ReelList l) =>
             {
-                l.Clips[0].End = l.Clips[0].Start + 12.0;
+                l.Clips[0].End = l.Clips[0].Start + 20.0;
                 l.Clips[0].Shots = new[] { AShot(ShotKind.Low, l.Clips[0].Start, 1f) };
                 l.Length = l.Clips[0].RealLength + l.Clips[1].RealLength;
-            })), "12 s is allowed");
+            })), "20 s (the reel's whole length) is allowed");
+        }
+
+        [Test]
+        public void Sane_AcceptsTheHostsOwnLongMergedClip()
+        {
+            // Steals by two pairs of seats take turns, each clip (up to 6 s) overlapping the next: they merge into one of about 15 s
+            var moments = new System.Collections.Generic.List<Moment>();
+            int[][] steals = { new[] { 10, 0, 1 }, new[] { 12, 0, 1 }, new[] { 12, 2, 3 }, new[] { 15, 2, 3 }, new[] { 17, 0, 1 }, new[] { 19, 2, 3 }, new[] { 21, 0, 1 } };
+            foreach (int[] steal in steals)
+                moments.Add(new Moment { Kind = MomentKind.Steal, Time = steal[0], Seat = steal[1], Other = steal[2], TimeLeft = 100f });
+            var recording = new ReelRecording(1000);
+            for (int i = 0; i <= 600; i++)
+            {
+                for (int seat = 0; seat < 4; seat++)
+                {
+                    Vector3 ball = new Vector3(i / 20f * 0.5f, 0f, seat * 3f);
+                    recording.Add(seat, new ReelSample { Time = i / 20.0, Pose = new ScooterPose { Ball = ball, Heading = 90f, ModelPosition = ball, ModelRotation = Quaternion.identity } });
+                }
+            }
+
+            var picked = HighlightRules.Pick(HighlightRules.Clips(moments), new[] { 0, 1, 2, 3 });
+            Assert.AreEqual(1, picked.Count, "one merged clip: " + string.Join(" ", picked.ConvertAll(c => c.Start + "-" + c.End)));
+            Assert.GreaterOrEqual(picked[0].Length, 14.0, "a long one");
+
+            ReelList list = ReelList.From(picked, new ShotDirector(recording, (a, b) => true), 50);
+
+            Assert.IsTrue(NetChecks.Sane(list), "the host's own list passes what every machine checks");
+            Assert.IsTrue(NetChecks.Sane(HighlightDirector.Playable(list)));
         }
 
         [Test]
