@@ -19,6 +19,9 @@ public class HighlightReel : MonoBehaviour
     const float PARCEL_SIZE = 0.4f;
     static readonly Vector3 PARCEL_OFFSET = new Vector3(0f, 1.1f, -0.5f); // over the basket, from the scooter model
 
+    /// <summary>Seconds the camera's aim takes to ease onto the action (critically damped): long enough to smooth the bounces, short enough to keep up</summary>
+    internal const float AIM_SMOOTH_TIME = 0.4f;
+
     // One seat's stand-in
     class Actor
     {
@@ -57,10 +60,11 @@ public class HighlightReel : MonoBehaviour
     int clipShown = -1;
     int shotShown = -1;
     int cameraNumber = 1;
-    Vector3 lastSubjectPlace;
+    Framing framing = new Framing { Rotation = Quaternion.identity };
+    double lastNow = double.NaN;
 
     /// <summary>
-    /// Starts playing a reel: the players are hidden, the stand-ins and the camera made, and the skip vote opened for
+    /// Starts playing a reel: the stand-ins are copied from the players, the players hidden, the camera made, and the skip vote opened for
     /// every roster seat (decides: whether this machine decides it, GameAuthority). If anything throws, the half-built
     /// reel is ended (the players come back) before the exception goes on
     /// </summary>
@@ -72,8 +76,8 @@ public class HighlightReel : MonoBehaviour
         {
             reel.list = list;
             reel.recording = recording;
+            reel.BuildStandIns(); // before hiding: the copies take each renderer's on or off from the live look
             reel.HidePlayers();
-            reel.BuildStandIns();
             reel.BuildCamera();
             reel.overlay = ReelOverlay.Build(holder.transform);
 
@@ -196,9 +200,12 @@ public class HighlightReel : MonoBehaviour
                 Pose(standIns[seat], seat, time, cut);
         }
 
+        // The aim eases in real time, so it is as steady through a slowed peak shot as at full speed
+        float deltaTime = double.IsNaN(lastNow) ? 0f : (float)Math.Max(0.0, now - lastNow);
+        lastNow = now;
         int shot = clip.ShotAt(time);
         if (shot >= 0)
-            PlaceCamera(clip.Shots[shot], time);
+            PlaceCamera(clip.Shots[shot], time, cut || shot != shotShown, deltaTime);
         if (cut || shot != shotShown)
             cameraNumber = ReelOverlay.CameraNumber(Camera.transform.position);
         clipShown = index;
@@ -245,37 +252,95 @@ public class HighlightReel : MonoBehaviour
         standIn.Parcel.transform.SetPositionAndRotation(body.position + body.rotation * PARCEL_OFFSET, body.rotation);
     }
 
-    // A static shot sits where it was placed; a moving one rides its subject's recorded ball. Either looks at the framed stand-ins
-    void PlaceCamera(ReelShot shot, double time)
+    // The camera sits still for the shot and eases its aim after the framed stand-ins showing (Frame)
+    void PlaceCamera(ReelShot shot, double time, bool cut, float deltaTime)
     {
-        Transform camera = Camera.transform;
-        if (shot.Kind == ShotKind.SideTrack || shot.Kind == ShotKind.Behind)
+        int shown = 0;
+        for (int seat = 0; seat < standIns.Length; seat++)
         {
-            int subject = shot.Subject;
-            double clamped = Math.Min(Math.Max(time, recording.First(subject)), recording.Last(subject));
-            if (recording.TryGet(subject, clamped, out ReelSample sample))
-                lastSubjectPlace = sample.Pose.Ball + Quaternion.Euler(0f, sample.Pose.Heading, 0f) * shot.Offset;
-            camera.position = lastSubjectPlace;
+            if (standIns[seat] != null && standIns[seat].Body.activeSelf)
+                shown |= 1 << seat;
+        }
+        Frame(ref framing, shot, recording, shown, time, cut, deltaTime);
+        Camera.transform.SetPositionAndRotation(framing.Position, framing.Rotation);
+    }
+
+    /// <summary>Where the reel's camera is and what it looks at, carried from frame to frame</summary>
+    internal struct Framing
+    {
+        public Vector3 Position;
+        public Quaternion Rotation;
+
+        /// <summary>The point the camera looks at</summary>
+        public Vector3 Aim;
+        public Vector3 AimVelocity;
+        public float AimHeight;
+        public bool Aiming;
+    }
+
+    /// <summary>
+    /// The camera for a frame of a shot, kept steady against motion sickness. On a cut (a new clip or shot) the camera
+    /// is placed and stays there for the whole shot, and the aim snaps to the action. Between cuts the aim eases after
+    /// the framed seats' recorded balls (shown: the seats with a stand-in showing), held at the height it cut in at,
+    /// so the balls' bounces, the riders' hops and leans and the 20 Hz samples' steps don't shake it. The horizon stays level
+    /// </summary>
+    internal static void Frame(ref Framing framing, ReelShot shot, ReelRecording recording, int shown, double time, bool cut, float deltaTime)
+    {
+        if (cut)
+        {
+            framing.Position = Place(shot, recording, framing.Position);
+            framing.Aiming = false;
+        }
+        if (!Target(shot.FramedMask & shown, recording, time, out Vector3 target))
+            return;
+
+        if (!framing.Aiming)
+        {
+            framing.Aiming = true;
+            framing.AimHeight = target.y;
+            framing.Aim = target;
+            framing.AimVelocity = Vector3.zero;
         }
         else
         {
-            camera.position = shot.Position;
+            target.y = framing.AimHeight;
+            framing.Aim = Vector3.SmoothDamp(framing.Aim, target, ref framing.AimVelocity, AIM_SMOOTH_TIME, Mathf.Infinity, deltaTime);
         }
 
+        Vector3 look = framing.Aim - framing.Position;
+        if (look.sqrMagnitude > 1e-6f)
+            framing.Rotation = Quaternion.LookRotation(look, Vector3.up);
+    }
+
+    // Where a shot's camera sits. A moving kind (no longer chosen, but still a valid kind on the wire) sits where it
+    // would have been at its cut, and stays: it doesn't ride its subject. Its subject not recorded: where the camera was
+    static Vector3 Place(ReelShot shot, ReelRecording recording, Vector3 was)
+    {
+        if (shot.Kind != ShotKind.SideTrack && shot.Kind != ShotKind.Behind)
+            return shot.Position;
+        int subject = shot.Subject;
+        if (subject < 0 || subject >= Constants.MAX_PLAYERS)
+            return was;
+        double clamped = Math.Min(Math.Max(shot.Cut, recording.First(subject)), recording.Last(subject));
+        if (!recording.TryGet(subject, clamped, out ReelSample sample))
+            return was;
+        return sample.Pose.Ball + Quaternion.Euler(0f, sample.Pose.Heading, 0f) * shot.Offset;
+    }
+
+    // The mean recorded ball of the seats in a mask at a time; false if none was recorded then
+    static bool Target(int seats, ReelRecording recording, double time, out Vector3 target)
+    {
         Vector3 sum = Vector3.zero;
         int count = 0;
-        for (int seat = 0; seat < standIns.Length; seat++)
+        for (int seat = 0; seat < Constants.MAX_PLAYERS; seat++)
         {
-            if ((shot.FramedMask & (1 << seat)) == 0 || standIns[seat] == null || !standIns[seat].Body.activeSelf)
+            if ((seats & (1 << seat)) == 0 || !recording.TryGet(seat, time, out ReelSample sample))
                 continue;
-            sum += standIns[seat].Body.transform.position;
+            sum += sample.Pose.Ball;
             count++;
         }
-        if (count == 0)
-            return;
-        Vector3 look = sum / count - camera.position;
-        if (look.sqrMagnitude > 1e-6f)
-            camera.rotation = Quaternion.LookRotation(look);
+        target = count > 0 ? sum / count : Vector3.zero;
+        return count > 0;
     }
 
     static Color ParcelColour(byte carrying)
@@ -309,8 +374,8 @@ public class HighlightReel : MonoBehaviour
         return players != null ? players.Roster[seat] : null;
     }
 
-    // The scooter every machine sees: a local player's view holds it, a remote player is one
-    static Transform Avatar(PlayerSlot slot)
+    /// <summary>The scooter every machine sees: a local player's view holds it, a remote player is one</summary>
+    internal static Transform Avatar(PlayerSlot slot)
     {
         if (slot == null || slot.Player == null)
             return null;

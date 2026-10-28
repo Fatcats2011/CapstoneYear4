@@ -17,7 +17,7 @@ public struct ReelShot : INetworkSerializable
     /// <summary>Where the camera sits, for the static kinds (Low, HighWide, FixedPan)</summary>
     public Vector3 Position;
 
-    /// <summary>The seat a moving kind (SideTrack, Behind) follows</summary>
+    /// <summary>The seat a moving kind (SideTrack, Behind) is placed from. The director no longer chooses those kinds, and the reel holds one still at its cut</summary>
     public int Subject;
 
     /// <summary>Where a moving kind sits from its subject's ball, in the subject's heading frame (side, up, forward)</summary>
@@ -85,8 +85,13 @@ public class ShotDirector
     /// <summary>...and at most this many times its ideal</summary>
     public const float BAND_MAX = 2.5f;
 
-    // The kinds in enum order: the order the cycle goes round
-    static readonly ShotKind[] ALL_KINDS = { ShotKind.Low, ShotKind.HighWide, ShotKind.SideTrack, ShotKind.Behind, ShotKind.FixedPan };
+    // The kinds chosen, in enum order: the order the cycle goes round. Only the fixed ones: a camera riding a scooter
+    // shakes with its bounces and drifts, which made the reel hard to watch. SideTrack and Behind stay in the enum
+    // (they're on the wire and NetChecks accepts them) but are never chosen
+    static readonly ShotKind[] ALL_KINDS = { ShotKind.Low, ShotKind.HighWide, ShotKind.FixedPan };
+
+    // The peak shot's kinds, closest first
+    static readonly ShotKind[] PEAK_KINDS = { ShotKind.Low, ShotKind.FixedPan };
 
     readonly ReelRecording recording;
     readonly Func<Vector3, Vector3, bool> clear;
@@ -99,17 +104,23 @@ public class ShotDirector
     }
 
     /// <summary>
-    /// The shots for a clip: the first, plus a slow peak shot for a big clip (if Behind or Low is valid for it). The
-    /// first is the first valid kind after the previous one, going round the kinds in order; if none is valid it is the
-    /// most clear, and never the previous kind.
+    /// The shots for a clip: the first, plus a slow peak shot for a big clip (if Low or FixedPan, whichever the first
+    /// isn't, is valid for it). The first is the first valid kind after the previous one, going round the fixed kinds
+    /// in order; if none is valid it is the most clear, and never the previous kind.
     /// </summary>
     public List<ReelShot> Shots(Clip clip, ShotKind? previous)
     {
         List<int> framed = FramedSeats(clip);
         var shots = new List<ReelShot>();
 
+        // The cycle starts at the first kind after the previous in enum order (a previous moving kind too)
+        int startAt = 0;
+        if (previous.HasValue)
+        {
+            while (startAt < ALL_KINDS.Length && ALL_KINDS[startAt] <= previous.Value)
+                startAt++;
+        }
         var order = new List<ShotKind>();
-        int startAt = previous.HasValue ? (int)previous.Value + 1 : 0;
         for (int i = 0; i < ALL_KINDS.Length; i++)
         {
             ShotKind kind = ALL_KINDS[(startAt + i) % ALL_KINDS.Length];
@@ -124,7 +135,7 @@ public class ShotDirector
         if (clip.Score >= PEAK_SCORE && cut > clip.Start)
         {
             var peakOrder = new List<ShotKind>();
-            foreach (ShotKind kind in new[] { ShotKind.Behind, ShotKind.Low })
+            foreach (ShotKind kind in PEAK_KINDS)
             {
                 if (kind != first.Kind)
                     peakOrder.Add(kind);

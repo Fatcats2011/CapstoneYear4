@@ -40,7 +40,7 @@ namespace DoA.Tests
 
         static bool Open(Vector3 a, Vector3 b) => true;
 
-        // Rays from the Behind camera sit 3 m up, from the HighWide camera 18 m up, from a Side track camera 2 m up
+        // Rays from the FixedPan camera start 3 m up, from the HighWide camera 18 m up, from the Low camera 0.8 m up
         static bool Near(float y, float height) => Mathf.Abs(y - height) < 0.01f;
 
         [Test]
@@ -73,11 +73,39 @@ namespace DoA.Tests
             Assert.IsTrue(sawStatic, "static cameras are not starved by the moving ones");
         }
 
+        static bool Moving(ShotKind kind) => kind == ShotKind.SideTrack || kind == ShotKind.Behind;
+
+        [Test]
+        public void Shots_NeverAMovingKind_FirstOrPeak()
+        {
+            // A camera riding a scooter shakes with it: only the fixed kinds are chosen, through a run of big clips,
+            // after any previous kind, slow or fast, all clear or only the low cameras clear
+            foreach (float speed in new[] { SLOW, SPEED, 30f })
+            {
+                foreach (Func<Vector3, Vector3, bool> clear in new Func<Vector3, Vector3, bool>[] { Open, (a, b) => a.y < 5f, (a, b) => false })
+                {
+                    var director = new ShotDirector(Recording(speed), clear);
+                    foreach (ShotKind? start in new ShotKind?[] { null, ShotKind.Low, ShotKind.HighWide, ShotKind.SideTrack, ShotKind.Behind, ShotKind.FixedPan })
+                    {
+                        ShotKind? previous = start;
+                        for (int i = 0; i < 6; i++)
+                        {
+                            var shots = director.Shots(Clip(20f), previous);
+                            foreach (ReelShot shot in shots)
+                                Assert.IsFalse(Moving(shot.Kind), shot.Kind + " at speed " + speed + " after " + previous);
+                            previous = shots[0].Kind;
+                        }
+                    }
+                }
+            }
+        }
+
         [Test]
         public void Shots_TooFarOrTooCloseToTheAction_IsNotValid()
         {
-            // Fast action drives right past a Low camera: far from it for most of the clip, so Low is out of band
-            var director = new ShotDirector(Recording(30f), Open);
+            // Fast action drives right past a Low camera: far from it for most of the clip, so Low is out of band (at
+            // 20 m/s FixedPan and HighWide are still in theirs; much faster, nothing fixed is, and the fallback is Low)
+            var director = new ShotDirector(Recording(20f), Open);
 
             Assert.AreNotEqual(ShotKind.Low, director.Shots(Clip(5f), null)[0].Kind);
         }
@@ -127,12 +155,12 @@ namespace DoA.Tests
         [Test]
         public void Shots_NothingFullyClear_TakesTheMostClearCandidate()
         {
-            // Only the Behind camera (3 m up) has any view, and only early in the clip (before it passes x = 25)
-            var director = new ShotDirector(Recording(), (a, b) => Near(a.y, 3f) && a.x < 25f);
+            // Only the FixedPan camera (3 m up) has any view, and only of the scooters early in the clip (before x = 40)
+            var director = new ShotDirector(Recording(), (a, b) => Near(a.y, 3f) && b.x < 40f);
 
             var shots = director.Shots(Clip(5f), null);
 
-            Assert.AreEqual(ShotKind.Behind, shots[0].Kind);
+            Assert.AreEqual(ShotKind.FixedPan, shots[0].Kind, "the most clear, though the last kind tried");
         }
 
         [Test]
@@ -145,7 +173,7 @@ namespace DoA.Tests
             Assert.AreEqual(2, shots.Count);
             Assert.AreEqual(4.0 - ShotDirector.PEAK_LEAD, shots[1].Cut, 1e-6);
             Assert.AreEqual(ShotDirector.PEAK_SPEED, shots[1].Speed);
-            Assert.AreEqual(ShotKind.Behind, shots[1].Kind, "Behind is tried first, and the first shot was Low");
+            Assert.AreEqual(ShotKind.FixedPan, shots[1].Kind, "Low is tried first, but the first shot was Low");
             Assert.AreEqual(1f, shots[0].Speed);
         }
 
@@ -161,20 +189,31 @@ namespace DoA.Tests
             Assert.AreNotEqual(shots[0].Kind, shots[1].Kind);
             Assert.AreEqual(2, after.Count);
             Assert.AreEqual(ShotKind.HighWide, after[0].Kind);
-            Assert.AreEqual(ShotKind.Behind, after[1].Kind);
+            Assert.AreEqual(ShotKind.Low, after[1].Kind, "the closest peak kind");
         }
 
         [Test]
-        public void Shots_BigClip_FirstShotBehind_PeakShotIsLow()
+        public void Shots_TheCycle_GoesRoundTheFixedKinds()
         {
-            // Previous SideTrack, so Behind is the first shot and Low is the only peak kind left. Fast and slow action.
+            var director = new ShotDirector(Recording(SLOW), Open);
+
+            Assert.AreEqual(ShotKind.HighWide, director.Shots(Clip(5f), ShotKind.Low)[0].Kind);
+            Assert.AreEqual(ShotKind.FixedPan, director.Shots(Clip(5f), ShotKind.HighWide)[0].Kind);
+            Assert.AreEqual(ShotKind.Low, director.Shots(Clip(5f), ShotKind.FixedPan)[0].Kind);
+            Assert.AreEqual(ShotKind.FixedPan, director.Shots(Clip(5f), ShotKind.Behind)[0].Kind, "after a moving kind: the next fixed one in enum order");
+        }
+
+        [Test]
+        public void Shots_BigClip_FirstShotFixedPan_PeakShotIsLow()
+        {
+            // Previous HighWide, so FixedPan is the first shot and Low is the only peak kind left. Fast and slow action.
             foreach (float speed in new[] { SLOW, SPEED })
             {
                 var director = new ShotDirector(Recording(speed), Open);
 
-                var shots = director.Shots(Clip(20f), ShotKind.SideTrack);
+                var shots = director.Shots(Clip(20f), ShotKind.HighWide);
 
-                Assert.AreEqual(ShotKind.Behind, shots[0].Kind, "speed " + speed);
+                Assert.AreEqual(ShotKind.FixedPan, shots[0].Kind, "speed " + speed);
                 Assert.AreEqual(2, shots.Count, "speed " + speed);
                 Assert.AreEqual(ShotKind.Low, shots[1].Kind, "speed " + speed);
             }

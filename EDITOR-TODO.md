@@ -167,6 +167,9 @@ The room scene and the board are set up (`DispatchRoom`, `RoomClock`, the board 
 - Check the reel on the Steam Deck and in 4-player split-screen with `PerfOverlay` (F6).
 - Tune the scoring weights and the "good enough" bar (`HighlightRules`).
 - Check the camera choices look good in the real town.
+- After the playtest fix, check again:
+  - each player shows as their own ghost on the scooter, in their colour and hat, not just a box;
+  - the camera feels steady, with no shake or motion sickness. Only the fixed cameras are used now, and their aim eases after the action.
 - Check that no HUD (the match timer, the time-up banner) draws over the reel, and that the colours look right (post-processing is off on the reel camera).
 
 ## 17. Reference

@@ -78,14 +78,14 @@ The user asked for skill **and** chaos, with **player interaction weighted most*
 - For each chosen clip, the director tries several **shot types** around the action:
   - **low:** near the ground as the scooters pass
   - **high wide:** shows the chase
-  - **side track:** moves alongside
-  - **behind:** follows the attacker / main player
   - **fixed pan:** a spot ahead of the action that turns to follow, sports-camera style
+  - **Dropped after the first playtest:** side track (moving alongside) and behind (following a player). Riding a scooter's bouncing ball made the reel shake and caused motion sickness. Their `ShotKind` values stay, because they're on the wire and `NetChecks` accepts them, but the director never chooses them. The reel would hold one still at its cut.
+- **A steady camera:** a shot's camera never moves. Its aim eases (critically damped, `HighlightReel.AIM_SMOOTH_TIME`, 0.4 s) after the framed players' recorded balls, held at the height it cut in at, so bounces, hops and leans don't shake it. The aim snaps on every cut, and the horizon stays level.
 - **Rejecting bad shots:** for each candidate, sample a few times across the clip. Line-of-sight raycasts to the players in the clip (and the key moment's place) must be clear of buildings, trees and bridges, and the players must stay in frame. Drop any candidate that fails.
 - **Choosing:** of the survivors, take the best framed, but **never the same shot type twice in a row** across the reel.
-- **Peak cut:** on the big clips, cut to a second, closer angle at the key moment, with a short slow-down (playback speed only, since it's a replay).
+- **Peak cut:** on the big clips, cut to a second, closer angle (low, or fixed pan if the first shot was low) at the key moment, with a short slow-down (playback speed only, since it's a replay).
 - **Beauty spots (optional, later):** a scene marker the user can drop at places like the waterfall or the drawbridge. When action passes near one, the director prefers it.
-- **Shots aim at the stand-ins, not at fixed points (my call).** A shot stores where the camera sits (or how it moves, for side track and behind, relative to its subject) and which seats it frames. Each frame, the camera looks at those seats' **stand-ins** as this machine plays them. So if a client's recording of a remote scooter is a little off, the framing still follows it. Only the camera's placement is shared, never a fixed aim point.
+- **Shots aim at the stand-ins, not at fixed points (my call).** A shot stores where the camera sits and which seats it frames. Each frame, the camera looks at those seats as this machine plays them: the recorded balls of the ones whose stand-ins show, smoothed as above. So if a client's recording of a remote scooter is a little off, the framing still follows it. Only the camera's placement is shared, never a fixed aim point.
 - **Online:** the host runs the director, using its own recording and its own world. It sends every machine the **reel list**: for each clip, start/end round time, players, caption key, and each shot's type, placement, framed seats and cut time. That's small: a few clips × a few shots. Each machine plays that list against its own recording, so everyone sees the same plays from the same angles. This follows the awards' pattern (`AwardSync` / `OnlineAwards`): a static seam plus a relay component and an RPC.
 
 ### 4. Playback (every machine)

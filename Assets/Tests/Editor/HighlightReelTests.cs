@@ -237,6 +237,99 @@ namespace DoA.Tests
             }
         }
 
+        // ---- The camera's framing (Edit Mode) ----
+
+        const float FRAME = 1f / 60f;
+
+        // A scooter passing 10 m from the camera at 10 m/s turns the view by at most 10/10 rad/s, 0.955 degrees a
+        // 60 fps frame. A steady camera follows it with a little to spare and adds no shake of its own
+        const float MOST_TURN = 1.2f;
+
+        // Seat 0 driving along +x at 10 m/s from 0 to 10 s at 20 Hz, its ball bouncing 0.3 m up then down each sample
+        static ReelRecording Bouncing()
+        {
+            var recording = new ReelRecording(400);
+            for (int i = 0; i <= 200; i++)
+            {
+                double time = i / 20.0;
+                Vector3 ball = new Vector3((float)time * 10f, i % 2 == 0 ? 1.3f : 0.7f, 0f);
+                recording.Add(0, new ReelSample { Time = time, Pose = new ScooterPose { Ball = ball, Heading = 90f, ModelPosition = ball, ModelRotation = Quaternion.identity } });
+            }
+            return recording;
+        }
+
+        // A camera 10 m to the side of x = 50, which the scooter passes 5 s in
+        static ReelShot Beside()
+        {
+            return new ReelShot { Kind = ShotKind.Low, Cut = 1, Position = new Vector3(50f, 1.8f, 10f), FramedMask = 1, Speed = 1 };
+        }
+
+        // Plays a shot from 1 s to 9 s at 60 fps: the most the camera turned between two frames (degrees), and whether it stayed put
+        static float MostTurn(ReelShot shot, ReelRecording recording, out bool stayed)
+        {
+            var framing = new HighlightReel.Framing();
+            float most = 0f;
+            stayed = true;
+            Vector3 place = Vector3.zero;
+            Quaternion last = Quaternion.identity;
+            for (int frame = 0; frame <= 480; frame++)
+            {
+                HighlightReel.Frame(ref framing, shot, recording, 1, 1.0 + frame / 60.0, frame == 0, FRAME);
+                if (frame == 0)
+                    place = framing.Position;
+                else
+                {
+                    stayed &= framing.Position == place;
+                    most = Mathf.Max(most, Quaternion.Angle(last, framing.Rotation));
+                }
+                last = framing.Rotation;
+            }
+            return most;
+        }
+
+        [Test]
+        public void Frame_ABouncingScooterPassing_TheCameraTurnsSmoothly()
+        {
+            float most = MostTurn(Beside(), Bouncing(), out bool stayed);
+
+            Assert.IsTrue(stayed, "the camera stays where the shot put it");
+            Assert.LessOrEqual(most, MOST_TURN, "no more than " + MOST_TURN + " degrees a frame, the bounce smoothed out");
+        }
+
+        [Test]
+        public void Frame_AMovingKind_StaysWhereItCutIn()
+        {
+            var shot = new ReelShot { Kind = ShotKind.Behind, Cut = 1, Subject = 0, Offset = new Vector3(0, 3, -7), FramedMask = 1, Speed = 1 };
+            ReelRecording recording = Bouncing();
+
+            MostTurn(shot, recording, out bool stayed);
+
+            Assert.IsTrue(stayed, "it no longer rides its subject's bouncing ball");
+        }
+
+        [Test]
+        public void Frame_ACut_SnapsTheAim_ThenItFollowsSmoothly_HorizonLevel()
+        {
+            ReelRecording recording = Bouncing();
+            var framing = new HighlightReel.Framing();
+            for (int frame = 0; frame < 60; frame++)
+                HighlightReel.Frame(ref framing, Beside(), recording, 1, 1.0 + frame / 60.0, frame == 0, FRAME);
+
+            ReelShot next = new ReelShot { Kind = ShotKind.HighWide, Cut = 2, Position = new Vector3(20f, 18f, -25f), FramedMask = 1, Speed = 1 };
+            HighlightReel.Frame(ref framing, next, recording, 1, 2.0, true, FRAME);
+
+            Assert.IsTrue(recording.TryGet(0, 2.0, out ReelSample sample));
+            Assert.Less(Vector3.Distance(sample.Pose.Ball, framing.Aim), 1e-4f, "a cut aims straight at the action");
+            Vector3 look = framing.Rotation * Vector3.forward;
+            Assert.Less(Vector3.Angle(sample.Pose.Ball - next.Position, look), 0.01f);
+            Assert.AreEqual(next.Position, framing.Position);
+
+            HighlightReel.Frame(ref framing, next, recording, 1, 2.0 + 1 / 60.0, false, FRAME);
+            Assert.IsTrue(recording.TryGet(0, 2.0 + 1 / 60.0, out sample));
+            Assert.Greater(Vector3.Distance(sample.Pose.Ball, framing.Aim), 0.01f, "between cuts the aim eases after it");
+            Assert.AreEqual(0f, (framing.Rotation * Vector3.right).y, 1e-5f, "no roll: the horizon stays level");
+        }
+
         // ---- Playback (Play Mode) ----
 
         // Two seats driving along x from 100 to 110 at 10 m/s, at 20 samples a second
@@ -374,6 +467,50 @@ namespace DoA.Tests
                 Assert.IsFalse(renderer.Key.enabled, renderer.Key.name + " is hidden");
         }
 
+        // The renderers switched on under a model, leaving out trails: the reel strips the player's and adds its own boost trail
+        static int Drawn(Transform model)
+        {
+            int drawn = 0;
+            foreach (Renderer renderer in model.GetComponentsInChildren<Renderer>(true))
+            {
+                if (renderer.enabled && !(renderer is TrailRenderer))
+                    drawn++;
+            }
+            return drawn;
+        }
+
+        // The hat, from the scooter model
+        static readonly string HAT_IN_MODEL = ScooterLook.HAT.Substring(ScooterLook.MODEL.Length + 1);
+
+        [UnityTest]
+        public IEnumerator Play_StandInLooksLikeThePlayer_GhostColourAndHat()
+        {
+            yield return InTheMenu();
+            yield return OnePlayer();
+            Transform avatar = HighlightReel.Avatar(PlayerInstantiate.Instance.Roster[0]);
+            Transform live = avatar != null ? avatar.Find(ScooterLook.MODEL) : null;
+            Assert.IsNotNull(live, "the player has a scooter model");
+            int liveDrawn = Drawn(live);
+            Assert.Greater(liveDrawn, 0, "the player is drawn in the menu");
+            Transform liveHat = live.Find(HAT_IN_MODEL);
+            Assert.IsNotNull(liveHat, "the player's model has its hat slot");
+            bool hatWorn = liveHat.gameObject.activeSelf;
+
+            HighlightReel reel = Play();
+            yield return null;
+            yield return null;
+
+            Transform standIn = reel.StandIn(0);
+            Assert.IsNotNull(standIn, "the player has a stand-in");
+            Assert.IsTrue(standIn.gameObject.activeInHierarchy, "and it shows half a second in");
+            Assert.Greater(Drawn(standIn), 0, "the stand-in is drawn, not only its parcel");
+            Assert.AreEqual(liveDrawn, Drawn(standIn), "drawn as the player's own model was before the reel");
+            Transform hat = standIn.Find(HAT_IN_MODEL);
+            Assert.IsNotNull(hat, "the stand-in has the hat slot");
+            Assert.AreEqual(hatWorn, hat.gameObject.activeSelf, "the hat is worn (or not) as the player's is");
+            reel.End();
+        }
+
         [UnityTest]
         public IEnumerator Play_StandInsFollowTheRecording()
         {
@@ -392,12 +529,15 @@ namespace DoA.Tests
             Assert.Less(Vector3.Distance(sample.Pose.ModelPosition, standIn.position), 0.01f, "it's where it was recorded");
             Assert.IsNull(reel.StandIn(1), "no player in seat 1 to copy");
 
-            now = START_AT + 2.5; // 0.5 s into the second clip: the camera rides behind seat 1
+            now = START_AT + 2.5; // 0.5 s into the second clip: a Behind shot, held where it cut in behind seat 1
             yield return null;
             Assert.AreEqual(105.5, reel.Clock, 1e-6, "a hard cut to the second clip");
-            Assert.IsTrue(recording.TryGet(1, 105.5, out ReelSample subject));
+            Assert.IsTrue(recording.TryGet(1, 105.0, out ReelSample subject));
             Vector3 expected = subject.Pose.Ball + Quaternion.Euler(0, subject.Pose.Heading, 0) * new Vector3(0, 3, -7);
-            Assert.Less(Vector3.Distance(expected, reel.Camera.transform.position), 0.01f, "the camera rides behind its subject");
+            Assert.Less(Vector3.Distance(expected, reel.Camera.transform.position), 0.01f, "the camera sits behind its subject's place at the cut");
+            now = START_AT + 3.0;
+            yield return null;
+            Assert.Less(Vector3.Distance(expected, reel.Camera.transform.position), 0.01f, "and stays there: it doesn't ride along");
         }
 
         [UnityTest]
