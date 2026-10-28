@@ -101,7 +101,7 @@ public static class NetChecks
     {
         if (reel.Clips == null || reel.Clips.Length > ReelList.MAX_CLIPS)
             return false;
-        if (!Finite(reel.StartAt) ||!Finite(reel.Length) || reel.Length < 0f || reel.Length > MAX_REEL_LENGTH)
+        if (!Finite(reel.StartAt) || !Finite(reel.Length) || reel.Length < 0f || reel.Length > MAX_REEL_LENGTH)
             return false;
 
         foreach (ReelClip clip in reel.Clips)

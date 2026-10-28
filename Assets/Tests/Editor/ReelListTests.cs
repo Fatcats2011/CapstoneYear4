@@ -1,3 +1,4 @@
+using System;
 using NUnit.Framework;
 using Unity.Collections;
 using Unity.Netcode;
@@ -49,7 +50,7 @@ namespace DoA.Tests
 
         static ReelList Sent(ReelList list)
         {
-            using (FastBufferWriter writer = new FastBufferWriter(1024, Allocator.Temp))
+            using (FastBufferWriter writer = new FastBufferWriter(4096, Allocator.Temp))
             {
                 writer.WriteNetworkSerializable(list);
                 using (FastBufferReader reader = new FastBufferReader(writer, Allocator.Temp))
@@ -113,7 +114,7 @@ namespace DoA.Tests
         }
 
         [Test]
-        public void Read_AHostileShotCount_ArrivesNullAndSaneRefusesIt()
+        public void Read_AHostileShotCount_ArrivesWithNoClipsAndSaneRefusesIt()
         {
             using (FastBufferWriter writer = new FastBufferWriter(128, Allocator.Temp))
             {
@@ -130,8 +131,73 @@ namespace DoA.Tests
                 using (FastBufferReader reader = new FastBufferReader(writer, Allocator.Temp))
                 {
                     reader.ReadNetworkSerializable(out ReelList received);
-                    Assert.IsNull(received.Clips[0].Shots);
+                    Assert.IsNull(received.Clips);
                     Assert.IsFalse(NetChecks.Sane(received));
+                }
+            }
+        }
+
+        [Test]
+        public void Read_AHostileShotCountInTheFirstOfTwoClips_RejectsTheWholeListWithoutThrowing()
+        {
+            ReelList good = AList();
+            using (FastBufferWriter writer = new FastBufferWriter(1024, Allocator.Temp))
+            {
+                writer.WriteNetworkSerializable(good);
+                byte[] bytes = writer.ToArray();
+                // StartAt (8) + Length (4) + clip count (1), then the clip's 3 doubles, 2 bytes and a float, then its shot count
+                bytes[8 + 4 + 1 + 24 + 2 + 4] = 255;
+
+                ReelList received = default;
+                Assert.DoesNotThrow(() => received = ReadBytes(bytes));
+                Assert.IsNull(received.Clips);
+                Assert.IsFalse(NetChecks.Sane(received));
+            }
+        }
+
+        [Test]
+        public void Read_ATruncatedBuffer_RejectsWithoutThrowing()
+        {
+            using (FastBufferWriter writer = new FastBufferWriter(1024, Allocator.Temp))
+            {
+                writer.WriteNetworkSerializable(AList());
+                byte[] bytes = writer.ToArray();
+                byte[] cut = new byte[bytes.Length - 20];
+                Array.Copy(bytes, cut, cut.Length);
+
+                ReelList received = default;
+                Assert.DoesNotThrow(() => received = ReadBytes(cut));
+                Assert.IsNull(received.Clips);
+                Assert.IsFalse(NetChecks.Sane(received));
+            }
+        }
+
+        [Test]
+        public void RoundTrip_ABiggestSizeList()
+        {
+            var clips = new ReelClip[ReelList.MAX_CLIPS];
+            for (int i = 0; i < clips.Length; i++)
+            {
+                clips[i] = AClip(i * 10.0);
+                clips[i].Shots = new[] { AShot(ShotKind.Low, i * 10.0, 1f), AShot(ShotKind.Behind, i * 10.0 + 1, 0.5f), AShot(ShotKind.HighWide, i * 10.0 + 3, 1f) };
+            }
+            ReelList sent = new ReelList { Clips = clips, StartAt = 5.0, Length = 20f };
+
+            ReelList received = Sent(sent);
+
+            Assert.AreEqual(sent, received);
+            Assert.AreEqual(ReelList.MAX_SHOTS, received.Clips[ReelList.MAX_CLIPS - 1].Shots.Length);
+        }
+
+        static ReelList ReadBytes(byte[] bytes)
+        {
+            using (FastBufferWriter writer = new FastBufferWriter(bytes.Length + 1, Allocator.Temp))
+            {
+                writer.WriteBytesSafe(bytes);
+                using (FastBufferReader reader = new FastBufferReader(writer, Allocator.Temp))
+                {
+                    reader.ReadNetworkSerializable(out ReelList received);
+                    return received;
                 }
             }
         }

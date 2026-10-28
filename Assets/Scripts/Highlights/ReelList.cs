@@ -118,23 +118,53 @@ public struct ReelList : INetworkSerializable, IEquatable<ReelList>
 
     public void NetworkSerialize<T>(BufferSerializer<T> serializer) where T : IReaderWriter
     {
+        if (!serializer.IsReader)
+        {
+            Write(serializer);
+            return;
+        }
+
+        // A hostile or cut-short message must not throw out of here: any bad count or short buffer leaves the clips
+        // null (NetChecks.Sane refuses that) and nothing is read past the bad point
+        try
+        {
+            if (!Read(serializer))
+                Clips = null;
+        }
+        catch (OverflowException)
+        {
+            Clips = null;
+        }
+    }
+
+    void Write<T>(BufferSerializer<T> serializer) where T : IReaderWriter
+    {
         serializer.SerializeValue(ref StartAt);
         serializer.SerializeValue(ref Length);
-
-        // Same as the shots: an explicit, capped length; over the cap the clips stay null and nothing more is read
         byte count = (byte)(Clips != null ? Math.Min(Clips.Length, byte.MaxValue) : 0);
         serializer.SerializeValue(ref count);
-        if (serializer.IsReader)
-        {
-            if (count > MAX_CLIPS)
-            {
-                Clips = null;
-                return;
-            }
-            Clips = new ReelClip[count];
-        }
         for (int i = 0; i < count; i++)
             serializer.SerializeValue(ref Clips[i]);
+    }
+
+    // False when the message is bad: a count over the cap, here or in a clip
+    bool Read<T>(BufferSerializer<T> serializer) where T : IReaderWriter
+    {
+        serializer.SerializeValue(ref StartAt);
+        serializer.SerializeValue(ref Length);
+        byte count = 0;
+        serializer.SerializeValue(ref count);
+        if (count > MAX_CLIPS)
+            return false;
+
+        Clips = new ReelClip[count];
+        for (int i = 0; i < count; i++)
+        {
+            serializer.SerializeValue(ref Clips[i]);
+            if (Clips[i].Shots == null)
+                return false;
+        }
+        return true;
     }
 
     public bool Equals(ReelList other)
