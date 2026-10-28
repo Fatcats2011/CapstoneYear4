@@ -18,6 +18,11 @@ public static class NetChecks
         return !float.IsNaN(value) && !float.IsInfinity(value);
     }
 
+    public static bool Finite(double value)
+    {
+        return !double.IsNaN(value) && !double.IsInfinity(value);
+    }
+
     /// <summary>A place inside the world's bounds (finite, within WORLD_EXTENT on each axis)</summary>
     public static bool InWorld(Vector3 place)
     {
@@ -82,6 +87,45 @@ public static class NetChecks
     {
         return Defined(change.Kind) && InWorld(change.Spot) && InWorld(change.Spot2)
             && Within(change.Height) && Within(change.Height2);
+    }
+
+    /// <summary>The longest reel a client plays, in real seconds</summary>
+    public const float MAX_REEL_LENGTH = 30f;
+
+    /// <summary>
+    /// The host's highlight reel: no missing arrays, no more clips or shots than the reel allows, times and places that
+    /// are finite, clips that run forwards, seats 0-3 only, enum values the game knows, a length a reel can have and a
+    /// playback speed above 0 and at most 1
+    /// </summary>
+    public static bool Sane(ReelList reel)
+    {
+        if (reel.Clips == null || reel.Clips.Length > ReelList.MAX_CLIPS)
+            return false;
+        if (!Finite(reel.StartAt) ||!Finite(reel.Length) || reel.Length < 0f || reel.Length > MAX_REEL_LENGTH)
+            return false;
+
+        foreach (ReelClip clip in reel.Clips)
+        {
+            if (clip.Shots == null || clip.Shots.Length > ReelList.MAX_SHOTS)
+                return false;
+            if (!Finite(clip.Start) || !Finite(clip.End) || !Finite(clip.KeyTime) || !Finite(clip.TimeLeftAtStart) || clip.Start >= clip.End)
+                return false;
+            if ((clip.SeatsMask & ~0b1111) != 0 || !Defined(clip.Caption))
+                return false;
+
+            foreach (ReelShot shot in clip.Shots)
+            {
+                if (!Finite(shot.Cut) || !Defined(shot.Kind))
+                    return false;
+                if (!InWorld(shot.Position) || !InWorld(shot.Offset))
+                    return false;
+                if (shot.Subject < 0 || shot.Subject >= Constants.MAX_PLAYERS || (shot.FramedMask & ~0b1111) != 0)
+                    return false;
+                if (!Finite(shot.Speed) || shot.Speed <= 0f || shot.Speed > 1f)
+                    return false;
+            }
+        }
+        return true;
     }
 
     static bool Within(float value)

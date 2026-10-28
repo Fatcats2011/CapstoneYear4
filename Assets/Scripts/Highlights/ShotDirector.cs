@@ -1,12 +1,13 @@
 using System;
 using System.Collections.Generic;
+using Unity.Netcode;
 using UnityEngine;
 
 /// <summary>The kinds of invisible camera the highlight reel can place for a clip</summary>
 public enum ShotKind : byte { Low, HighWide, SideTrack, Behind, FixedPan }
 
 /// <summary>One camera placement in a clip</summary>
-public struct ReelShot
+public struct ReelShot : INetworkSerializable
 {
     public ShotKind Kind;
 
@@ -27,6 +28,19 @@ public struct ReelShot
 
     /// <summary>Playback speed: 1, or ShotDirector.PEAK_SPEED. A peak shot plays slowed for PEAK_LENGTH seconds of clip time, then goes back to 1</summary>
     public float Speed;
+
+    public void NetworkSerialize<T>(BufferSerializer<T> serializer) where T : IReaderWriter
+    {
+        byte kind = (byte)Kind;
+        serializer.SerializeValue(ref kind);
+        Kind = (ShotKind)kind;
+        serializer.SerializeValue(ref Cut);
+        serializer.SerializeValue(ref Position);
+        serializer.SerializeValue(ref Subject);
+        serializer.SerializeValue(ref Offset);
+        serializer.SerializeValue(ref FramedMask);
+        serializer.SerializeValue(ref Speed);
+    }
 }
 
 /// <summary>
