@@ -44,10 +44,10 @@ public class OnlineDriving : MonoBehaviour
             BallDriving driving = DrivingOf(seat, slot.Player);
             if (scooter.IsOwner)
             {
-                if (slot.IsLocal)
+                if (slot.IsLocal || slot.IsBot)
                     scooter.Share(ScooterPose.Read(driving), driving.Flags);
             }
-            else if (!slot.IsLocal && scooter.HasPose)
+            else if (!slot.IsLocal && !slot.IsBot && scooter.HasPose)
                 Show(scooter, driving);
         }
     }

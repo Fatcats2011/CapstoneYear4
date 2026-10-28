@@ -66,6 +66,29 @@ namespace DoA.Tests
         }
 
         [Test]
+        public void Bots_AreOnInNormal_AndSavedInSettings()
+        {
+            Assert.IsTrue(HouseRules.Normal.Bots);
+            Assert.IsTrue(HouseRules.From(GameSettings.Parse("bgm=3", new GameSettings(5, 6, 1))).Bots);
+
+            GameSettings saved = new GameSettings(3, 4, 1);
+            saved.bots = 0;
+            HouseRules loaded = HouseRules.From(GameSettings.Parse(saved.ToText(), new GameSettings(5, 6, 1)));
+
+            Assert.IsFalse(loaded.Bots);
+            Assert.AreEqual("NO BOTS", loaded.Summary);
+        }
+
+        [Test]
+        public void BotsOff_AMatchPlaysItAnywayInAPublicLobby()
+        {
+            HouseRules noBots = new HouseRules(MatchLength.Normal, true, true, false);
+
+            Assert.IsTrue(noBots.ForMatch(true).Bots);
+            Assert.IsFalse(noBots.ForMatch(false).Bots);
+        }
+
+        [Test]
         public void Settings_AreClamped()
         {
             GameSettings loaded = GameSettings.Parse("length=9\nsteals=4\ngolden=-1", new GameSettings(5, 6, 1));

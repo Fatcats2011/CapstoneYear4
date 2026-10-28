@@ -77,8 +77,8 @@ public class SpawnManager : SingletonMonobehaviour<SpawnManager>
     ///</summary>
     public void PlacePlayersAtStart()
     {
-        // Each machine places its own players: online, another machine's scooter is where its owner puts it
-        foreach (PlayerSlot player in playerInstantiate.Roster.LocalPlayers)
+        // Each machine places its own players (and the host its bots): online, another machine's scooter is where its owner puts it
+        foreach (PlayerSlot player in playerInstantiate.Roster.SimulatedHere)
         {
             GameObject lane = SpawnPoint(player.Index, gameSpawnPositions, null);
             RespawnPoint city = TutorialManager.SkipNextTutorial && lane != null && RespawnManager.Instance != null
@@ -100,7 +100,7 @@ public class SpawnManager : SingletonMonobehaviour<SpawnManager>
     {
         // The golden round lists 3 spawn points; a 4th player starts on their normal spawn point, in line with the others.
         // Each machine places its own players (online, another machine's scooter is where its owner puts it)
-        foreach (PlayerSlot player in playerInstantiate.Roster.LocalPlayers)
+        foreach (PlayerSlot player in playerInstantiate.Roster.SimulatedHere)
             PlacePlayer(player, SpawnPoint(player.Index, goldenPackageSpawnPositions, gameSpawnPositions));
     }
 

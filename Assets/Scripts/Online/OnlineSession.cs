@@ -53,6 +53,12 @@ public class OnlineSession : MonoBehaviour
     SteamNetworkingSocketsTransport steam; // added the first time a Steam session starts
 #endif
 
+    /// <summary>
+    /// Host: whether the match fills its empty seats with CPU drivers as it starts (BotFill, when the match rules allow).
+    /// The game's sessions turn it on (OnlinePlay, the editor's Online menu); a session made any other way, as in tests, doesn't
+    /// </summary>
+    public bool FillsWithBots { get; set; }
+
     /// <summary>Netcode's manager for this session</summary>
     public NetworkManager Network { get; private set; }
 
@@ -454,6 +460,64 @@ public class OnlineSession : MonoBehaviour
         Debug.Log("Online: player " + machine + " took another seat (" + seats.Count + " in)");
         Spawn(prefabs.PlayerPrefab, machine, false, seat);
         Spawn(prefabs.ScooterPrefab, machine, false, seat);
+    }
+
+    /// <summary>Whether the player being spawned is a CPU driver (OnlinePlayer takes it as it spawns), false otherwise</summary>
+    internal bool SpawningBot { get; private set; }
+
+    /// <summary>
+    /// Host, as the match starts: seats CPU drivers in the empty seats, up to count, each a player and scooter the host
+    /// owns on every machine (BotFill says how many). Returns how many were seated
+    /// </summary>
+    public int AddBots(int count)
+    {
+        if (Match == null || !Network.IsServer)
+            return 0;
+
+        int added = 0;
+        for (; added < count; added++)
+        {
+            int seat = seats.Take(NetworkManager.ServerClientId);
+            if (seat < 0)
+                break;
+
+            SpawningBot = true;
+            try
+            {
+                Spawn(prefabs.PlayerPrefab, NetworkManager.ServerClientId, false, seat);
+            }
+            finally
+            {
+                SpawningBot = false;
+            }
+            Spawn(prefabs.ScooterPrefab, NetworkManager.ServerClientId, false, seat);
+        }
+
+        if (added > 0)
+            Debug.Log("Online: " + added + " CPU driver(s) took the empty seats (" + seats.Count + " in)");
+        return added;
+    }
+
+    /// <summary>Host, as the match ends for the lobby: the CPU drivers go, and their seats are free</summary>
+    public void RemoveBots()
+    {
+        if (Match == null || !Network.IsServer)
+            return;
+
+        foreach (OnlinePlayer player in players.ToArray())
+        {
+            if (!player.IsBot || !player.IsSpawned)
+                continue;
+
+            int seat = player.Seat;
+            seats.Free(NetworkManager.ServerClientId, seat);
+            player.NetworkObject.Despawn(true);
+            foreach (OnlineScooter scooter in scooters.ToArray())
+            {
+                if (scooter.Seat == seat && scooter.IsSpawned)
+                    scooter.NetworkObject.Despawn(true);
+            }
+        }
     }
 
     // Host: a machine gives a seat back. Only its own, and never its last (a connected machine always has a player)

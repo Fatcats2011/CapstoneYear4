@@ -119,9 +119,10 @@ public class RulesPanel : MonoBehaviour
         OptionSetting length = OptionSetting.Keyed("rules.length", new[] { 0, 1, 2 }, choice => lengths[choice], (int)rules.Length);
         OptionSetting steals = OptionSetting.KeyedToggle("rules.steals", "word.off", "word.on", rules.Steals ? 1 : 0);
         OptionSetting golden = OptionSetting.KeyedToggle("rules.golden", "word.off", "word.on", rules.GoldenOrder ? 1 : 0);
-        foreach (OptionSetting setting in new[] { length, steals, golden })
+        OptionSetting bots = OptionSetting.KeyedToggle("rules.bots", "word.off", "word.on", rules.Bots ? 1 : 0);
+        foreach (OptionSetting setting in new[] { length, steals, golden, bots })
             setting.Changed += OnChanged;
-        book = new OptionsBook(new OptionsPage("RULES", length, steals, golden));
+        book = new OptionsBook(new OptionsPage("RULES", length, steals, golden, bots));
         BuildRows();
 
         IsOpen = true;
@@ -156,7 +157,7 @@ public class RulesPanel : MonoBehaviour
         get
         {
             IReadOnlyList<OptionSetting> rules = book.Current.Settings;
-            return new HouseRules((MatchLength)rules[0].Value, rules[1].Value == 1, rules[2].Value == 1);
+            return new HouseRules((MatchLength)rules[0].Value, rules[1].Value == 1, rules[2].Value == 1, rules[3].Value == 1);
         }
     }
 

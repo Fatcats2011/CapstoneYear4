@@ -101,6 +101,8 @@ public class OnlineGame : MonoBehaviour
     double graceFor;         // host: the automatic start whose grace ran out (other machines' players made ready, or already counting down)
     double forcedFor;        // host: the automatic start other machines' players were made ready for
     readonly HashSet<ulong> seatedMachines = new HashSet<ulong>();
+    readonly List<OnlinePlayer> botsToSeat = new List<OnlinePlayer>(); // host: CPU drivers spawned, until their seat is free here
+    readonly HashSet<OnlinePlayer> seatedBots = new HashSet<OnlinePlayer>(); // host: CPU drivers with a scooter here
 
     /// <summary>
     /// Plays the game over a session (adds an OnlineGame to its object)
@@ -327,6 +329,13 @@ public class OnlineGame : MonoBehaviour
 
     void OnPlayerSpawned(OnlinePlayer player)
     {
+        // Host: a CPU driver is the host's, but nobody sits at it: its scooter is built here (SeatHostBots)
+        if (player.IsBot && player.IsOwner)
+        {
+            botsToSeat.Add(player);
+            return;
+        }
+
         // Host: a machine's first seat in this session restarts an open lobby's automatic start (AutoStartClock)
         if (session.Network != null && session.Network.IsServer)
             autoStartClock.Seated(session.MachineOf(player.OwnerClientId), session.Network.ServerTime.Time);
@@ -357,6 +366,9 @@ public class OnlineGame : MonoBehaviour
         if (localPlayers.Remove(player) && PlayerInstantiate.Instance != null)
             PlayerInstantiate.Instance.LoseSeat(player.Seat);
         waiting.Remove(player);
+        botsToSeat.Remove(player);
+        if (seatedBots.Remove(player) && PlayerInstantiate.Instance != null)
+            PlayerInstantiate.Instance.RemoveRemotePlayer(player.Seat);
 
         RemotePlayer remote;
         if (remotes.TryGetValue(player, out remote))
@@ -482,7 +494,15 @@ public class OnlineGame : MonoBehaviour
         // machine shows it in the match
         bool menus = LobbyRules.InTheMenus(state);
         if (wasInMenus && !menus && session.Match != null && session.Match.IsServer && PlayerInstantiate.Instance != null)
+        {
             session.DropUnreadyExtras(PlayerInstantiate.Instance.IsReady);
+
+            // The seats nobody took fill with CPU drivers, unless the match rules say not (a public lobby always fills)
+            bool botsOn = session.FillsWithBots && HouseRules.Current.ForMatch(OrderManager.PublicLobby()).Bots;
+            session.AddBots(BotFill.Needed(session.PlayersIn, botsOn));
+        }
+        else if (!wasInMenus && menus && session.Match != null && session.Match.IsServer)
+            session.RemoveBots(); // back in the lobby: the seats are people's again
         wasInMenus = menus;
 
         // The match starts: a player here without a seat can't follow it (the host never counted them)
@@ -571,6 +591,7 @@ public class OnlineGame : MonoBehaviour
         // start that was forced (SeatWaitingPlayers)
         AutoStart(players);
         SeatWaitingPlayers(players);
+        SeatHostBots(players);
         ShareLocalChoices(players);
         ShowRemoteChoices(players);
         ShareOrFollowClock();
@@ -680,6 +701,84 @@ public class OnlineGame : MonoBehaviour
             remotes[player] = new RemotePlayer { Avatar = avatar, Seat = seat, Forced = forced, Ready = forced };
             waiting.RemoveAt(i);
         }
+    }
+
+    // Host: each CPU driver gets a scooter here once its seat is free: a full scooter with a BotDriver at the wheel and no
+    // view. Its colour and hat are ones nobody uses, and every machine sees it as it sees any other host-owned player
+    void SeatHostBots(PlayerInstantiate players)
+    {
+        for (int i = botsToSeat.Count - 1; i >= 0; i--)
+        {
+            OnlinePlayer player = botsToSeat[i];
+            if (player == null)
+            {
+                botsToSeat.RemoveAt(i);
+                continue;
+            }
+
+            int seat = player.Seat;
+            if (seat < 0 || seat >= Constants.MAX_PLAYERS || players.Roster[seat] != null)
+                continue;
+
+            // Built switched off, so nothing starts before its seat is set (AddBotPlayer switches it on)
+            GameObject holder = new GameObject("CPU (being built)");
+            holder.SetActive(false);
+            GameObject avatar = Instantiate(prefabs.RemoteAvatarPrefab, holder.transform);
+            PlayerSlot slot = players.AddBotPlayer(avatar, seat, player.OwnerClientId);
+            Destroy(holder);
+            if (slot == null)
+            {
+                Destroy(avatar);
+                continue;
+            }
+
+            // The horn gauge's sliders live in a view, which a CPU driver has none of
+            foreach (PhaseIndicator horns in avatar.GetComponentsInChildren<PhaseIndicator>(true))
+                horns.enabled = false;
+            BallDriving driving = avatar.GetComponentInChildren<BallDriving>(true);
+            BotDriver bot = driving.gameObject.AddComponent<BotDriver>();
+            bot.OnlyInRound = true;
+            bot.Drive(driving);
+
+            DressBot(player, avatar);
+            seatedBots.Add(player);
+            botsToSeat.RemoveAt(i);
+        }
+    }
+
+    const string BOT_NAME = "CPU";
+
+    // A CPU driver's colour and hat, from those no one in the session wears, shared like any player's
+    void DressBot(OnlinePlayer bot, GameObject avatar)
+    {
+        int colour = Unused(choices.Colours.Count, bot, p => p.Colour);
+        int hat = Unused(choices.Hats.Count, bot, p => p.Hat);
+        bot.Share(colour, hat, true);
+        bot.ShareName(BOT_NAME);
+
+        PlayerColorInformationSO colourLook = Pick(choices.Colours, colour);
+        if (colourLook != null)
+            ScooterLook.ShowColour(avatar, colourLook);
+        PlayerHatInformationSO hatLook = Pick(choices.Hats, hat);
+        if (hatLook != null)
+            ScooterLook.ShowHat(avatar, hatLook);
+    }
+
+    // The first index of a list that no other player in the session has (the first one if all are used)
+    int Unused(int count, OnlinePlayer except, System.Func<OnlinePlayer, int> pick)
+    {
+        for (int index = 0; index < count; index++)
+        {
+            bool used = false;
+            foreach (OnlinePlayer player in session.Players)
+            {
+                if (player != except && pick(player) == index)
+                    used = true;
+            }
+            if (!used)
+                return index;
+        }
+        return 0;
     }
 
     // This machine's players' colour, hat, readiness and name go to every machine

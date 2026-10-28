@@ -185,5 +185,15 @@ public class ResultsMenu : SingletonMonobehaviour<ResultsMenu>
                 hostSeat = player.Index;
         }
         vote.Open(seats, hostSeat, GameAuthority.IsAuthority);
+
+        // A CPU driver always wants another round
+        if (GameAuthority.IsAuthority)
+        {
+            foreach (PlayerSlot player in PlayerInstantiate.Instance.Roster.Players)
+            {
+                if (player.IsBot)
+                    vote.Press(player.Index, true);
+            }
+        }
     }
 }

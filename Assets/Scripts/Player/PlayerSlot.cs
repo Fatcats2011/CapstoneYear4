@@ -6,12 +6,13 @@ using UnityEngine.InputSystem;
 /// </summary>
 public class PlayerSlot
 {
-    public PlayerSlot(int index, GameObject player, PlayerInput input, ulong ownerClientId)
+    public PlayerSlot(int index, GameObject player, PlayerInput input, ulong ownerClientId, bool isBot = false)
     {
         Index = index;
         Player = player;
         Input = input;
         OwnerClientId = ownerClientId;
+        IsBot = isBot;
     }
 
     /// <summary>
@@ -33,6 +34,11 @@ public class PlayerSlot
     /// Plays on this machine: has a controller, a split-screen view and menus here
     /// </summary>
     public bool IsLocal => Input != null;
+
+    /// <summary>
+    /// A CPU driver the host runs (online bots): a full scooter on the host with no controller, view or menus
+    /// </summary>
+    public bool IsBot { get; }
 
     /// <summary>
     /// The online client that owns another machine's player (0 for this machine's players and offline)

@@ -52,6 +52,21 @@ public class PlayerRoster
     }
 
     /// <summary>
+    /// Players whose scooters this machine runs: its own, and the CPU drivers a host runs (they have no view)
+    /// </summary>
+    public IEnumerable<PlayerSlot> SimulatedHere
+    {
+        get
+        {
+            foreach (PlayerSlot slot in slots)
+            {
+                if (slot != null && (slot.IsLocal || slot.IsBot))
+                    yield return slot;
+            }
+        }
+    }
+
+    /// <summary>
     /// How many players are on this machine
     /// </summary>
     public int LocalCount
@@ -111,6 +126,17 @@ public class PlayerRoster
             return null;
 
         return Take(new PlayerSlot(slot, player, null, ownerClientId));
+    }
+
+    ///<summary>
+    /// Online, host: puts a CPU driver in its seat. Returns their slot, or null when that slot is taken or doesn't exist
+    ///</summary>
+    public PlayerSlot JoinBotAt(GameObject player, ulong hostClientId, int slot)
+    {
+        if (player == null || !IsFree(slot) || SlotOfPlayer(player) >= 0)
+            return null;
+
+        return Take(new PlayerSlot(slot, player, null, hostClientId, true));
     }
 
     ///<summary>

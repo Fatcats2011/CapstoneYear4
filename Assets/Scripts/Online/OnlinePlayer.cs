@@ -18,6 +18,7 @@ public class OnlinePlayer : NetworkBehaviour
     readonly NetworkVariable<FixedString32Bytes> displayName = new NetworkVariable<FixedString32Bytes>(default, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Owner);
     readonly NetworkVariable<ulong> steamId = new NetworkVariable<ulong>(0, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Owner);
     readonly NetworkVariable<int> score = new NetworkVariable<int>(0);
+    readonly NetworkVariable<bool> isBot = new NetworkVariable<bool>(false);
 
     OnlineSession session;
 
@@ -39,6 +40,9 @@ public class OnlinePlayer : NetworkBehaviour
     /// <summary>Their Steam ID, for their profile picture (0 without Steam). Only their own machine writes it</summary>
     public ulong SteamId { get { return steamId.Value; } }
 
+    /// <summary>Whether this is a CPU driver the host runs (BotFill), rather than a person</summary>
+    public bool IsBot { get { return isBot.Value; } }
+
     /// <summary>Their score in the match, which only the host writes</summary>
     public int Score { get { return score.Value; } }
 
@@ -48,7 +52,10 @@ public class OnlinePlayer : NetworkBehaviour
 
         // The host seats the player as it spawns them: a value set here goes out with the spawn itself
         if (IsServer && session != null)
+        {
             seat.Value = session.SpawningSeat;
+            isBot.Value = session.SpawningBot;
+        }
 
         DontDestroyOnLoad(gameObject);
 

@@ -58,7 +58,7 @@ public class OnlineAchievements : MonoBehaviour
             ownSeats.Clear();
             foreach (OnlinePlayer player in session.Players)
             {
-                if (player != null && player.IsOwner)
+                if (player != null && player.IsOwner && !player.IsBot) // a CPU driver earns none
                     ownSeats.Add(player.Seat);
             }
             return ownSeats;

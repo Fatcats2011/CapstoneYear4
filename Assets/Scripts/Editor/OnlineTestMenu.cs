@@ -95,6 +95,7 @@ public static class OnlineTestMenu
         if (session == null)
         {
             session = OnlineSession.Create(Application.version);
+            session.FillsWithBots = true;
             OnlineGame.Attach(session);
         }
 

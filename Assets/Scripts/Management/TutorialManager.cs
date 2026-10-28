@@ -116,6 +116,8 @@ public class TutorialManager : SingletonMonobehaviour<TutorialManager>
         bool anyone = false;
         foreach (PlayerSlot player in PlayerInstantiate.Instance.Roster.Players)
         {
+            if (player.IsBot)
+                continue; // a CPU driver skips the tutorial
             if (!finished.Contains(player.Index))
                 return;
             anyone = true;

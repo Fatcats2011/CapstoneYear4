@@ -453,6 +453,8 @@ public class BallDriving : MonoBehaviour
     {
         pad = PlayerInstantiate.Instance.PlayerGamepads[playerIndex - 1];
         rumble = gameObject.GetComponent<Rumbler>();
+        if (rumble == null)
+            rumble = gameObject.AddComponent<Rumbler>(); // a host's CPU driver has no pad, so nothing shakes, but the calls still land
 
         boostTimerMaxTime = boostDuration;
         boostElapsedTime = boostTimerMaxTime;
@@ -751,7 +753,7 @@ public class BallDriving : MonoBehaviour
                 insideBuilding = false;
 
                 if(phaseType == PhaseType.OnlyInBuilding)
-                    cameraResizer.SwapCameraRendering(false);
+                    SwapRendering(false);
 
                 soundPool.StopPhaseSound();
             }
@@ -761,12 +763,12 @@ public class BallDriving : MonoBehaviour
                 insideBuilding = false;
 
                 if (phaseType == PhaseType.OnlyInBuilding)
-                    cameraResizer.SwapCameraRendering(false);
+                    SwapRendering(false);
             }
             else if (hit1Success == true && hit2Success == true && insideBuilding == false && boosting)
             {
                 if (phaseType == PhaseType.OnlyInBuilding)
-                    cameraResizer.SwapCameraRendering(true);
+                    SwapRendering(true);
 
                 insideBuilding = true;
 
@@ -1124,7 +1126,7 @@ public class BallDriving : MonoBehaviour
         ToggleCollision(true);
 
         if (phaseType == PhaseType.AtAllTimes)
-            cameraResizer.SwapCameraRendering(true);
+            SwapRendering(true);
 
         //~~~~~~~~~Wheelie~~~~~~~~~~~
         scooterModel.parent.parent.DOComplete();
@@ -1175,7 +1177,7 @@ public class BallDriving : MonoBehaviour
         boosting = false;
 
         if (phaseType == PhaseType.AtAllTimes)
-            cameraResizer.SwapCameraRendering(false);
+            SwapRendering(false);
 
         if (wheelie != null && wheelieEnd != null) 
         {
@@ -1233,7 +1235,7 @@ public class BallDriving : MonoBehaviour
         boostElapsedTime = boostTimerMaxTime;
 
         if (phaseType == PhaseType.AtAllTimes)
-            cameraResizer.SwapCameraRendering(false);
+            SwapRendering(false);
 
         boostAble = true;
         boosting = false;
@@ -1421,18 +1423,23 @@ public class BallDriving : MonoBehaviour
             speedLineValue = 0.8f;
             SetSpeedLines(speedLineValue);
 
-            orbitalCamera.BoostFOV(orbitalCamera.maxFOV);
+            if (orbitalCamera != null)
+                orbitalCamera.BoostFOV(orbitalCamera.maxFOV);
         }
         else
         {
             float clampedSpeedLineValue = RangeMutations.Map_Linear(currentVelocity, 23, 30, 1, 0.85f);
             clampedSpeedLineValue = Mathf.Clamp(clampedSpeedLineValue, 0.85f, 1f);
 
-            float clampedFOVValue = RangeMutations.Map_Linear(currentVelocity, 30, 40, 60f, orbitalCamera.maxFOV);
-            clampedFOVValue = Mathf.Clamp(clampedFOVValue, 60f, orbitalCamera.maxFOV);
+            // A CPU driver has no view to widen
+            if (orbitalCamera != null)
+            {
+                float clampedFOVValue = RangeMutations.Map_Linear(currentVelocity, 30, 40, 60f, orbitalCamera.maxFOV);
+                clampedFOVValue = Mathf.Clamp(clampedFOVValue, 60f, orbitalCamera.maxFOV);
 
-            // Reduce motion keeps the view as it is at any speed (Comfort)
-            orbitalCamera.passInFOV = Comfort.TargetFov(true, clampedFOVValue, 60f);
+                // Reduce motion keeps the view as it is at any speed (Comfort)
+                orbitalCamera.passInFOV = Comfort.TargetFov(true, clampedFOVValue, 60f);
+            }
 
             speedLineValue = clampedSpeedLineValue;
             SetSpeedLines(speedLineValue);
@@ -1442,6 +1449,13 @@ public class BallDriving : MonoBehaviour
     static readonly int SpeedLinesRemap = Shader.PropertyToID("_SpeedLinesRemap");
     float shownSpeedLines = float.NaN;
 
+    // The view swaps what it draws while phasing; a CPU driver has no view
+    void SwapRendering(bool phasing)
+    {
+        if (cameraResizer != null)
+            cameraResizer.SwapCameraRendering(phasing);
+    }
+
     // The speed lines' strength, written to their material only when it changes (every frame otherwise)
     void SetSpeedLines(float value)
     {
@@ -1450,7 +1464,8 @@ public class BallDriving : MonoBehaviour
             return;
 
         shownSpeedLines = value;
-        speedLinesMain.SetFloat(SpeedLinesRemap, value);
+        if (speedLinesMain != null) // a CPU driver has no view
+            speedLinesMain.SetFloat(SpeedLinesRemap, value);
     }
 
     /// <summary>
@@ -1494,7 +1509,7 @@ public class BallDriving : MonoBehaviour
             boosting = false;
             wheelying = false;
             if (phaseType == PhaseType.AtAllTimes)
-                cameraResizer.SwapCameraRendering(false);
+                SwapRendering(false);
             
             StartBoostCooldown();
         }

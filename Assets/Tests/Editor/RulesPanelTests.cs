@@ -74,10 +74,24 @@ namespace DoA.Tests
             panel.Open(HouseRules.Normal);
             Assert.AreEqual("", panel.Note);
 
-            panel.Move(false); // round to the last row: Golden Order
+            panel.Move(false); // round to the last row: Bots
+            panel.Move(false); // Golden Order
             panel.Step(false);
 
             StringAssert.Contains("GOLDEN WIN", panel.Note);
+        }
+
+        [Test]
+        public void Bots_AreTheLastRow_OnByDefault_AndStepOff()
+        {
+            panel.Open(HouseRules.Normal);
+            Assert.AreEqual("ON", panel.ValueOf(3));
+
+            panel.Move(false);
+            panel.Step(false);
+
+            Assert.IsFalse(HouseRules.Current.Bots);
+            Assert.AreEqual("NO BOTS", HouseRules.Current.Summary);
         }
 
         [Test]

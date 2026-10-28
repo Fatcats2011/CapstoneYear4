@@ -73,6 +73,7 @@ public class OnlinePlay : MonoBehaviour, ISessionControl
             if (session == null)
             {
                 session = OnlineSession.Create(Application.version);
+                session.FillsWithBots = true;
                 OnlineGame.Attach(session);
                 session.RoleChanged += ForwardRole;
                 session.Ended += ForwardEnd;

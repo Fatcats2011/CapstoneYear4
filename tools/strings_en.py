@@ -104,6 +104,8 @@ ROWS = [
     ("rules.length.long", "Match length", "LONG"),
     ("rules.steals", "Rule: boosting into a rival takes their delivery", "STEALS"),
     ("rules.golden", "Rule: the final round chasing one golden delivery", "GOLDEN ORDER"),
+    ("rules.bots", "Rule: empty online seats fill with CPU drivers", "BOTS"),
+    ("rules.nobots", "Summary line part", "NO BOTS"),
     ("rules.nosteals", "Summary line part", "NO STEALS"),
     ("rules.nogolden", "Summary line part", "NO GOLDEN ORDER"),
     ("rules.note.nogolden", "Shown with the golden order off", "NO GOLDEN ORDER: GOLDEN WIN, GOLDEN STEAL AND LAST TO FIRST CAN'T BE EARNED"),

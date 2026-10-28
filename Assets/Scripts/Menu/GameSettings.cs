@@ -51,6 +51,8 @@ public class GameSettings
     public int steals = 1;
     /// <summary>1: the match ends with the golden round</summary>
     public int goldenOrder = 1;
+    /// <summary>1: an online match fills its empty seats with CPU bots</summary>
+    public int bots = 1;
 
     /// <summary>The language picked on Options → LANGUAGE (a locale code); "" until picked: Steam's then (LanguageRules)</summary>
     public string language = "";
@@ -71,7 +73,7 @@ public class GameSettings
         return $"bgm={bgmPosition}\nsfx={sfxPosition}\nfullscreen={fullscreenPosition}\nquality={qualityLevel}\n"
             + $"exclusive={exclusiveFullscreen}\nwidth={width}\nheight={height}\nvsync={vsync}\nframecap={frameCap}\n"
             + $"master={masterPosition}\nbgmute={backgroundMute}\nsplit={splitLayout}\nreducemotion={reduceMotion}\nunits={units}\n"
-            + $"length={matchLength}\nsteals={steals}\ngolden={goldenOrder}\n"
+            + $"length={matchLength}\nsteals={steals}\ngolden={goldenOrder}\nbots={bots}\n"
             + $"language={language}\n";
     }
 
@@ -104,6 +106,7 @@ public class GameSettings
         copy.matchLength = matchLength;
         copy.steals = steals;
         copy.goldenOrder = goldenOrder;
+        copy.bots = bots;
         copy.language = language;
         return copy;
     }
@@ -192,6 +195,9 @@ public class GameSettings
                     break;
                 case "golden":
                     settings.goldenOrder = Mathf.Clamp(value, 0, 1);
+                    break;
+                case "bots":
+                    settings.bots = Mathf.Clamp(value, 0, 1);
                     break;
             }
         }

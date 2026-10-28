@@ -42,6 +42,9 @@ public class BotDriver : MonoBehaviour, IDriveInput
     internal bool UsesBoost = true;
     float sinceBoost = BOOST_EVERY;
 
+    /// <summary>Online bots: it drives only while a round is on (not in the tutorial, a cutscene or the results)</summary>
+    internal bool OnlyInRound;
+
     public event Action<bool> BoostButton;
 #pragma warning disable 67 // a bot neither drifts nor emotes (yet): there for IDriveInput
     public event Action<bool> DriftButton;
@@ -95,6 +98,15 @@ public class BotDriver : MonoBehaviour, IDriveInput
         if (driving == null)
             return;
 
+        if (OnlyInRound && !InRound())
+        {
+            Target = null;
+            corners.Clear();
+            steer = accelerate = brake = 0f;
+            ReleaseBoost(Time.deltaTime);
+            return;
+        }
+
         Vector3 position = driving.transform.position;
         Target = PickTarget(position);
         float dt = Time.deltaTime;
@@ -145,6 +157,15 @@ public class BotDriver : MonoBehaviour, IDriveInput
             BoostButton?.Invoke(true);
         }
         ReleaseBoost(dt);
+    }
+
+    static bool InRound()
+    {
+        GameManager game = GameManager.Instance;
+        if (game == null)
+            return false;
+        GameState state = game.MainState;
+        return state == GameState.Begin || state == GameState.MainLoop || state == GameState.FinalPackage;
     }
 
     void ReleaseBoost(float dt)

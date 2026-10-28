@@ -550,6 +550,28 @@ public class PlayerInstantiate : SingletonMonobehaviour<PlayerInstantiate>
     }
 
     ///<summary>
+    /// Online, host: seats a CPU driver (BotDriver) in a seat: a full scooter that this machine runs, with no view
+    /// (other machines show it as any remote scooter). Returns its slot, or null when the seat is taken
+    ///</summary>
+    public PlayerSlot AddBotPlayer(GameObject avatar, int seat, ulong hostClientId)
+    {
+        PlayerSlot slot = roster.JoinBotAt(avatar, hostClientId, seat);
+        if (slot == null)
+            return null;
+
+        slot.Company = companies[seat];
+        BallDriving ballDriving = avatar.GetComponentInChildren<BallDriving>(true);
+        ballDriving.Sphere.layer = 10 + seat;
+        ballDriving.playerIndex = seat + 1;
+        avatar.name = "P" + (seat + 1) + " CPU";
+        avatar.transform.SetParent(playerHolder.transform); // this switches it on, with its seat set
+        avatar.GetComponentInChildren<OrderHandler>(true).CompanyInfo = slot.Company;
+        ScooterLook.ShowCompany(avatar, slot.Company);
+        PlaceOnPodium(slot);
+        return slot;
+    }
+
+    ///<summary>
     /// Online: another machine's player left. Their seat is free and the ready count is redone
     ///</summary>
     public void RemoveRemotePlayer(int seat)
