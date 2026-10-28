@@ -1,4 +1,5 @@
 using NUnit.Framework;
+using UnityEngine;
 
 namespace DoA.Tests
 {
@@ -94,6 +95,49 @@ namespace DoA.Tests
 
             Assert.AreEqual(0, thief.PayForSteal(order, -1));
             Assert.AreEqual(0, thief.Score);
+        }
+
+        // An order with a mesh to swell, at its tier's size
+        Order NewOrderWithMesh(Constants.OrderValue tier, int tierIndex, float size)
+        {
+            Order order = NewOrder(tier);
+            order.orderMeshObject = objects.NewGameObject("Mesh");
+            order.meshScale = new float[] { 1f, 1f, 1f, 1f };
+            order.meshScale[tierIndex] = size;
+            order.orderMeshObject.transform.localScale = new Vector3(size, size, size);
+            return order;
+        }
+
+        [Test]
+        public void CountSteal_SwellsTheMesh()
+        {
+            Order order = NewOrderWithMesh(Constants.OrderValue.Hard, 2, 2f);
+
+            order.CountSteal();
+
+            Assert.AreEqual(2f * 1.15f, order.orderMeshObject.transform.localScale.x, 0.001f);
+        }
+
+        [Test]
+        public void ResetSteals_ReturnsTheMeshToItsSize()
+        {
+            Order order = NewOrderWithMesh(Constants.OrderValue.Hard, 2, 2f);
+            order.CountSteal();
+            order.CountSteal();
+
+            order.ResetSteals();
+
+            Assert.AreEqual(2f, order.orderMeshObject.transform.localScale.x, 0.001f);
+        }
+
+        [Test]
+        public void Golden_DoesNotSwell()
+        {
+            Order order = NewOrderWithMesh(Constants.OrderValue.Golden, 3, 1.5f);
+
+            order.CountSteal();
+
+            Assert.AreEqual(1.5f, order.orderMeshObject.transform.localScale.x, 0.001f);
         }
 
         [Test]

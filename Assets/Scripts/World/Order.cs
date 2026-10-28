@@ -25,6 +25,7 @@ public class Order : MonoBehaviour
     internal void CountSteal()
     {
         steals++;
+        ApplyStealLook();
     }
 
     /// <summary>The order starts afresh (it spawns, or goes back to the pool): no steals, nobody paid for it</summary>
@@ -32,6 +33,30 @@ public class Order : MonoBehaviour
     {
         steals = 0;
         PaidThieves.Clear();
+        ApplyStealLook();
+    }
+
+    // The index of this order's tier in the per-tier tables (meshes, materials, scales, glows): Easy 0 to Golden 3
+    private int PackageType()
+    {
+        switch (value)
+        {
+            case Constants.OrderValue.Medium: return 1;
+            case Constants.OrderValue.Hard: return 2;
+            case Constants.OrderValue.Golden: return 3;
+            default: return 0;
+        }
+    }
+
+    // A stolen order looks larger the more it has been stolen (StealValueRules.Swell), so players can see it is worth more.
+    // The golden order keeps its size: it doesn't double
+    private void ApplyStealLook()
+    {
+        if (orderMeshObject == null || value == Constants.OrderValue.Golden)
+            return;
+
+        float size = meshScale[PackageType()] * StealValueRules.Swell(steals);
+        orderMeshObject.transform.localScale = new Vector3(size, size, size);
     }
 
     // This order's key, the same on every machine (OrderBook): online, an order change names its order by it
@@ -57,7 +82,7 @@ public class Order : MonoBehaviour
     private MeshRenderer meshRenderer;
     private MeshFilter meshFilter;
     [Tooltip("Scale of the mesh based on order difficulty.")]
-    [SerializeField]private float[] meshScale = new float[4];
+    [SerializeField] internal float[] meshScale = new float[4];
 
     [Header("Order Information")]
     [SerializeField] private Transform pickup;
@@ -199,22 +224,7 @@ public class Order : MonoBehaviour
         this.transform.position = pickup.position;
 
         // Determines the pacakge type value based on the order type
-        int packageType = 0;
-        switch (value)
-        {
-            case Constants.OrderValue.Easy:
-                packageType = 0;
-                break;
-            case Constants.OrderValue.Medium:
-                packageType = 1;
-                break;
-            case Constants.OrderValue.Hard:
-                packageType = 2;
-                break;
-            case Constants.OrderValue.Golden:
-                packageType = 3;
-                break;
-        }
+        int packageType = PackageType();
 
         // set mesh based on package type
         meshRenderer.material = orderMaterials[packageType];
