@@ -50,6 +50,12 @@ public class HighlightDirector : MonoBehaviour
     /// <summary>Starts playing a reel (HighlightReel.Play); tests swap it</summary>
     internal Func<ReelList, ReelRecording, bool, HighlightReel> PlayReel = HighlightReel.Play;
 
+    /// <summary>
+    /// Whether the main round is being played (the game scene is up and its state is Begin): when a client plays an
+    /// arrived list; tests swap it
+    /// </summary>
+    internal Func<bool> InMainRound = InMainRoundNow;
+
     /// <summary>The last reel was destroyed before it ended (RunReel)</summary>
     internal bool ReelCutShort { get; private set; }
 
@@ -59,11 +65,13 @@ public class HighlightDirector : MonoBehaviour
     bool listening;
     bool active; // a main round is being recorded
     float sinceSample;
+    HighlightReel clientReel; // the host's reel, playing here (a client)
 
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
     static void ResetStatics()
     {
         Instance = null;
+        HighlightSync.Reset();
     }
 
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
@@ -112,6 +120,7 @@ public class HighlightDirector : MonoBehaviour
         FeatSync.Bumped += OnBumped;
         FeatSync.Delivered += OnDelivered;
         FeatSync.Sank += OnSank;
+        HighlightSync.Arrived += OnReelArrived;
     }
 
     /// <summary>Stops logging</summary>
@@ -122,6 +131,7 @@ public class HighlightDirector : MonoBehaviour
         FeatSync.Bumped -= OnBumped;
         FeatSync.Delivered -= OnDelivered;
         FeatSync.Sank -= OnSank;
+        HighlightSync.Arrived -= OnReelArrived;
     }
 
     void Update()
@@ -256,6 +266,7 @@ public class HighlightDirector : MonoBehaviour
                 return null;
 
             Debug.Log("Highlights: reel of " + list.Clips.Length + " clips, " + list.Length.ToString("0.0") + " s");
+            HighlightSync.Share(list); // the clients play it from the same start time
             return PlayReel(list, Recording, GameAuthority.IsAuthority);
         }
         catch (Exception e)
@@ -263,6 +274,35 @@ public class HighlightDirector : MonoBehaviour
             Debug.LogException(e);
             return null;
         }
+    }
+
+    /// <summary>
+    /// Client: the host's reel list arrived. While the main round is up it plays from where its start time puts it,
+    /// without deciding the skip (votes go to the host); late, it joins at the same moment as the rest, and a reel
+    /// already over plays nothing. It ends with the scene when the host loads the next. The host never plays what it shares
+    /// </summary>
+    internal void OnReelArrived(ReelList list)
+    {
+        if (GameAuthority.IsAuthority || Recording == null || !InMainRound())
+            return;
+        if (clientReel != null && !clientReel.Done)
+            return;
+        if (double.IsPositiveInfinity(HighlightReel.StartClock(list, Now())))
+            return;
+
+        try
+        {
+            clientReel = PlayReel(list, Recording, false);
+        }
+        catch (Exception e)
+        {
+            Debug.LogException(e); // Play has ended the half-built reel: the match goes on without one
+        }
+    }
+
+    static bool InMainRoundNow()
+    {
+        return GameManager.Instance != null && GameManager.Instance.MainState == GameState.Begin;
     }
 
     /// <summary>

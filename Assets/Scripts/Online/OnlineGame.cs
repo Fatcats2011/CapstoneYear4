@@ -13,6 +13,7 @@ using UnityEngine;
 /// - the results' rematch vote (OnlineRematch);
 /// - the vote to skip a cutscene (OnlineCutsceneSkip);
 /// - the end-of-match awards (OnlineAwards);
+/// - the highlight reel's list (OnlineHighlights);
 /// - each machine's round trip (OnlinePings);
 /// - steals and clashes between players (OnlineSteals);
 /// - where players who fall in the water rise (OnlineRespawns);
@@ -196,6 +197,9 @@ public class OnlineGame : MonoBehaviour
 
         // The end-of-match awards: picked on the host, shown on every machine
         gameObject.AddComponent<OnlineAwards>().Begin(session);
+
+        // The highlight reel's list: made on the host, played on every machine at the same moment
+        gameObject.AddComponent<OnlineHighlights>().Begin(session);
 
         // Each machine's round trip, measured on the host, for the pause menu
         gameObject.AddComponent<OnlinePings>().Begin(session);

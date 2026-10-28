@@ -75,6 +75,9 @@ public class OnlineMatch : NetworkBehaviour, IMatchLink
     /// <summary>Clients: the host's end-of-match awards</summary>
     public event Action<AwardBoard> AwardsReceived;
 
+    /// <summary>Clients: the host's highlight reel list</summary>
+    public event Action<ReelList> ReelReceived;
+
     /// <summary>Clients: the host's round trips (every PingRules.EVERY seconds)</summary>
     public event Action<PingBoard> PingsReceived;
 
@@ -285,6 +288,13 @@ public class OnlineMatch : NetworkBehaviour, IMatchLink
     {
         if (IsServer)
             AwardsClientRpc(board);
+    }
+
+    /// <summary>Host: shows every client the highlight reel to play. Does nothing on a client</summary>
+    public void ShareReel(ReelList list)
+    {
+        if (IsServer)
+            ReelClientRpc(list);
     }
 
     /// <summary>Host: shows every client each machine's round trip. Does nothing on a client</summary>
@@ -613,6 +623,14 @@ public class OnlineMatch : NetworkBehaviour, IMatchLink
     {
         if (!IsServer && NetChecks.Sane(board))
             AwardsReceived?.Invoke(board);
+    }
+
+    // The list is the only argument: a rejected read leaves the reader mid-message
+    [ClientRpc]
+    void ReelClientRpc(ReelList list)
+    {
+        if (!IsServer && NetChecks.Sane(list))
+            ReelReceived?.Invoke(list);
     }
 
     [ClientRpc]

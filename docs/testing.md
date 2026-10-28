@@ -63,6 +63,7 @@
   - `TutorialManagerTests`: the tutorial ends when every seat's player has finished it (online, only the host ends it).
   - `TutorialSkipTests`: a rematch skips the next tutorial once; the first wave uses the skip up, the menus clear it.
 - Connection info and matchmaking by distance: `PingRulesTests`, `MatchRegionTests`, `MatchmakerTests` (a far lobby losing to a near one); `OnlinePingsNetworkTests` (port 7834).
+- The highlight reel's list online: `HighlightMessagesNetworkTests` (port 7835; 7823-7834 are taken).
 - The mouse in the menus: `MouseMenuRulesTests` (rows on screen, which way a click steps), `MouseMenusTests` (a fake menu driven by the pointer).
 - Localization: `StringsCsvTests` (the CSV, every cell filled, placeholders, translations), `LanguageRulesTests`, `LocTests`, `LocalizedTextTests` (live switching; every key the code asks for exists), `AccentRulesTests` and `AccentOverlayTests` (the drawn accents; every translation showable in each font), `DrawnWordsTests` (the hand-lettered words, every word image known), `LanguageFlagTests`, `LocalizationSetupTests` (the editor tables). `OptionsPagesMenuTests.Language_RightOnTheRow_SwitchesTheGame` switches the real menu to French.
 - The match rules: `HouseRulesTests` (normal, the wave factor, public lobbies, the summary, `settings.cfg`), `RulesPanelTests` (the panel). `MatchRulesPlayTests` ends a real local match with the Golden Order off.

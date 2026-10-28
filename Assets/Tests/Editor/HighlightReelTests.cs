@@ -209,6 +209,7 @@ namespace DoA.Tests
 
             EditorSceneManager.playModeStartScene = null;
             TestPlayers.RemoveAll();
+            GameAuthority.Role = NetworkRole.Offline;
         }
 
         // Play Mode starts in the menu (the test yields EnterPlayMode itself: an Edit Mode test can't from a nested one)
@@ -512,6 +513,147 @@ namespace DoA.Tests
             yield return null;
             foreach (KeyValuePair<Behaviour, bool> part in before)
                 Assert.AreEqual(part.Value, part.Key.enabled, part.Key.name + " is back as it was");
+        }
+
+        // ---- A reel shared and heard ----
+
+        static readonly System.Collections.Generic.List<ReelList> shared = new System.Collections.Generic.List<ReelList>();
+        static ReelList playedList;
+
+        static void Share(ReelList list) { shared.Add(list); }
+
+        static HighlightReel PlayAndNote(ReelList list, ReelRecording recording, bool decides)
+        {
+            playedList = list;
+            playedDecides = decides;
+            sharedBeforePlay = shared.Count;
+            return PlayAndKeep(list, recording, decides);
+        }
+
+        static int sharedBeforePlay;
+        static bool playedDecides;
+        static bool inTheRound;
+
+        static bool InTheRound() { return inTheRound; }
+
+        [UnityTest]
+        public IEnumerator RunReel_SharesTheListItPlays_BeforePlayingIt()
+        {
+            yield return InTheMenu();
+            yield return OnePlayer();
+            HighlightDirector director = DirectorWithAMoment();
+            shared.Clear();
+            HighlightSync.Reset();
+            HighlightSync.Shared += Share;
+            played = null;
+            director.PlayReel = PlayAndNote;
+
+            director.RunReel().MoveNext();
+            HighlightSync.Reset();
+
+            Assert.IsNotNull(played, "a reel plays");
+            Assert.AreEqual(1, shared.Count, "the list was shared once");
+            Assert.AreEqual(1, sharedBeforePlay, "and before the reel started");
+            Assert.AreEqual(playedList, shared[0], "the list that plays");
+            played.End();
+        }
+
+        static HighlightDirector ClientWithARecording()
+        {
+            HighlightDirector director = HighlightDirector.Instance;
+            director.Recording = Recording();
+            director.InMainRound = InTheRound;
+            played = null;
+            director.PlayReel = PlayAndNote;
+            GameAuthority.Role = NetworkRole.Client;
+            return director;
+        }
+
+        static ReelList StartingIn(double seconds)
+        {
+            ReelList list = TwoClips();
+            list.StartAt = HighlightDirector.Now() + seconds;
+            return list;
+        }
+
+        [UnityTest]
+        public IEnumerator Client_ArrivedList_InTheMainRound_PlaysWithoutDeciding()
+        {
+            yield return InTheMenu();
+            yield return OnePlayer();
+            HighlightDirector director = ClientWithARecording();
+            inTheRound = true;
+
+            director.OnReelArrived(StartingIn(5));
+
+            Assert.IsNotNull(played, "the reel plays");
+            Assert.AreEqual(StartingIn(5).Clips.Length, playedList.Clips.Length);
+            Assert.IsFalse(playedDecides, "a client's skip vote only goes to the host");
+            played.End();
+            GameAuthority.Role = NetworkRole.Offline;
+        }
+
+        [UnityTest]
+        public IEnumerator Client_ArrivedList_OutsideTheMainRound_IsIgnored()
+        {
+            yield return InTheMenu();
+            yield return OnePlayer();
+            HighlightDirector director = ClientWithARecording();
+            inTheRound = false;
+
+            director.OnReelArrived(StartingIn(5));
+
+            Assert.IsNull(played);
+            GameAuthority.Role = NetworkRole.Offline;
+        }
+
+        [UnityTest]
+        public IEnumerator Client_ArrivedList_AlreadyOver_PlaysNothing()
+        {
+            yield return InTheMenu();
+            yield return OnePlayer();
+            HighlightDirector director = ClientWithARecording();
+            inTheRound = true;
+            ReelList list = TwoClips();
+
+            director.OnReelArrived(StartingIn(-(list.Length + 5)));
+
+            Assert.IsNull(played);
+            GameAuthority.Role = NetworkRole.Offline;
+        }
+
+        [UnityTest]
+        public IEnumerator Host_ArrivedList_IsIgnored()
+        {
+            yield return InTheMenu();
+            yield return OnePlayer();
+            HighlightDirector director = ClientWithARecording();
+            GameAuthority.Role = NetworkRole.Host;
+            inTheRound = true;
+
+            director.OnReelArrived(StartingIn(5));
+
+            Assert.IsNull(played);
+            GameAuthority.Role = NetworkRole.Offline;
+        }
+
+        [UnityTest]
+        public IEnumerator Client_TwoListsArrive_OnlyTheFirstPlays()
+        {
+            yield return InTheMenu();
+            yield return OnePlayer();
+            HighlightDirector director = ClientWithARecording();
+            inTheRound = true;
+
+            director.OnReelArrived(StartingIn(5));
+            HighlightReel first = played;
+            played = null;
+            director.OnReelArrived(StartingIn(5));
+
+            Assert.IsNotNull(first);
+            Assert.IsNull(played, "a reel already plays");
+            first.End();
+            GameAuthority.Role = NetworkRole.Offline;
         }
     }
 }

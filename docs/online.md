@@ -343,6 +343,12 @@ Playing with strangers is opt-in: a lobby is created friends only, exactly as be
 - The host sends the picked awards once (`AwardBoard`, `OnlineAwards` → `OnlineMatch.ShareAwards`); clients keep the last ones (`AwardSync.Last`) for their results screen.
 - `OnlineAwardsNetworkTests` (port 7833): the host's awards reach the other machine as picked.
 
+### Highlight reel
+
+- The host picks and films the main round's reel after its time is up, then shares the list once (`ReelList`, `HighlightSync` → `OnlineHighlights` → `OnlineMatch.ShareReel`) before playing it. A client keeps it only if `NetChecks.Sane(ReelList)` passes, and plays it while the main round (state `Begin`) is up, from where the list's `StartAt` (server time) puts it: `HighlightReel.StartClock`. A list that arrives after the reel is over plays nothing.
+- A client's reel opens its own skip vote without deciding it: the votes go to the host over the cutscene skip's relay. The host waits only on its own reel; a client's reel ends with the scene when the host loads the next.
+- `HighlightMessagesNetworkTests` (port 7835): the list reaches a client whole, a list with a NaN is dropped, a client never sends, and `OnlineHighlights` carries the host's shared list to a client's arrival.
+
 ### Cutscene skip
 
 - Every player holds A to vote to skip a cutscene (`docs/controls.md`). The host holds the vote: `CutsceneSkip` runs `SkipVote` there and calls `CutsceneManager.Skip()` once everyone still in has voted. Its next state ends the cutscene on every client, as the developer skip always did.
