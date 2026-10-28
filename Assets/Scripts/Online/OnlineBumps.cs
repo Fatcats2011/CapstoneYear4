@@ -122,6 +122,7 @@ public class OnlineBumps : MonoBehaviour
             return;
 
         PlayerBump bump = new PlayerBump { Bumper = bumper, Victim = victim, Push = push };
+        FeatSync.Bump(bumper, victim, Mathf.Clamp01(push / toBall.ClashForce));
         Show(bump);
         match.SendBump(bump);
     }

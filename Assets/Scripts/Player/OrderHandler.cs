@@ -410,12 +410,23 @@ public class OrderHandler : MonoBehaviour
         if (newOrder != null && (order1 == null || order2 == null))
         {
             TakeOrderFrom(victim, newOrder);
-            FeatSync.Steal(OrderSync.SeatOf(this), newOrder.Value == Constants.OrderValue.Golden);
-            FeatSync.Rob(OrderSync.SeatOf(victim));
+            ReportSteal(victim, newOrder.Value == Constants.OrderValue.Golden);
         }
         victim.DropEverything(victim.order1Position.position, victim.order2Position.position);
 
         SetDrivingIndicators();
+    }
+
+    /// <summary>
+    /// Tells the achievements, awards and highlight reel that this player stole from a victim
+    /// </summary>
+    internal void ReportSteal(OrderHandler victim, bool golden)
+    {
+        int thief = OrderSync.SeatOf(this);
+        int robbed = OrderSync.SeatOf(victim);
+        FeatSync.Steal(thief, golden);
+        FeatSync.Rob(robbed);
+        FeatSync.Strike(thief, robbed, true, golden);
     }
 
     /// <summary>
@@ -593,6 +604,7 @@ public class OrderHandler : MonoBehaviour
         {
             ClashWith(other);
             other.ClashWith(this);
+            FeatSync.Strike(OrderSync.SeatOf(this), OrderSync.SeatOf(other), false, false);
         }
     }
 

@@ -96,7 +96,10 @@ public class OnlineSteals : MonoBehaviour
             hit = PlayerHit.Steal(attacker, victim);
         }
         else
+        {
             hit = PlayerHit.Clash(attacker, victim);
+            FeatSync.Strike(attacker, victim, false, false);
+        }
 
         Show(hit);
         match.SendHit(hit);
