@@ -15,7 +15,7 @@ public class OrderHandler : MonoBehaviour
     [SerializeField] NumberHandler numberHandler;    
 
     internal Order order1 = null; // first order the player is holding
-    private Order order2 = null; // second order the player is holding
+    internal Order order2 = null; // second order the player is holding
 
     [SerializeField] DrivingIndicators drivingIndicators; // Reference to driving indicator script on player
 
@@ -166,7 +166,7 @@ public class OrderHandler : MonoBehaviour
             // Online, only the host changes scores, and counts deliveries for achievements: a client shows the host's
             if (GameAuthority.IsAuthority)
             {
-                score += (int)order1.Value;
+                score += order1.Worth;
                 FeatSync.Deliver(OrderSync.SeatOf(this), rightOrder.Value);
             }
             order1.DeliverOrder();
@@ -180,7 +180,7 @@ public class OrderHandler : MonoBehaviour
             soundPool.PlayOrderDropoff(key);
             if (GameAuthority.IsAuthority)
             {
-                score += (int)order2.Value;
+                score += order2.Worth;
                 FeatSync.Deliver(OrderSync.SeatOf(this), rightOrder.Value);
             }
             order2.DeliverOrder();
@@ -324,14 +324,14 @@ public class OrderHandler : MonoBehaviour
     }
 
     /// <summary>
-    /// This method returns the order of the highest value the player is holding. If the player isn't holidng anything it returns null.
+    /// This method returns the order worth the most that the player is holding (a stolen order is worth more than its tier). If the player isn't holidng anything it returns null.
     /// </summary>
     /// <returns></returns>
     public Order GetBestOrder()
     {
         if(order1 != null && order2 != null)
         {
-            if(order2.Value > order1.Value)
+            if(order2.Worth > order1.Worth)
             {
                 return order2;
             }
@@ -410,11 +410,25 @@ public class OrderHandler : MonoBehaviour
         if (newOrder != null && (order1 == null || order2 == null))
         {
             TakeOrderFrom(victim, newOrder);
+            PayForSteal(newOrder, OrderSync.SeatOf(this));
+            ShowScore();
+            ScoreManager.Instance.UpdatePlacement();
             ReportSteal(victim, newOrder.Value == Constants.OrderValue.Golden);
         }
         victim.DropEverything(victim.order1Position.position, victim.order2Position.position);
 
         SetDrivingIndicators();
+    }
+
+    /// <summary>
+    /// Pays this player for taking a package: the first time their seat takes this order (StealValueRules.Pay). Offline
+    /// and on the host only, like every score change. Returns what was paid
+    /// </summary>
+    internal int PayForSteal(Order stolen, int thiefSeat)
+    {
+        int paid = StealValueRules.Pay(stolen.PaidThieves, thiefSeat);
+        score += paid;
+        return paid;
     }
 
     /// <summary>
@@ -445,6 +459,7 @@ public class OrderHandler : MonoBehaviour
         soundPool.PlayOrderTheft();
         victim.LoseOrder(order);
         AddOrder(order);
+        order.CountSteal(); // the order is worth more now, here and on every machine that replays this steal
     }
 
     /// <summary>

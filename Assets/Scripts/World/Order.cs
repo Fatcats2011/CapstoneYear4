@@ -12,6 +12,28 @@ public class Order : MonoBehaviour
     [SerializeField] internal Constants.OrderValue value;
     public Constants.OrderValue Value { get { return value; } }
 
+    // How many times this order has been stolen since it last spawned (every machine counts the steals it replays), and
+    // what it is worth now: its price doubled for each (StealValueRules)
+    private int steals;
+    public int Steals { get { return steals; } }
+    public int Worth { get { return StealValueRules.Worth(value, steals); } }
+
+    /// <summary>The seats already paid for stealing this order (StealValueRules.Pay): only the host's scores use it</summary>
+    internal readonly HashSet<int> PaidThieves = new HashSet<int>();
+
+    /// <summary>This order was stolen: it is worth more. Every machine that replays the steal calls this</summary>
+    internal void CountSteal()
+    {
+        steals++;
+    }
+
+    /// <summary>The order starts afresh (it spawns, or goes back to the pool): no steals, nobody paid for it</summary>
+    internal void ResetSteals()
+    {
+        steals = 0;
+        PaidThieves.Clear();
+    }
+
     // This order's key, the same on every machine (OrderBook): online, an order change names its order by it
     internal int key;
     public int Key { get { return key; } }
@@ -164,6 +186,7 @@ public class Order : MonoBehaviour
 
         using OrderSync.Scope change = OrderSync.Change(OrderChange.Spawn(key, shouldAdd));
 
+        ResetSteals();
         OrderManager.Instance.OnMainGameFinishes += EraseWhenSwappingToGold;
 
         if (shouldAdd)
@@ -409,6 +432,7 @@ public class Order : MonoBehaviour
 
         using OrderSync.Scope change = OrderSync.Change(OrderChange.Erase(key));
 
+        ResetSteals();
         ResetMesh();
 
         orderMeshObject.transform.rotation = initMeshRotation;
