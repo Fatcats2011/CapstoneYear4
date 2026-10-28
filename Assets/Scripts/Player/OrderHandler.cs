@@ -410,9 +410,12 @@ public class OrderHandler : MonoBehaviour
         if (newOrder != null && (order1 == null || order2 == null))
         {
             TakeOrderFrom(victim, newOrder);
-            PayForSteal(newOrder, OrderSync.SeatOf(this));
-            ShowScore();
-            ScoreManager.Instance.UpdatePlacement();
+            if (StealsCount)
+            {
+                PayForSteal(newOrder, OrderSync.SeatOf(this));
+                ShowScore();
+                ScoreManager.Instance.UpdatePlacement();
+            }
             ReportSteal(victim, newOrder.Value == Constants.OrderValue.Golden);
         }
         victim.DropEverything(victim.order1Position.position, victim.order2Position.position);
@@ -459,7 +462,15 @@ public class OrderHandler : MonoBehaviour
         soundPool.PlayOrderTheft();
         victim.LoseOrder(order);
         AddOrder(order);
-        order.CountSteal(); // the order is worth more now, here and on every machine that replays this steal
+        if (StealsCount)
+            order.CountSteal(); // the order is worth more now, here and on every machine that replays this steal
+    }
+
+    // Whether a steal now doubles an order and pays the thief (StealValueRules.CountsIn): not in the tutorial. Every
+    // machine follows the host's game state, so they agree
+    static bool StealsCount
+    {
+        get { return GameManager.Instance == null || StealValueRules.CountsIn(GameManager.Instance.MainState); }
     }
 
     /// <summary>

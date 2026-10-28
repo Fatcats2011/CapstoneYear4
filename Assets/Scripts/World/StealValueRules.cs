@@ -61,6 +61,15 @@ public static class StealValueRules
         return STEAL_PAY;
     }
 
+    /// <summary>
+    /// Whether a steal in this game state doubles an order and pays the thief. Not in the tutorial: its points carry into
+    /// the match (scores reset only for a new match), so a bump there would hand a player a head start
+    /// </summary>
+    public static bool CountsIn(GameState state)
+    {
+        return state != GameState.Tutorial;
+    }
+
     /// <summary>How many times larger than usual an order that has been stolen this many times looks</summary>
     public static float Swell(int steals)
     {

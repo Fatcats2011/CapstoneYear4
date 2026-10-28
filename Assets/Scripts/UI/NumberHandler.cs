@@ -36,8 +36,21 @@ public class NumberHandler : MonoBehaviour
 
     private int currPlace = -1;
 
+    /// <summary>
+    /// What the score HUD shows for a score: it has room for three digits, so anything higher reads 999 (not the last number
+    /// it had room for). The results screen shows the true score
+    /// </summary>
+    internal static string HudScoreText(string score)
+    {
+        if (int.TryParse(score, out int value) && value > 999)
+            return "999";
+
+        return score;
+    }
+
     public void UpdateScoreUI(string passedInScore)
     {
+        passedInScore = HudScoreText(passedInScore);
         moneyCount = passedInScore;
 
         char[] splitScore = passedInScore.ToCharArray();

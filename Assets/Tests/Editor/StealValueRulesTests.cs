@@ -63,6 +63,14 @@ namespace DoA.Tests
         }
 
         [Test]
+        public void Counts_NotInTheTutorial()
+        {
+            Assert.IsFalse(StealValueRules.CountsIn(GameState.Tutorial), "tutorial points carry into the match");
+            Assert.IsTrue(StealValueRules.CountsIn(GameState.Begin));
+            Assert.IsTrue(StealValueRules.CountsIn(GameState.MainLoop));
+        }
+
+        [Test]
         public void Swell_GrowsPerStealThenStops()
         {
             Assert.AreEqual(1f, StealValueRules.Swell(0), 0.001f);
