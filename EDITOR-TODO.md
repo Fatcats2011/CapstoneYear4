@@ -160,6 +160,15 @@ The room scene and the board are set up (`DispatchRoom`, `RoomClock`, the board 
 - Community → Rich Presence: upload `docs/steam/rich-presence-english.vdf`.
 - Store page and tags: `docs/steam/store-page-draft.md`. Steam Deck: `docs/steam/steam-deck.md`.
 
+## 16. Highlight reel: playtest (30 minutes)
+
+- Watch a full local round to time up: the reel plays, skips with everyone holding A, and the golden round (or results, if it's off) loads after.
+- Online, two PCs: both see the same reel, and skip works.
+- Check the reel on the Steam Deck and in 4-player split-screen with `PerfOverlay` (F6).
+- Tune the scoring weights and the "good enough" bar (`HighlightRules`).
+- Check the camera choices look good in the real town.
+- Check that no HUD (the match timer, the time-up banner) draws over the reel, and that the colours look right (post-processing is off on the reel camera).
+
 ## 17. Reference
 
 - Frame rate: `docs/performance.md`.

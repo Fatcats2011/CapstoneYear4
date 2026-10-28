@@ -347,6 +347,7 @@ Playing with strangers is opt-in: a lobby is created friends only, exactly as be
 
 - The host picks and films the main round's reel after its time is up, then shares the list once (`ReelList`, `HighlightSync` → `OnlineHighlights` → `OnlineMatch.ShareReel`) before playing it. A client keeps it only if `NetChecks.Sane(ReelList)` passes, and plays it while the main round (state `Begin`) is up, from where the list's `StartAt` (server time) puts it: `HighlightReel.StartClock`. A list that arrives after the reel is over plays nothing.
 - A client's reel opens its own skip vote without deciding it: the votes go to the host over the cutscene skip's relay. The host waits only on its own reel; a client's reel ends with the scene when the host loads the next.
+- The host does not wait for any client. Every machine plays its own recording of the round, so no frames travel: only the list does.
 - `HighlightMessagesNetworkTests` (port 7835): the list reaches a client whole, a list with a NaN is dropped, a client never sends, and `OnlineHighlights` carries the host's shared list to a client's arrival.
 
 ### Cutscene skip

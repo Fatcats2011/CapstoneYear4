@@ -52,6 +52,11 @@ The goal is 120 FPS, or as high as the game can go, with 1 to 4 split-screen pla
   - **Pedestrians'** animators stop animating off-screen.
   - **Online:** other players' scooters are looked up once, not every frame.
 
+- **Highlight reel recorder** (`HighlightDirector`, `ReelRecording`):
+  - It samples each seat during the main round (from state `Begin`). The budget is a 12000-sample ring per seat (about 3 MB in all), and nothing is allocated per sample.
+  - Checked by `HighlightDirectorTests.Sample_AllocatesNothing`.
+  - Still to measure on the Steam Deck and in 4-player split-screen: see `EDITOR-TODO.md`.
+
 ## Editor changes, in order
 
 Make one change, then measure again (a 4-player match, then the `Perf:` line). Each change is an asset or Player Settings edit. Check the look after each.
