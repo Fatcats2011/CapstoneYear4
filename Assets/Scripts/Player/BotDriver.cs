@@ -198,7 +198,7 @@ public class BotDriver : MonoBehaviour, IDriveInput
         if (victimBall != null)
         {
             Vector3 toVictim = victimBall.position - position;
-            hit = BotTactics.BoostToHit(BotBrain.Bearing(driving.transform.forward, toVictim), new Vector2(toVictim.x, toVictim.z).magnitude);
+            hit = BotTactics.BoostToHit(BotBrain.Bearing(driving.transform.forward, toVictim), new Vector2(toVictim.x, toVictim.z).magnitude, driving.Boosting);
         }
         sinceBoost += dt;
         if (UsesBoost && boostHeld < 0f && !stuck.Reversing

@@ -71,6 +71,15 @@ namespace DoA.Tests
         }
 
         [Test]
+        public void Hunter_StealsAGoldenOrderWhenBehind()
+        {
+            BotOption golden = Steal(50, 20f);
+            golden.Golden = true;
+
+            Assert.Greater(BotTactics.Score(Desperate(BotKind.Hunter), golden), float.NegativeInfinity, "golden is big, though it's worth 50");
+        }
+
+        [Test]
         public void Hunter_DrivesFarForAHardOrder()
         {
             List<BotOption> options = new List<BotOption> { Order(55, 20f), Order(80, 120f) };
@@ -150,10 +159,16 @@ namespace DoA.Tests
         [Test]
         public void BoostToHit_CloseAndLinedUp_Only()
         {
-            Assert.IsTrue(BotTactics.BoostToHit(5f, 8f));
-            Assert.IsTrue(BotTactics.BoostToHit(-5f, 8f));
-            Assert.IsFalse(BotTactics.BoostToHit(30f, 8f), "not lined up");
-            Assert.IsFalse(BotTactics.BoostToHit(5f, 20f), "too far");
+            Assert.IsTrue(BotTactics.BoostToHit(5f, 8f, false));
+            Assert.IsTrue(BotTactics.BoostToHit(-5f, 8f, false));
+            Assert.IsFalse(BotTactics.BoostToHit(30f, 8f, false), "not lined up");
+            Assert.IsFalse(BotTactics.BoostToHit(5f, 20f, false), "too far");
+        }
+
+        [Test]
+        public void BoostToHit_NotWhileAlreadyBoosting()
+        {
+            Assert.IsFalse(BotTactics.BoostToHit(5f, 8f, true), "one press per boost, so one steal try");
         }
 
         [Test]

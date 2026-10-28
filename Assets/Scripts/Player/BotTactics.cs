@@ -80,7 +80,8 @@ public static class BotTactics
             return value - distance;
 
         float appetite = p.StealAppetite + p.DesperateSteal * d;
-        if (!s.StealsOn || appetite <= 0f || o.Worth < p.MinStealWorth)
+        // A golden order is big whatever its Worth (50, below an easy one's)
+        if (!s.StealsOn || appetite <= 0f || (o.Worth < p.MinStealWorth && !o.Golden))
             return float.NegativeInfinity;
         return value * appetite * (o.VictimLeads ? LEADER_BONUS : 1f) * (o.VictimBoosting ? BOOSTING_VICTIM : 1f) - distance;
     }
@@ -118,10 +119,13 @@ public static class BotTactics
     /// <summary>The courier swerves from boosting rivals this close, in metres</summary>
     public const float DANGER_RADIUS = 15f;
 
-    /// <summary>Whether a chasing bot boosts into its victim now: lined up (bearing in degrees) and close (metres)</summary>
-    public static bool BoostToHit(float bearing, float distance)
+    /// <summary>
+    /// Whether a chasing bot boosts into its victim now: lined up (bearing in degrees), close (metres) and not boosting
+    /// already (a press mid-boost does nothing, and would count as another steal try)
+    /// </summary>
+    public static bool BoostToHit(float bearing, float distance, bool boosting)
     {
-        return Mathf.Abs(bearing) <= HIT_ANGLE && distance <= HIT_DISTANCE;
+        return !boosting && Mathf.Abs(bearing) <= HIT_ANGLE && distance <= HIT_DISTANCE;
     }
 
     /// <summary>
