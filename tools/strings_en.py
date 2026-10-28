@@ -146,7 +146,7 @@ ROWS = [
     ("reel.rec", "Recording light, top left of the reel", "REC"),
     ("reel.cam", "{0} = camera number, two digits", "CAM {0}"),
     ("reel.caption.theft", "Caption: a player stole another's order", "THEFT DETECTED"),
-    ("reel.caption.collision", "Caption: two players crashed into each other", "COLLISION RECORDED"),
+    ("reel.caption.collision", "Caption: two players crashed into each other", "COLLISION DETECTED"),
     ("reel.caption.water", "Caption: a player fell in the water", "SUBJECT ENTERED WATER"),
     ("reel.caption.delivery", "Caption: a player delivered an order", "DELIVERY CONFIRMED"),
 

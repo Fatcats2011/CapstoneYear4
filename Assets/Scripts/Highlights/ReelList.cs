@@ -20,24 +20,79 @@ public struct ReelClip : INetworkSerializable
 
     /// <summary>
     /// How long the clip takes to play, in real seconds: its length, plus what each slowed stretch (clamped to the
-    /// clip's end) adds
+    /// clip's end, and to the next shot's cut) adds
     /// </summary>
-    public float RealLength
+    public float RealLength => (float)RealSeconds;
+
+    /// <summary>RealLength, unrounded: the clip's stretches walked as playback walks them (TimeAfter)</summary>
+    internal double RealSeconds
     {
         get
         {
-            double length = End - Start;
-            if (Shots != null)
+            double real = 0;
+            double t = Start;
+            while (t < End)
             {
-                foreach (ReelShot shot in Shots)
-                {
-                    if (shot.Speed <= 0f || shot.Speed >= 1f)
-                        continue;
-                    double stretch = Math.Max(0.0, Math.Min(ShotDirector.PEAK_LENGTH, End - shot.Cut));
-                    length += stretch * (1.0 / shot.Speed - 1.0);
-                }
+                Stretch(t, out float speed, out double until);
+                real += (until - t) / speed;
+                t = until;
             }
-            return (float)length;
+            return real;
+        }
+    }
+
+    /// <summary>The clip time after this many real seconds of playing the clip (its End at most)</summary>
+    internal double TimeAfter(double real)
+    {
+        double t = Start;
+        while (t < End)
+        {
+            Stretch(t, out float speed, out double until);
+            double needed = (until - t) / speed;
+            if (real < needed)
+                return t + real * speed;
+            real -= needed;
+            t = until;
+        }
+        return End;
+    }
+
+    /// <summary>The shot showing at a clip time: the last to have cut in, else the first (-1: no shots)</summary>
+    internal int ShotAt(double t)
+    {
+        if (Shots == null || Shots.Length == 0)
+            return -1;
+        int index = 0;
+        for (int i = 1; i < Shots.Length; i++)
+        {
+            if (Shots[i].Cut <= t && Shots[i].Cut >= Shots[index].Cut)
+                index = i;
+        }
+        return index;
+    }
+
+    // The playback speed at a clip time, and the clip time it holds until: a slow shot plays at its speed for
+    // PEAK_LENGTH of clip time from its cut (until the next cut), else the clip plays at full speed. Always moves on past t
+    void Stretch(double t, out float speed, out double until)
+    {
+        until = End;
+        speed = 1f;
+        int index = ShotAt(t);
+        if (index < 0)
+            return;
+
+        for (int i = 0; i < Shots.Length; i++)
+        {
+            if (Shots[i].Cut > t && Shots[i].Cut < until)
+                until = Shots[i].Cut;
+        }
+
+        ReelShot shot = Shots[index];
+        double slowEnd = shot.Cut + ShotDirector.PEAK_LENGTH;
+        if (shot.Speed > 0f && shot.Speed < 1f && t >= shot.Cut && t < slowEnd)
+        {
+            speed = shot.Speed;
+            until = Math.Min(until, slowEnd);
         }
     }
 

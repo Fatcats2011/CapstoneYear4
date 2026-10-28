@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using System.Text.RegularExpressions;
 using NUnit.Framework;
 using UnityEditor;
 using UnityEditor.SceneManagement;
@@ -114,6 +115,33 @@ namespace DoA.Tests
             ReelList playable = HighlightDirector.Playable(List(5, clips));
 
             Assert.AreEqual(0, playable.Clips.Length);
+        }
+
+        [Test]
+        public void RealLength_AgreesWithPlayback_OnADirectorMadeList()
+        {
+            // Two seats driving along x at 2 m/s from 0 to 10 s; every shot clear. Big clips get a slow peak shot: one
+            // with all of its slow stretch, one cut short by the clip's end
+            var recording = new ReelRecording(400);
+            for (int i = 0; i <= 200; i++)
+            {
+                for (int seat = 0; seat < 2; seat++)
+                {
+                    Vector3 ball = new Vector3(i / 20f * 2f, 0f, seat * 3f);
+                    recording.Add(seat, new ReelSample { Time = i / 20.0, Pose = new ScooterPose { Ball = ball, Heading = 90f, ModelPosition = ball, ModelRotation = Quaternion.identity } });
+                }
+            }
+            var clips = new List<Clip>
+            {
+                new Clip { Start = 2, End = 6, KeyTime = 4, Score = 20, SeatsMask = 0b11, KeyPlace = new Vector3(8, 0, 1.5f) },
+                new Clip { Start = 6.5, End = 8.5, KeyTime = 8, Score = 20, SeatsMask = 0b11, KeyPlace = new Vector3(16, 0, 1.5f) },
+            };
+            ReelList list = ReelList.From(clips, new ShotDirector(recording, (a, b) => true), 50);
+            Assert.IsTrue(System.Array.TrueForAll(list.Clips, clip => clip.Shots.Length == 2 && clip.Shots[1].Speed < 1f), "each clip has a peak");
+
+            Assert.IsFalse(double.IsPositiveInfinity(HighlightReel.StartClock(list, 50 + list.Length - 0.001)), "still playing just before Length");
+            Assert.AreEqual(8.5, HighlightReel.StartClock(list, 50 + list.Length - 0.0001), 1e-3, "at the last clip's end");
+            Assert.IsTrue(double.IsPositiveInfinity(HighlightReel.StartClock(list, 50 + list.Length + 0.001)), "done just after Length");
         }
 
         [Test]
@@ -372,6 +400,118 @@ namespace DoA.Tests
             yield return null;
             Assert.IsTrue(reel == null);
             AssertRestored(renderers, canvases); // nothing left of the player's to restore, and nothing thrown
+        }
+        // The reel the director started, and the loads it asked for (statics: an iterator's lambdas can't share its locals safely)
+        static HighlightReel played;
+        static int loads;
+
+        static HighlightReel PlayAndKeep(ReelList list, ReelRecording recording, bool decides)
+        {
+            played = HighlightReel.Play(list, recording, decides);
+            return played;
+        }
+
+        static void CountLoad() { loads++; }
+
+        // The director with a steal by seat 0 on seat 1 at 105, in the recording, and its reel started through a seam
+        static HighlightDirector DirectorWithAMoment()
+        {
+            HighlightDirector director = HighlightDirector.Instance;
+            Assert.IsNotNull(director, "the director made on launch");
+            director.Recording = Recording();
+            director.Moments.Clear();
+            director.Moments.Add(new Moment { Kind = MomentKind.Steal, Time = 105, Seat = 0, Other = 1, TimeLeft = 20, Place = new Vector3(55, 1, 50) });
+            return director;
+        }
+
+        [UnityTest]
+        public IEnumerator RunReel_PlayThrows_FinishesAndRestoresThePlayers()
+        {
+            yield return InTheMenu();
+            yield return OnePlayer();
+            Dictionary<Renderer, bool> renderers = RenderersNow();
+            Dictionary<Behaviour, bool> canvases = CanvasesNow();
+            HighlightDirector director = DirectorWithAMoment();
+            director.PlayReel = (list, recording, decides) => HighlightReel.Play(list, null, decides); // throws once the players are hidden
+            LogAssert.Expect(LogType.Exception, new Regex("NullReferenceException"));
+
+            IEnumerator run = director.RunReel();
+            Assert.IsFalse(run.MoveNext(), "no reel: RunReel ends at once, so the load follows");
+            Assert.IsFalse(director.ReelCutShort);
+            yield return null;
+
+            Assert.IsNull(GameObject.Find("Highlight Reel"), "the half-built reel is gone");
+            AssertRestored(renderers, canvases);
+        }
+
+        [UnityTest]
+        public IEnumerator ReelThen_ReelDestroyedByAnotherScene_DoesNotLoad()
+        {
+            yield return InTheMenu();
+            yield return OnePlayer();
+            Dictionary<Renderer, bool> renderers = RenderersNow();
+            Dictionary<Behaviour, bool> canvases = CanvasesNow();
+            HighlightDirector director = DirectorWithAMoment();
+            played = null;
+            loads = 0;
+            director.PlayReel = PlayAndKeep;
+            director.StartCoroutine(director.ReelThen(CountLoad));
+            Assert.IsNotNull(played, "a reel plays");
+            yield return null;
+
+            Object.Destroy(played.gameObject); // as a scene load would
+            yield return null;
+            yield return null;
+
+            Assert.IsTrue(director.ReelCutShort);
+            Assert.AreEqual(0, loads, "the game moved on elsewhere: no golden round load");
+            AssertRestored(renderers, canvases);
+        }
+
+        [UnityTest]
+        public IEnumerator ReelThen_ReelEnds_Loads()
+        {
+            yield return InTheMenu();
+            yield return OnePlayer();
+            HighlightDirector director = DirectorWithAMoment();
+            played = null;
+            loads = 0;
+            director.PlayReel = PlayAndKeep;
+            director.StartCoroutine(director.ReelThen(CountLoad));
+            yield return null;
+
+            played.End(); // as a skip would
+            yield return null;
+            yield return null;
+
+            Assert.IsFalse(director.ReelCutShort);
+            Assert.AreEqual(1, loads, "the golden round loads after the reel");
+        }
+
+        [UnityTest]
+        public IEnumerator Play_HidesThePlayersLightsAndDecals_AndRestoresThem()
+        {
+            yield return InTheMenu();
+            yield return OnePlayer();
+            var before = new Dictionary<Behaviour, bool>();
+            foreach (PlayerSlot slot in PlayerInstantiate.Instance.Roster.Players)
+            {
+                foreach (Light light in slot.Player.GetComponentsInChildren<Light>(true))
+                    before[light] = light.enabled;
+                foreach (UnityEngine.Rendering.Universal.DecalProjector decal in slot.Player.GetComponentsInChildren<UnityEngine.Rendering.Universal.DecalProjector>(true))
+                    before[decal] = decal.enabled;
+            }
+            Assert.IsTrue(before.ContainsValue(true), "the player has a headlight or logo on");
+
+            HighlightReel reel = Play();
+            yield return null;
+            foreach (Behaviour part in before.Keys)
+                Assert.IsFalse(part.enabled, part.name + " is off during the reel");
+
+            reel.End();
+            yield return null;
+            foreach (KeyValuePair<Behaviour, bool> part in before)
+                Assert.AreEqual(part.Value, part.Key.enabled, part.Key.name + " is back as it was");
         }
     }
 }

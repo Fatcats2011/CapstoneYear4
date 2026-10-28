@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Rendering.Universal;
 using UnityEngine.VFX;
 
 /// <summary>
@@ -32,6 +33,9 @@ public class HighlightReel : MonoBehaviour
     /// <summary>The reel has finished: played to the end, skipped, or ended</summary>
     public bool Done { get; private set; }
 
+    /// <summary>The reel was destroyed before it ended (a scene load, a quit to the menu), not played out or skipped</summary>
+    internal bool CutShort { get; private set; }
+
     /// <summary>Round time now, in the reel (the recording's clock)</summary>
     internal double Clock { get; private set; }
 
@@ -48,7 +52,7 @@ public class HighlightReel : MonoBehaviour
     ReelOverlay overlay;
     readonly Actor[] standIns = new Actor[Constants.MAX_PLAYERS];
     readonly List<Renderer> hiddenRenderers = new List<Renderer>();
-    readonly List<Canvas> hiddenCanvases = new List<Canvas>();
+    readonly List<Behaviour> hiddenParts = new List<Behaviour>(); // the HUD's canvases, the headlights and logo decals
     bool restored;
     int clipShown = -1;
     int shotShown = -1;
@@ -57,25 +61,34 @@ public class HighlightReel : MonoBehaviour
 
     /// <summary>
     /// Starts playing a reel: the players are hidden, the stand-ins and the camera made, and the skip vote opened for
-    /// every roster seat (decides: whether this machine decides it, GameAuthority)
+    /// every roster seat (decides: whether this machine decides it, GameAuthority). If anything throws, the half-built
+    /// reel is ended (the players come back) before the exception goes on
     /// </summary>
     public static HighlightReel Play(ReelList list, ReelRecording recording, bool decides)
     {
         GameObject holder = new GameObject("Highlight Reel");
         HighlightReel reel = holder.AddComponent<HighlightReel>();
-        reel.list = list;
-        reel.recording = recording;
-        reel.HidePlayers();
-        reel.BuildStandIns();
-        reel.BuildCamera();
-        reel.overlay = ReelOverlay.Build(holder.transform);
+        try
+        {
+            reel.list = list;
+            reel.recording = recording;
+            reel.HidePlayers();
+            reel.BuildStandIns();
+            reel.BuildCamera();
+            reel.overlay = ReelOverlay.Build(holder.transform);
 
-        reel.Skipper = holder.AddComponent<CutsceneSkip>();
-        reel.Skipper.PromptParent = reel.overlay.transform;
-        reel.Skipper.Skip = reel.End;
-        reel.Skipper.Open(RosterSeats(), decides);
+            reel.Skipper = holder.AddComponent<CutsceneSkip>();
+            reel.Skipper.PromptParent = reel.overlay.transform;
+            reel.Skipper.Skip = reel.End;
+            reel.Skipper.Open(RosterSeats(), decides);
 
-        reel.Show(reel.Now());
+            reel.Show(reel.Now());
+        }
+        catch
+        {
+            reel.End();
+            throw;
+        }
         return reel;
     }
 
@@ -118,6 +131,8 @@ public class HighlightReel : MonoBehaviour
     void OnDestroy()
     {
         // A scene load (or a client's reel cut short) still gives the players back
+        if (!Done)
+            CutShort = true;
         Done = true;
         Restore();
     }
@@ -140,82 +155,15 @@ public class HighlightReel : MonoBehaviour
         for (clip = 0; clip < list.Clips.Length; clip++)
         {
             ReelClip entry = list.Clips[clip];
-            double length = RealLength(entry);
+            double length = entry.RealSeconds; // the same walk as RealLength, which list.Length adds up
             if (real < length)
             {
-                time = ClipTime(entry, real);
+                time = entry.TimeAfter(real);
                 return true;
             }
             real -= length;
         }
         return false;
-    }
-
-    // How long a clip plays in real seconds: its stretches walked as ClipTime walks them
-    static double RealLength(ReelClip clip)
-    {
-        double real = 0;
-        double t = clip.Start;
-        while (t < clip.End)
-        {
-            Stretch(clip, t, out float speed, out double until);
-            real += (until - t) / speed;
-            t = until;
-        }
-        return real;
-    }
-
-    // The clip time after this many real seconds of the clip
-    static double ClipTime(ReelClip clip, double real)
-    {
-        double t = clip.Start;
-        while (t < clip.End)
-        {
-            Stretch(clip, t, out float speed, out double until);
-            double needed = (until - t) / speed;
-            if (real < needed)
-                return t + real * speed;
-            real -= needed;
-            t = until;
-        }
-        return clip.End;
-    }
-
-    // The playback speed at a clip time, and the clip time it holds until: a slow shot plays at its speed for
-    // PEAK_LENGTH of clip time from its cut, else the clip plays at full speed. Always moves on past t
-    static void Stretch(ReelClip clip, double t, out float speed, out double until)
-    {
-        until = clip.End;
-        speed = 1f;
-        if (clip.Shots == null || clip.Shots.Length == 0)
-            return;
-
-        int index = ShotAt(clip, t);
-        for (int i = 0; i < clip.Shots.Length; i++)
-        {
-            if (clip.Shots[i].Cut > t && clip.Shots[i].Cut < until)
-                until = clip.Shots[i].Cut;
-        }
-
-        ReelShot shot = clip.Shots[index];
-        double slowEnd = shot.Cut + ShotDirector.PEAK_LENGTH;
-        if (shot.Speed > 0f && shot.Speed < 1f && t >= shot.Cut && t < slowEnd)
-        {
-            speed = shot.Speed;
-            until = Math.Min(until, slowEnd);
-        }
-    }
-
-    // The shot showing at a clip time: the last to have cut in, else the first
-    static int ShotAt(ReelClip clip, double t)
-    {
-        int index = 0;
-        for (int i = 1; i < clip.Shots.Length; i++)
-        {
-            if (clip.Shots[i].Cut <= t && clip.Shots[i].Cut >= clip.Shots[index].Cut)
-                index = i;
-        }
-        return index;
     }
 
     // ---- Each frame ----
@@ -237,7 +185,7 @@ public class HighlightReel : MonoBehaviour
                 Pose(standIns[seat], seat, time, cut);
         }
 
-        int shot = clip.Shots != null && clip.Shots.Length > 0 ? ShotAt(clip, time) : -1;
+        int shot = clip.ShotAt(time);
         if (shot >= 0)
             PlaceCamera(clip.Shots[shot], time);
         if (cut || shot != shotShown)
@@ -359,8 +307,8 @@ public class HighlightReel : MonoBehaviour
         return driving != null && driving.transform.parent != null ? driving.transform.parent : slot.Player.transform;
     }
 
-    // Every roster player's renderers and driving HUD off, remembering which were on (never their objects: Respawn
-    // reads its model's active state)
+    // Every roster player's renderers, headlights, logo decals and driving HUD off, remembering which were on (never
+    // their objects: Respawn reads its model's active state)
     void HidePlayers()
     {
         if (PlayerInstantiate.Instance == null)
@@ -377,18 +325,25 @@ public class HighlightReel : MonoBehaviour
                 renderer.enabled = false;
                 hiddenRenderers.Add(renderer);
             }
+            foreach (Light light in avatar.GetComponentsInChildren<Light>(true))
+                Hide(light);
+            foreach (DecalProjector decal in avatar.GetComponentsInChildren<DecalProjector>(true))
+                Hide(decal);
 
             Transform hud = slot.IsLocal ? avatar.Find(DRIVING_CANVAS) : null;
             if (hud == null)
                 continue;
             foreach (Canvas canvas in hud.GetComponentsInChildren<Canvas>(true))
-            {
-                if (!canvas.enabled)
-                    continue;
-                canvas.enabled = false;
-                hiddenCanvases.Add(canvas);
-            }
+                Hide(canvas);
         }
+    }
+
+    void Hide(Behaviour part)
+    {
+        if (!part.enabled)
+            return;
+        part.enabled = false;
+        hiddenParts.Add(part);
     }
 
     // Exactly what HidePlayers switched off comes back on (a player gone since is skipped), and the skip closes
@@ -405,13 +360,13 @@ public class HighlightReel : MonoBehaviour
             if (renderer != null)
                 renderer.enabled = true;
         }
-        foreach (Canvas canvas in hiddenCanvases)
+        foreach (Behaviour part in hiddenParts)
         {
-            if (canvas != null)
-                canvas.enabled = true;
+            if (part != null)
+                part.enabled = true;
         }
         hiddenRenderers.Clear();
-        hiddenCanvases.Clear();
+        hiddenParts.Clear();
 
         foreach (Actor standIn in standIns)
         {
@@ -532,11 +487,10 @@ public class HighlightReel : MonoBehaviour
             || part is VisualEffect || part is TrailRenderer;
     }
 
-    // Render pipeline parts that are the scooter's look (the company logo decals, a light's settings): kept
+    // Render pipeline parts that are the scooter's look (the company logo decals, the headlight's settings): kept
     static bool IsLook(MonoBehaviour behaviour)
     {
-        string space = behaviour.GetType().Namespace;
-        return space != null && space.StartsWith("UnityEngine.Rendering");
+        return behaviour is DecalProjector || behaviour is UniversalAdditionalLightData;
     }
 
     // Whether another part on the same object still requires this one

@@ -703,10 +703,12 @@ public class OrderManager : SingletonMonobehaviour<OrderManager>
         GameAuthority.SetTimeScale(1.0f);
         if (!isFinal)
         {
-            // The main round's highlight reel, if it had moments worth showing; the golden round loads after it
+            // The main round's highlight reel, if it had moments worth showing; the golden round loads after it (not if
+            // the reel was cut short by another scene load)
             if (HighlightDirector.Instance != null)
-                yield return HighlightDirector.Instance.RunReel();
-            SceneFlow.Current.LoadFinalOrderScene();
+                yield return HighlightDirector.Instance.ReelThen(() => SceneFlow.Current.LoadFinalOrderScene());
+            else
+                SceneFlow.Current.LoadFinalOrderScene();
         }
         else
         {

@@ -47,6 +47,12 @@ public class HighlightDirector : MonoBehaviour
     /// <summary>How long is left of the round now; tests swap it</summary>
     internal Func<float> TimeLeft = RoundTimeLeft;
 
+    /// <summary>Starts playing a reel (HighlightReel.Play); tests swap it</summary>
+    internal Func<ReelList, ReelRecording, bool, HighlightReel> PlayReel = HighlightReel.Play;
+
+    /// <summary>The last reel was destroyed before it ended (RunReel)</summary>
+    internal bool ReelCutShort { get; private set; }
+
     readonly List<Seat> seats = new List<Seat>();
     GameManager watched; // the game manager whose states this follows
     OrderManager hooked; // the order manager whose end of round this waits for
@@ -202,29 +208,61 @@ public class HighlightDirector : MonoBehaviour
     }
 
     /// <summary>
+    /// The main round's reel, then the next scene: the reel plays (RunReel), and the load follows unless the reel was cut
+    /// short by something else's scene load (a quit to the menu, a disconnect), when this game's flow has moved on already
+    /// </summary>
+    internal IEnumerator ReelThen(Action load)
+    {
+        yield return RunReel();
+        if (!ReelCutShort)
+            load();
+    }
+
+    /// <summary>
     /// The main round's reel, after its time is up: where the rules run, the round's moments become clips (HighlightRules),
     /// the director films them (ShotDirector), and the reel plays from a moment ahead until it ends or is skipped.
-    /// Nothing worth showing: it ends at once, without a frame
+    /// Nothing worth showing, or a reel that failed to build: it ends at once, without a frame. Afterwards ReelCutShort
+    /// says whether it was destroyed before it ended
     /// </summary>
     internal IEnumerator RunReel()
     {
-        if (!GameAuthority.IsAuthority || Recording == null)
+        ReelCutShort = false;
+        HighlightReel reel = StartReel();
+        if (reel == null)
             yield break;
 
-        List<Clip> clips = HighlightRules.Pick(HighlightRules.Clips(Moments), RosterSeatIndices());
-        if (clips.Count == 0)
-            yield break;
-
-        var director = new ShotDirector(Recording, ShotLineOfSight.WorldClear());
-        ReelList list = Playable(ReelList.From(clips, director, Now() + START_DELAY));
-        if (list.Clips.Length == 0)
-            yield break;
-
-        Debug.Log("Highlights: reel of " + list.Clips.Length + " clips, " + list.Length.ToString("0.0") + " s");
-        HighlightReel reel = HighlightReel.Play(list, Recording, GameAuthority.IsAuthority);
         while (reel != null && !reel.Done)
             yield return null;
-        Debug.Log("Highlights: reel ended");
+        ReelCutShort = reel.CutShort;
+        Debug.Log("Highlights: reel " + (ReelCutShort ? "cut short" : "ended"));
+    }
+
+    // Picks, films and starts the reel; null for none. A failure here must never strand the match: it's logged, and
+    // the reel (whose Play ends itself on a throw, so the players come back) is skipped
+    HighlightReel StartReel()
+    {
+        if (!GameAuthority.IsAuthority || Recording == null)
+            return null;
+
+        try
+        {
+            List<Clip> clips = HighlightRules.Pick(HighlightRules.Clips(Moments), RosterSeatIndices());
+            if (clips.Count == 0)
+                return null;
+
+            var director = new ShotDirector(Recording, ShotLineOfSight.WorldClear());
+            ReelList list = Playable(ReelList.From(clips, director, Now() + START_DELAY));
+            if (list.Clips.Length == 0)
+                return null;
+
+            Debug.Log("Highlights: reel of " + list.Clips.Length + " clips, " + list.Length.ToString("0.0") + " s");
+            return PlayReel(list, Recording, GameAuthority.IsAuthority);
+        }
+        catch (Exception e)
+        {
+            Debug.LogException(e);
+            return null;
+        }
     }
 
     /// <summary>
