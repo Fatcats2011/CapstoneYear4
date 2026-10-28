@@ -13,7 +13,7 @@ public class NumberHandler : MonoBehaviour
 
     [Header("Tip Counter")]
     [SerializeField] string moneyCount;
-    [SerializeField] Image[] moneyImages;
+    [SerializeField] internal Image[] moneyImages;
     [SerializeField] GameObject tipHolder;
     [SerializeField] GameObject dollarSign;
 
@@ -37,15 +37,55 @@ public class NumberHandler : MonoBehaviour
     private int currPlace = -1;
 
     /// <summary>
-    /// What the score HUD shows for a score: it has room for three digits, so anything higher reads 999 (not the last number
-    /// it had room for). The results screen shows the true score
+    /// What the score HUD shows for a score: it has room for four digits, so anything higher reads 9999. The results
+    /// screen shows the true score
     /// </summary>
     internal static string HudScoreText(string score)
     {
-        if (int.TryParse(score, out int value) && value > 999)
-            return "999";
+        if (int.TryParse(score, out int value) && value > 9999)
+            return "9999";
 
         return score;
+    }
+
+    /// <summary>Where the dollar sign goes and where the whole counter sits, and how big, for a count of digits</summary>
+    internal struct ScoreLayout
+    {
+        public float DollarX;
+        public float CounterX;
+        public float CounterScale;
+    }
+
+    /// <summary>
+    /// The layout for a count of digits (the nearest one for a count the HUD has no room for). The counter keeps its right
+    /// edge in place as digits come and go, and shrinks to fit the fourth
+    /// </summary>
+    internal static ScoreLayout LayoutFor(int digits)
+    {
+        switch (Mathf.Clamp(digits, 1, 4))
+        {
+            case 1: return new ScoreLayout { DollarX = 0f, CounterX = -50f, CounterScale = 1.45f };
+            case 2: return new ScoreLayout { DollarX = -65f, CounterX = -16f, CounterScale = 1.2f };
+            case 3: return new ScoreLayout { DollarX = -115f, CounterX = 0f, CounterScale = 1f };
+            default: return new ScoreLayout { DollarX = -175f, CounterX = 18f, CounterScale = 0.82f };
+        }
+    }
+
+    // The fourth digit, made the first time a score reaches 1000 by copying the leftmost digit's holder one digit further left
+    private Image thousandsImage;
+
+    internal Image ThousandsImage()
+    {
+        if (thousandsImage == null)
+        {
+            RectTransform first = (RectTransform)moneyImages[0].transform.parent;
+            RectTransform second = (RectTransform)moneyImages[1].transform.parent;
+            RectTransform copy = Instantiate(first, first.parent);
+            copy.name = "Image Holder (thousands)";
+            copy.anchoredPosition = first.anchoredPosition + (first.anchoredPosition - second.anchoredPosition);
+            thousandsImage = copy.GetComponentInChildren<Image>();
+        }
+        return thousandsImage;
     }
 
     public void UpdateScoreUI(string passedInScore)
@@ -54,38 +94,28 @@ public class NumberHandler : MonoBehaviour
         moneyCount = passedInScore;
 
         char[] splitScore = passedInScore.ToCharArray();
+        if (splitScore.Length == 0)
+            return;
 
-        // If there is 0-9 dollars
-        if (splitScore.Length == 1)
+        // The digits' slots from the left; a score of n digits fills the last n, and the others hide
+        int count = Mathf.Min(splitScore.Length, 4);
+        Image[] slots = { count > 3 ? ThousandsImage() : thousandsImage, moneyImages[0], moneyImages[1], moneyImages[2] };
+        for (int slot = 0; slot < slots.Length; slot++)
         {
-            moneyImages[0].enabled = false;
-            moneyImages[1].enabled = false;
-            StartCoroutine(animateNumber(moneyImages[2], splitScore[0]));
-            dollarSign.transform.localPosition = new Vector3(0, 0, 0);
-            tipHolder.transform.localPosition = new Vector3(-50, 0, 0);
-            tipHolder.transform.localScale = new Vector3(1.45f, 1.45f, 1.45f);
-        }
-        // If there is 10-99 dollars
-        else if (splitScore.Length == 2)
-        {
-            moneyImages[0].enabled = false;
-            StartCoroutine(animateNumber(moneyImages[1], splitScore[0]));
-            StartCoroutine(animateNumber(moneyImages[2], splitScore[1]));
-            dollarSign.transform.localPosition = new Vector3(-65, 0, 0);
-            tipHolder.transform.localPosition = new Vector3(-16, 0, 0);
-            tipHolder.transform.localScale = new Vector3(1.2f, 1.2f, 1.2f);
-        }
-        // If there is 100-999 dollars
-        else if (splitScore.Length == 3)
-        {
-            StartCoroutine(animateNumber(moneyImages[0], splitScore[0]));
-            StartCoroutine(animateNumber(moneyImages[1], splitScore[1]));
-            StartCoroutine(animateNumber(moneyImages[2], splitScore[2]));
-            dollarSign.transform.localPosition = new Vector3(-115, 0, 0);
+            if (slots[slot] == null)
+                continue;
 
-            tipHolder.transform.localPosition = new Vector3(0, 0, 0);
-            tipHolder.transform.localScale = new Vector3(1, 1, 1);
+            int digit = slot - (slots.Length - count);
+            if (digit < 0)
+                slots[slot].enabled = false;
+            else
+                StartCoroutine(animateNumber(slots[slot], splitScore[digit]));
         }
+
+        ScoreLayout layout = LayoutFor(count);
+        dollarSign.transform.localPosition = new Vector3(layout.DollarX, 0, 0);
+        tipHolder.transform.localPosition = new Vector3(layout.CounterX, 0, 0);
+        tipHolder.transform.localScale = new Vector3(layout.CounterScale, layout.CounterScale, layout.CounterScale);
     }
 
     public void UpdateTimerUI(string passedInTimer)
