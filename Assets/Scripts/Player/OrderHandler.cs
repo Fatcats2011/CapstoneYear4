@@ -42,6 +42,8 @@ public class OrderHandler : MonoBehaviour
     }
     private bool hasOrder = false;
     public bool HasOrder => hasOrder;
+    /// <summary>How many orders it holds, 0-2 (a CPU driver weighs a detour by it: BotTactics)</summary>
+    public int HeldCount => (order1 != null ? 1 : 0) + (order2 != null ? 1 : 0);
 
     private SoundPool soundPool;
 

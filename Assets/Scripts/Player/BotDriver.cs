@@ -4,9 +4,10 @@ using UnityEngine;
 using UnityEngine.AI;
 
 /// <summary>
-/// A CPU driver for one scooter (bots phase G1): it drives as a pad would (IDriveInput), towards the nearest order free
-/// to take, then to where its order goes (BotBrain), along a path on the Scooter NavMesh (straight at it without one),
-/// boosting when lined up on a far corner and backing out when stuck.
+/// A CPU driver for one scooter (bots phase G1): it drives as a pad would (IDriveInput), towards what its personality
+/// (Kind) scores best — a free order, or a rival to steal from, boosting into them when close — then to where its order
+/// goes (BotTactics), along a path on the Scooter NavMesh (straight at it without one), boosting when lined up on a far
+/// corner and backing out when stuck. The courier swerves from boosting rivals while it carries something.
 /// Set it as the scooter's BallDriving.DriveInput. Only where the rules run: a client's scooters follow the host's.
 /// Developers: F7 hands Player 1's scooter to a bot and back (BotAutopilot)
 /// </summary>
@@ -23,8 +24,16 @@ public class BotDriver : MonoBehaviour, IDriveInput
     BallDriving driving;
     OrderHandler handler;
     readonly BotStuck stuck = new BotStuck();
-    readonly List<Vector3> spots = new List<Vector3>();
-    readonly List<Order> free = new List<Order>();
+    readonly BotChase chase = new BotChase();
+    readonly List<BotOption> options = new List<BotOption>();
+    readonly List<Component> targets = new List<Component>();     // each option's order, or its victim's OrderHandler
+    readonly List<Transform> victimBalls = new List<Transform>(); // a steal's victim's scooter (null for an order)
+    readonly List<Vector3> threats = new List<Vector3>();
+    Component chosen;                 // the order or victim it's going for, else null: deliver, or nothing to do
+    Transform victimBall;
+    int victimSeat = -1;
+    float chaseLimit;
+    float sinceChoice = REPATH_EVERY;
     readonly List<Vector3> corners = new List<Vector3>();
     readonly Vector3[] cornerBuffer = new Vector3[MAX_CORNERS];
     NavMeshPath path;
@@ -57,6 +66,12 @@ public class BotDriver : MonoBehaviour, IDriveInput
     float IDriveInput.CameraX => 0f;
     float IDriveInput.CameraY => 0f;
     bool IDriveInput.LookBehind => false;
+
+    /// <summary>Its personality (online bots: by seat, OnlineGame). The courier, the mildest, until told</summary>
+    public BotKind Kind { get; set; } = BotKind.Courier;
+
+    /// <summary>Who it's chasing to steal from now, else null (tests)</summary>
+    public OrderHandler Victim { get; private set; }
 
     /// <summary>Where it's heading now (tests, gizmos); null with nothing to do</summary>
     public Vector3? Target { get; private set; }
@@ -100,6 +115,7 @@ public class BotDriver : MonoBehaviour, IDriveInput
 
         if (OnlyInRound && !InRound())
         {
+            Forget();
             Target = null;
             corners.Clear();
             steer = accelerate = brake = 0f;
@@ -108,8 +124,9 @@ public class BotDriver : MonoBehaviour, IDriveInput
         }
 
         Vector3 position = driving.transform.position;
-        Target = PickTarget(position);
         float dt = Time.deltaTime;
+        Target = PickTarget(position, dt);
+        BotProfile profile = BotPersonality.For(Kind);
 
         if (Target == null)
         {
@@ -131,6 +148,8 @@ public class BotDriver : MonoBehaviour, IDriveInput
         // partial path ends where the NavMesh does, nearest the target, so that's where it goes
         bool last = corner >= 0 && corner == corners.Count - 1 && path.status == NavMeshPathStatus.PathComplete;
         Aim = corner < 0 || last ? Target.Value : corners[corner];
+        if (profile.Dodges && handler != null && handler.HeldCount > 0)
+            Aim = BotTactics.Dodge(position, Aim, BoostingRivals());
 
         Vector3 toAim = Aim - position;
         float bearing = BotBrain.Bearing(driving.transform.forward, toAim);
@@ -148,9 +167,16 @@ public class BotDriver : MonoBehaviour, IDriveInput
             brake = 0f;
         }
 
+        // Chasing: a boost into the victim when close and lined up, whenever it can (the game's boost rules still apply)
+        bool hit = false;
+        if (victimBall != null)
+        {
+            Vector3 toVictim = victimBall.position - position;
+            hit = BotTactics.BoostToHit(BotBrain.Bearing(driving.transform.forward, toVictim), new Vector2(toVictim.x, toVictim.z).magnitude);
+        }
         sinceBoost += dt;
-        if (UsesBoost && boostHeld < 0f && sinceBoost >= BOOST_EVERY && !stuck.Reversing
-            && BotBrain.Boosts(bearing, new Vector2(toAim.x, toAim.z).magnitude))
+        if (UsesBoost && boostHeld < 0f && !stuck.Reversing
+            && (hit || (sinceBoost >= profile.BoostEvery && BotBrain.Boosts(bearing, new Vector2(toAim.x, toAim.z).magnitude))))
         {
             boostHeld = 0f;
             sinceBoost = 0f;
@@ -224,27 +250,155 @@ public class BotDriver : MonoBehaviour, IDriveInput
             Gizmos.DrawLine(corners[i - 1], corners[i]);
     }
 
-    // Where its order goes, else the nearest order nobody has
-    Vector3? PickTarget(Vector3 position)
+    // What it goes for, chosen afresh every REPATH_EVERY and at once when that's gone (taken, delivered, dropped) or a
+    // chase runs out: a free order, a victim's scooter, else where its best held order goes
+    Vector3? PickTarget(Vector3 position, float dt)
     {
+        chase.Advance(dt);
+        sinceChoice += dt;
+        // ReferenceEquals: a destroyed order or player is gone too (Unity's == calls it null)
+        if (sinceChoice >= REPATH_EVERY || (!ReferenceEquals(chosen, null) && !StillThere(chosen)))
+            Choose(position);
+        if (chase.Tick(victimSeat, chaseLimit, dt))
+            Choose(position); // the victim is barred for a while now
+
+        if (chosen is Order order)
+            return order.transform.position;
+        if (victimBall != null)
+            return victimBall.position;
         Order held = handler != null ? handler.GetBestOrder() : null;
         if (held != null && held.DropoffPoint != null)
             return held.DropoffPoint.position;
+        return null;
+    }
 
-        OrderManager orders = OrderManager.Instance;
-        if (orders == null)
-            return null;
-        spots.Clear();
-        free.Clear();
-        foreach (Order order in orders.ActiveOrders)
+    // Whether what it went for is still there to have
+    static bool StillThere(Component target)
+    {
+        if (target == null)
+            return false;
+        if (target is Order order)
+            return FreeToTake(order);
+        return ((OrderHandler)target).GetBestOrder() != null;
+    }
+
+    static bool FreeToTake(Order order)
+    {
+        return order != null && order.IsActive && order.CanPickup && order.PlayerHolding == null;
+    }
+
+    // Scores every free order and every rival carrying one (BotTactics) and takes the best
+    void Choose(Vector3 position)
+    {
+        sinceChoice = 0f;
+        options.Clear();
+        targets.Clear();
+        victimBalls.Clear();
+
+        int mySeat = OrderSync.SeatOf(handler);
+        int myScore = handler != null ? handler.Score : 0;
+        int leader = myScore;
+        PlayerRoster roster = PlayerInstantiate.Instance != null ? PlayerInstantiate.Instance.Roster : null;
+        if (roster != null)
         {
-            if (order != null && order.IsActive && order.CanPickup && order.PlayerHolding == null)
+            foreach (PlayerSlot slot in roster.Players)
             {
-                free.Add(order);
-                spots.Add(order.transform.position);
+                OrderHandler other = slot.Player != null ? slot.Player.GetComponentInChildren<OrderHandler>(true) : null;
+                if (other != null)
+                    leader = Mathf.Max(leader, other.Score);
             }
         }
-        int nearest = BotBrain.Nearest(position, spots);
-        return nearest >= 0 ? spots[nearest] : (Vector3?)null;
+
+        OrderManager orders = OrderManager.Instance;
+        if (orders != null)
+        {
+            foreach (Order order in orders.ActiveOrders)
+            {
+                if (!FreeToTake(order))
+                    continue;
+                options.Add(new BotOption
+                {
+                    Kind = BotOptionKind.Order,
+                    Worth = order.Worth,
+                    Golden = order.Value == Constants.OrderValue.Golden,
+                    Distance = Flat(order.transform.position - position)
+                });
+                targets.Add(order);
+                victimBalls.Add(null);
+            }
+        }
+
+        if (roster != null)
+        {
+            foreach (PlayerSlot slot in roster.Players)
+            {
+                if (slot.Index == mySeat || slot.Player == null || chase.Barred(slot.Index))
+                    continue;
+                OrderHandler other = slot.Player.GetComponentInChildren<OrderHandler>(true);
+                BallDriving ball = slot.Player.GetComponentInChildren<BallDriving>(true);
+                Order best = other != null ? other.GetBestOrder() : null;
+                if (best == null || ball == null || other == handler)
+                    continue;
+                options.Add(new BotOption
+                {
+                    Kind = BotOptionKind.Steal,
+                    Worth = best.Worth,
+                    Golden = best.Value == Constants.OrderValue.Golden,
+                    Distance = Flat(ball.transform.position - position),
+                    VictimLeads = other.Score >= leader,
+                    VictimBoosting = other.IsBoosting
+                });
+                targets.Add(other);
+                victimBalls.Add(ball.transform);
+            }
+        }
+
+        BotSituation situation = new BotSituation
+        {
+            Profile = BotPersonality.For(Kind),
+            MyScore = myScore,
+            LeaderScore = leader,
+            Held = handler != null ? handler.HeldCount : 0,
+            StealsOn = HouseRules.Playing.Steals
+        };
+        int pick = BotTactics.Choose(situation, options, chosen != null ? targets.IndexOf(chosen) : -1);
+        chosen = pick >= 0 ? targets[pick] : null;
+        victimBall = pick >= 0 ? victimBalls[pick] : null;
+        Victim = chosen as OrderHandler;
+        victimSeat = Victim != null ? OrderSync.SeatOf(Victim) : -1;
+        chaseLimit = BotTactics.ChaseSeconds(situation);
+    }
+
+    // Nothing chosen, nobody chased (out of the round)
+    void Forget()
+    {
+        chosen = null;
+        victimBall = null;
+        Victim = null;
+        victimSeat = -1;
+        sinceChoice = REPATH_EVERY;
+    }
+
+    // Where the rivals boosting now are (the courier swerves from them)
+    List<Vector3> BoostingRivals()
+    {
+        threats.Clear();
+        if (PlayerInstantiate.Instance == null)
+            return threats;
+        foreach (PlayerSlot slot in PlayerInstantiate.Instance.Roster.Players)
+        {
+            if (slot.Player == null)
+                continue;
+            OrderHandler other = slot.Player.GetComponentInChildren<OrderHandler>(true);
+            BallDriving ball = slot.Player.GetComponentInChildren<BallDriving>(true);
+            if (other != null && other != handler && ball != null && other.IsBoosting)
+                threats.Add(ball.transform.position);
+        }
+        return threats;
+    }
+
+    static float Flat(Vector3 v)
+    {
+        return new Vector2(v.x, v.z).magnitude;
     }
 }

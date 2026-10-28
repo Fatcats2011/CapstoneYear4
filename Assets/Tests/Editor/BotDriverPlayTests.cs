@@ -21,6 +21,7 @@ namespace DoA.Tests
         [UnityTearDown]
         public IEnumerator TearDown()
         {
+            HouseRules.Playing = HouseRules.Normal;
             if (Application.isPlaying)
                 yield return new ExitPlayMode();
 
@@ -112,6 +113,122 @@ namespace DoA.Tests
             Assert.IsTrue(pathed, "it found a path on the Scooter NavMesh");
             Assert.Greater(travelled, 10f, "it drove");
             Assert.IsNotNull(handler.GetBestOrder(), "it picked up an order (drove " + travelled.ToString("0") + " m, came within " + closest.ToString("0.0") + " m of its target, target height " + (bot.Target != null ? (bot.Target.Value.y - last.y).ToString("0.0") : "-") + ") " + orders + " TRACE " + trace);
+        }
+
+        const float WATCH = 1.5f; // a bot chooses afresh every half second: three choices
+
+        // Gives a player a free order to carry; false with none free
+        static bool GiveOrder(OrderHandler player)
+        {
+            if (player.GetBestOrder() != null)
+                return true;
+            foreach (Order order in OrderManager.Instance.ActiveOrders)
+            {
+                if (order != null && order.IsActive && order.CanPickup && order.PlayerHolding == null)
+                {
+                    player.AddOrder(order);
+                    return player.GetBestOrder() != null;
+                }
+            }
+            return false;
+        }
+
+        // Personalities in a real match (one scene load for all four checks): Player 1 is the bot, Player 2 carries an
+        // order. The thief chases the carrier; the courier doesn't; a thief whose victim lets go goes back to orders; with
+        // steals off, the thief only collects
+        [UnityTest]
+        public IEnumerator Personalities_ChaseCarriers_OnlyAsTheirKindAndTheRulesAllow()
+        {
+            EditorSceneManager.playModeStartScene = AssetDatabase.LoadAssetAtPath<SceneAsset>(MENU_SCENE);
+            yield return new EnterPlayMode();
+            LogAssert.ignoreFailingMessages = true;
+            float deadline = Time.realtimeSinceStartup + 60;
+            while (State() != GameState.Menu && Time.realtimeSinceStartup < deadline)
+                yield return null;
+            // The first pad joins on the title screen, the second in player select (OnlineSeatTests)
+            TestPlayers.Add();
+            deadline = Time.realtimeSinceStartup + 10;
+            while (PlayerInstantiate.Instance.PlayerCount < 1 && Time.realtimeSinceStartup < deadline)
+                yield return null;
+            GameManager.Instance.SetGameState(GameState.PlayerSelect);
+            TestPlayers.Add();
+            deadline = Time.realtimeSinceStartup + 10;
+            while (PlayerInstantiate.Instance.PlayerCount < 2 && Time.realtimeSinceStartup < deadline)
+                yield return null;
+            Assert.AreEqual(2, PlayerInstantiate.Instance.PlayerCount, "two players in");
+            SceneFlow.Current.Rematch();
+            deadline = Time.realtimeSinceStartup + LOADING;
+            while (State() != GameState.Begin && State() != GameState.MainLoop && Time.realtimeSinceStartup < deadline)
+                yield return null;
+            Assert.IsTrue(State() == GameState.Begin || State() == GameState.MainLoop, "in the match");
+            deadline = Time.realtimeSinceStartup + 10;
+            while (OrderManager.Instance.ActiveOrders.Count == 0 && Time.realtimeSinceStartup < deadline)
+                yield return null;
+
+            BallDriving scooter = PlayerInstantiate.Instance.Roster[0].Player.GetComponentInChildren<BallDriving>();
+            BotDriver bot = scooter.gameObject.AddComponent<BotDriver>();
+            bot.Kind = BotKind.Thief;
+            bot.Drive(scooter);
+            OrderHandler carrier = null;
+            foreach (PlayerSlot slot in PlayerInstantiate.Instance.Roster.Players)
+                if (slot.Index != 0 && slot.Player != null)
+                    carrier = slot.Player.GetComponentInChildren<OrderHandler>(true);
+            Assert.IsNotNull(carrier, "a second player in the match (" + PlayerInstantiate.Instance.PlayerCount + " players)");
+
+            // The thief goes after the carrier (once an order is out to take: the first wave may not have spawned yet)
+            deadline = Time.realtimeSinceStartup + 30;
+            while (!GiveOrder(carrier) && Time.realtimeSinceStartup < deadline)
+                yield return null;
+            Assert.IsTrue(GiveOrder(carrier), "player 2 carries an order (" + OrderManager.Instance.ActiveOrders.Count + " orders out, state " + State() + ")");
+            bool chased = false;
+            deadline = Time.realtimeSinceStartup + WATCH;
+            while (!chased && Time.realtimeSinceStartup < deadline)
+            {
+                chased = bot.Victim == carrier;
+                yield return null;
+            }
+            Assert.IsTrue(chased, "the thief chases the carrier");
+
+            // The carrier lets go: the thief goes back to orders
+            carrier.ReleaseOrders();
+            yield return new WaitForSeconds(1f);
+            Assert.IsNull(bot.Victim, "nobody to rob");
+            bool anyFree = false;
+            foreach (Order order in OrderManager.Instance.ActiveOrders)
+                anyFree |= order != null && order.IsActive && order.CanPickup && order.PlayerHolding == null;
+            if (anyFree)
+                Assert.IsNotNull(bot.Target, "it has an order to go for");
+
+            // The courier never chases
+            bot.Kind = BotKind.Courier;
+            deadline = Time.realtimeSinceStartup + 30;
+            while (!GiveOrder(carrier) && Time.realtimeSinceStartup < deadline)
+                yield return null;
+            Assert.IsTrue(GiveOrder(carrier), "player 2 carries an order again");
+            chased = false;
+            deadline = Time.realtimeSinceStartup + WATCH;
+            while (Time.realtimeSinceStartup < deadline)
+            {
+                chased |= bot.Victim != null;
+                yield return null;
+            }
+            Assert.IsFalse(chased, "the courier doesn't steal");
+
+            // Steals off: the thief only collects
+            HouseRules.Playing = new HouseRules(MatchLength.Normal, false, true);
+            bot.Kind = BotKind.Thief;
+            deadline = Time.realtimeSinceStartup + 30;
+            while (!GiveOrder(carrier) && Time.realtimeSinceStartup < deadline)
+                yield return null;
+            Assert.IsTrue(GiveOrder(carrier), "player 2 still carries an order");
+            chased = false;
+            deadline = Time.realtimeSinceStartup + WATCH;
+            while (Time.realtimeSinceStartup < deadline)
+            {
+                chased |= bot.Victim != null;
+                yield return null;
+            }
+            Assert.IsFalse(chased, "no steals in a no-steals match");
         }
     }
 }
