@@ -390,9 +390,9 @@ namespace DoA.Tests
             Assert.Greater(heard.Changes.IndexOf(OrderChange.Erase(first.Key)), heard.Changes.IndexOf(OrderChange.Deliver(first.Key, 1)),
                 "erased after its throw");
             deadline = Time.realtimeSinceStartup + WAIT;
-            while (PlayerInSeat(other, 1).Score != (int)first.Value && Time.realtimeSinceStartup < deadline)
+            while (PlayerInSeat(other, 1).Score != StealValueRules.Price(first.Value) && Time.realtimeSinceStartup < deadline)
                 yield return null;
-            Assert.AreEqual((int)first.Value, PlayerInSeat(other, 1).Score, "their score, from the host");
+            Assert.AreEqual(StealValueRules.Price(first.Value), PlayerInSeat(other, 1).Score, "their score, from the host");
             FeatSync.Delivered -= feats.Heard;
             Assert.IsTrue(feats.Seats.Contains(1), "the host counts the other machine's delivery for its achievements");
             Assert.AreNotEqual(Constants.OrderValue.Golden, feats.Values[feats.Seats.IndexOf(1)], "an ordinary order");
