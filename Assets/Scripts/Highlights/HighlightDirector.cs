@@ -35,7 +35,7 @@ public class HighlightDirector : MonoBehaviour
 
     public static HighlightDirector Instance { get; private set; }
 
-    /// <summary>Every seat's samples in the round being played (null before the first)</summary>
+    /// <summary>Every seat's samples in the round being played (made once, and emptied as each round starts)</summary>
     internal ReelRecording Recording;
 
     /// <summary>What happened in the round, in order (the rules machine only)</summary>
@@ -58,6 +58,9 @@ public class HighlightDirector : MonoBehaviour
     /// arrived list; tests swap it
     /// </summary>
     internal Func<bool> InMainRound = InMainRoundNow;
+
+    /// <summary>The game's clock when the main round's time ran out (positive infinity: it hasn't this round)</summary>
+    internal double RoundEnd = double.PositiveInfinity;
 
     /// <summary>The last reel was destroyed before it ended (RunReel)</summary>
     internal bool ReelCutShort { get; private set; }
@@ -116,6 +119,7 @@ public class HighlightDirector : MonoBehaviour
     /// <summary>Starts logging what the game raises</summary>
     internal void Begin()
     {
+        Recording ??= new ReelRecording(CAPACITY); // once, so the waves starting don't hitch on a 3 MB allocation
         if (listening)
             return;
         listening = true;
@@ -194,7 +198,9 @@ public class HighlightDirector : MonoBehaviour
         seats.Clear();
         FindSeats(seats);
 
-        Recording = new ReelRecording(CAPACITY);
+        Recording ??= new ReelRecording(CAPACITY);
+        Recording.Clear();
+        RoundEnd = double.PositiveInfinity;
         sinceSample = 0f;
         active = true;
 
@@ -214,10 +220,11 @@ public class HighlightDirector : MonoBehaviour
         }
     }
 
-    /// <summary>The main round's time is up: recording stops and the director stops listening for it</summary>
+    /// <summary>The main round's time is up: recording stops (at this time, RoundEnd) and the director stops listening for it</summary>
     internal void MainGameFinishes()
     {
         active = false;
+        RoundEnd = Now();
         Hook(null);
     }
 
@@ -261,6 +268,7 @@ public class HighlightDirector : MonoBehaviour
         try
         {
             List<Clip> clips = HighlightRules.Pick(HighlightRules.Clips(Moments), RosterSeatIndices());
+            EndByRound(clips, RoundEnd, Recording);
             if (clips.Count == 0)
                 return null;
 
@@ -310,12 +318,49 @@ public class HighlightDirector : MonoBehaviour
     }
 
     /// <summary>
-    /// A reel every machine accepts (NetChecks.Sane): as it is, else with only each clip's first shot (slow shots
-    /// lengthen it), else no clips at all
+    /// A moment in the round's last seconds gets a clip running past the recording (the tail after it), where no
+    /// stand-in could show. Each clip ends by the round's end or the last sample, whichever is first, starts earlier
+    /// if it must to stay MIN_CLIP long (not before the first sample), keeps its key time inside, and one left with
+    /// nothing to show goes. The list then carries these times to every machine
+    /// </summary>
+    internal static void EndByRound(List<Clip> clips, double roundEnd, ReelRecording recording)
+    {
+        double first = double.PositiveInfinity, last = double.NegativeInfinity;
+        for (int seat = 0; seat < Constants.MAX_PLAYERS; seat++)
+        {
+            if (recording.Last(seat) <= 0)
+                continue; // nothing recorded for the seat
+            first = Math.Min(first, recording.First(seat));
+            last = Math.Max(last, recording.Last(seat));
+        }
+        double end = Math.Min(roundEnd, last);
+
+        for (int i = clips.Count - 1; i >= 0; i--)
+        {
+            Clip clip = clips[i];
+            if (clip.End <= end)
+                continue;
+
+            clip.End = end;
+            if (clip.End - clip.Start < HighlightRules.MIN_CLIP)
+                clip.Start = Math.Max(clip.End - HighlightRules.MIN_CLIP, first);
+            if (clip.End <= clip.Start)
+            {
+                clips.RemoveAt(i);
+                continue;
+            }
+            clip.KeyTime = Math.Min(Math.Max(clip.KeyTime, clip.Start), clip.End);
+        }
+    }
+
+    /// <summary>
+    /// A reel every machine accepts (NetChecks.Sane) and that plays within the spec's HighlightRules.MAX_REEL: as it
+    /// is, else with only each clip's first shot (slow shots lengthen it), else no clips at all
     /// </summary>
     internal static ReelList Playable(ReelList list)
     {
-        if (NetChecks.Sane(list))
+        bool sane = NetChecks.Sane(list);
+        if (sane && list.Length <= HighlightRules.MAX_REEL)
             return list;
 
         var plain = new ReelList { StartAt = list.StartAt, Clips = new ReelClip[list.Clips != null ? list.Clips.Length : 0] };
@@ -327,7 +372,9 @@ public class HighlightDirector : MonoBehaviour
             plain.Clips[i] = clip;
             plain.Length += clip.RealLength;
         }
-        return NetChecks.Sane(plain) ? plain : new ReelList { StartAt = list.StartAt, Clips = new ReelClip[0] };
+        if (NetChecks.Sane(plain))
+            return plain;
+        return sane ? list : new ReelList { StartAt = list.StartAt, Clips = new ReelClip[0] };
     }
 
     static List<int> RosterSeatIndices()

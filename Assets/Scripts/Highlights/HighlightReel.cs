@@ -124,8 +124,19 @@ public class HighlightReel : MonoBehaviour
 
     void LateUpdate()
     {
-        if (!Done)
+        if (Done)
+            return;
+
+        // A throw here must not leave the reel up, the players hidden and the host's RunReel waiting for ever
+        try
+        {
             Show(Now());
+        }
+        catch (Exception e)
+        {
+            Debug.LogException(e);
+            End();
+        }
     }
 
     void OnDestroy()

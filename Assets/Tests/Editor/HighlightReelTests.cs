@@ -118,6 +118,38 @@ namespace DoA.Tests
         }
 
         [Test]
+        public void Playable_OverTheReelCapOnlyWithPeaks_DropsThePeaks()
+        {
+            // Four 4 s clips, each with a half-speed peak adding 1.5 s: 22 s to play, which every machine accepts but the spec's 20 s doesn't
+            var clips = new ReelClip[4];
+            for (int i = 0; i < clips.Length; i++)
+                clips[i] = Clip(i * 10, i * 10 + 4, Shot(i * 10), Shot(i * 10 + 1, 0.5f));
+            ReelList list = List(5, clips);
+            Assert.IsTrue(NetChecks.Sane(list), "a list the machines accept");
+            Assert.Greater(list.Length, HighlightRules.MAX_REEL, "but longer than the reel may play");
+
+            ReelList playable = HighlightDirector.Playable(list);
+
+            Assert.IsTrue(NetChecks.Sane(playable));
+            Assert.LessOrEqual(playable.Length, HighlightRules.MAX_REEL);
+            Assert.AreEqual(16f, playable.Length, 1e-4);
+            Assert.AreEqual(clips.Length, playable.Clips.Length);
+            foreach (ReelClip clip in playable.Clips)
+                Assert.AreEqual(1, clip.Shots.Length, "no peak shots");
+        }
+
+        [Test]
+        public void Playable_WithinTheReelCap_IsLeftAlone()
+        {
+            ReelList list = List(5, Clip(0, 4, Shot(0), Shot(1, 0.5f)), Clip(10, 14, Shot(10), Shot(11, 0.5f)));
+
+            ReelList playable = HighlightDirector.Playable(list);
+
+            Assert.AreEqual(list, playable);
+            Assert.AreEqual(2, playable.Clips[0].Shots.Length, "the peaks stay");
+        }
+
+        [Test]
         public void RealLength_AgreesWithPlayback_OnADirectorMadeList()
         {
             // Two seats driving along x at 2 m/s from 0 to 10 s; every shot clear. Big clips get a slow peak shot: one
@@ -142,6 +174,50 @@ namespace DoA.Tests
             Assert.IsFalse(double.IsPositiveInfinity(HighlightReel.StartClock(list, 50 + list.Length - 0.001)), "still playing just before Length");
             Assert.AreEqual(8.5, HighlightReel.StartClock(list, 50 + list.Length - 0.0001), 1e-3, "at the last clip's end");
             Assert.IsTrue(double.IsPositiveInfinity(HighlightReel.StartClock(list, 50 + list.Length + 0.001)), "done just after Length");
+        }
+
+        // The reel list the director played, through a seam (a static: no lambda over a test's locals)
+        static ReelList edited;
+
+        static HighlightReel NoteList(ReelList list, ReelRecording recording, bool decides)
+        {
+            edited = list;
+            return null;
+        }
+
+        [Test]
+        public void RunReel_AMomentJustBeforeTimeUp_GetsAClipThatEndsWithTheRecording()
+        {
+            // Both seats recorded from 100 to 110 (the round's end); a steal at 109.5 would get a clip to 111
+            ReelRecording recording = Recording();
+            GameObject holder = new GameObject("Director");
+            try
+            {
+                HighlightDirector director = holder.AddComponent<HighlightDirector>();
+                director.Recording = recording;
+                director.RoundEnd = 110.0;
+                director.Moments.Add(new Moment { Kind = MomentKind.Steal, Time = 109.5, Seat = 0, Other = 1, TimeLeft = 0.5f, Place = new Vector3(100, 1, 50) });
+                edited = default;
+                director.PlayReel = NoteList;
+
+                director.RunReel().MoveNext();
+
+                Assert.IsNotNull(edited.Clips, "a list was made");
+                Assert.AreEqual(1, edited.Clips.Length, "and it is playable");
+                ReelClip clip = edited.Clips[0];
+                Assert.LessOrEqual(clip.End, 110.0, "the clip ends with the round");
+                Assert.GreaterOrEqual(clip.End - clip.Start, HighlightRules.MIN_CLIP - 1e-6, "still long enough");
+                Assert.GreaterOrEqual(clip.Start, recording.First(0), "and not before the recording");
+                Assert.GreaterOrEqual(clip.KeyTime, clip.Start);
+                Assert.LessOrEqual(clip.KeyTime, clip.End);
+                Assert.IsTrue(NetChecks.Sane(edited));
+                for (int seat = 0; seat < 2; seat++)
+                    Assert.IsTrue(recording.TryGet(seat, clip.End, out ReelSample sample) && !sample.Flags.Hidden, "a stand-in shows at the clip's end (seat " + seat + ")");
+            }
+            finally
+            {
+                Object.DestroyImmediate(holder);
+            }
         }
 
         [Test]
@@ -443,6 +519,29 @@ namespace DoA.Tests
 
             Assert.IsNull(GameObject.Find("Highlight Reel"), "the half-built reel is gone");
             AssertRestored(renderers, canvases);
+        }
+
+        static double ThrowingClock() { throw new System.InvalidOperationException("clock broke"); }
+
+        [UnityTest]
+        public IEnumerator Playback_ThrowsInAFrame_LogsEndsAndRestoresThePlayers()
+        {
+            yield return InTheMenu();
+            yield return OnePlayer();
+            Dictionary<Renderer, bool> renderers = RenderersNow();
+            Dictionary<Behaviour, bool> canvases = CanvasesNow();
+            HighlightReel reel = Play();
+            yield return null;
+            Assert.IsFalse(reel.Done);
+            reel.Now = ThrowingClock;
+            LogAssert.Expect(LogType.Exception, new Regex("InvalidOperationException"));
+
+            yield return null;
+            yield return null;
+
+            Assert.IsTrue(reel == null, "the reel ended itself, so RunReel's wait is over");
+            AssertRestored(renderers, canvases);
+            Assert.IsFalse(CameraBudget.CoveredNow(), "the players' views are back");
         }
 
         [UnityTest]

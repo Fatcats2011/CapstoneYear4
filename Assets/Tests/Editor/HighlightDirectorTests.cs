@@ -269,6 +269,20 @@ namespace DoA.Tests
         }
 
         [Test]
+        public void EnteringBegin_ReusesTheRecording_AndEmptiesIt()
+        {
+            director.OnStateApplied(GameState.Begin);
+            ReelRecording first = director.Recording;
+            director.Sample(1.0);
+
+            director.OnStateApplied(GameState.Begin);
+
+            Assert.IsNotNull(first);
+            Assert.AreSame(first, director.Recording, "the 3 MB ring isn't allocated every round");
+            Assert.IsFalse(director.Recording.TryGet(0, 1.0, out _), "but it starts empty");
+        }
+
+        [Test]
         public void Begin_Offline_PutsABumpWatcherOnEveryBall_Once()
         {
             director.OnStateApplied(GameState.Begin);
