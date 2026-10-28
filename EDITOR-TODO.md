@@ -172,6 +172,18 @@ The room scene and the board are set up (`DispatchRoom`, `RoomClock`, the board 
   - the camera feels steady, with no shake or motion sickness. Only the fixed cameras are used now, and their aim eases after the action.
 - Check that no HUD (the match timer, the time-up banner) draws over the reel, and that the colours look right (post-processing is off on the reel camera).
 
+## 16b. Bot personalities: playtest (20 minutes)
+
+- Host an online match alone, Bots on: three CPU drivers join.
+- Pick out the three by how they drive:
+  - the thief hounds whoever is carrying, the leader most of all;
+  - the hunter drives far for Hard and Golden orders;
+  - the courier takes nearby orders, boosts a lot, and swerves from boosting rivals.
+- Pull ahead: the bots behind should get bolder.
+- After the round, read the console: one `Bot seat N <Kind>: ...` line per bot. The steals and average values should differ clearly.
+- Steals off in MATCH RULES: nobody chases.
+- Tune in `Assets/Scripts/Player/BotPersonality.cs` (weights) and `BotTactics.cs` (desperation gap, detour distance).
+
 ## 17. Reference
 
 - Frame rate: `docs/performance.md`.
