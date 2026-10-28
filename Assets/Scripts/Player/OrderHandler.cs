@@ -604,8 +604,20 @@ public class OrderHandler : MonoBehaviour
         {
             ClashWith(other);
             other.ClashWith(this);
-            FeatSync.Strike(OrderSync.SeatOf(this), OrderSync.SeatOf(other), false, false);
+            // Both boosting balls reach Hit (each one's trigger): the reel hears one clash per pair per cooldown
+            int seat = OrderSync.SeatOf(this), otherSeat = OrderSync.SeatOf(other);
+            if (!ClashPairs.TooSoon(seat, otherSeat, BumpWatcher.Clock(), 0f))
+                FeatSync.Strike(seat, otherSeat, false, false);
         }
+    }
+
+    /// <summary>The offline clash pairs' cooldown, so a clash both balls trigger counts once</summary>
+    internal static BumpRules ClashPairs = new BumpRules();
+
+    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+    static void ResetClashPairs()
+    {
+        ClashPairs = new BumpRules();
     }
 
     /// <summary>

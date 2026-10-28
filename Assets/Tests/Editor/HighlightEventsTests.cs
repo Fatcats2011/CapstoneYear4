@@ -25,6 +25,7 @@ namespace DoA.Tests
             FeatSync.Struck += (attacker, victim, steal, golden) => struck.Add((attacker, victim, steal, golden));
             FeatSync.Bumped += (bumper, victim, strength) => bumped.Add((bumper, victim, strength));
             BumpWatcher.Rules = new BumpRules();
+            OrderHandler.ClashPairs = new BumpRules();
             now = 10f;
             BumpWatcher.Clock = () => now;
             PlayerInstantiate.instance = objects.Add<PlayerInstantiate>();
@@ -108,6 +109,24 @@ namespace DoA.Tests
 
             Assert.AreEqual(1, struck.Count);
             Assert.AreEqual((0, 1, false, false), struck[0]);
+        }
+
+        [Test]
+        public void OfflineClash_FromBothSides_RaisesStruckOncePerCooldown()
+        {
+            var a = NewPlayer("Player 1");
+            var b = NewPlayer("Player 2");
+            SetBoosting(a.handler, true);
+            SetBoosting(b.handler, true);
+
+            Reflect.Invoke(a.handler, "Hit", b.handler);
+            now += 0.01f;
+            Reflect.Invoke(b.handler, "Hit", a.handler);
+            Assert.AreEqual(1, struck.Count, "both triggers, one clash");
+
+            now += BumpRules.PAIR_COOLDOWN + 0.1f;
+            Reflect.Invoke(b.handler, "Hit", a.handler);
+            Assert.AreEqual(2, struck.Count, "a later clash counts");
         }
 
         [Test]
