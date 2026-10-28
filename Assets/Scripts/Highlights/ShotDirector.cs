@@ -31,8 +31,8 @@ public struct ReelShot
 
 /// <summary>
 /// Places the invisible cameras for a highlight clip. Each kind is tried against the recording and is kept only if
-/// the framed players stay in view and in the open; of those, the best is the one whose distance is closest to its
-/// ideal. Pure logic: line of sight comes in through a delegate, so there is no physics in here.
+/// the framed players stay in view and in the open and the camera stays a fair distance from them; the first kind
+/// that does, after the previous clip's kind, is used. Pure logic: line of sight comes in through a delegate, so there is no physics in here.
 /// </summary>
 public class ShotDirector
 {
@@ -65,7 +65,13 @@ public class ShotDirector
     const float MIN_TRAVEL = 0.5f;
     const float TRAVEL_TIME = 0.5f;
 
-    // The tie-break order
+    /// <summary>A kind is only valid with its mean distance from the action at least this many times its ideal</summary>
+    public const float BAND_MIN = 0.4f;
+
+    /// <summary>...and at most this many times its ideal</summary>
+    public const float BAND_MAX = 2.5f;
+
+    // The kinds in enum order: the order the cycle goes round
     static readonly ShotKind[] ALL_KINDS = { ShotKind.Low, ShotKind.HighWide, ShotKind.SideTrack, ShotKind.Behind, ShotKind.FixedPan };
 
     readonly ReelRecording recording;
@@ -79,29 +85,39 @@ public class ShotDirector
     }
 
     /// <summary>
-    /// The shots for a clip: the first, plus a slow peak shot for a big clip (if Behind or Low can see it). The first
-    /// is never the previous kind.
+    /// The shots for a clip: the first, plus a slow peak shot for a big clip (if Behind or Low is valid for it). The
+    /// first is the first valid kind after the previous one, going round the kinds in order; if none is valid it is the
+    /// most clear, and never the previous kind.
     /// </summary>
     public List<ReelShot> Shots(Clip clip, ShotKind? previous)
     {
         List<int> framed = FramedSeats(clip);
         var shots = new List<ReelShot>();
-        ReelShot first = Choose(clip, framed, clip.Start, ALL_KINDS, previous, out _);
+
+        var order = new List<ShotKind>();
+        int startAt = previous.HasValue ? (int)previous.Value + 1 : 0;
+        for (int i = 0; i < ALL_KINDS.Length; i++)
+        {
+            ShotKind kind = ALL_KINDS[(startAt + i) % ALL_KINDS.Length];
+            if (!previous.HasValue || kind != previous.Value)
+                order.Add(kind);
+        }
+        ReelShot first = Choose(clip, framed, clip.Start, order, true, out _);
         shots.Add(first);
 
         // A peak at the very start would only replace the first shot
         double cut = clip.KeyTime - PEAK_LEAD;
         if (clip.Score >= PEAK_SCORE && cut > clip.Start)
         {
-            var kinds = new List<ShotKind>();
+            var peakOrder = new List<ShotKind>();
             foreach (ShotKind kind in new[] { ShotKind.Behind, ShotKind.Low })
             {
                 if (kind != first.Kind)
-                    kinds.Add(kind);
+                    peakOrder.Add(kind);
             }
 
-            ReelShot peak = Choose(clip, framed, cut, kinds.ToArray(), null, out bool passes);
-            if (passes)
+            ReelShot peak = Choose(clip, framed, cut, peakOrder, false, out bool valid);
+            if (valid)
             {
                 peak.Speed = PEAK_SPEED;
                 shots.Add(peak);
@@ -110,9 +126,10 @@ public class ShotDirector
         return shots;
     }
 
-    // The best of the kinds for a shot cutting in at from and lasting to the clip's end. passes says whether the pick
-    // is clear on every sample; if none is, the pick is the one with the most clear samples.
-    ReelShot Choose(Clip clip, List<int> framed, double from, ShotKind[] kinds, ShotKind? avoid, out bool passes)
+    // The first valid kind in the order for a shot cutting in at from and lasting to the clip's end. A kind is valid
+    // when every sample is clear and in frame and its mean distance is within the band around its ideal. With none
+    // valid and fallback set, the pick is the kind with the most clear samples (ties to the earlier kind).
+    ReelShot Choose(Clip clip, List<int> framed, double from, List<ShotKind> order, bool fallback, out bool valid)
     {
         int framedMask = 0;
         foreach (int seat in framed)
@@ -123,36 +140,27 @@ public class ShotDirector
         Vector3 right = Vector3.Cross(Vector3.up, forward);
         int subject = framed.Count > 0 ? framed[0] : 0;
 
+        valid = false;
         ReelShot best = default;
-        bool haveBest = false;
-        int bestClear = 0;
-        float bestError = 0f;
-        bool bestFull = false;
-        foreach (ShotKind kind in kinds)
+        int bestClear = -1;
+        foreach (ShotKind kind in order)
         {
-            if (avoid.HasValue && kind == avoid.Value)
-                continue;
-
             ReelShot shot = Place(kind, from, framedMask, subject, centre, forward, right);
             Test(shot, framed, from, clip.End, out int clearSamples, out int tested, out float meanDistance);
-            bool full = clearSamples == tested;
-            float error = Mathf.Abs(meanDistance - Ideal(kind));
+            float ideal = Ideal(kind);
+            if (tested > 0 && clearSamples == tested && meanDistance >= BAND_MIN * ideal && meanDistance <= BAND_MAX * ideal)
+            {
+                valid = true;
+                return shot;
+            }
 
-            // A candidate clear all the way beats any that isn't, then the closest to its ideal; failing that, the most clear.
-            // Ties go to the earlier kind.
-            bool better = !haveBest
-                || (full != bestFull ? full : full ? error < bestError : clearSamples > bestClear);
-            if (!better)
-                continue;
-
-            best = shot;
-            haveBest = true;
-            bestClear = clearSamples;
-            bestError = error;
-            bestFull = full;
+            // Kinds go through the fallback in their own order, so a tie stays with the earlier one
+            if (clearSamples > bestClear || (clearSamples == bestClear && kind < best.Kind))
+            {
+                best = shot;
+                bestClear = clearSamples;
+            }
         }
-
-        passes = haveBest && bestFull;
         return best;
     }
 
