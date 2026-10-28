@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using Unity.Netcode;
 using UnityEngine;
@@ -25,6 +26,9 @@ public class HighlightDirector : MonoBehaviour
 
     /// <summary>Samples kept per seat: 10 minutes. A ring, so a longer round keeps its latest stretch</summary>
     const int CAPACITY = 12000;
+
+    /// <summary>Seconds after it's picked that the reel starts, so the list can reach every machine first</summary>
+    internal const float START_DELAY = 0.5f;
 
     public static HighlightDirector Instance { get; private set; }
 
@@ -195,6 +199,64 @@ public class HighlightDirector : MonoBehaviour
     {
         active = false;
         Hook(null);
+    }
+
+    /// <summary>
+    /// The main round's reel, after its time is up: where the rules run, the round's moments become clips (HighlightRules),
+    /// the director films them (ShotDirector), and the reel plays from a moment ahead until it ends or is skipped.
+    /// Nothing worth showing: it ends at once, without a frame
+    /// </summary>
+    internal IEnumerator RunReel()
+    {
+        if (!GameAuthority.IsAuthority || Recording == null)
+            yield break;
+
+        List<Clip> clips = HighlightRules.Pick(HighlightRules.Clips(Moments), RosterSeatIndices());
+        if (clips.Count == 0)
+            yield break;
+
+        var director = new ShotDirector(Recording, ShotLineOfSight.WorldClear());
+        ReelList list = Playable(ReelList.From(clips, director, Now() + START_DELAY));
+        if (list.Clips.Length == 0)
+            yield break;
+
+        Debug.Log("Highlights: reel of " + list.Clips.Length + " clips, " + list.Length.ToString("0.0") + " s");
+        HighlightReel reel = HighlightReel.Play(list, Recording, GameAuthority.IsAuthority);
+        while (reel != null && !reel.Done)
+            yield return null;
+        Debug.Log("Highlights: reel ended");
+    }
+
+    /// <summary>
+    /// A reel every machine accepts (NetChecks.Sane): as it is, else with only each clip's first shot (slow shots
+    /// lengthen it), else no clips at all
+    /// </summary>
+    internal static ReelList Playable(ReelList list)
+    {
+        if (NetChecks.Sane(list))
+            return list;
+
+        var plain = new ReelList { StartAt = list.StartAt, Clips = new ReelClip[list.Clips != null ? list.Clips.Length : 0] };
+        for (int i = 0; i < plain.Clips.Length; i++)
+        {
+            ReelClip clip = list.Clips[i];
+            if (clip.Shots != null && clip.Shots.Length > 1)
+                clip.Shots = new[] { clip.Shots[0] };
+            plain.Clips[i] = clip;
+            plain.Length += clip.RealLength;
+        }
+        return NetChecks.Sane(plain) ? plain : new ReelList { StartAt = list.StartAt, Clips = new ReelClip[0] };
+    }
+
+    static List<int> RosterSeatIndices()
+    {
+        var indices = new List<int>();
+        if (PlayerInstantiate.Instance != null)
+        {
+            foreach (PlayerSlot slot in PlayerInstantiate.Instance.Roster.Players)
+                indices.Add(slot.Index);
+        }
+        return indices;
     }
 
     /// <summary>A new match: nothing recorded, no moments</summary>

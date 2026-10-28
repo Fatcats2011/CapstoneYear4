@@ -142,6 +142,14 @@ ROWS = [
     ("cutscene.toskip", "{0} voted of {1}", "TO SKIP  {0}/{1}"),
     ("results.employee", "Results title", "Employee of The Month"),
 
+    # Highlight reel (shown as hidden-camera footage: dry, official captions)
+    ("reel.rec", "Recording light, top left of the reel", "REC"),
+    ("reel.cam", "{0} = camera number, two digits", "CAM {0}"),
+    ("reel.caption.theft", "Caption: a player stole another's order", "THEFT DETECTED"),
+    ("reel.caption.collision", "Caption: two players crashed into each other", "COLLISION RECORDED"),
+    ("reel.caption.water", "Caption: a player fell in the water", "SUBJECT ENTERED WATER"),
+    ("reel.caption.delivery", "Caption: a player delivered an order", "DELIVERY CONFIRMED"),
+
     # Dispatch (online lobby)
     ("dispatch.dispatched", "A player who's ready", "DISPATCHED"),
     ("dispatch.gettingready", "A player who isn't ready yet", "GETTING READY…"),

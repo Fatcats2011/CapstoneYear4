@@ -15,6 +15,12 @@ public class TrailHandler : MonoBehaviour
     [Tooltip("Speed at which the boost trails shrink and grow.")]
     [SerializeField] private float boostTrailMulitplier = 1f;
 
+    /// <summary>The first boost trail's material (the highlight reel's stand-ins trail with it), or null</summary>
+    internal Material BoostTrailMaterial
+    {
+        get { return boostTrails != null && boostTrails.Length > 0 && boostTrails[0] != null ? boostTrails[0].sharedMaterial : null; }
+    }
+
     // Start is called before the first frame update
     void Start()
     {
