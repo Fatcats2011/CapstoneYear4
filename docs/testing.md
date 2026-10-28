@@ -55,6 +55,8 @@
 - The rules for orders online run without Play Mode:
   - `OrderBookTests`: order keys.
   - `OrderChangeTests`: a change as it travels.
+  - `StealValueRulesTests`: the prices, the doubling per steal (never the golden order's), the cap against overflow, the thief's payment (once per order per seat) and how much a stolen order swells.
+  - `OrderStealValueTests`: an order's steal count and reset, its worth, the mesh swelling and returning to size, the thief's payment, and the best order a player holds being the one worth most.
   - `OrderSyncTests`: who may change orders, and which changes go out.
   - `OrderRulesTests`: a client's orders wait for the host.
   - `HostQueueTests`: a client's messages from the host wait while its scene changes (and an overflow is warned about once per hold).

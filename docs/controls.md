@@ -37,6 +37,8 @@ Up to 4 players, one controller each (Xbox, PlayStation and Switch Pro controlle
 - In player select (local) or Dispatch (the online host), **Start** opens **MATCH RULES**; only the player who works the menus can. Up / down pick a rule, left / right change it, **A** or **B** close it (Start too).
 - **LENGTH:** SHORT, NORMAL or LONG: each wave lasts 0.75×, 1× or 1.5× as long.
 - **STEALS:** OFF still bumps a rival, but takes and drops nothing. The tutorial's steal lesson still works.
+  - **What a steal does** (STEALS on): the order is worth double what it was, each time it is stolen (an Easy order stolen twice pays 4×). The golden order is the exception: it keeps its worth, which grows 1 a second while it is held. The thief is paid 7 at once for taking a package, once per order, even if they never deliver it; a bump that takes nothing pays nothing. A stolen order looks larger the more it has been stolen. STEALS: OFF turns all of this off.
+  - **Prices:** Easy 55, Medium 65, Hard 80 (set by the time each takes to score), the golden order 50 and +1 a second. All the numbers are constants in `StealValueRules`.
 - **GOLDEN ORDER:** OFF ends the match after the last wave, straight to the results. Golden Win, Golden Steal and Last to First can't be earned then (the panel says so).
 - The rules are kept in `settings.cfg` (`length`, `steals`, `golden`). Online the host's rules run the match; a public lobby (matchmaking, or an open lobby) always plays the normal rules. Clients aren't shown the host's rules yet.
 
