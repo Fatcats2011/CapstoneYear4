@@ -33,6 +33,10 @@ public class BotDriver : MonoBehaviour, IDriveInput
     Transform victimBall;
     int victimSeat = -1;
     float chaseLimit;
+    int chosenWorth;                  // what it chose was worth, and how far away it was (BotStats)
+    float chosenDistance;
+    int heldBefore;
+    bool inRound;
     float sinceChoice = REPATH_EVERY;
     readonly List<Vector3> corners = new List<Vector3>();
     readonly Vector3[] cornerBuffer = new Vector3[MAX_CORNERS];
@@ -69,6 +73,9 @@ public class BotDriver : MonoBehaviour, IDriveInput
 
     /// <summary>Its personality (online bots: by seat, OnlineGame). The courier, the mildest, until told</summary>
     public BotKind Kind { get; set; } = BotKind.Courier;
+
+    /// <summary>How this round has gone (online bots log it as the round ends)</summary>
+    internal BotStats Stats { get; private set; } = new BotStats();
 
     /// <summary>Who it's chasing to steal from now, else null (tests)</summary>
     public OrderHandler Victim { get; private set; }
@@ -115,6 +122,13 @@ public class BotDriver : MonoBehaviour, IDriveInput
 
         if (OnlyInRound && !InRound())
         {
+            if (inRound)
+            {
+                // The round is over: how it played, for the log
+                Debug.Log(Stats.Line(Kind, OrderSync.SeatOf(handler)));
+                Stats = new BotStats();
+                inRound = false;
+            }
             Forget();
             Target = null;
             corners.Clear();
@@ -122,6 +136,18 @@ public class BotDriver : MonoBehaviour, IDriveInput
             ReleaseBoost(Time.deltaTime);
             return;
         }
+        inRound = true;
+
+        // Something new in its hold: a steal when it was chasing, else a pickup (before choosing again forgets which)
+        int held = handler != null ? handler.HeldCount : 0;
+        if (held > heldBefore)
+        {
+            if (Victim != null)
+                Stats.Stole();
+            else
+                Stats.PickedUp(chosenWorth, chosenDistance);
+        }
+        heldBefore = held;
 
         Vector3 position = driving.transform.position;
         float dt = Time.deltaTime;
@@ -180,6 +206,8 @@ public class BotDriver : MonoBehaviour, IDriveInput
         {
             boostHeld = 0f;
             sinceBoost = 0f;
+            if (hit)
+                Stats.Tried();
             BoostButton?.Invoke(true);
         }
         ReleaseBoost(dt);
@@ -364,6 +392,8 @@ public class BotDriver : MonoBehaviour, IDriveInput
         int pick = BotTactics.Choose(situation, options, chosen != null ? targets.IndexOf(chosen) : -1);
         chosen = pick >= 0 ? targets[pick] : null;
         victimBall = pick >= 0 ? victimBalls[pick] : null;
+        chosenWorth = pick >= 0 ? options[pick].Worth : 0;
+        chosenDistance = pick >= 0 ? options[pick].Distance : 0f;
         Victim = chosen as OrderHandler;
         victimSeat = Victim != null ? OrderSync.SeatOf(Victim) : -1;
         chaseLimit = BotTactics.ChaseSeconds(situation);

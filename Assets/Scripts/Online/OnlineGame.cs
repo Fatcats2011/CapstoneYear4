@@ -738,12 +738,24 @@ public class OnlineGame : MonoBehaviour
             BallDriving driving = avatar.GetComponentInChildren<BallDriving>(true);
             BotDriver bot = driving.gameObject.AddComponent<BotDriver>();
             bot.OnlyInRound = true;
+            bot.Kind = BotPersonality.ForRank(BotPersonality.RankOf(seat, BotSeats()));
             bot.Drive(driving);
 
             DressBot(player, avatar);
             seatedBots.Add(player);
             botsToSeat.RemoveAt(i);
         }
+    }
+
+    // Every CPU driver's seat, seated or waiting (bots take seats in the order they're added: the lowest is the thief)
+    IEnumerable<int> BotSeats()
+    {
+        foreach (OnlinePlayer bot in botsToSeat)
+            if (bot != null)
+                yield return bot.Seat;
+        foreach (OnlinePlayer bot in seatedBots)
+            if (bot != null)
+                yield return bot.Seat;
     }
 
     const string BOT_NAME = "CPU";
