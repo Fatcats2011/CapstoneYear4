@@ -480,21 +480,33 @@ PrefabInstance:
       value: 1
       objectReference: {fileID: 0}
     - target: {fileID: -7511558181221131132, guid: e74b9fa79d5b2574fafa5aa1f00a6970, type: 3}
+      propertyPath: m_Materials.Array.size
+      value: 6
+      objectReference: {fileID: 0}
+    - target: {fileID: -7511558181221131132, guid: e74b9fa79d5b2574fafa5aa1f00a6970, type: 3}
       propertyPath: m_Materials.Array.data[0]
       value: 
       objectReference: {fileID: 2100000, guid: c69f41ff91dddeb4bb6a729793740b81, type: 2}
     - target: {fileID: -7511558181221131132, guid: e74b9fa79d5b2574fafa5aa1f00a6970, type: 3}
       propertyPath: m_Materials.Array.data[1]
       value: 
-      objectReference: {fileID: 2100000, guid: 518246e730cf16d4389e0f6bbb2ba7ef, type: 2}
+      objectReference: {fileID: 2100000, guid: 1f56593e12544ef9bd099d707edd90dc, type: 2}
     - target: {fileID: -7511558181221131132, guid: e74b9fa79d5b2574fafa5aa1f00a6970, type: 3}
       propertyPath: m_Materials.Array.data[2]
       value: 
-      objectReference: {fileID: 2100000, guid: 518246e730cf16d4389e0f6bbb2ba7ef, type: 2}
+      objectReference: {fileID: 2100000, guid: 1f56593e12544ef9bd099d707edd90dc, type: 2}
     - target: {fileID: -7511558181221131132, guid: e74b9fa79d5b2574fafa5aa1f00a6970, type: 3}
       propertyPath: m_Materials.Array.data[3]
       value: 
-      objectReference: {fileID: 2100000, guid: 518246e730cf16d4389e0f6bbb2ba7ef, type: 2}
+      objectReference: {fileID: 2100000, guid: 7afec215902e2db4fa354597e9cdaf9c, type: 2}
+    - target: {fileID: -7511558181221131132, guid: e74b9fa79d5b2574fafa5aa1f00a6970, type: 3}
+      propertyPath: m_Materials.Array.data[4]
+      value: 
+      objectReference: {fileID: 2100000, guid: 0cfc97a53a3bcfc4cb45e6d73f3f339a, type: 2}
+    - target: {fileID: -7511558181221131132, guid: e74b9fa79d5b2574fafa5aa1f00a6970, type: 3}
+      propertyPath: m_Materials.Array.data[5]
+      value: 
+      objectReference: {fileID: 2100000, guid: 7afec215902e2db4fa354597e9cdaf9c, type: 2}
     - target: {fileID: -5754084199372789682, guid: e74b9fa79d5b2574fafa5aa1f00a6970, type: 3}
       propertyPath: m_Mesh
       value: 
