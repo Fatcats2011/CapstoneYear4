@@ -749,6 +749,38 @@ MonoBehaviour:
     m_Localized: "Eme\u011Fi Ge\xE7enler"
     m_Metadata:
       m_Items: []
+  - m_Id: 2016801274597376
+    m_Localized: BOTLAR
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2016801316540416
+    m_Localized: BOT YOK
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2016801316540417
+    m_Localized: REC
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2016801316540418
+    m_Localized: CAM {0}
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2016801316540419
+    m_Localized: "HIRSIZLIK TESP\u0130T ED\u0130LD\u0130"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2016801316540420
+    m_Localized: "\xC7ARPI\u015EMA TESP\u0130T ED\u0130LD\u0130"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2016801316540421
+    m_Localized: "\u015EAHIS SUYA D\xDC\u015ET\xDC"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2016801316540422
+    m_Localized: "TESL\u0130MAT ONAYLANDI"
+    m_Metadata:
+      m_Items: []
   references:
     version: 2
     RefIds: []

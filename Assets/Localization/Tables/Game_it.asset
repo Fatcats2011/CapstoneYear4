@@ -747,6 +747,38 @@ MonoBehaviour:
     m_Localized: Riconoscimenti
     m_Metadata:
       m_Items: []
+  - m_Id: 2016801274597376
+    m_Localized: BOT
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2016801316540416
+    m_Localized: SENZA BOT
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2016801316540417
+    m_Localized: REC
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2016801316540418
+    m_Localized: CAM {0}
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2016801316540419
+    m_Localized: FURTO RILEVATO
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2016801316540420
+    m_Localized: COLLISIONE RILEVATA
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2016801316540421
+    m_Localized: SOGGETTO IN ACQUA
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2016801316540422
+    m_Localized: CONSEGNA CONFERMATA
+    m_Metadata:
+      m_Items: []
   references:
     version: 2
     RefIds: []

@@ -748,6 +748,38 @@ MonoBehaviour:
     m_Localized: "Tw\xF3rcy"
     m_Metadata:
       m_Items: []
+  - m_Id: 2016801274597376
+    m_Localized: BOTY
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2016801316540416
+    m_Localized: "BEZ BOT\xD3W"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2016801316540417
+    m_Localized: REC
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2016801316540418
+    m_Localized: CAM {0}
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2016801316540419
+    m_Localized: "WYKRYTO KRADZIE\u017B"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2016801316540420
+    m_Localized: WYKRYTO ZDERZENIE
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2016801316540421
+    m_Localized: "OBIEKT WPAD\u0141 DO WODY"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2016801316540422
+    m_Localized: DOSTAWA POTWIERDZONA
+    m_Metadata:
+      m_Items: []
   references:
     version: 2
     RefIds: []

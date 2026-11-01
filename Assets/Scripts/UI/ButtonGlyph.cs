@@ -2,7 +2,9 @@ using System;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.DualShock;
+#if UNITY_EDITOR || UNITY_STANDALONE_WIN || UNITY_STANDALONE_OSX || UNITY_WSA
 using UnityEngine.InputSystem.Switch;
+#endif
 using UnityEngine.UI;
 
 /// <summary>
@@ -30,8 +32,11 @@ public static class GlyphRules
         {
             case DualShockGamepad _:
                 return GlyphStyle.PlayStation;
+#if UNITY_EDITOR || UNITY_STANDALONE_WIN || UNITY_STANDALONE_OSX || UNITY_WSA
+            // The Input System only ships the Switch Pro layout on these platforms (not Linux)
             case SwitchProControllerHID _:
                 return GlyphStyle.Nintendo;
+#endif
             case Keyboard _:
             case Mouse _:
                 return GlyphStyle.Keyboard;

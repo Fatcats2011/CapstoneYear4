@@ -735,6 +735,38 @@ MonoBehaviour:
     m_Key: menu.credits
     m_Metadata:
       m_Items: []
+  - m_Id: 2016801274597376
+    m_Key: rules.bots
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2016801316540416
+    m_Key: rules.nobots
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2016801316540417
+    m_Key: reel.rec
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2016801316540418
+    m_Key: reel.cam
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2016801316540419
+    m_Key: reel.caption.theft
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2016801316540420
+    m_Key: reel.caption.collision
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2016801316540421
+    m_Key: reel.caption.water
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2016801316540422
+    m_Key: reel.caption.delivery
+    m_Metadata:
+      m_Items: []
   m_Metadata:
     m_Items: []
   m_KeyGenerator:
