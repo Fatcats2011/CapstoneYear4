@@ -656,7 +656,9 @@ public class PlayerInstantiate : SingletonMonobehaviour<PlayerInstantiate>
     {
         if (readyUpCountdown != null)
         {
-            PlayerSelectCanvas.Instance.StopCountdown();
+            // The lobby's canvas goes with the menu scene: a match already loading has none to stop
+            if (PlayerSelectCanvas.Instance != null)
+                PlayerSelectCanvas.Instance.StopCountdown();
             StopCoroutine(readyUpCountdown);
             readyUpCountdown = null;
         }

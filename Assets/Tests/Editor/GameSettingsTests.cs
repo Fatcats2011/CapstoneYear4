@@ -182,6 +182,28 @@ namespace DoA.Tests
         }
 
         [Test]
+        public void Volume_StepsInTens_OverTheTwelveDrawnPositions()
+        {
+            // 12 slider positions stepped 0, 9, 18 ... 100% (playtest, 2026-10-31)
+            int[] choices = OptionsMenu.VolumeChoices(12);
+            Assert.AreEqual(11, choices.Length);
+            Assert.AreEqual(0, choices[0]);
+            Assert.AreEqual(11, choices[10], "the loudest is the last position");
+            for (int step = 0; step < choices.Length; step++)
+                Assert.AreEqual(step * 10 + "%", OptionsMenu.VolumePercent(choices[step], 12), "step " + step);
+            CollectionAssert.AllItemsAreUnique(choices);
+        }
+
+        [Test]
+        public void Volume_ASavedPositionBetweenTheTens_SnapsToTheNearest()
+        {
+            int[] choices = OptionsMenu.VolumeChoices(12);
+            foreach (int saved in new[] { 0, 3, 5, 6, 8, 11 })
+                Assert.LessOrEqual(System.Math.Abs(OptionsMenu.Nearest(choices, saved) - saved), 1, "saved " + saved);
+            CollectionAssert.Contains(choices, OptionsMenu.Nearest(choices, 5));
+        }
+
+        [Test]
         public void Units_AreMetricUntilPicked_AndSaved()
         {
             Assert.AreEqual(0, GameSettings.Parse("", Defaults).units, "metric");

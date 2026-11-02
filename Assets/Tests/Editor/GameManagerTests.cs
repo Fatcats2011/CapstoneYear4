@@ -1,5 +1,8 @@
 using System.Collections.Generic;
+using System.Text.RegularExpressions;
 using NUnit.Framework;
+using UnityEngine;
+using UnityEngine.TestTools;
 
 namespace DoA.Tests
 {
@@ -25,6 +28,23 @@ namespace DoA.Tests
         {
             applied.Clear();
             objects.DestroyAll();
+        }
+
+        [Test]
+        public void AHandlerThatThrows_DoesntStopTheOthers()
+        {
+            // A joining player's machine: one player's unready threw at the opening cutscene, and every handler after it
+            // (the other players', the bots', the spawns) never ran (playtest, 2026-10-31: player 2 didn't load, bots
+            // didn't work)
+            int after = 0;
+            game.OnSwapStartingCutscene += () => throw new System.NullReferenceException("a destroyed lobby");
+            game.OnSwapStartingCutscene += () => after++;
+            LogAssert.Expect(LogType.Exception, new Regex("a destroyed lobby"));
+
+            game.ApplyGameState(GameState.StartingCutscene);
+
+            Assert.AreEqual(1, after, "the next handler still ran");
+            Assert.AreEqual(GameState.StartingCutscene, game.MainState);
         }
 
         [Test]

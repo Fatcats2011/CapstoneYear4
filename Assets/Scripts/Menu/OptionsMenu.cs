@@ -223,29 +223,59 @@ public class OptionsMenu : SingletonMonobehaviour<OptionsMenu>, IMouseMenu
     // Music and Effects, at the drawn sliders' steps (volumeValues), shown as a share of the loudest
     OptionSetting MusicSetting()
     {
-        OptionSetting setting = new OptionSetting("MUSIC", VolumeSteps(), VolumeWords, bgmPosition) { LabelKey = "options.music" };
+        int[] steps = VolumeChoices(volumeValues.Length);
+        OptionSetting setting = new OptionSetting("MUSIC", steps, VolumeWords, Nearest(steps, bgmPosition)) { LabelKey = "options.music" };
         setting.Changed += value => { bgmPosition = value; bgmValue = volumeValues[value]; soundManager.SetMusic(bgmValue); };
         return setting;
     }
 
     OptionSetting EffectsSetting()
     {
-        OptionSetting setting = new OptionSetting("EFFECTS", VolumeSteps(), VolumeWords, sfxPosition) { LabelKey = "options.effects" };
+        int[] steps = VolumeChoices(volumeValues.Length);
+        OptionSetting setting = new OptionSetting("EFFECTS", steps, VolumeWords, Nearest(steps, sfxPosition)) { LabelKey = "options.effects" };
         setting.Changed += value => { sfxPosition = value; sfxValue = volumeValues[value]; soundManager.SetSFX(sfxValue); };
         return setting;
     }
 
-    int[] VolumeSteps()
+    /// <summary>
+    /// The slider positions the Music and Effects rows step through: 0% to 100% in tens. The drawn sliders had 12
+    /// positions, so every position stepped about 9% (playtest, 2026-10-31); the rows skip the ones between the tens
+    /// </summary>
+    public static int[] VolumeChoices(int positions)
     {
-        int[] steps = new int[volumeValues.Length];
-        for (int i = 0; i < steps.Length; i++)
-            steps[i] = i;
-        return steps;
+        if (positions < 2)
+            return new[] { 0 };
+        int[] choices = new int[VOLUME_STEPS + 1];
+        for (int step = 0; step <= VOLUME_STEPS; step++)
+            choices[step] = Mathf.RoundToInt((float)step * (positions - 1) / VOLUME_STEPS);
+        return choices;
     }
 
-    string VolumeWords(int step)
+    /// <summary>A slider position as the rows show it: its step's tens ("40%")</summary>
+    public static string VolumePercent(int position, int positions)
     {
-        return Mathf.RoundToInt(100f * step / (volumeValues.Length - 1)) + "%";
+        if (positions < 2)
+            return "100%";
+        return Mathf.RoundToInt((float)position * VOLUME_STEPS / (positions - 1)) * (100 / VOLUME_STEPS) + "%";
+    }
+
+    /// <summary>The choice nearest a position (one saved before the rows stepped in tens)</summary>
+    public static int Nearest(int[] choices, int position)
+    {
+        int best = choices[0];
+        foreach (int choice in choices)
+        {
+            if (Mathf.Abs(choice - position) < Mathf.Abs(best - position))
+                best = choice;
+        }
+        return best;
+    }
+
+    const int VOLUME_STEPS = 10;
+
+    string VolumeWords(int position)
+    {
+        return VolumePercent(position, volumeValues.Length);
     }
 
     // Music and Effects live on AUDIO (playtest, 2026-10-24: audio settings weren't under Audio). GENERAL's drawn sliders

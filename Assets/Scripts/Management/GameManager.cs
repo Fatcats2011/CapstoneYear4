@@ -84,64 +84,101 @@ public class GameManager : SingletonMonobehaviour<GameManager>
         GameAuthority.SetTimeScale(1f);
 
         mainState = state;
-        StateApplied?.Invoke(state);
+        Raise(StateApplied, state);
 
         if(mainState != GameState.Tutorial)
-            OnSwapAnything?.Invoke();
+            Raise(OnSwapAnything);
 
         // A match started from the menus teaches again, whatever a rematch left set
         if (mainState == GameState.Menu || mainState == GameState.PlayerSelect)
         {
             TutorialManager.SkipNextTutorial = false;
-            OnNewMatch?.Invoke();
+            Raise(OnNewMatch);
         }
 
         // Calls an event for the certain state that is swapped to
         switch(mainState)
         {
             case GameState.Menu:
-                OnSwapMenu?.Invoke();
+                Raise(OnSwapMenu);
                 break;
             case GameState.Options:
-                OnSwapOptions?.Invoke();
+                Raise(OnSwapOptions);
                 break;
             case GameState.Credits:
-                OnSwapCredits?.Invoke();
+                Raise(OnSwapCredits);
                 break;
             case GameState.PlayerSelect:
-                OnSwapPlayerSelect?.Invoke();
+                Raise(OnSwapPlayerSelect);
                 break;
             case GameState.Loading:
-                OnSwapLoading?.Invoke();
+                Raise(OnSwapLoading);
                 break;
             case GameState.StartingCutscene:
-                OnSwapStartingCutscene?.Invoke();
+                Raise(OnSwapStartingCutscene);
                 break;
             case GameState.Tutorial:
-                OnSwapTutorial?.Invoke();
+                Raise(OnSwapTutorial);
                 // A rematch skips the tutorial: its state still unfreezes the scooters and hands over the driving
                 // controls and engines, then the first wave starts at once
                 if (TutorialManager.SkipNextTutorial && mainState == GameState.Tutorial)
                     SetGameState(GameState.Begin);
                 break;
             case GameState.Begin:
-                OnSwapBegin?.Invoke();
+                Raise(OnSwapBegin);
                 break;
             case GameState.MainLoop:
-                OnSwapMainLoop?.Invoke();
+                Raise(OnSwapMainLoop);
                 break;
             case GameState.FinalPackage:
-                OnSwapFinalPackage?.Invoke();
+                Raise(OnSwapFinalPackage);
                 break;
             case GameState.GoldenCutscene:
-                OnSwapGoldenCutscene?.Invoke();
+                Raise(OnSwapGoldenCutscene);
                 break;
             case GameState.Results:
                 DOTween.CompleteAll();
-                OnSwapResults?.Invoke();
+                Raise(OnSwapResults);
                 break;
             default:
                 break;
+        }
+    }
+
+    // Each handler on its own: one that throws is logged and the rest still run. A joining machine's player threw at the
+    // opening cutscene, and the handlers after it (the other players', the bots', the spawns) never ran (playtest,
+    // 2026-10-31: player 2 didn't load, bots didn't work)
+    static void Raise(Action handlers)
+    {
+        if (handlers == null)
+            return;
+        foreach (Delegate handler in handlers.GetInvocationList())
+        {
+            try
+            {
+                ((Action)handler)();
+            }
+            catch (Exception e)
+            {
+                Debug.LogException(e);
+            }
+        }
+    }
+
+    static void Raise(Action<GameState> handlers, GameState state)
+    {
+        if (handlers == null)
+            return;
+        foreach (Delegate handler in handlers.GetInvocationList())
+        {
+            try
+            {
+                ((Action<GameState>)handler)(state);
+            }
+            catch (Exception e)
+            {
+                Debug.LogException(e);
+            }
         }
     }
 

@@ -63,7 +63,9 @@ public class PlayerSelectCanvas : SingletonMonobehaviour<PlayerSelectCanvas>
 
     public void StopCountdown()
     {
-        countdown.SetTrigger(HashReference._resetTrigger);
+        // Gone with the menu scene once a match loads (online, a joining machine stops its countdown then)
+        if (countdown != null)
+            countdown.SetTrigger(HashReference._resetTrigger);
         CountdownStopped?.Invoke();
     }
 
