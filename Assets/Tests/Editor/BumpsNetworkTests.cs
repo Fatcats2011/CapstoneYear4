@@ -185,9 +185,9 @@ namespace DoA.Tests
             SceneFlow.Current.LoadGameScene();
             x.Match.ReportLoaded(MatchScene.Game);
             deadline = Time.realtimeSinceStartup + LOADING + 60;
-            while (State() != GameState.Tutorial && Time.realtimeSinceStartup < deadline)
+            while (State() != GameState.Begin && Time.realtimeSinceStartup < deadline)
                 yield return null;
-            Assert.AreEqual(GameState.Tutorial, State(), "the tutorial");
+            Assert.AreEqual(GameState.Begin, State(), "the first wave: online has no tutorial");
             Vector3 spot = CitySpot();
             PutBallAt(0, spot);
             Slot(0).Player.GetComponentInChildren<TutorialHandler>().TeachHandler(TutorialType.Final);

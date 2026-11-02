@@ -302,9 +302,9 @@ namespace DoA.Tests
             x.Match.ReportLoaded(MatchScene.Game);
             y.Match.ReportLoaded(MatchScene.Game);
             deadline = Time.realtimeSinceStartup + LOADING + 60;
-            while (State() != GameState.Tutorial && Time.realtimeSinceStartup < deadline)
+            while (State() != GameState.Begin && Time.realtimeSinceStartup < deadline)
                 yield return null;
-            Assert.AreEqual(GameState.Tutorial, State(), "the tutorial");
+            Assert.AreEqual(GameState.Begin, State(), "the first wave: online has no tutorial");
             FinishTutorialInTheCity(0);
             x.Match.ReportLearnt(1);
             y.Match.ReportLearnt(2);
