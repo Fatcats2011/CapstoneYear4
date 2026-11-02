@@ -122380,15 +122380,15 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   dontDestroyOnLoad: 0
-  maxEasy: 020000000100000000000000
-  maxMedium: 020000000200000002000000
-  maxHard: 010000000200000003000000
+  maxEasy: 010000000100000000000000
+  maxMedium: 020000000100000001000000
+  maxHard: 010000000100000002000000
   waveLengthInSeconds: 60
   totalOrderListGO: {fileID: 345970365}
   cooldownTime: 4
   postGameLinger: 2.5
   goldIncrementValue: 5
-  goldValueTimer: 5
+  goldValueTimer: 2.5
   normalOrders:
   - {fileID: 1039809852}
   - {fileID: 828574814}

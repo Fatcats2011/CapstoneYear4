@@ -774,8 +774,25 @@ public class PlayerInstantiate : SingletonMonobehaviour<PlayerInstantiate>
     private void SwapForMainMenu()
     {
         SwapPlayerInputControlSchemeToUI();
+        ClearFinishPoses();
 
         SwapMenuTypeForAllPlayers(MenuType.MainMenu);
+    }
+
+    /// <summary>
+    /// Every scooter here stops its results pose (End Status, the podium's victory dance). The results clear them when
+    /// their vote ends where it's decided, but not on a joining machine, nor when a player leaves straight for the lobby:
+    /// the dances went on in the lobby (playtest, 2026-10-31)
+    /// </summary>
+    internal void ClearFinishPoses()
+    {
+        foreach (PlayerSlot slot in roster.Players)
+        {
+            OrderHandler orders = slot.Player != null ? slot.Player.GetComponentInChildren<OrderHandler>(true) : null;
+            Animator pose = orders != null ? orders.PlayerAnimator : null;
+            if (pose != null && pose.runtimeAnimatorController != null)
+                pose.SetInteger(HashReference._endStatusFloat, 0);
+        }
     }
 
     /// <summary>
@@ -794,6 +811,7 @@ public class PlayerInstantiate : SingletonMonobehaviour<PlayerInstantiate>
     private void SwapForCharacterSelect()
     {
         SwapPlayerInputControlSchemeToUI();
+        ClearFinishPoses();
 
         SwapMenuTypeForAllPlayers(MenuType.PlayerSelect);
     }

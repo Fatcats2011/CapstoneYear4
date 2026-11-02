@@ -84,7 +84,7 @@ public class HighlightReel : MonoBehaviour
             reel.Skipper = holder.AddComponent<CutsceneSkip>();
             reel.Skipper.PromptParent = reel.overlay.transform;
             reel.Skipper.Skip = reel.End;
-            reel.Skipper.Open(RosterSeats(), decides);
+            reel.Skipper.Open(CutsceneSkip.VotingSeats(), decides); // the CPU drivers don't vote
 
             reel.Show(reel.Now());
         }
@@ -356,17 +356,6 @@ public class HighlightReel : MonoBehaviour
     }
 
     // ---- Building and restoring ----
-
-    static List<int> RosterSeats()
-    {
-        var seats = new List<int>();
-        if (PlayerInstantiate.Instance != null)
-        {
-            foreach (PlayerSlot player in PlayerInstantiate.Instance.Roster.Players)
-                seats.Add(player.Index);
-        }
-        return seats;
-    }
 
     static PlayerSlot Slot(int seat)
     {

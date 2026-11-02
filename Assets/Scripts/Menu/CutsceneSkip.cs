@@ -61,6 +61,28 @@ public class CutsceneSkip : MonoBehaviour
         return players == null || (seat >= 0 && seat < Constants.MAX_PLAYERS && players.Roster[seat] != null);
     }
 
+    /// <summary>
+    /// The seats that vote to skip: every player but the CPU drivers. A bot never votes, so with one in, a vote of every
+    /// seat could never pass (playtest, 2026-10-31)
+    /// </summary>
+    public static List<int> VotingSeats(IEnumerable<PlayerSlot> players)
+    {
+        List<int> seats = new List<int>();
+        foreach (PlayerSlot player in players)
+        {
+            if (player != null && !player.IsBot)
+                seats.Add(player.Index);
+        }
+        return seats;
+    }
+
+    /// <summary>The voting seats of the players in the match now</summary>
+    public static List<int> VotingSeats()
+    {
+        PlayerInstantiate players = PlayerInstantiate.Instance;
+        return players == null ? new List<int>() : VotingSeats(players.Roster.Players);
+    }
+
     static IEnumerable<int> RosterLocalSeats()
     {
         PlayerInstantiate players = PlayerInstantiate.Instance;

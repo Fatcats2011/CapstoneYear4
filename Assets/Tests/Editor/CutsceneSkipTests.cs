@@ -58,6 +58,21 @@ namespace DoA.Tests
         }
 
         [Test]
+        public void TheCpuDrivers_DontVote()
+        {
+            // A bot never holds A: counted, it kept every vote from passing (playtest, 2026-10-31)
+            PlayerSlot[] players =
+            {
+                new PlayerSlot(0, null, null, 0),
+                new PlayerSlot(1, null, null, 0, isBot: true),
+                new PlayerSlot(2, null, null, 5),
+                new PlayerSlot(3, null, null, 0, isBot: true),
+            };
+
+            CollectionAssert.AreEqual(new[] { 0, 2 }, CutsceneSkip.VotingSeats(players));
+        }
+
+        [Test]
         public void EveryoneHolds_SkipsOnce()
         {
             skip.Open(new[] { 0, 1 }, true);

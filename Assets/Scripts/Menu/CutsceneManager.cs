@@ -148,7 +148,8 @@ public class CutsceneManager : SingletonMonobehaviour<CutsceneManager>
         OpenSkip();
     }
 
-    // Every player in the match votes to skip (hold A); where states are decided, everyone's vote skips
+    // Every player in the match votes to skip (hold A), not the CPU drivers; where states are decided, everyone's vote
+    // skips
     void OpenSkip()
     {
         if (skip == null)
@@ -156,11 +157,7 @@ public class CutsceneManager : SingletonMonobehaviour<CutsceneManager>
             skip = gameObject.AddComponent<CutsceneSkip>();
             skip.PromptParent = cutsceneCanvas.transform;
         }
-        List<int> seats = new List<int>();
-        if (PlayerInstantiate.Instance != null)
-            foreach (PlayerSlot player in PlayerInstantiate.Instance.Roster.Players)
-                seats.Add(player.Index);
-        skip.Open(seats, GameAuthority.IsAuthority);
+        skip.Open(CutsceneSkip.VotingSeats(), GameAuthority.IsAuthority);
     }
 
     ///<summary>
