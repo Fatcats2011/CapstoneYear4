@@ -253,8 +253,8 @@ public class OrderManager : SingletonMonobehaviour<OrderManager>
 
     internal void InitTutorial()
     {
-        // Online, the host hands out the tutorial orders. A rematch has none: it goes straight on to the first wave
-        if (!GameAuthority.IsAuthority || TutorialManager.SkipNextTutorial)
+        // A rematch, or online, has no tutorial orders: it goes straight on to the first wave
+        if (!GameAuthority.IsAuthority || TutorialManager.Skipping)
             return;
 
         TutorialManager.Instance.ShouldTutorialize = true;

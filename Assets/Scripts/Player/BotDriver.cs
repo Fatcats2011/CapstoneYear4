@@ -216,10 +216,16 @@ public class BotDriver : MonoBehaviour, IDriveInput
     static bool InRound()
     {
         GameManager game = GameManager.Instance;
-        if (game == null)
-            return false;
-        GameState state = game.MainState;
-        return state == GameState.Begin || state == GameState.MainLoop || state == GameState.FinalPackage;
+        return game != null && InRound(game.MainState, Time.time, PlayerInstantiate.DrivingFrom);
+    }
+
+    /// <summary>
+    /// Whether a bot drives: in the round's states, and once the players' 3, 2, 1 has handed them their controls (the
+    /// golden round's start). Bots set off before it ended (playtest, 2026-10-31)
+    /// </summary>
+    internal static bool InRound(GameState state, float now, float drivingFrom)
+    {
+        return (state == GameState.Begin || state == GameState.MainLoop || state == GameState.FinalPackage) && now >= drivingFrom;
     }
 
     void ReleaseBoost(float dt)

@@ -77,9 +77,9 @@ namespace DoA.Tests
         }
 
         [TestCase(NetworkRole.Offline, true)]
-        [TestCase(NetworkRole.Host, true)]
+        [TestCase(NetworkRole.Host, false)] // online has no tutorial (playtest, 2026-10-31)
         [TestCase(NetworkRole.Client, false)]
-        public void OrderManager_InitTutorial_StartsTheTutorial_OnlyWhereTheRulesAreDecided(NetworkRole role, bool decides)
+        public void OrderManager_InitTutorial_StartsTheTutorial_OnlyOffline(NetworkRole role, bool decides)
         {
             GameAuthority.Role = role;
             TutorialManager tutorial = objects.Add<TutorialManager>();

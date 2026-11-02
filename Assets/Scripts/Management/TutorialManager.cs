@@ -22,6 +22,13 @@ public class TutorialManager : SingletonMonobehaviour<TutorialManager>
     /// </summary>
     public static bool SkipNextTutorial;
 
+    /// <summary>
+    /// Whether this match skips its tutorial: a rematch, or any online match (playtest, 2026-10-31: the tutorial is for
+    /// local play, not the multiplayer lobbies' loop). It still hands the players their driving, then the first wave
+    /// starts at once (GameManager)
+    /// </summary>
+    public static bool Skipping { get { return SkipNextTutorial || GameAuthority.IsOnline; } }
+
     private List<TutorialHandler> handlers = new List<TutorialHandler>();
 
     // The seats whose players have finished this match's tutorial (online, the host hears about other machines' players)

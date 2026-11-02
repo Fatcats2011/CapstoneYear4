@@ -899,14 +899,30 @@ public class PlayerInstantiate : SingletonMonobehaviour<PlayerInstantiate>
         StartCoroutine(PlayerMoverCountdown());
     }
 
+    /// <summary>
+    /// When the players' 3, 2, 1 hands them the driving controls (Time.time): the CPU drivers wait for it too (BotDriver)
+    /// </summary>
+    internal static float DrivingFrom;
+
+    /// <summary>The 3, 2, 1 before the players get the driving controls, in seconds</summary>
+    internal const float DRIVE_COUNTDOWN = 3f;
+
+    // Time.time starts again with each play: an old countdown's end mustn't hold the bots
+    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+    static void ResetDrivingFrom()
+    {
+        DrivingFrom = 0f;
+    }
+
     private IEnumerator PlayerMoverCountdown()
     {
         if (cutsceneManager == null)
             cutsceneManager = CutsceneManager.Instance;
 
         cutsceneManager.BeginCountdownAnimation();
+        DrivingFrom = Time.time + DRIVE_COUNTDOWN;
 
-        yield return new WaitForSeconds(3f);
+        yield return new WaitForSeconds(DRIVE_COUNTDOWN);
 
         SwapPlayerInputControlSchemeToDrive();
         SwapMenuTypeForAllPlayers(MenuType.PauseMenu);

@@ -81,7 +81,7 @@ public class SpawnManager : SingletonMonobehaviour<SpawnManager>
         foreach (PlayerSlot player in playerInstantiate.Roster.SimulatedHere)
         {
             GameObject lane = SpawnPoint(player.Index, gameSpawnPositions, null);
-            RespawnPoint city = TutorialManager.SkipNextTutorial && lane != null && RespawnManager.Instance != null
+            RespawnPoint city = TutorialManager.Skipping && lane != null && RespawnManager.Instance != null
                 ? RespawnManager.Instance.GetRespawnPoint(lane.transform.position) : null;
             if (city == null)
             {

@@ -64,8 +64,8 @@ public class TutorialHandler : MonoBehaviour
     public void ResetHandler()
     {
         hasLearnt = false;
-        // A rematch skips the tutorial: this player starts as if they'd learnt it (no count: nobody waits on it)
-        if (TutorialManager.SkipNextTutorial)
+        // A rematch, or online, skips the tutorial: this player starts as if they'd learnt it (no count: nobody waits on it)
+        if (TutorialManager.Skipping)
         {
             hasLearnt = true;
             ball.SetBoostModifier(false);

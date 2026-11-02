@@ -31,6 +31,16 @@ namespace DoA.Tests
         }
 
         [Test]
+        public void ABot_WaitsForThePlayers321()
+        {
+            // The golden round's start: the players drive once the 3, 2, 1 ends, and so do the bots (playtest, 2026-10-31)
+            Assert.IsFalse(BotDriver.InRound(GameState.FinalPackage, 10f, 12f), "during the 3, 2, 1");
+            Assert.IsTrue(BotDriver.InRound(GameState.FinalPackage, 12f, 12f), "once it ends");
+            Assert.IsTrue(BotDriver.InRound(GameState.Begin, 50f, 12f));
+            Assert.IsFalse(BotDriver.InRound(GameState.GoldenCutscene, 50f, 12f), "never in a cutscene");
+        }
+
+        [Test]
         public void Desperation_ZeroWhenLeadingOrLevel_OneAtFullGap()
         {
             Assert.AreEqual(0f, BotTactics.Desperation(100, 100));

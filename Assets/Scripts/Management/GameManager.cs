@@ -121,7 +121,7 @@ public class GameManager : SingletonMonobehaviour<GameManager>
                 Raise(OnSwapTutorial);
                 // A rematch skips the tutorial: its state still unfreezes the scooters and hands over the driving
                 // controls and engines, then the first wave starts at once
-                if (TutorialManager.SkipNextTutorial && mainState == GameState.Tutorial)
+                if (TutorialManager.Skipping && mainState == GameState.Tutorial)
                     SetGameState(GameState.Begin);
                 break;
             case GameState.Begin:

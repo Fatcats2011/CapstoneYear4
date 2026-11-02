@@ -321,18 +321,12 @@ namespace DoA.Tests
             ChangeRecorder heard = new ChangeRecorder(other.Match);
             PointRecorder rise = new PointRecorder(other.Match);
 
-            // The match starts on both machines. Both players finish the tutorial (this machine's waits in the city), and
-            // the first wave begins
+            // The match starts on both machines. Online has no tutorial: the first wave begins, this machine's player in
+            // the city
             PlayerInstantiate.Instance.ReadyUp(0);
             SceneFlow.Current.LoadGameScene();
             other.Match.ReportLoaded(MatchScene.Game);
             deadline = Time.realtimeSinceStartup + LOADING + 60;
-            while (State() != GameState.Tutorial && Time.realtimeSinceStartup < deadline)
-                yield return null;
-            Assert.AreEqual(GameState.Tutorial, State(), "the tutorial");
-            FinishTutorialInTheCity(0);
-            other.Match.ReportLearnt(1);
-            deadline = Time.realtimeSinceStartup + WAIT;
             while (State() != GameState.Begin && Time.realtimeSinceStartup < deadline)
                 yield return null;
             Assert.AreEqual(GameState.Begin, State(), "the first wave");

@@ -10,11 +10,24 @@ public class RespawnManager : SingletonMonobehaviour<RespawnManager>
     [Tooltip("Will return any respawn point less than this distance, even if it's not technically the closest.")]
     [SerializeField] private float closeEnough = 10f;
 
-    private RespawnPoint[] respawnPoints;
+    private RespawnPoint[] gathered;
+
+    // The scene's points, gathered on first use: online the opening state can place players in the frame the scene
+    // loads, before Start (a player started online with no tutorial found none)
+    private RespawnPoint[] respawnPoints
+    {
+        get
+        {
+            if (gathered == null && RSPParent != null)
+                InitRespawnPoints(RSPParent);
+            return gathered;
+        }
+    }
 
     private void Start()
     {
-        InitRespawnPoints(RSPParent);
+        if (gathered == null && RSPParent != null)
+            InitRespawnPoints(RSPParent);
     }
 
     /// <summary>
@@ -23,10 +36,10 @@ public class RespawnManager : SingletonMonobehaviour<RespawnManager>
     /// <param name="parent">Parent GO of the respawn points for the map.</param>
     internal void InitRespawnPoints(GameObject parent)
     {
-        respawnPoints = new RespawnPoint[parent.transform.childCount];
+        gathered = new RespawnPoint[parent.transform.childCount];
         for(int i=0;i<parent.transform.childCount;i++)
         {
-            respawnPoints[i] = parent.transform.GetChild(i).GetComponent<RespawnPoint>();
+            gathered[i] = parent.transform.GetChild(i).GetComponent<RespawnPoint>();
         }
     }
 
@@ -54,7 +67,7 @@ public class RespawnManager : SingletonMonobehaviour<RespawnManager>
     /// </summary>
     public RespawnPoint GetRespawnPoint(Vector3 lastGrounded)
     {
-        if(respawnPoints.Length == 0)
+        if(respawnPoints == null || respawnPoints.Length == 0)
         {
             return null;
         }
