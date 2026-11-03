@@ -75,7 +75,7 @@ public class ResultsAwardsView : MonoBehaviour
         return view;
     }
 
-    // Just above the score's text, in the parent's units. The scores' text changes after the cards are made, so they
+    // Just above the score's text and its player's name, in the parent's units. The scores' text changes after the cards are made, so they
     // follow it (LateUpdate)
     void PlaceOver(int i)
     {
@@ -91,7 +91,9 @@ public class ResultsAwardsView : MonoBehaviour
             : scores[i].horizontalAlignment == HorizontalAlignmentOptions.Right ? box.xMax - width / 2f
             : box.center.x;
         Vector2 top = new Vector2(middle * score.localScale.x, box.yMax * score.localScale.y);
-        ((RectTransform)cards[i].transform).anchoredPosition = score.anchoredPosition + top + new Vector2(0f, ABOVE_SCORE);
+        // Over the player's name, which sits on the score (ResultsMenu)
+        float above = ABOVE_SCORE + ResultsMenu.NAME_LINE * score.localScale.y;
+        ((RectTransform)cards[i].transform).anchoredPosition = score.anchoredPosition + top + new Vector2(0f, above);
     }
 
     void LateUpdate()

@@ -24,13 +24,13 @@ public class Scoreboard : MonoBehaviour
     const float LEFT = 16f;
     const float BORDER = 4f;
     const float PAD = 6f;
-    const float NAME_WIDTH = 190f;
-    const float MONEY_WIDTH = 96f;
+    const float NAME_WIDTH = 150f;
+    const float MONEY_WIDTH = 84f;
     internal const float PACKAGE = 52f;
     // Apart enough that two burning packages' flames don't touch: PurpleFlame.SIDE
     internal const float PACKAGE_SPACING = PACKAGE * PurpleFlame.SIDE + 2f;
     internal const float TAPER = 0.3f; // how much shorter the row's right end is than its left
-    internal const float TIP = 28f;    // how far the right end's slanted cut leans
+    internal const float TIP = 22f;    // how far the right end's slanted cut leans
     const int BANNER_DETAIL = 2;       // the row's shape is drawn at this many pixels per reference pixel
     const float SLIDE_SPEED = 10f;   // how quickly a row reaches its place (1 / seconds, roughly)
     const float FLAME_FPS = 14f;
@@ -272,6 +272,23 @@ public class Scoreboard : MonoBehaviour
             return online != null && !online.IsBot ? online.SteamId : 0;
         }
         return seat == FirstLocalSeat(roster) ? SteamNames.MyId() : 0;
+    }
+
+    /// <summary>A seated player's name as the board shows it (the results' podium names it the same way)</summary>
+    internal static string ShownName(int seat)
+    {
+        PlayerInstantiate players = PlayerInstantiate.Instance;
+        if (players == null)
+            return PlayerNames.Fallback(seat);
+        Dictionary<int, ulong> ids = new Dictionary<int, ulong>();
+        for (int other = 0; other < Constants.MAX_PLAYERS; other++)
+        {
+            PlayerSlot slot = players.Roster[other];
+            if (slot != null && slot.Player != null)
+                ids[other] = SteamIdIn(other, players.Roster);
+        }
+        ulong id = ids.TryGetValue(seat, out ulong found) ? found : 0;
+        return NameIn(seat, players.Roster, FirstWithId(seat, id, ids));
     }
 
     // Their name: online, the name they share (a bot's fits its personality: BotNames); offline, the Steam name on this

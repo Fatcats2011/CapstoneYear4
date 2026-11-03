@@ -22,7 +22,11 @@ public class ResultsMenu : SingletonMonobehaviour<ResultsMenu>
 
     private IEnumerator resultsRoutine;
 
+    /// <summary>How tall each player's name over their score is, in the score's own units (the award cards sit above it)</summary>
+    internal const float NAME_LINE = 30f;
+
     private ResultsVote vote; // the rematch vote, opened once the scores are up
+    private TMP_Text[] names; // each player's name over their score
     private ResultsAwardsView awards; // the award cards, shown with the scores
 
     private void OnEnable()
@@ -100,9 +104,46 @@ public class ResultsMenu : SingletonMonobehaviour<ResultsMenu>
             {
                 displayText[i].gameObject.SetActive(true);
                 displayText[i].text = "$" + currHandler.Score;
+                ShowName(i, OrderSync.SeatOf(currHandler));
             }
         }
         ShowAwards();
+    }
+
+    // Each player's name just over their score, as the scoreboard showed it (playtest, 2026-11-03: the podium had none)
+    private void ShowName(int score, int seat)
+    {
+        if (names == null)
+            names = new TMP_Text[displayText.Length];
+        if (names[score] == null)
+            names[score] = NameLabel(displayText[score]);
+        names[score].text = seat >= 0 ? Scoreboard.ShownName(seat) : "";
+        names[score].enabled = true;
+    }
+
+    // A label on top of a score's text box, inside its margins, aligned like it and in its font and colour
+    private static TMP_Text NameLabel(TMP_Text score)
+    {
+        TextMeshProUGUI label = new GameObject("Player Name", typeof(RectTransform)).AddComponent<TextMeshProUGUI>();
+        RectTransform rect = label.rectTransform;
+        rect.SetParent(score.transform, false);
+        rect.anchorMin = new Vector2(0f, 1f);
+        rect.anchorMax = Vector2.one;
+        rect.pivot = new Vector2(0.5f, 0f);
+        rect.offsetMin = new Vector2(score.margin.x, score.margin.y);
+        rect.offsetMax = new Vector2(-score.margin.z, score.margin.y + NAME_LINE);
+        if (score.font != null)
+            label.font = score.font;
+        label.color = score.color;
+        label.horizontalAlignment = score.horizontalAlignment;
+        label.verticalAlignment = VerticalAlignmentOptions.Bottom;
+        label.enableWordWrapping = false;
+        label.enableAutoSizing = true;
+        label.fontSizeMin = 12f;
+        label.fontSizeMax = 24f;
+        label.overflowMode = TextOverflowModes.Ellipsis;
+        label.raycastTarget = false;
+        return label;
     }
 
     // Each player's award card over their score, from the awards picked here or sent by the host (MatchAwards): now, or
@@ -143,6 +184,14 @@ public class ResultsMenu : SingletonMonobehaviour<ResultsMenu>
         for (int i = 0; i < displayText.Length; i++)
         {
             displayText[i].enabled = false;
+        }
+        if (names != null)
+        {
+            foreach (TMP_Text name in names)
+            {
+                if (name != null)
+                    name.enabled = false;
+            }
         }
         if (awards != null)
             awards.Hide();
