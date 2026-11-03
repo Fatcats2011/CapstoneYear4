@@ -55,7 +55,7 @@
         UNITY_SETUP_STEREO_EYE_INDEX_POST_VERTEX(input);
         float2 uv = UnityStereoTransformScreenSpaceTex(input.texcoord);
 
-#if defined(_FOVEATED_RENDERING_NON_UNIFORM_RASTER)
+#if defined(_FOVEATED_RENDERING_NON_UNIFORM_RASTER) && defined(SUPPORTS_FOVEATED_RENDERING_NON_UNIFORM_RASTER) // the remap only exists where foveated rendering does (not Metal on a Mac)
             uv = RemapFoveatedRenderingResolve(uv);
 #endif
 

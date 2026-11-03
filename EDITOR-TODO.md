@@ -184,6 +184,21 @@ The room scene and the board are set up (`DispatchRoom`, `RoomClock`, the board 
 - Steals off in MATCH RULES: nobody chases.
 - Tune in `Assets/Scripts/Player/BotPersonality.cs` (weights) and `BotTactics.cs` (desperation gap, detour distance).
 
+## 16c. Accessibility: to build, then playtest
+
+For Steam's store-page accessibility section. None of these exist yet. Today Options → ACCESSIBILITY has only Reduce motion.
+
+- **Colorblind mode:**
+  - Players are told apart only by ghost colour, and a stolen package only by its purple flame.
+  - Add a player number or symbol over each ghost (and on the scoreboard), and give the stolen-package flame a shape too.
+  - Playtest: with a colour-blindness filter (protanopia, deuteranopia, tritanopia), check you can still tell all four players apart and spot a stolen package.
+- **Turn off rumble:**
+  - Add a RUMBLE on/off row next to Reduce motion, saved in `settings.cfg`. `Rumbler` should do nothing while it's off.
+  - Playtest: off means no pad shakes on boosts, hits or water; check each player's pad.
+- **Adjustable text size:**
+  - Add a TEXT SIZE row (for example 100% / 125% / 150%) for the HUD, scoreboard, hints and menus.
+  - Playtest: at the largest size, in 4-way split and on the Steam Deck (1280×800), check nothing overlaps or gets cut off.
+
 ## 17. Reference
 
 - Frame rate: `docs/performance.md`.

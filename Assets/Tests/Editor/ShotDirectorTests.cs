@@ -219,6 +219,45 @@ namespace DoA.Tests
             }
         }
 
+        // A building between the Low camera (0.8 m up) and the scooters while they pass x = 32.5 to 37.5 (0.5 s), which
+        // the five samples across the clip (x = 20, 30, 40...) miss
+        static bool BuildingInLowsWay(Vector3 a, Vector3 b) => !(Near(a.y, 0.8f) && b.x > 32.5f && b.x < 37.5f);
+
+        [Test]
+        public void Shots_BuildingInTheWayMidShot_CutsAwayWhenTheyGoOutOfSight()
+        {
+            var director = new ShotDirector(Recording(), BuildingInLowsWay);
+
+            var shots = director.Shots(Clip(5f), null);
+
+            Assert.AreEqual(2, shots.Count);
+            Assert.AreEqual(ShotKind.Low, shots[0].Kind, "the samples saw nothing in the way");
+            Assert.AreNotEqual(ShotKind.Low, shots[1].Kind, "a camera that can see them");
+            Assert.AreEqual(3.3, shots[1].Cut, 0.11, "cut in as they went behind it");
+            Assert.AreEqual(1f, shots[1].Speed);
+        }
+
+        [Test]
+        public void Shots_BuildingInTheWayForAMoment_NoCutAway()
+        {
+            var director = new ShotDirector(Recording(), (a, b) => !(Near(a.y, 0.8f) && b.x > 32.5f && b.x < 34.5f));
+
+            Assert.AreEqual(1, director.Shots(Clip(5f), null).Count, "hidden for less than BLOCK_TIME");
+        }
+
+        [Test]
+        public void Shots_BigClip_CutAwayAndPeak_FitTheWire()
+        {
+            var director = new ShotDirector(Recording(), BuildingInLowsWay);
+
+            var shots = director.Shots(Clip(20f), null);
+
+            Assert.LessOrEqual(shots.Count, ReelList.MAX_SHOTS);
+            Assert.AreEqual(3, shots.Count, "first, cut-away, peak");
+            Assert.Less(shots[1].Cut, shots[2].Cut);
+            Assert.AreNotEqual(shots[1].Kind, shots[2].Kind, "the peak never cuts to the kind showing");
+        }
+
         [Test]
         public void Shots_SmallClip_OneShot()
         {

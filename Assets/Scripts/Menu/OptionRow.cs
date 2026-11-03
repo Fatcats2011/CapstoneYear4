@@ -70,7 +70,7 @@ public class OptionRow : MonoBehaviour
         float widestValue = 0f;
         foreach (OptionRow row in rows)
         {
-            row.label.fontSize = LABEL_SIZE;
+            TextSize.SetSize(row.label, LABEL_SIZE); // measured as it shows, at the text size setting's
             float valueHalf = row.Value.GetPreferredValues(row.Value.text).x / 2f;
             widestValue = Mathf.Max(widestValue, valueHalf);
             column = Mathf.Max(column, LABEL_LEFT + row.label.GetPreferredValues(row.label.text).x + GAP + valueHalf);
@@ -85,7 +85,7 @@ public class OptionRow : MonoBehaviour
             float room = column - row.Value.GetPreferredValues(row.Value.text).x / 2f - GAP - LABEL_LEFT;
             float width = row.label.GetPreferredValues(row.label.text).x;
             if (width > room)
-                row.label.fontSize = Mathf.Max(LABEL_MIN_SIZE, Mathf.Floor(LABEL_SIZE * room / width));
+                TextSize.SetSize(row.label, Mathf.Max(LABEL_MIN_SIZE, Mathf.Floor(LABEL_SIZE * room / width)));
         }
     }
 }

@@ -16,6 +16,7 @@ public class ResultsAwardsView : MonoBehaviour
     const float NAME_SIZE = 34f;
     const float LINE_SIZE = 24f;
     const float ABOVE_SCORE = 12f;
+    const float MAX_WIDTH = 310f; // a card at a big text size shrinks to this, clear of its neighbours (TextSize)
     static readonly Color CARD = new Color(0f, 0f, 0f, 0.6f);
     static readonly Color GOLD = new Color(1f, 0.82f, 0.25f);
 
@@ -91,6 +92,10 @@ public class ResultsAwardsView : MonoBehaviour
             : scores[i].horizontalAlignment == HorizontalAlignmentOptions.Right ? box.xMax - width / 2f
             : box.center.x;
         Vector2 top = new Vector2(middle * score.localScale.x, box.yMax * score.localScale.y);
+        RectTransform card = (RectTransform)cards[i].transform;
+        float wide = LayoutUtility.GetPreferredWidth(card);
+        card.localScale = Vector3.one * (wide > MAX_WIDTH ? MAX_WIDTH / wide : 1f);
+
         // Over the player's name, which sits on the score (ResultsMenu)
         float above = ABOVE_SCORE + ResultsMenu.NAME_LINE * score.localScale.y;
         ((RectTransform)cards[i].transform).anchoredPosition = score.anchoredPosition + top + new Vector2(0f, above);

@@ -1,10 +1,10 @@
 "AppBuild"
 {
 	"AppID" "APP_ID"
-	"Desc" "Dead on Arrival Windows build"
+	"Desc" "Dead on Arrival Windows, macOS and Linux builds"
 
-	// Folder containing DeadOnArrival.exe and DeadOnArrival_Data (relative to this file)
-	"ContentRoot" "..\..\..\Builds\Windows\"
+	// Folder holding Windows\, macOS\ and Linux\ (relative to this file): Tools → Dead on Arrival → Build → All Three
+	"ContentRoot" "..\..\..\Builds\"
 	// SteamPipe logs and cache (keep out of git)
 	"BuildOutput" "..\..\..\Builds\steampipe-output\"
 
@@ -17,13 +17,37 @@
 		{
 			"FileMapping"
 			{
-				"LocalPath" "*"
+				"LocalPath" "Windows\*"
 				"DepotPath" "."
 				"recursive" "1"
 			}
 			// Unity writes these next to the build; players don't need them
 			"FileExclusion" "*.pdb"
 			// Dev-only file for launching outside Steam; Valve advises not shipping it
+			"FileExclusion" "steam_appid.txt"
+			"FileExclusion" "*_BurstDebugInformation_DoNotShip*"
+			"FileExclusion" "*_BackUpThisFolder_ButDontShipItWithYourGame*"
+		}
+		"MAC_DEPOT_ID"
+		{
+			"FileMapping"
+			{
+				"LocalPath" "macOS\*"
+				"DepotPath" "."
+				"recursive" "1"
+			}
+			"FileExclusion" "steam_appid.txt"
+			"FileExclusion" "*_BurstDebugInformation_DoNotShip*"
+			"FileExclusion" "*_BackUpThisFolder_ButDontShipItWithYourGame*"
+		}
+		"LINUX_DEPOT_ID"
+		{
+			"FileMapping"
+			{
+				"LocalPath" "Linux\*"
+				"DepotPath" "."
+				"recursive" "1"
+			}
 			"FileExclusion" "steam_appid.txt"
 			"FileExclusion" "*_BurstDebugInformation_DoNotShip*"
 			"FileExclusion" "*_BackUpThisFolder_ButDontShipItWithYourGame*"

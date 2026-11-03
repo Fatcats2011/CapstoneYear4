@@ -67,6 +67,15 @@ public class ShotDirector
     /// <summary>Seconds of clip time the peak shot plays slowed</summary>
     public const float PEAK_LENGTH = 1.5f;
 
+    /// <summary>How often (seconds of clip time) the first shot is looked through for a building in the way</summary>
+    public const float SCAN_STEP = 0.1f;
+
+    /// <summary>Seconds the framed players stay hidden behind something before the reel cuts away</summary>
+    public const float BLOCK_TIME = 0.25f;
+
+    /// <summary>No cut-away sooner than this after the first shot cuts in: hidden from the start, it was the best there was</summary>
+    public const float MIN_SHOT = 0.5f;
+
     // Where each kind sits (side, up, forward), from the action's centre along the direction of travel. Side track
     // and behind sit from their subject's ball in its heading frame instead
     static readonly Vector3 LOW = new Vector3(4f, 0.8f, 6f);
@@ -104,9 +113,10 @@ public class ShotDirector
     }
 
     /// <summary>
-    /// The shots for a clip: the first, plus a slow peak shot for a big clip (if Low or FixedPan, whichever the first
-    /// isn't, is valid for it). The first is the first valid kind after the previous one, going round the fixed kinds
-    /// in order; if none is valid it is the most clear, and never the previous kind.
+    /// The shots for a clip: the first, a cut-away if a building hides the players from it for BLOCK_TIME (playtest,
+    /// 2026-11-02: the samples could miss one in between), plus a slow peak shot for a big clip (if Low or FixedPan,
+    /// whichever isn't showing, is valid for it). The first is the first valid kind after the previous one, going round
+    /// the fixed kinds in order; if none is valid it is the most clear, and never the previous kind.
     /// </summary>
     public List<ReelShot> Shots(Clip clip, ShotKind? previous)
     {
@@ -132,12 +142,21 @@ public class ShotDirector
 
         // A peak at the very start would only replace the first shot
         double cut = clip.KeyTime - PEAK_LEAD;
-        if (clip.Score >= PEAK_SCORE && cut > clip.Start)
+        bool peaks = clip.Score >= PEAK_SCORE && cut > clip.Start;
+
+        ReelShot showing = first;
+        if (CutAway(clip, framed, first, peaks ? cut : clip.End, out ReelShot away))
+        {
+            shots.Add(away);
+            showing = away;
+        }
+
+        if (peaks)
         {
             var peakOrder = new List<ShotKind>();
             foreach (ShotKind kind in PEAK_KINDS)
             {
-                if (kind != first.Kind)
+                if (kind != showing.Kind)
                     peakOrder.Add(kind);
             }
 
@@ -149,6 +168,54 @@ public class ShotDirector
             }
         }
         return shots;
+    }
+
+    // A cut-away from the first shot, if something solid hides the framed players from it for BLOCK_TIME before until
+    // (from MIN_SHOT in): another kind, cutting in when they went out of sight, and only one that sees them then
+    bool CutAway(Clip clip, List<int> framed, ReelShot first, double until, out ReelShot away)
+    {
+        away = default;
+        double hiddenFrom = double.NaN;
+        for (double time = clip.Start + MIN_SHOT; time < until; time += SCAN_STEP)
+        {
+            if (!Hidden(first, framed, time))
+            {
+                hiddenFrom = double.NaN;
+                continue;
+            }
+            if (double.IsNaN(hiddenFrom))
+                hiddenFrom = time;
+            if (time - hiddenFrom < BLOCK_TIME - 1e-6)
+                continue;
+
+            // Any other fixed kind, the previous clip's too: this is mid-clip
+            var others = new List<ShotKind>();
+            foreach (ShotKind kind in ALL_KINDS)
+            {
+                if (kind != first.Kind)
+                    others.Add(kind);
+            }
+            away = Choose(clip, framed, hiddenFrom, others, true, out _);
+            for (double check = hiddenFrom; check <= time + 1e-6; check += SCAN_STEP)
+            {
+                if (Hidden(away, framed, check))
+                    return false;
+            }
+            return true;
+        }
+        return false;
+    }
+
+    // Whether something solid lies between the shot's camera and any framed player recorded at a time
+    bool Hidden(ReelShot shot, List<int> framed, double time)
+    {
+        Vector3 camera = CameraAt(shot, time);
+        foreach (int seat in framed)
+        {
+            if (recording.TryGet(seat, time, out ReelSample sample) && !clear(camera, sample.Pose.Ball + Vector3.up))
+                return true;
+        }
+        return false;
     }
 
     // The first valid kind in the order for a shot cutting in at from and lasting to the clip's end. A kind is valid

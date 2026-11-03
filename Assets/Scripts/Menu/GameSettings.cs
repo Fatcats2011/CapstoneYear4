@@ -43,6 +43,12 @@ public class GameSettings
     public int reduceMotion = 0;
     /// <summary>Distances: 0 metres, 1 feet (Units)</summary>
     public int units = 0;
+    /// <summary>1: pads shake (Rumbler); 0: never</summary>
+    public int rumble = 1;
+    /// <summary>1: each player's shape badge and the colourblind-safe player colours (Colourblind)</summary>
+    public int colourblind = 0;
+    /// <summary>All text's size: an index into TextSize.SCALES (0 is 100%)</summary>
+    public int textSize = 0;
 
     // The match rules (HouseRules): normal is today's game
     /// <summary>MatchLength: 0 short, 1 normal, 2 long</summary>
@@ -73,6 +79,7 @@ public class GameSettings
         return $"bgm={bgmPosition}\nsfx={sfxPosition}\nfullscreen={fullscreenPosition}\nquality={qualityLevel}\n"
             + $"exclusive={exclusiveFullscreen}\nwidth={width}\nheight={height}\nvsync={vsync}\nframecap={frameCap}\n"
             + $"master={masterPosition}\nbgmute={backgroundMute}\nsplit={splitLayout}\nreducemotion={reduceMotion}\nunits={units}\n"
+            + $"rumble={rumble}\ncolourblind={colourblind}\ntextsize={textSize}\n"
             + $"length={matchLength}\nsteals={steals}\ngolden={goldenOrder}\nbots={bots}\n"
             + $"language={language}\n";
     }
@@ -103,6 +110,9 @@ public class GameSettings
         copy.splitLayout = splitLayout;
         copy.reduceMotion = reduceMotion;
         copy.units = units;
+        copy.rumble = rumble;
+        copy.colourblind = colourblind;
+        copy.textSize = textSize;
         copy.matchLength = matchLength;
         copy.steals = steals;
         copy.goldenOrder = goldenOrder;
@@ -186,6 +196,15 @@ public class GameSettings
                     break;
                 case "units":
                     settings.units = Mathf.Clamp(value, 0, 1);
+                    break;
+                case "rumble":
+                    settings.rumble = Mathf.Clamp(value, 0, 1);
+                    break;
+                case "colourblind":
+                    settings.colourblind = Mathf.Clamp(value, 0, 1);
+                    break;
+                case "textsize":
+                    settings.textSize = Mathf.Clamp(value, 0, TextSize.SCALES.Length - 1);
                     break;
                 case "length":
                     settings.matchLength = Mathf.Clamp(value, 0, (int)MatchLength.Long);

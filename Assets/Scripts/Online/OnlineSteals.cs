@@ -107,7 +107,7 @@ public class OnlineSteals : MonoBehaviour
 
     /// <summary>
     /// A steal or clash the host decided, on this machine: each player this machine drives bounces. A robbed player
-    /// bounces away from the thief; in a clash each bounces off the other, unless phasing. A player who isn't here is
+    /// bounces away from the thief; in a clash each bounces off the other, unless phasing, and the clash bursts between them. A player who isn't here is
     /// skipped
     /// </summary>
     public void Show(PlayerHit hit)
@@ -129,6 +129,8 @@ public class OnlineSteals : MonoBehaviour
             return;
         }
 
+        if (PeterSparker.Instance != null)
+            PeterSparker.Instance.CreateClashBurst(BallOf(attacker), BallOf(victim));
         if (!RemoteAvatar.IsRemote(attacker))
             attacker.ClashWith(victim);
         if (!RemoteAvatar.IsRemote(victim))

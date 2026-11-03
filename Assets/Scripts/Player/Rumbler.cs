@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
+/// <summary>A player's pad shaking: pulses and held rumbles, none while Options → Accessibility → Rumble is off (Comfort)</summary>
 public class Rumbler : MonoBehaviour
 {
     private IEnumerator pulseTimeCoroutine;
@@ -29,7 +30,7 @@ public class Rumbler : MonoBehaviour
         suspendedLow = low;
         suspendedHigh = high;
 
-        pad?.SetMotorSpeeds(low, high);
+        pad?.SetMotorSpeeds(Comfort.Motor(low), Comfort.Motor(high));
         suspendedInEffect = true;
     }
 
@@ -50,7 +51,7 @@ public class Rumbler : MonoBehaviour
 
         if (pad != null)
         {
-            pad.SetMotorSpeeds(low, high);
+            pad.SetMotorSpeeds(Comfort.Motor(low), Comfort.Motor(high));
         }
 
         StartPulseTime(duration, pad, breakSuspension);
@@ -59,7 +60,7 @@ public class Rumbler : MonoBehaviour
     internal IEnumerator PulseTime(float duration, Gamepad pad, bool breakSuspension)
     {
         yield return new WaitForSeconds(duration);
-        pad?.SetMotorSpeeds(breakSuspension ? 0f : suspendedLow, breakSuspension ? 0f : suspendedHigh);
+        pad?.SetMotorSpeeds(breakSuspension ? 0f : Comfort.Motor(suspendedLow), breakSuspension ? 0f : Comfort.Motor(suspendedHigh));
     }
 
     private void StartPulseTime(float duration, Gamepad pad, bool breakSuspension)

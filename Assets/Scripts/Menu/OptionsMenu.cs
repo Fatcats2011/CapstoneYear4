@@ -102,7 +102,7 @@ public class OptionsMenu : SingletonMonobehaviour<OptionsMenu>, IMouseMenu
             OptionsPage.Keyed("options.page.general"),
             OptionsPage.Keyed("options.page.display", FullscreenStyleSetting(), VSyncSetting(), FrameCapSetting(), QualitySetting(), SplitScreenSetting(), UnitsSetting()),
             OptionsPage.Keyed("options.page.audio", MasterSetting(), MusicSetting(), EffectsSetting(), BackgroundSetting()),
-            OptionsPage.Keyed("options.page.accessibility", ReduceMotionSetting()));
+            OptionsPage.Keyed("options.page.accessibility", ReduceMotionSetting(), RumbleSetting(), ColourblindSetting(), TextSizeSetting()));
 
         TMP_Text style = positions.GetComponentInChildren<TMP_Text>(true);
         float rowX = resolutionRow != null ? ((RectTransform)resolutionRow.transform).anchoredPosition.x : firstRow.anchoredPosition.x;
@@ -340,6 +340,42 @@ public class OptionsMenu : SingletonMonobehaviour<OptionsMenu>, IMouseMenu
     {
         OptionSetting setting = OptionSetting.KeyedToggle("options.reducemotion", "word.off", "word.on", current.reduceMotion);
         setting.Changed += value => { current.reduceMotion = value; Comfort.ReduceMotion = value == 1; };
+        return setting;
+    }
+
+    OptionSetting RumbleSetting()
+    {
+        OptionSetting setting = OptionSetting.KeyedToggle("options.rumble", "word.off", "word.on", current.rumble);
+        setting.Changed += value =>
+        {
+            current.rumble = value;
+            Comfort.Rumble = value == 1;
+            if (!Comfort.Rumble)
+                UnityEngine.InputSystem.InputSystem.ResetHaptics(); // a held rumble stops now
+        };
+        return setting;
+    }
+
+    OptionSetting ColourblindSetting()
+    {
+        OptionSetting setting = OptionSetting.KeyedToggle("options.colourblind", "word.off", "word.on", current.colourblind);
+        setting.Changed += value => { current.colourblind = value; Colourblind.On = value == 1; };
+        return setting;
+    }
+
+    OptionSetting TextSizeSetting()
+    {
+        int[] sizes = new int[TextSize.SCALES.Length];
+        for (int i = 0; i < sizes.Length; i++)
+            sizes[i] = i;
+        OptionSetting setting = new OptionSetting("TEXT SIZE", sizes, TextSize.Label, current.textSize) { LabelKey = "options.textsize" };
+        setting.Changed += value =>
+        {
+            current.textSize = value;
+            TextSize.Set(value);
+            foreach (List<OptionRow> rows in pageRows)
+                OptionRow.AlignColumn(rows); // the labels' room, measured again at the new size
+        };
         return setting;
     }
 
@@ -644,6 +680,9 @@ public class OptionsMenu : SingletonMonobehaviour<OptionsMenu>, IMouseMenu
         SplitScreenLayout.TwoPlayers = (SplitLayout)settings.splitLayout;
         AudioVolume.Set(settings.masterPosition, settings.backgroundMute == 1);
         Comfort.ReduceMotion = settings.reduceMotion == 1;
+        Comfort.Rumble = settings.rumble == 1;
+        Colourblind.On = settings.colourblind == 1;
+        TextSize.Set(settings.textSize);
         Units.Imperial = settings.units == 1;
         HouseRules.Current = HouseRules.From(settings);
 

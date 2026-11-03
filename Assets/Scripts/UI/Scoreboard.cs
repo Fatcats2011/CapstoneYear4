@@ -34,6 +34,8 @@ public class Scoreboard : MonoBehaviour
     const int BANNER_DETAIL = 2;       // the row's shape is drawn at this many pixels per reference pixel
     const float SLIDE_SPEED = 10f;   // how quickly a row reaches its place (1 / seconds, roughly)
     const float FLAME_FPS = 14f;
+    const float SEAT_BADGE = 30f;   // colourblind mode's badges
+    const float STOLEN_BADGE = 34f;
 
     static readonly Color INK = new Color(0.06f, 0.05f, 0.08f, 1f);
     static readonly Color PAPER = new Color(1f, 1f, 1f, 0.97f);
@@ -79,10 +81,12 @@ public class Scoreboard : MonoBehaviour
 
         portraits = new GameObject("Scoreboard Portraits").transform;
         portraits.SetParent(transform, false);
+        Colourblind.Changed += Clear; // the ghost portraits are taken again, in the colours worn now
     }
 
     void OnDestroy()
     {
+        Colourblind.Changed -= Clear;
         Clear();
         if (instance == this)
             instance = null;
@@ -219,6 +223,7 @@ public class Scoreboard : MonoBehaviour
         List<int> ranked = Ranking(seats, MoneyIn);
         float[] tops = RowTops(ranked.Count);
         float step = 1f - Mathf.Exp(-SLIDE_SPEED * Time.unscaledDeltaTime);
+        board.localScale = Vector3.one * TextSize.Scale; // the whole board grows with the text size setting
         int flame = Mathf.FloorToInt(Time.unscaledTime * FLAME_FPS);
 
         foreach (Row row in rows)
@@ -351,6 +356,8 @@ public class Scoreboard : MonoBehaviour
         readonly TMP_Text moneyText;
         readonly Image[] icons = new Image[2];
         readonly Image[] flames = new Image[2];
+        readonly GameObject seatBadge;               // colourblind mode: the seat's shape and number on the picture
+        readonly GameObject[] stolenBadges = new GameObject[2]; // ...and a "!" on a stolen package
         readonly GhostPortrait ghost;
         string shownName;
         int shownMoney = -1;
@@ -374,6 +381,9 @@ public class Scoreboard : MonoBehaviour
             picture = new GameObject("Picture", typeof(RectTransform)).AddComponent<RawImage>();
             Fill(picture.rectTransform, frame, BORDER);
             picture.raycastTarget = false;
+            seatBadge = Badge(frame, "Seat Badge", Colourblind.BadgeOf(seat), (seat + 1).ToString(), SEAT_BADGE,
+                new Vector2(ROW_HEIGHT - SEAT_BADGE * 0.75f, -(ROW_HEIGHT - SEAT_BADGE * 0.75f)),
+                Colourblind.ShapeOf(seat) == Colourblind.Shape.Triangle ? -SEAT_BADGE * 0.08f : 0f);
             x += ROW_HEIGHT + PAD;
 
             nameText = Label(rect, "Name", x, NAME_WIDTH, 28f, FontStyles.Bold);
@@ -399,6 +409,8 @@ public class Scoreboard : MonoBehaviour
                 icons[i] = icon.GetComponent<Image>();
                 icons[i].preserveAspect = true;
                 icons[i].enabled = false;
+                stolenBadges[i] = Badge(rect, "Stolen Badge " + (i + 1), Colourblind.AlarmBadge(), "!", STOLEN_BADGE,
+                    new Vector2(x + PACKAGE - STOLEN_BADGE * 0.5f, y + STOLEN_BADGE * 0.3f), 0f);
                 x += PACKAGE_SPACING;
             }
         }
@@ -415,6 +427,9 @@ public class Scoreboard : MonoBehaviour
                 shownMoney = money;
                 moneyText.text = "$" + money;
             }
+
+            if (seatBadge.activeSelf != Colourblind.On)
+                seatBadge.SetActive(Colourblind.On);
 
             Texture shown = steamPicture != null ? steamPicture : ghost != null ? ghost.Texture : null;
             if (picture.texture != shown)
@@ -443,6 +458,8 @@ public class Scoreboard : MonoBehaviour
 
             bool burning = order != null && order.WorthMoreForSteals;
             flames[slot].enabled = burning;
+            if (stolenBadges[slot].activeSelf != (burning && Colourblind.On))
+                stolenBadges[slot].SetActive(burning && Colourblind.On);
             if (burning)
             {
                 Sprite[] frames = PurpleFlame.Frames;
@@ -464,6 +481,28 @@ public class Scoreboard : MonoBehaviour
                 Object.Destroy(rect.gameObject);
             if (ghost != null)
                 ghost.Destroy();
+        }
+
+        // A colourblind badge: a shape with its mark on, centred at a point from its parent's top left, hidden until shown
+        static GameObject Badge(RectTransform parent, string name, Sprite shape, string mark, float size, Vector2 centre, float markDrop)
+        {
+            RectTransform badge = Box(parent, name, Vector2.one * size, Color.white);
+            badge.GetComponent<Image>().sprite = shape;
+            badge.pivot = new Vector2(0.5f, 0.5f);
+            badge.anchoredPosition = centre;
+            TMP_Text text = ResolutionRow.Text(badge, "Mark", null, size * 0.6f, TextAlignmentOptions.Center, new Vector2(0.5f, 0.5f), new Vector2(0f, markDrop), size);
+            RectTransform textRect = text.rectTransform;
+            textRect.anchorMin = textRect.anchorMax = new Vector2(0.5f, 0.5f);
+            textRect.sizeDelta = Vector2.one * size;
+            text.text = mark;
+            text.color = INK;
+            text.fontStyle = FontStyles.Bold;
+            text.raycastTarget = false;
+            text.enableAutoSizing = true; // never past its shape, whatever the text size setting
+            text.fontSizeMin = 6f;
+            text.fontSizeMax = size * 0.6f;
+            badge.gameObject.SetActive(false);
+            return badge.gameObject;
         }
 
         static RectTransform Box(RectTransform parent, string name, Vector2 size, Color colour)
