@@ -36,6 +36,15 @@ public class Order : MonoBehaviour
         ApplyStealLook();
     }
 
+    /// <summary>The order's package icon, as the compass shows it (the scoreboard shows what each player holds)</summary>
+    internal Sprite Icon
+    {
+        get { return possiblePackageTypes != null && possiblePackageTypes.Length > PackageType() ? possiblePackageTypes[PackageType()] : null; }
+    }
+
+    /// <summary>Whether it's been stolen, so it's worth more than its price (the golden order never is: it doesn't double)</summary>
+    internal bool WorthMoreForSteals { get { return steals > 0 && value != Constants.OrderValue.Golden; } }
+
     // The index of this order's tier in the per-tier tables (meshes, materials, scales, glows): Easy 0 to Golden 3
     private int PackageType()
     {

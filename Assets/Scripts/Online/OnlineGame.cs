@@ -698,6 +698,8 @@ public class OnlineGame : MonoBehaviour
                 continue;
             }
 
+            OnlinePlayer owner = player; // their Steam ID may arrive after their scooter
+            SteamIcon.Attach(avatar, () => owner != null ? owner.SteamId : 0);
             remotes[player] = new RemotePlayer { Avatar = avatar, Seat = seat, Forced = forced, Ready = forced };
             waiting.RemoveAt(i);
         }
@@ -741,7 +743,7 @@ public class OnlineGame : MonoBehaviour
             bot.Kind = BotPersonality.ForRank(BotPersonality.RankOf(seat, BotSeats()));
             bot.Drive(driving);
 
-            DressBot(player, avatar);
+            DressBot(player, avatar, bot.Kind);
             seatedBots.Add(player);
             botsToSeat.RemoveAt(i);
         }
@@ -758,15 +760,20 @@ public class OnlineGame : MonoBehaviour
                 yield return bot.Seat;
     }
 
-    const string BOT_NAME = "CPU";
-
-    // A CPU driver's colour and hat, from those no one in the session wears, shared like any player's
-    void DressBot(OnlinePlayer bot, GameObject avatar)
+    // A CPU driver's colour and hat, from those no one in the session wears, and a name that fits its personality and
+    // no one else has, shared like any player's
+    void DressBot(OnlinePlayer bot, GameObject avatar, BotKind kind)
     {
         int colour = Unused(choices.Colours.Count, bot, p => p.Colour);
         int hat = Unused(choices.Hats.Count, bot, p => p.Hat);
         bot.Share(colour, hat, true);
-        bot.ShareName(BOT_NAME);
+        HashSet<string> taken = new HashSet<string>();
+        foreach (OnlinePlayer player in session.Players)
+        {
+            if (player != bot)
+                taken.Add(player.Name);
+        }
+        bot.ShareName(BotNames.Pick(kind, taken, Random.Range(0, int.MaxValue)));
 
         PlayerColorInformationSO colourLook = Pick(choices.Colours, colour);
         if (colourLook != null)
