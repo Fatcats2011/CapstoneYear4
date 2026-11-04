@@ -1,0 +1,469 @@
+"""Rebuild the Dead on Arrival key art as a wide 1232x706 shot from game FBXs.
+
+Run headless:
+  blender -b --factory-startup --python tools/keyart/build_keyart.py -- <out.png> [eevee|cycles] [samples]
+Also saves tools/keyart/keyart.blend so the shot can be tweaked by hand.
+"""
+import bpy, sys, math, os
+from mathutils import Vector
+
+ROOT = "D:/.PersonalWork/DoA/CapstoneYear4/"
+A = ROOT + "Assets/"
+argv = sys.argv[sys.argv.index("--") + 1:] if "--" in sys.argv else []
+OUT = argv[0] if argv else ROOT + "docs/steam-store/keyart_render.png"
+ENGINE = argv[1] if len(argv) > 1 else "eevee"
+SAMPLES = int(argv[2]) if len(argv) > 2 else 64
+
+bpy.ops.wm.read_factory_settings(use_empty=True)
+scene = bpy.context.scene
+coll = scene.collection
+
+
+# ---------------------------------------------------------------- helpers
+def bbox(objs):
+    bpy.context.view_layer.update()
+    pts = [o.matrix_world @ Vector(c) for o in objs if o.type == 'MESH' for c in o.bound_box]
+    mn = Vector([min(p[k] for p in pts) for k in range(3)])
+    mx = Vector([max(p[k] for p in pts) for k in range(3)])
+    return mn, mx
+
+
+def load(path, name):
+    """Import an FBX and parent everything under an empty at its bbox bottom-centre."""
+    before = set(bpy.data.objects)
+    bpy.ops.import_scene.fbx(filepath=A + path)
+    new = [o for o in bpy.data.objects if o not in before]
+    mn, mx = bbox(new)
+    root = bpy.data.objects.new(name, None)
+    coll.objects.link(root)
+    root.location = ((mn.x + mx.x) / 2, (mn.y + mx.y) / 2, mn.z)
+    bpy.context.view_layer.update()
+    for o in new:
+        if o.parent is None:
+            mw = o.matrix_world.copy()
+            o.parent = root
+            o.matrix_world = mw
+    root.location = (0, 0, 0)
+    root["size"] = list(mx - mn)
+    root["kids"] = [o.name for o in new]
+    return root
+
+
+def kids(root):
+    return [bpy.data.objects[n] for n in root["kids"]]
+
+
+def mat_centre(root, matname_prefix):
+    """World-space centre of the faces using a material (root at origin, unrotated)."""
+    bpy.context.view_layer.update()
+    acc, n = Vector(), 0
+    for o in kids(root):
+        if o.type != 'MESH':
+            continue
+        for p in o.data.polygons:
+            m = o.data.materials[p.material_index] if o.data.materials else None
+            if m and m.name.startswith(matname_prefix):
+                acc += o.matrix_world @ p.center
+                n += 1
+    return acc / n if n else None
+
+
+def place(root, loc, yaw_deg=0, scale=1.0):
+    root.location = loc
+    root.rotation_euler = (0, 0, math.radians(yaw_deg))
+    root.scale = (scale, scale, scale)
+
+
+def look_at(obj, target):
+    obj.rotation_euler = (Vector(target) - obj.location).to_track_quat('-Z', 'Y').to_euler()
+
+
+def img(path, non_color=False):
+    im = bpy.data.images.load(A + path, check_existing=True)
+    if non_color:
+        im.colorspace_settings.name = 'Non-Color'
+    return im
+
+
+def principled(name, color=(0.8, 0.8, 0.8), rough=0.7, emit=None, emit_strength=0.0):
+    m = bpy.data.materials.new(name)
+    m.use_nodes = True
+    b = m.node_tree.nodes["Principled BSDF"]
+    b.inputs["Base Color"].default_value = (*color, 1)
+    b.inputs["Roughness"].default_value = rough
+    if emit:
+        b.inputs["Emission Color"].default_value = (*emit, 1)
+        b.inputs["Emission Strength"].default_value = emit_strength
+    return m
+
+
+def textured(name, base, tint=(1, 1, 1), box_scale=None, normal=None, emissive=None, emit_strength=3.0, rough=0.8):
+    """Image material. box_scale -> box-projected object-space mapping, else UVs."""
+    m = bpy.data.materials.new(name)
+    m.use_nodes = True
+    nt = m.node_tree
+    N, L = nt.nodes, nt.links
+    b = N["Principled BSDF"]
+    b.inputs["Roughness"].default_value = rough
+    vec = None
+    if box_scale:
+        tc = N.new("ShaderNodeTexCoord")
+        mp = N.new("ShaderNodeMapping")
+        mp.inputs["Scale"].default_value = (box_scale,) * 3
+        L.new(tc.outputs["Object"], mp.inputs["Vector"])
+        vec = mp.outputs["Vector"]
+
+    def tex(path, nc=False):
+        t = N.new("ShaderNodeTexImage")
+        t.image = img(path, nc)
+        if box_scale:
+            t.projection = 'BOX'
+            t.projection_blend = 0.25
+            L.new(vec, t.inputs["Vector"])
+        return t
+
+    t = tex(base)
+    mul = N.new("ShaderNodeMix")
+    mul.data_type = 'RGBA'
+    mul.blend_type = 'MULTIPLY'
+    mul.inputs["Factor"].default_value = 1.0
+    L.new(t.outputs["Color"], mul.inputs[6])
+    mul.inputs[7].default_value = (*tint, 1)
+    L.new(mul.outputs[2], b.inputs["Base Color"])
+    if normal:
+        tn = tex(normal, True)
+        nm = N.new("ShaderNodeNormalMap")
+        nm.inputs["Strength"].default_value = 0.6
+        L.new(tn.outputs["Color"], nm.inputs["Color"])
+        L.new(nm.outputs["Normal"], b.inputs["Normal"])
+    if emissive:
+        te = tex(emissive)
+        L.new(te.outputs["Color"], b.inputs["Emission Color"])
+        b.inputs["Emission Strength"].default_value = emit_strength
+    return m
+
+
+def set_all(root, mat):
+    for o in kids(root):
+        if o.type == 'MESH':
+            o.data.materials.clear()
+            o.data.materials.append(mat)
+
+
+def recolor(root, prefix, color, emit=None, emit_strength=0.0, rough=None):
+    """Make the imported material(s) whose name starts with prefix a single colour."""
+    done = set()
+    for o in kids(root):
+        if o.type != 'MESH':
+            continue
+        for i, m in enumerate(o.data.materials):
+            if m and m.name.startswith(prefix):
+                if m.name not in done:
+                    m.use_nodes = True
+                    b = m.node_tree.nodes.get("Principled BSDF")
+                    for l in list(b.inputs["Base Color"].links):
+                        m.node_tree.links.remove(l)
+                    b.inputs["Base Color"].default_value = (*color, 1)
+                    if rough is not None:
+                        b.inputs["Roughness"].default_value = rough
+                    if emit:
+                        b.inputs["Emission Color"].default_value = (*emit, 1)
+                        b.inputs["Emission Strength"].default_value = emit_strength
+                    done.add(m.name)
+
+
+def point(name, loc, color, energy, radius=0.1):
+    l = bpy.data.objects.new(name, bpy.data.lights.new(name, 'POINT'))
+    l.data.color = color
+    l.data.energy = energy
+    l.data.shadow_soft_size = radius
+    l.location = loc
+    coll.objects.link(l)
+    return l
+
+
+def spot(name, loc, target, color, energy, angle=50):
+    l = bpy.data.objects.new(name, bpy.data.lights.new(name, 'SPOT'))
+    l.data.color = color
+    l.data.energy = energy
+    l.data.spot_size = math.radians(angle)
+    l.data.spot_blend = 0.6
+    l.location = loc
+    coll.objects.link(l)
+    look_at(l, target)
+    return l
+
+
+# ---------------------------------------------------------------- materials
+wall_mat = textured("Wall", "Textures/DoA-WallFlat/DoA_-_StoneWall_basecolor.png", tint=(0.62, 0.30, 0.26),
+                    box_scale=1.1, normal="Textures/DoA-WallFlat/DoA_-_StoneWall_normal.png")
+wall_mat2 = textured("Wall2", "Textures/DoA-WallFlat/DoA_-_StoneWall_basecolor.png", tint=(0.48, 0.28, 0.34),
+                     box_scale=1.2, normal="Textures/DoA-WallFlat/DoA_-_StoneWall_normal.png")
+roof_mats = [textured(f"Roof{i}", p, tint=t, rough=0.7) for i, (p, t) in enumerate([
+    ("Textures/Roofs/RoofGeneric1/DefaultMaterial_Base_color.png", (0.75, 0.38, 0.40)),
+    ("Textures/Roofs/RoofGeneric2/DefaultMaterial_Base_color.png", (0.60, 0.40, 0.55)),
+    ("Textures/Roofs/RoofGeneric3/RoofGeneric_03_DefaultMaterial_BaseColor.png", (0.70, 0.42, 0.42))])]
+ground_mat = textured("Flagstone", "Textures/DoA-RoadV3/DoA-Flagstone_BaseColor.png", tint=(0.55, 0.55, 0.65),
+                      box_scale=0.45, normal="Textures/DoA-RoadV3/DoA-Flagstone_Normal.png", rough=0.45)
+tower_mat = textured("ClockTower", "Textures/ClockTower_Textures/Clock_Tower_Clock Tower_Textured_BaseMap.png",
+                     normal="Textures/ClockTower_Textures/Clock_Tower_Clock Tower_Textured_Normal.png",
+                     emissive="Textures/ClockTower_Textures/Clock_Tower_Clock Tower_Textured_Emissive.png",
+                     emit_strength=25.0, rough=0.75)
+window_glow = principled("WindowGlow", (1.0, 0.75, 0.25), 0.5, emit=(1.0, 0.62, 0.15), emit_strength=2.2)
+tower_window = principled("TowerWindow", (0.4, 1.0, 0.45), 0.5, emit=(0.35, 1.0, 0.4), emit_strength=8.0)
+lamp_glow = principled("LampGlow", (0.7, 1.0, 1.0), 0.3, emit=(0.55, 0.95, 1.0), emit_strength=25.0)
+lamp_metal = principled("LampMetal", (0.08, 0.10, 0.12), 0.5)
+frame_mat = principled("Frame", (0.10, 0.06, 0.05), 0.7)
+
+# ---------------------------------------------------------------- ground + sky
+bpy.ops.mesh.primitive_plane_add(size=400, location=(0, 60, 0))
+ground = bpy.context.object
+ground.data.materials.append(ground_mat)
+
+world = bpy.data.worlds.new("Night")
+scene.world = world
+world.use_nodes = True
+wn, wl = world.node_tree.nodes, world.node_tree.links
+bg = wn["Background"]
+tc = wn.new("ShaderNodeTexCoord")
+sep = wn.new("ShaderNodeSeparateXYZ")
+wl.new(tc.outputs["Generated"], sep.inputs[0])
+ramp = wn.new("ShaderNodeValToRGB")
+ramp.color_ramp.elements[0].position = 0.0
+ramp.color_ramp.elements[0].color = (0.10, 0.08, 0.20, 1)
+ramp.color_ramp.elements[1].position = 0.6
+ramp.color_ramp.elements[1].color = (0.004, 0.004, 0.015, 1)
+wl.new(sep.outputs["Z"], ramp.inputs["Fac"])
+# stars
+vor = wn.new("ShaderNodeTexVoronoi")
+vor.feature = 'DISTANCE_TO_EDGE' if False else 'F1'
+vor.inputs["Scale"].default_value = 260
+st = wn.new("ShaderNodeMapRange")
+st.inputs["From Min"].default_value = 0.0
+st.inputs["From Max"].default_value = 0.05
+st.inputs["To Min"].default_value = 1.0
+st.inputs["To Max"].default_value = 0.0
+st.clamp = True
+wl.new(tc.outputs["Generated"], vor.inputs["Vector"])
+wl.new(vor.outputs["Distance"], st.inputs["Value"])
+add = wn.new("ShaderNodeMix")
+add.data_type = 'RGBA'
+add.blend_type = 'ADD'
+wl.new(st.outputs["Result"], add.inputs["Factor"])
+wl.new(ramp.outputs["Color"], add.inputs[6])
+add.inputs[7].default_value = (0.6, 0.6, 0.8, 1)
+wl.new(add.outputs[2], bg.inputs["Color"])
+bg.inputs["Strength"].default_value = 1.0
+
+# moon: emissive textured disc far away, upper right
+moon_img = img("Materials/Skybox/Moon_Texture.png")
+moon_mat = bpy.data.materials.new("Moon")
+moon_mat.use_nodes = True
+mn_, ml_ = moon_mat.node_tree.nodes, moon_mat.node_tree.links
+for n in list(mn_):
+    mn_.remove(n)
+o_ = mn_.new("ShaderNodeOutputMaterial")
+t_ = mn_.new("ShaderNodeTexImage"); t_.image = moon_img
+e_ = mn_.new("ShaderNodeEmission"); e_.inputs["Strength"].default_value = 2.2
+tr_ = mn_.new("ShaderNodeBsdfTransparent")
+mx_ = mn_.new("ShaderNodeMixShader")
+ml_.new(t_.outputs["Color"], e_.inputs["Color"])
+ml_.new(t_.outputs["Alpha"], mx_.inputs["Fac"])
+ml_.new(tr_.outputs[0], mx_.inputs[1])
+ml_.new(e_.outputs[0], mx_.inputs[2])
+ml_.new(mx_.outputs[0], o_.inputs["Surface"])
+moon_mat.blend_method = 'BLEND' if hasattr(moon_mat, "blend_method") else None
+bpy.ops.mesh.primitive_plane_add(size=1)
+moon = bpy.context.object
+moon.name = "Moon"
+moon.scale = (782 / 701 * 34, 34, 1)
+moon.data.materials.append(moon_mat)
+
+# moonlight
+sun = bpy.data.objects.new("Moonlight", bpy.data.lights.new("Moonlight", 'SUN'))
+sun.data.color = (0.55, 0.62, 1.0)
+sun.data.energy = 1.2
+sun.data.angle = math.radians(3)
+coll.objects.link(sun)
+
+# ---------------------------------------------------------------- clock tower
+tower = load("Models/City Center Models/Clock Tower_Textured.fbx", "ClockTower")
+set_all(tower, tower_mat)
+place(tower, (0.8, 34, 0), yaw_deg=180, scale=2.6)
+
+# ---------------------------------------------------------------- buildings
+BUILD = [("Models/Building Revision 3/Generic_01.fbx", "Models/Building Revision 3/RoofGeneric_01.fbx"),
+         ("Models/Building Revision 3/Generic_02.fbx", "Models/Building Revision 3/RoofGeneric_02.fbx"),
+         ("Models/Building Revision 3/Generic_03.fbx", "Models/Building Revision 3/RoofGeneric_03.fbx"),
+         ("Models/Building Revision 3/MultiStory-building.fbx", None),
+         ("Models/Building Revision 3/OverHang-building.fbx", None)]
+# (building index, side, y, scale, yaw)
+STREET = [(3, -1, 8, 1.9, 0), (0, -1, 15.5, 2.2, 0), (4, -1, 22, 2.1, 0), (1, -1, 28.5, 2.0, 0),
+          (4, 1, 6, 2.0, 180), (3, 1, 14, 1.8, 180), (0, 1, 21, 1.7, 180), (4, 1, 28.5, 1.5, 180),
+          (1, -1, 40, 2.2, 90), (2, 1, 40, 2.2, -90)]
+win_proto = None
+for k, (bi, side, y, s, yaw) in enumerate(STREET):
+    bpath, rpath = BUILD[bi]
+    b = load(bpath, f"Bld{k}")
+    set_all(b, wall_mat if k % 2 == 0 else wall_mat2)
+    sx, sy, sz = b["size"]
+    half_w = (sy if yaw in (0, 180) else sx) * s / 2
+    x = side * (6.3 + (sx if yaw in (0, 180) else sy) * s / 2)
+    place(b, (x, y, 0), yaw, s)
+    top = sz * s
+    if rpath:
+        r = load(rpath, f"Roof{k}")
+        set_all(r, roof_mats[bi % 3])
+        place(r, (x, y, top - 0.02), yaw, s * 1.08)
+    # glowing windows on the street-facing wall
+    inner_x = x - side * ((sx if yaw in (0, 180) else sy) * s / 2) - side * 0.06
+    floors = max(1, int(top // 3.2))
+    for f in range(floors):
+        for c in (-1, 1) if half_w > 2.5 else (0,):
+            wz = 1.6 + f * 3.0
+            if wz + 1.2 > top - 0.3:
+                continue
+            bpy.ops.mesh.primitive_plane_add(size=1, location=(inner_x, y + c * half_w * 0.45, wz))
+            w = bpy.context.object
+            w.rotation_euler = (math.radians(90), 0, math.radians(90))
+            w.scale = (0.75, 1.15, 1)
+            lit = (k * 7 + f * 3 + c) % 5 != 0
+            w.data.materials.append(window_glow if lit else lamp_metal)
+            bpy.ops.mesh.primitive_cube_add(size=1, location=(inner_x + side * 0.03, w.location.y, wz))
+            fr = bpy.context.object
+            fr.scale = (0.05, 0.95, 1.40)
+            fr.data.materials.append(frame_mat)
+            for (dy, dz, sy_, sz_) in ((0, 0, 0.07, 1.2), (0, 0.1, 0.8, 0.07)):
+                bpy.ops.mesh.primitive_cube_add(size=1, location=(inner_x - side * 0.03, w.location.y + dy, wz + dz))
+                mu = bpy.context.object
+                mu.scale = (0.05, sy_, sz_)
+                mu.data.materials.append(frame_mat)
+            if lit and f == 0:
+                point(f"WinL{k}{f}{c}", (inner_x - side * 1.2, y + c * half_w * 0.45, wz), (1.0, 0.7, 0.35), 60, 0.5)
+
+# ---------------------------------------------------------------- street lamps
+for k, (x, y) in enumerate([(-4.4, 11), (4.4, 18.5), (-4.4, 25)]):
+    l = load("Models/Modular Kit/Street Props/streetLamp_01.fbx", f"Lamp{k}")
+    set_all(l, lamp_metal)
+    place(l, (x, y, 0), 0, 1.15)
+    bpy.ops.mesh.primitive_uv_sphere_add(radius=0.2, location=(x, y, 3.65))
+    bpy.context.object.data.materials.append(lamp_glow)
+    point(f"LampL{k}", (x, y, 3.6), (0.55, 0.95, 1.0), 180, 0.3)
+
+# ---------------------------------------------------------------- ghosts on scooters
+GHOSTS = [
+    # body colour, scooter colour, stripe, location, scooter yaw, ghost yaw, bag colour
+    dict(body=(0.50, 0.32, 1.0), scooter=(0.32, 0.10, 0.06), stripe=(0.55, 0.20, 0.10),
+         loc=(-1.45, 3.4, 0), yaw=245, gyaw=-25, bag=(1.0, 0.85, 0.15), bag_off=(0.55, -0.15, 0.95)),
+    dict(body=(1.0, 0.26, 0.06), scooter=(0.10, 0.18, 0.85), stripe=(0.75, 0.80, 0.95),
+         loc=(0.95, 5.6, 0), yaw=290, gyaw=22, bag=(0.35, 0.95, 0.30), bag_off=(0.2, 0.0, 2.15)),
+]
+for i, g in enumerate(GHOSTS):
+    sc = load("Models/Vehicle Models/GhostMates.fbx", f"Scooter{i}")
+    recolor(sc, "Scooter.", g["scooter"], rough=0.35)
+    recolor(sc, "Logo", g["scooter"], rough=0.35)
+    recolor(sc, "Stripe", g["stripe"], rough=0.35)
+    recolor(sc, "Headlights", (1, 0.95, 0.8), emit=(1.0, 0.9, 0.7), emit_strength=40)
+    recolor(sc, "RearLight.", (1, 0.1, 0.1), emit=(1.0, 0.1, 0.05), emit_strength=10)
+    head = mat_centre(sc, "Headlights")
+    seat = mat_centre(sc, "Seat")
+    fwd_yaw = math.degrees(math.atan2(head.y, head.x))  # local heading of the scooter's nose
+    S = 0.24
+    place(sc, Vector(g["loc"]), g["yaw"] - fwd_yaw, S)
+    bpy.context.view_layer.update()
+    seat_w = sc.matrix_world @ seat
+    head_w = sc.matrix_world @ head
+    fwd = (head_w - seat_w); fwd.z = 0; fwd.normalize()
+    # headlight beam
+    spot(f"Beam{i}", head_w + fwd * 0.1, head_w + fwd * 6 - Vector((0, 0, 0.8)), (1.0, 0.85, 0.6), 400, 55)
+    point(f"HeadGlow{i}", head_w + fwd * 0.15, (1.0, 0.85, 0.6), 15, 0.05)
+
+    gh = load("Models/Ghost Models/GHOST_FINAL.fbx", f"Ghost{i}")
+    recolor(gh, "Body", g["body"], emit=g["body"], emit_strength=0.35, rough=0.4)
+    recolor(gh, "Horn", (1.0, 0.72, 0.72), rough=0.4)
+    eye = mat_centre(gh, "EyeColor") or mat_centre(gh, "Eyes")
+    eye_yaw = math.degrees(math.atan2(eye.y, eye.x))
+    cam_dir_yaw = 270  # camera sits toward -Y
+    GS = 0.40
+    place(gh, seat_w + Vector((0, 0, 0.12)) - fwd * 0.05, 0, GS)
+    gh.rotation_euler.z = math.radians(cam_dir_yaw + g["gyaw"]) - math.radians(eye_yaw)
+    point(f"GhostGlow{i}", seat_w + Vector((0, -0.5, 0.7)), g["body"], 25, 0.4)
+
+    # delivery bag
+    bpy.ops.mesh.primitive_cube_add(size=1)
+    bag = bpy.context.object
+    bag.name = f"Bag{i}"
+    bag.scale = (0.32, 0.18, 0.40)
+    bag.location = seat_w + Vector(g["bag_off"]) * 0.9
+    bag.rotation_euler = (math.radians(12), math.radians(-18 + 30 * i), math.radians(25))
+    bag.data.materials.append(principled(f"BagMat{i}", g["bag"], 0.8, emit=g["bag"], emit_strength=0.15))
+
+# tower lighting: warm uplight on the base, light on the clock face, green glow
+spot("TowerUp", (0.8, 26, 0.3), (0.8, 34, 9), (1.0, 0.55, 0.25), 9000, 40)
+spot("ClockFace", (0.8, 20, 6), (0.8, 34, 17.5), (0.9, 0.85, 1.0), 6000, 14)
+point("TowerGreen", (0.8, 31.5, 11), (0.3, 1.0, 0.4), 1500, 1.0)
+# haze
+bpy.ops.mesh.primitive_cube_add(size=1, location=(0, 40, 15))
+hz = bpy.context.object
+hz.name = "Haze"
+hz.scale = (120, 110, 30)
+hm = bpy.data.materials.new("HazeMat"); hm.use_nodes = True
+for n_ in list(hm.node_tree.nodes): hm.node_tree.nodes.remove(n_)
+vo = hm.node_tree.nodes.new("ShaderNodeVolumePrincipled")
+vo.inputs["Density"].default_value = 0.012
+vo.inputs["Color"].default_value = (0.55, 0.55, 0.85, 1)
+oo = hm.node_tree.nodes.new("ShaderNodeOutputMaterial")
+hm.node_tree.links.new(vo.outputs[0], oo.inputs["Volume"])
+hz.data.materials.append(hm)
+
+# ---------------------------------------------------------------- camera
+cam = bpy.data.objects.new("Camera", bpy.data.cameras.new("Camera"))
+coll.objects.link(cam)
+cam.location = (0.0, -2.6, 1.0)
+look_at(cam, (0.3, 30, 7.5))
+cam.data.lens = 24
+cam.data.shift_x = 0.11  # pushes the scene left; the logo goes right
+scene.camera = cam
+
+# moon placed relative to the camera view (upper right)
+bpy.context.view_layer.update()
+mpos = cam.matrix_world @ Vector((42, 46, -150))
+moon.location = mpos
+moon.rotation_euler = cam.rotation_euler
+sun.rotation_euler = (cam.location - mpos).to_track_quat('-Z', 'Y').to_euler()
+
+# ---------------------------------------------------------------- render settings
+r = scene.render
+r.resolution_x, r.resolution_y, r.resolution_percentage = 1232, 706, 100
+r.film_transparent = False
+scene.view_settings.view_transform = 'AgX'
+scene.view_settings.look = 'AgX - Punchy' if 'AgX - Punchy' in [i.identifier for i in scene.view_settings.bl_rna.properties['look'].enum_items_static] else 'None'
+scene.view_settings.exposure = 0.3
+if ENGINE == "cycles":
+    r.engine = 'CYCLES'
+    prefs = bpy.context.preferences.addons["cycles"].preferences
+    for t in ("OPTIX", "CUDA"):
+        try:
+            prefs.compute_device_type = t
+            prefs.get_devices()
+            for d in prefs.devices:
+                d.use = True
+            break
+        except Exception:
+            pass
+    scene.cycles.device = 'GPU'
+    scene.cycles.samples = SAMPLES
+    scene.cycles.use_denoising = True
+else:
+    engines = [e.identifier for e in r.bl_rna.properties['engine'].enum_items]
+    r.engine = 'BLENDER_EEVEE_NEXT' if 'BLENDER_EEVEE_NEXT' in engines else 'BLENDER_EEVEE'
+    scene.eevee.taa_render_samples = SAMPLES
+    try:
+        scene.eevee.use_shadows = True
+        scene.eevee.use_raytracing = True
+    except Exception:
+        pass
+r.filepath = OUT
+bpy.ops.wm.save_as_mainfile(filepath=ROOT + "tools/keyart/keyart.blend")
+bpy.ops.render.render(write_still=True)
+print("RENDERED", OUT)
