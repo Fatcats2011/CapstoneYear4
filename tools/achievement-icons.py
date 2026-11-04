@@ -55,13 +55,9 @@ def crown(d, cx, by, w, colour):
 
 
 def ghost(d, cx, cy, w, colour):
-    """The game's horned ghost as a flat silhouette with two eyes"""
+    """A ghost as a flat silhouette with two eyes"""
     h = w * 1.12
     top = cy - h / 2
-    for side in (-1, 1):
-        bx = cx + side * w * 0.3
-        d.polygon([(bx - w * 0.11, top + w * 0.2), (bx + w * 0.11, top + w * 0.2),
-                   (bx + side * w * 0.2, top - w * 0.14)], fill=colour)
     d.ellipse([cx - w / 2, top, cx + w / 2, top + w], fill=colour)
     d.rectangle([cx - w / 2, top + w / 2, cx + w / 2, top + h - w * 0.12], fill=colour)
     bw = w / 3
