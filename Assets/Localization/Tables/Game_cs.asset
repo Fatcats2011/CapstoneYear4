@@ -782,6 +782,18 @@ MonoBehaviour:
     m_Localized: "DORU\u010CEN\xCD POTVRZENO"
     m_Metadata:
       m_Items: []
+  - m_Id: 3225402324422656
+    m_Localized: VIBRACE
+    m_Metadata:
+      m_Items: []
+  - m_Id: 3225402366365696
+    m_Localized: "RE\u017DIM PRO BARVOSLEP\xC9"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 3225402366365697
+    m_Localized: VELIKOST TEXTU
+    m_Metadata:
+      m_Items: []
   references:
     version: 2
     RefIds: []

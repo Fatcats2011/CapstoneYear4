@@ -777,6 +777,18 @@ MonoBehaviour:
     m_Localized: ENTREGA CONFIRMADA
     m_Metadata:
       m_Items: []
+  - m_Id: 3225402324422656
+    m_Localized: "VIBRA\xC7\xC3O"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 3225402366365696
+    m_Localized: "MODO DALT\xD4NICO"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 3225402366365697
+    m_Localized: TAMANHO DO TEXTO
+    m_Metadata:
+      m_Items: []
   references:
     version: 2
     RefIds: []

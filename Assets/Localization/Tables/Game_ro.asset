@@ -780,6 +780,18 @@ MonoBehaviour:
     m_Localized: "LIVRARE CONFIRMAT\u0102"
     m_Metadata:
       m_Items: []
+  - m_Id: 3225402324422656
+    m_Localized: "VIBRA\u021AII"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 3225402366365696
+    m_Localized: MOD DALTONISM
+    m_Metadata:
+      m_Items: []
+  - m_Id: 3225402366365697
+    m_Localized: DIMENSIUNE TEXT
+    m_Metadata:
+      m_Items: []
   references:
     version: 2
     RefIds: []

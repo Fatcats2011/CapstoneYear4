@@ -780,6 +780,18 @@ MonoBehaviour:
     m_Localized: DOSTAWA POTWIERDZONA
     m_Metadata:
       m_Items: []
+  - m_Id: 3225402324422656
+    m_Localized: WIBRACJE
+    m_Metadata:
+      m_Items: []
+  - m_Id: 3225402366365696
+    m_Localized: TRYB DALTONISTY
+    m_Metadata:
+      m_Items: []
+  - m_Id: 3225402366365697
+    m_Localized: ROZMIAR TEKSTU
+    m_Metadata:
+      m_Items: []
   references:
     version: 2
     RefIds: []

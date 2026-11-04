@@ -778,6 +778,18 @@ MonoBehaviour:
     m_Localized: "LIVRAISON CONFIRM\xC9E"
     m_Metadata:
       m_Items: []
+  - m_Id: 3225402324422656
+    m_Localized: VIBRATIONS
+    m_Metadata:
+      m_Items: []
+  - m_Id: 3225402366365696
+    m_Localized: MODE DALTONIEN
+    m_Metadata:
+      m_Items: []
+  - m_Id: 3225402366365697
+    m_Localized: TAILLE DU TEXTE
+    m_Metadata:
+      m_Items: []
   references:
     version: 2
     RefIds: []

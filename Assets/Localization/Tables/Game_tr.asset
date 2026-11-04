@@ -781,6 +781,18 @@ MonoBehaviour:
     m_Localized: "TESL\u0130MAT ONAYLANDI"
     m_Metadata:
       m_Items: []
+  - m_Id: 3225402324422656
+    m_Localized: "T\u0130TRE\u015E\u0130M"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 3225402366365696
+    m_Localized: "RENK K\xD6R\xDC MODU"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 3225402366365697
+    m_Localized: "MET\u0130N BOYUTU"
+    m_Metadata:
+      m_Items: []
   references:
     version: 2
     RefIds: []

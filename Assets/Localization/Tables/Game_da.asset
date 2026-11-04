@@ -778,6 +778,18 @@ MonoBehaviour:
     m_Localized: "LEVERING BEKR\xC6FTET"
     m_Metadata:
       m_Items: []
+  - m_Id: 3225402324422656
+    m_Localized: VIBRATION
+    m_Metadata:
+      m_Items: []
+  - m_Id: 3225402366365696
+    m_Localized: FARVEBLIND-TILSTAND
+    m_Metadata:
+      m_Items: []
+  - m_Id: 3225402366365697
+    m_Localized: "TEKSTST\xD8RRELSE"
+    m_Metadata:
+      m_Items: []
   references:
     version: 2
     RefIds: []
