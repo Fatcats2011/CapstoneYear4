@@ -136,6 +136,48 @@ namespace DoA.Tests
         }
 
         [UnityTest]
+        public IEnumerator GoldRush_AScoreDrains_UntilADelivery()
+        {
+            EditorSceneManager.playModeStartScene = AssetDatabase.LoadAssetAtPath<SceneAsset>(MENU_SCENE);
+            yield return new EnterPlayMode();
+            LogAssert.ignoreFailingMessages = true;
+            float deadline = Time.realtimeSinceStartup + 60;
+            while (State() != GameState.Menu && Time.realtimeSinceStartup < deadline)
+                yield return null;
+            TestPlayers.Add();
+            deadline = Time.realtimeSinceStartup + 10;
+            while (PlayerInstantiate.Instance.PlayerCount < 1 && Time.realtimeSinceStartup < deadline)
+                yield return null;
+            HouseRules.Current = new HouseRules(MatchLength.Normal, false, true, true, GameMode.GoldRush);
+
+            GameManager.Instance.SetGameState(GameState.PlayerSelect);
+            SceneFlow.Current.Rematch();
+            deadline = Time.realtimeSinceStartup + LOADING;
+            while (State() != GameState.Begin && Time.realtimeSinceStartup < deadline)
+                yield return null;
+            Assert.AreEqual(GameState.Begin, State(), "in the match");
+            yield return null;
+            Assert.IsTrue(HouseRules.Playing.StealsOn, "Gold Rush locks steals on");
+
+            OrderHandler player = ScoreManager.Instance.orderHandlers[0];
+            player.Score = 100;
+            for (float until = Time.realtimeSinceStartup + GoldRushRules.GRACE_SECONDS - 1f; Time.realtimeSinceStartup < until;)
+                yield return null;
+            Assert.AreEqual(100, player.Score, "nothing drains during the grace");
+
+            for (float until = Time.realtimeSinceStartup + 4f; Time.realtimeSinceStartup < until;)
+                yield return null;
+            Assert.Less(player.Score, 100, "drained after the grace");
+            Assert.Greater(player.Score, 85, "about two points a second");
+
+            int before = player.Score;
+            player.StartDrainClock(); // as a delivery does
+            for (float until = Time.realtimeSinceStartup + 2f; Time.realtimeSinceStartup < until;)
+                yield return null;
+            Assert.AreEqual(before, player.Score, "a delivery restarts the grace");
+        }
+
+        [UnityTest]
         public IEnumerator OneWave_EndsAfterTheFirst_IntoTheGoldenRound()
         {
             EditorSceneManager.playModeStartScene = AssetDatabase.LoadAssetAtPath<SceneAsset>(MENU_SCENE);

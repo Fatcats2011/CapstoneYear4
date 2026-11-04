@@ -196,6 +196,31 @@ Plan: `docs/superpowers/plans/2026-11-04-modes-framework-and-mutators.md`. Start
 - Online (two editors): host with Speed 150% + Low Gravity; the joining machine drives at the same speed and gravity.
 - The MODE row appears once the first new mode is built.
 
+## 16e. Gold Rush: playtest (15 minutes)
+
+Numbers to tune: `Assets/Scripts/Management/GoldRushRules.cs`.
+
+- MATCH RULES now has a MODE row: pick GOLD RUSH. STEALS shows ON (LOCKED).
+- Many more packages appear, and faster.
+- Stop delivering: after about 5 s your score ticks down about 2 points a second, never below 0. A delivery stops it.
+- Last 30 s of the waves: "RUSH HOUR! STEALS COUNT DOUBLE" shows; a stolen package grows twice as much.
+- The golden round plays as usual, with no drain.
+- 4 players or bots: packages never run out; bots don't bleed points sitting still.
+- Online (two editors): the joining machine sees the extra packages, the drain on everyone's score and the rush hour hint.
+
+## 16f. Kings Crown, Infection, Hot Potato: playtest (45 minutes)
+
+Every choice made without asking is in `docs/game-modes-decisions.md`. Numbers: `Assets/Scripts/Management/TimedModeRules.cs`.
+
+- All three: no tutorial, no orders, the clock starts at the ROUND TIMER (2 / 3 / 5 min), a hint says what to do, the highlight reel plays, then the podium (no golden round).
+- **Kings Crown:** a gold crown spins on the road; drive through it to take it; it floats over the holder; boost into the holder to take it (not within 2 s of them taking it). The holder's score climbs 10/s.
+- **Infection:** one random hunter; boosting into a thief turns their ghost the hunter's colour. Free thieves' scores climb. Catching the last thief ends the round at once.
+- **Hot Potato:** a red-glowing package appears over someone after 3 s, ticking faster and faster; boost into someone to pass it (they can't pass straight back). When it goes off, that player vanishes and their screen follows someone else (Boost switches who). Falling in water doesn't put you out. Last one in ends the round; everyone is back on the podium.
+- **Bots** (online, Bots on): they chase the crown / thieves / the potato holder's targets and run away when they should.
+- **Highlight reel:** the crown changing hands, catches and explosions show, with CROWN SEIZED / INFECTION SPREADING / PACKAGE DETONATED / LAST SURVIVOR.
+- **Online (two editors):** the joining machine sees the crown, colours, potato, ticking and players out; an out player there spectates too.
+- Check the podium after Hot Potato: nobody stuck invisible or frozen; then a Standard match plays normally.
+
 ## 16c. Accessibility: to build, then playtest
 
 For Steam's store-page accessibility section. None of these exist yet. Today Options → ACCESSIBILITY has only Reduce motion.

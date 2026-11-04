@@ -65,6 +65,10 @@ public class ReelOverlay : MonoBehaviour
             case Caption.Theft: return "reel.caption.theft";
             case Caption.Collision: return "reel.caption.collision";
             case Caption.Water: return "reel.caption.water";
+            case Caption.Crown: return "reel.caption.crown";
+            case Caption.Infection: return "reel.caption.infection";
+            case Caption.Explosion: return "reel.caption.explosion";
+            case Caption.Survivor: return "reel.caption.survivor";
             default: return "reel.caption.delivery";
         }
     }

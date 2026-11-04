@@ -29,9 +29,9 @@ namespace DoA.Tests
         }
 
         [Test]
-        public void OnlyStandardIsPlayable_UntilAModeIsBuilt()
+        public void Playable_TheModesBuiltSoFar_StandardFirst()
         {
-            CollectionAssert.AreEqual(new[] { GameMode.Standard }, GameModes.Playable);
+            CollectionAssert.AreEqual(new[] { GameMode.Standard, GameMode.GoldRush, GameMode.KingsCrown, GameMode.Infection, GameMode.HotPotato }, GameModes.Playable);
         }
     }
 }

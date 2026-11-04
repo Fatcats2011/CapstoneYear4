@@ -288,6 +288,10 @@ public class BotDriver : MonoBehaviour, IDriveInput
     // chase runs out: a free order, a victim's scooter, else where its best held order goes
     Vector3? PickTarget(Vector3 position, float dt)
     {
+        // Kings Crown, Infection, Hot Potato: no orders, the mode's own goal (BotModeTactics)
+        if (ModeMatch.Current != null)
+            return ModeTarget(position);
+
         chase.Advance(dt);
         sinceChoice += dt;
         // ReferenceEquals: a destroyed order or player is gone too (Unity's == calls it null)
@@ -304,6 +308,30 @@ public class BotDriver : MonoBehaviour, IDriveInput
         if (held != null && held.DropoffPoint != null)
             return held.DropoffPoint.position;
         return null;
+    }
+
+    // A timed mode's goal: a seat to chase and boost into, or a place to drive to
+    Vector3? ModeTarget(Vector3 position)
+    {
+        chosen = null;
+        Victim = null;
+        ModeGoal goal = BotModeTactics.Choose(ModeMatch.Current, OrderSync.SeatOf(handler), position, SeatBallPosition);
+        victimSeat = goal.Chase;
+        victimBall = SeatBall(goal.Chase);
+        return victimBall != null ? victimBall.position : goal.Place;
+    }
+
+    static Transform SeatBall(int seat)
+    {
+        OrderHandler other = OrderSync.HandlerIn(seat);
+        BallDriving ball = other != null ? other.GetComponent<BallDriving>() : null;
+        return ball != null ? ball.transform : null;
+    }
+
+    static Vector3? SeatBallPosition(int seat)
+    {
+        Transform ball = SeatBall(seat);
+        return ball != null ? ball.position : (Vector3?)null;
     }
 
     // Whether what it went for is still there to have

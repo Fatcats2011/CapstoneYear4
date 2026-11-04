@@ -30,6 +30,51 @@ namespace DoA.Tests
         }
 
         [Test]
+        public void Weight_TheTimedModesObjectives()
+        {
+            Assert.AreEqual(7f, HighlightRules.Weight(M(MomentKind.CrownTaken, 0, 0, 1)));
+            Assert.AreEqual(13f, HighlightRules.Weight(M(MomentKind.CrownTaken, 0, 0, 1, 0f, 5f)), "a last-seconds crown swing");
+            Assert.AreEqual(5f, HighlightRules.Weight(M(MomentKind.Infected, 0, 0, 1, 0f)));
+            Assert.AreEqual(9f, HighlightRules.Weight(M(MomentKind.Infected, 0, 0, 1, 1f)), "the more it has spread, the more a catch weighs");
+            Assert.AreEqual(12f, HighlightRules.Weight(M(MomentKind.LastCaught, 0, 0, 1)));
+            Assert.AreEqual(2f, HighlightRules.Weight(M(MomentKind.PotatoPassed, 0, 0, 1, 0f)));
+            Assert.AreEqual(9f, HighlightRules.Weight(M(MomentKind.PotatoPassed, 0, 0, 1, 1f)), "a pass with the fuse nearly gone");
+            Assert.AreEqual(9f, HighlightRules.Weight(M(MomentKind.PotatoExploded, 0, 0)));
+            Assert.AreEqual(12f, HighlightRules.Weight(M(MomentKind.LastStanding, 0, 0, 1)));
+        }
+
+        [Test]
+        public void Weight_GoldRush_ARushHourStealCountsDouble()
+        {
+            Moment late = M(MomentKind.Steal, 0, 0, 1, 0f, 20f);
+            Assert.AreEqual(8f, HighlightRules.Weight(late), "in Standard");
+            Assert.AreEqual(12f, HighlightRules.Weight(late, GameMode.GoldRush));
+            Assert.AreEqual(8f, HighlightRules.Weight(M(MomentKind.Steal, 0, 0, 1, 0f, 60f), GameMode.GoldRush), "before rush hour");
+        }
+
+        [Test]
+        public void Clips_TheTimedModesHaveTheirOwnCaptions()
+        {
+            Assert.AreEqual(Caption.Crown, HighlightRules.Clips(new[] { M(MomentKind.CrownTaken, 1, 0, 1) })[0].Caption);
+            Assert.AreEqual(Caption.Infection, HighlightRules.Clips(new[] { M(MomentKind.LastCaught, 1, 0, 1) })[0].Caption);
+            Assert.AreEqual(Caption.Explosion, HighlightRules.Clips(new[] { M(MomentKind.PotatoExploded, 1, 0) })[0].Caption);
+            Assert.AreEqual(Caption.Survivor, HighlightRules.Clips(new[] { M(MomentKind.LastStanding, 1, 0, 1) })[0].Caption);
+        }
+
+        [Test]
+        public void Pick_InHotPotato_TheExplosionBeatsAClash()
+        {
+            Moment[] moments =
+            {
+                M(MomentKind.Clash, 10, 2, 3),
+                M(MomentKind.PotatoExploded, 30, 0),
+            };
+            List<Clip> clips = HighlightRules.Clips(moments, GameMode.HotPotato);
+
+            Assert.Greater(clips[1].Score, clips[0].Score);
+        }
+
+        [Test]
         public void Weight_StartValues()
         {
             Assert.AreEqual(10f, HighlightRules.Weight(M(MomentKind.GoldenSteal, 0, 0, 1)));

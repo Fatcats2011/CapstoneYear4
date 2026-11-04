@@ -94,8 +94,13 @@ public class GameManager : SingletonMonobehaviour<GameManager>
         {
             TutorialManager.SkipNextTutorial = false;
             MatchPhysics.Reset(); // the menus fall at normal gravity, whatever the last match's mutators were
+            ModeMatch.End();
             Raise(OnNewMatch);
         }
+
+        // The podium shows everyone as they were: a timed mode's crown, colours and players out go back (ModeVisuals)
+        if (mainState == GameState.Results)
+            ModeMatch.End();
 
         // Calls an event for the certain state that is swapped to
         switch(mainState)
@@ -189,6 +194,7 @@ public class GameManager : SingletonMonobehaviour<GameManager>
     public void StartNewMatch()
     {
         MatchPhysics.Reset();
+        ModeMatch.End();
         OnNewMatch?.Invoke();
     }
 

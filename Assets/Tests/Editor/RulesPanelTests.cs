@@ -60,12 +60,13 @@ namespace DoA.Tests
         [Test]
         public void Standard_ShowsItsRowsInOrder_WithoutModeOrRoundTimer()
         {
+            GameModes.Playable = new[] { GameMode.Standard };
             panel.Open(HouseRules.Normal);
 
             string[] names = { "WAVE LENGTH", "WAVES", "STEALS", "GOLDEN ORDER", "BOTS", "SPEED", "LOW GRAVITY" };
             for (int i = 0; i < names.Length; i++)
                 Assert.AreEqual(names[i], panel.NameOf(i));
-            Assert.AreEqual(-1, panel.ModeRow, "only Standard can be played yet");
+            Assert.AreEqual(-1, panel.ModeRow, "no Mode row with one mode to play");
             Assert.AreEqual(-1, panel.RowOf(Rule.RoundTimer));
         }
 
@@ -74,6 +75,7 @@ namespace DoA.Tests
         {
             panel.Open(HouseRules.Normal);
 
+            Select(panel.RowOf(Rule.WaveLength));
             panel.Step(false);
 
             Assert.AreEqual(MatchLength.Short, HouseRules.Current.Length);

@@ -65,8 +65,8 @@ public readonly struct HouseRules : IEquatable<HouseRules>
     public bool StealsOn => Effective(Rule.Steals, Steals);
     /// <summary>Whether the match ends with the golden round: only modes with deliveries have one</summary>
     public bool GoldenOn => Effective(Rule.GoldenOrder, GoldenOrder);
-    /// <summary>How many waves are played (the default where the mode has none)</summary>
-    public int WavesPlayed => ModeRules.For(Mode, Rule.Waves) == RuleShow.Hidden ? DEFAULT_WAVES : Waves;
+    /// <summary>How many waves are played: a mode without deliveries plays one, as long as its Round Timer (OrderManager.WaveLength)</summary>
+    public int WavesPlayed => ModeRules.HasDeliveries(Mode) ? Waves : 1;
     public float SpeedScale => SpeedPercent / 100f;
     public float GravityScale => LowGravity ? 0.5f : 1f;
 

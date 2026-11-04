@@ -27,7 +27,7 @@ public class TutorialManager : SingletonMonobehaviour<TutorialManager>
     /// local play, not the multiplayer lobbies' loop). It still hands the players their driving, then the first wave
     /// starts at once (GameManager)
     /// </summary>
-    public static bool Skipping { get { return SkipNextTutorial || GameAuthority.IsOnline; } }
+    public static bool Skipping { get { return SkipNextTutorial || GameAuthority.IsOnline || !ModeRules.HasDeliveries(HouseRules.Current.Mode); } }
 
     private List<TutorialHandler> handlers = new List<TutorialHandler>();
 

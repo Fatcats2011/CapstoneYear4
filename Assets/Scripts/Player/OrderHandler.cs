@@ -168,6 +168,7 @@ public class OrderHandler : MonoBehaviour
             // Online, only the host changes scores, and counts deliveries for achievements: a client shows the host's
             if (GameAuthority.IsAuthority)
             {
+                StartDrainClock();
                 score += order1.Worth;
                 FeatSync.Deliver(OrderSync.SeatOf(this), rightOrder.Value);
             }
@@ -182,6 +183,7 @@ public class OrderHandler : MonoBehaviour
             soundPool.PlayOrderDropoff(key);
             if (GameAuthority.IsAuthority)
             {
+                StartDrainClock();
                 score += order2.Worth;
                 FeatSync.Deliver(OrderSync.SeatOf(this), rightOrder.Value);
             }
@@ -289,6 +291,10 @@ public class OrderHandler : MonoBehaviour
 
         order1 = order2 = null;
         hasOrder = false;
+
+        // A timed mode: the crown goes back to the road, the potato waits for the next lighting, and they count as gone
+        if (GameAuthority.IsAuthority && ModeMatch.Current != null)
+            ModeMatch.Current.Leave(OrderSync.SeatOf(this));
     }
 
     /// <summary>
@@ -404,6 +410,10 @@ public class OrderHandler : MonoBehaviour
         if (!GameAuthority.IsAuthority)
             return;
 
+        // Kings Crown, Infection, Hot Potato: the hit moves the crown or the potato, or catches a thief, instead (ModeMatch)
+        if (ModeReferee.Strike(this, victim))
+            return;
+
         // Steals off (the match rules): the bump still happens, but nothing changes hands. The tutorial still teaches it
         if (!HouseRules.Playing.StealsOn && (GameManager.Instance == null || GameManager.Instance.MainState != GameState.Tutorial))
             return;
@@ -431,9 +441,39 @@ public class OrderHandler : MonoBehaviour
     /// </summary>
     internal int PayForSteal(Order stolen, int thiefSeat)
     {
-        int paid = StealValueRules.Pay(stolen.PaidThieves, thiefSeat);
+        int paid = StealValueRules.Pay(stolen.PaidThieves, thiefSeat) * GoldRushRules.StealCounts();
         score += paid;
         return paid;
+    }
+
+    // Gold Rush's drain (GoldRushRules): when this player last delivered, and the part of a point not yet taken
+    float lastDelivery;
+    float drainCarry;
+
+    /// <summary>Gold Rush: the drain waits GRACE_SECONDS from now (a delivery, or the match's start)</summary>
+    internal void StartDrainClock()
+    {
+        lastDelivery = Time.time;
+        drainCarry = 0f;
+    }
+
+    /// <summary>Kings Crown, Infection, Hot Potato, authority only: points for holding the crown, staying free or staying in</summary>
+    internal void AddModePoints(int points)
+    {
+        score += points;
+        ShowScore();
+    }
+
+    /// <summary>Gold Rush, authority only: takes this frame's drain off the score. Returns the points taken</summary>
+    internal int Drain(float deltaTime)
+    {
+        int points = GoldRushRules.Drain(Time.time - lastDelivery, deltaTime, ref drainCarry, score);
+        if (points > 0)
+        {
+            score -= points;
+            ShowScore();
+        }
+        return points;
     }
 
     /// <summary>
@@ -465,7 +505,11 @@ public class OrderHandler : MonoBehaviour
         victim.LoseOrder(order);
         AddOrder(order);
         if (StealsCount)
-            order.CountSteal(); // the order is worth more now, here and on every machine that replays this steal
+        {
+            // The order is worth more now, here and on every machine that replays this steal (twice in Gold Rush's rush hour)
+            for (int count = GoldRushRules.StealCounts(); count > 0; count--)
+                order.CountSteal();
+        }
     }
 
     // Whether a steal now doubles an order and pays the thief (StealValueRules.CountsIn): not in the tutorial. Every

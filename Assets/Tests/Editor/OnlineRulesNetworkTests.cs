@@ -86,6 +86,22 @@ namespace DoA.Tests
             Assert.AreEqual(-6.5f, Physics.gravity.y, 0.001f);
             Assert.AreEqual(1.5f, MatchPhysics.SpeedScale);
 
+            // A timed mode's state: who holds the potato, who's out, the fuse
+            int version = other.Match.ModeVersion;
+            ModeSnapshot potato = new ModeSnapshot(GameMode.HotPotato, 0b0011, ModeMatch.NONE, 1, ModeMatch.NONE, 0, 0b0001,
+                new Vector3(4f, 5f, 6f), 12f, 20f);
+            host.Match.ShareMode(potato);
+            deadline = Time.realtimeSinceStartup + WAIT;
+            while (other.Match.ModeVersion == version && Time.realtimeSinceStartup < deadline)
+                yield return null;
+            ModeSnapshot shown = other.Match.ModeShared;
+            Assert.AreEqual(GameMode.HotPotato, shown.Mode);
+            Assert.AreEqual(1, shown.PotatoSeat);
+            Assert.AreEqual(0b0001, shown.Out);
+            Assert.AreEqual(ModeMatch.NONE, shown.CrownSeat);
+            Assert.AreEqual(new Vector3(4f, 5f, 6f), shown.CrownSpot);
+            Assert.AreEqual(12f, shown.FuseLeft, 0.001f);
+
             log.MachinesLeave(); // Windows may report a leaving machine's closed port: see LogCollector.CLOSED_PORT
             other.Leave();
             deadline = Time.realtimeSinceStartup + WAIT;

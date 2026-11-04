@@ -12,17 +12,20 @@ Names are placeholders and still need workshopping.
 - Already planned. Two teams share a combined score.
 
 ### Kings Crown
+**Built 2026-11-04** (see `docs/game-modes-decisions.md` for every choice made while building).
 - One glowing crown on the map.
 - Whoever holds it earns points every second and is marked for everyone (purple flame).
 - Steal it to take over. The player with the most points when time runs out wins.
 
 ### Infection
+**Built 2026-11-04** (see `docs/game-modes-decisions.md` for every choice made while building).
 - One player starts as the hunter.
 - Each thief the hunter catches becomes a hunter too.
 - Infected players' ghosts change to the first hunter's ghost color, so the infected team reads as one color at a glance.
 - Thieves win if any survive the timer. Hunters win if they catch everyone.
 
 ### Gold Rush
+**Built 2026-11-04** (plan `docs/superpowers/plans/2026-11-04-mode-gold-rush.md`): 3× packages, 2 points/s drain after 5 s without delivering, steals count double in the last 30 s.
 - Short timed rounds for a quick match.
 - Steal value doubles in the final 30 seconds.
 - Far more packages on the map than a normal match, so there's always something to grab.
@@ -30,6 +33,7 @@ Names are placeholders and still need workshopping.
 - Delivering stops the drain (and maybe resets a short grace timer before it starts again).
 
 ### Hot Potato
+**Built 2026-11-04** (see `docs/game-modes-decisions.md` for every choice made while building).
 - One cursed package starts with a random player on a hidden fuse timer.
 - Pass it on by bumping or stealing from another player.
 - Whoever holds it when the fuse runs out "potatoes out": they're eliminated for the rest of the round.

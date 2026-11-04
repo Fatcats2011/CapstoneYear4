@@ -220,6 +220,9 @@ public class OnlineGame : MonoBehaviour
         // What a scooter does in a moment (a boost, a full horn…) plays on every machine
         gameObject.AddComponent<OnlineCues>().Begin(session);
 
+        // Kings Crown, Infection, Hot Potato: the host's crown, catches and potato show on every machine
+        gameObject.AddComponent<OnlineModes>().Begin(session);
+
         // The host decides achievements; each machine unlocks its own player's
         IAchievementStore achievements = SteamFeatures.Instance != null ? SteamFeatures.Instance.Achievements : new SteamAchievementStore();
         gameObject.AddComponent<OnlineAchievements>().Begin(session, achievements);

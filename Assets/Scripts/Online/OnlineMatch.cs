@@ -28,6 +28,11 @@ public class OnlineMatch : NetworkBehaviour, IMatchLink
     readonly NetworkVariable<double> autoStartAt = new NetworkVariable<double>(0);
     readonly NetworkVariable<int> goldenValue = new NetworkVariable<int>((int)Constants.OrderValue.Golden);
     readonly NetworkVariable<int> rules = new NetworkVariable<int>(HouseRules.Normal.Pack());
+    // A timed mode's state (ModeSnapshot); clients show it when the version moves on (OnlineModes)
+    readonly NetworkVariable<int> modeSeats = new NetworkVariable<int>(0);
+    readonly NetworkVariable<Vector3> modeCrownSpot = new NetworkVariable<Vector3>(Vector3.zero);
+    readonly NetworkVariable<Vector2> modeFuse = new NetworkVariable<Vector2>(Vector2.zero);
+    readonly NetworkVariable<int> modeVersion = new NetworkVariable<int>(0);
 
     OnlineSession session;
 
@@ -471,6 +476,23 @@ public class OnlineMatch : NetworkBehaviour, IMatchLink
     {
         if (IsServer && goldenValue.Value != value)
             goldenValue.Value = value;
+    }
+
+    /// <summary>How many times the host has shared a timed mode's state: a client shows ModeShared when this moves on</summary>
+    public int ModeVersion { get { return modeVersion.Value; } }
+
+    /// <summary>The host's timed-mode state, checked (ModeSnapshot.Unpack: another machine could send anything)</summary>
+    public ModeSnapshot ModeShared { get { return ModeSnapshot.Unpack(modeSeats.Value, modeCrownSpot.Value, modeFuse.Value.x, modeFuse.Value.y); } }
+
+    /// <summary>Host: shares a timed mode's state (who holds what, who's caught or out, the fuse). Does nothing on a client</summary>
+    public void ShareMode(ModeSnapshot snapshot)
+    {
+        if (!IsServer)
+            return;
+        modeSeats.Value = snapshot.PackSeats();
+        modeCrownSpot.Value = snapshot.CrownSpot;
+        modeFuse.Value = new Vector2(snapshot.FuseLeft, snapshot.FuseLength);
+        modeVersion.Value++;
     }
 
     /// <summary>Host: shares the match rules (only a change goes out). Does nothing on a client</summary>

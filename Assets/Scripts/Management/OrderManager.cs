@@ -24,13 +24,15 @@ public class OrderManager : SingletonMonobehaviour<OrderManager>
     [SerializeField] private float waveLengthInSeconds = 20f;
 
     // A wave's length in this match: the match rules' Length stretches or shortens it (HouseRules)
-    internal float WaveLength => waveLengthInSeconds * HouseRules.Playing.WaveFactor;
+    // A mode without deliveries plays one wave as long as its Round Timer (ModeReferee)
+    internal float WaveLength => TimedModeRules.IsTimed(HouseRules.Playing.Mode) ? HouseRules.Playing.RoundMinutes * 60f
+        : waveLengthInSeconds * HouseRules.Playing.WaveFactor;
     internal float TotalGameTime => totalGameTime;
 
     // This wave's order quotas: the authored rows (maxEasy...) spread over the waves played (WaveTable)
-    int EasyQuota => maxEasy[WaveTable.IndexFor(wave, HouseRules.Playing.WavesPlayed, maxEasy.Length)];
-    int MediumQuota => maxMedium[WaveTable.IndexFor(wave, HouseRules.Playing.WavesPlayed, maxMedium.Length)];
-    int HardQuota => maxHard[WaveTable.IndexFor(wave, HouseRules.Playing.WavesPlayed, maxHard.Length)];
+    int EasyQuota => GoldRushRules.Quota(maxEasy[WaveTable.IndexFor(wave, HouseRules.Playing.WavesPlayed, maxEasy.Length)]);
+    int MediumQuota => GoldRushRules.Quota(maxMedium[WaveTable.IndexFor(wave, HouseRules.Playing.WavesPlayed, maxMedium.Length)]);
+    int HardQuota => GoldRushRules.Quota(maxHard[WaveTable.IndexFor(wave, HouseRules.Playing.WavesPlayed, maxHard.Length)]);
     internal int wave = 0;
     private float waveTimer = 0f;
     private float gameTimer = 0f;
@@ -129,6 +131,8 @@ public class OrderManager : SingletonMonobehaviour<OrderManager>
 
     internal void Update()
     {
+        WatchRushHour(); // every machine, from its own clock
+
         // Online, the host runs the waves, the order spawns and the golden order's value; clients show what it sends
         if (!GameAuthority.IsAuthority)
             return;
@@ -163,11 +167,20 @@ public class OrderManager : SingletonMonobehaviour<OrderManager>
                 }
             }
         }
+        DrainGoldRush();
+        if (RoundRunning && ModeReferee.Tick() && !finalOrderActive)
+        {
+            // Kings Crown is never decided early; Infection and Hot Potato are once nobody's left to catch or explode
+            wave = HouseRules.Playing.WavesPlayed;
+            InitWave();
+        }
+
         if (!spawnNormalPackages) { return; }
 
         if (waveTimer > 0 && !finalOrderActive)
         {
-            if (canSpawnOrders)
+            // A mode without deliveries spawns none: its round only runs the clock
+            if (canSpawnOrders && ModeRules.HasDeliveries(HouseRules.Playing.Mode))
             {
                 if (activeOrders.Count >= 0)
                 {
@@ -291,6 +304,11 @@ public class OrderManager : SingletonMonobehaviour<OrderManager>
         // This match's rules: the host's, or normal in a public lobby (HouseRules)
         HouseRules.Playing = HouseRules.Current.ForMatch(PublicLobby());
         MatchPhysics.Apply(HouseRules.Playing);
+        ModeReferee.Begin(HouseRules.Playing.Mode);
+        if (ScoreManager.Instance != null)
+            foreach (OrderHandler handler in ScoreManager.Instance.orderHandlers)
+                if (handler != null)
+                    handler.StartDrainClock();
 
         GetOrders();
         finalOrderActive = false;
@@ -301,6 +319,49 @@ public class OrderManager : SingletonMonobehaviour<OrderManager>
         canSpawnOrders = true;
         gameStarted = true;
         EnableSpawning();
+    }
+
+    bool rushHourShown;
+
+    /// <summary>Whether the waves' clock is running in the match (not the tutorial, not past the last wave)</summary>
+    bool RoundRunning
+    {
+        get
+        {
+            if (!gameStarted || finalOrderActive || !countdown || GameManager.Instance == null)
+                return false;
+            GameState state = GameManager.Instance.MainState;
+            return state == GameState.Begin || state == GameState.MainLoop;
+        }
+    }
+
+    /// <summary>Gold Rush: says so on every machine as rush hour starts (each steal counts twice: GoldRushRules)</summary>
+    void WatchRushHour()
+    {
+        bool rush = GoldRushRules.IsRushHour(HouseRules.Playing.Mode, gameTimer, finalOrderActive) && GameManager.Instance != null
+            && (GameManager.Instance.MainState == GameState.Begin || GameManager.Instance.MainState == GameState.MainLoop);
+        if (rush && !rushHourShown && ControllerPrompts.Instance != null)
+            ControllerPrompts.Instance.ShowHint(Loc.Get("goldrush.rushhour"), 4f);
+        rushHourShown = rush;
+    }
+
+    /// <summary>
+    /// Gold Rush: while the waves run, each player's score drains when they haven't delivered for a while
+    /// (GoldRushRules). Authority only, like every score change; scores reach clients as always
+    /// </summary>
+    void DrainGoldRush()
+    {
+        if (!GoldRushRules.Playing || !RoundRunning || ScoreManager.Instance == null)
+            return;
+
+        bool changed = false;
+        foreach (OrderHandler handler in ScoreManager.Instance.orderHandlers)
+        {
+            if (handler != null && handler.Drain(Time.deltaTime) > 0)
+                changed = true;
+        }
+        if (changed)
+            ScoreManager.Instance.UpdatePlacement();
     }
 
     /// <summary>
@@ -658,7 +719,7 @@ public class OrderManager : SingletonMonobehaviour<OrderManager>
     private IEnumerator EasySpawn()
     {
         cooledDown = false;
-        yield return new WaitForSeconds(cooldownTime);
+        yield return new WaitForSeconds(GoldRushRules.Cooldown(cooldownTime));
         SpawnOrder(Constants.OrderValue.Easy);
         cooledDown = true;
     }
@@ -670,7 +731,7 @@ public class OrderManager : SingletonMonobehaviour<OrderManager>
     private IEnumerator MediumSpawn()
     {
         cooledDown = false;
-        yield return new WaitForSeconds(cooldownTime);
+        yield return new WaitForSeconds(GoldRushRules.Cooldown(cooldownTime));
         SpawnOrder(Constants.OrderValue.Medium);
         cooledDown = true;
     }
@@ -682,7 +743,7 @@ public class OrderManager : SingletonMonobehaviour<OrderManager>
     private IEnumerator HardSpawn()
     {
         cooledDown = false;
-        yield return new WaitForSeconds(cooldownTime);
+        yield return new WaitForSeconds(GoldRushRules.Cooldown(cooldownTime));
         SpawnOrder(Constants.OrderValue.Hard);
         cooledDown = true;
     }

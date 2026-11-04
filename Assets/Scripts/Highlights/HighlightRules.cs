@@ -2,10 +2,15 @@ using System.Collections.Generic;
 using UnityEngine;
 
 /// <summary>What happened in a moment the highlight reel might show</summary>
-public enum MomentKind : byte { GoldenSteal, Steal, Clash, Bump, HardDelivery, Delivery, Fall }
+public enum MomentKind : byte
+{
+    GoldenSteal, Steal, Clash, Bump, HardDelivery, Delivery, Fall,
+    // The timed modes' objectives (ModeMatch): appended, as the kinds travel as bytes
+    CrownTaken, Infected, LastCaught, PotatoPassed, PotatoExploded, LastStanding
+}
 
 /// <summary>The line shown over a clip</summary>
-public enum Caption : byte { Theft, Collision, Water, Delivery }
+public enum Caption : byte { Theft, Collision, Water, Delivery, Crown, Infection, Explosion, Survivor }
 
 /// <summary>One thing that happened in the round, as the highlight reel logs it</summary>
 public struct Moment
@@ -21,7 +26,7 @@ public struct Moment
     /// <summary>The second player involved (a victim), or -1 for none</summary>
     public int Other;
 
-    /// <summary>0 to 1, used only by bumps</summary>
+    /// <summary>0 to 1: a bump's force, how far Infection has spread, how close a passed potato was to exploding</summary>
     public float Strength;
 
     /// <summary>The round clock at the moment</summary>
@@ -90,11 +95,22 @@ public static class HighlightRules
     /// <summary>The longest the reel gets, in seconds</summary>
     public const float MAX_REEL = 20f;
 
-    /// <summary>What a moment weighs on its own. A fall's knocked-in bonus needs the moments before it (the list overload)</summary>
-    public static float Weight(Moment m)
+    /// <summary>
+    /// What a moment weighs on its own, in a match of this mode. A fall's knocked-in bonus needs the moments before it
+    /// (the list overload). Each mode's objective weighs most: a late crown swing, the catch that ends Infection, a pass with
+    /// the fuse nearly gone, the explosion and the last one standing; in Gold Rush a steal in rush hour counts double
+    /// </summary>
+    public static float Weight(Moment m, GameMode mode = GameMode.Standard)
     {
         switch (m.Kind)
         {
+            case MomentKind.Steal when mode == GameMode.GoldRush && m.TimeLeft > 0f && m.TimeLeft <= GoldRushRules.RUSH_HOUR_SECONDS: return 12f;
+            case MomentKind.CrownTaken: return 7f + 2f * Late(m);
+            case MomentKind.Infected: return 5f + 4f * Mathf.Clamp01(m.Strength);
+            case MomentKind.LastCaught: return 12f;
+            case MomentKind.PotatoPassed: return 2f + 7f * Mathf.Clamp01(m.Strength);
+            case MomentKind.PotatoExploded: return 9f;
+            case MomentKind.LastStanding: return 12f;
             case MomentKind.GoldenSteal: return 10f;
             case MomentKind.Steal: return 8f;
             case MomentKind.Clash: return 6f;
@@ -110,10 +126,10 @@ public static class HighlightRules
     /// What the moment at <c>index</c> weighs, counting a fall's knocked-in bonus. The list must be in time order, as only
     /// the moments before the index are looked at.
     /// </summary>
-    public static float Weight(IReadOnlyList<Moment> moments, int index)
+    public static float Weight(IReadOnlyList<Moment> moments, int index, GameMode mode = GameMode.Standard)
     {
         Moment m = moments[index];
-        float weight = Weight(m);
+        float weight = Weight(m, mode);
         if (m.Kind != MomentKind.Fall) return weight;
 
         for (int i = index - 1; i >= 0; i--)
@@ -152,6 +168,12 @@ public static class HighlightRules
             case MomentKind.Clash:
             case MomentKind.Bump: return Caption.Collision;
             case MomentKind.Fall: return Caption.Water;
+            case MomentKind.CrownTaken: return Caption.Crown;
+            case MomentKind.Infected:
+            case MomentKind.LastCaught: return Caption.Infection;
+            case MomentKind.PotatoPassed:
+            case MomentKind.PotatoExploded: return Caption.Explosion;
+            case MomentKind.LastStanding: return Caption.Survivor;
             default: return Caption.Delivery;
         }
     }
@@ -160,7 +182,7 @@ public static class HighlightRules
     /// Joins the moments into clips. A moment joins the open clip when it's within COMBO_WINDOW of the clip's last moment
     /// and shares a seat with the clip; otherwise it starts a new one. The moments can come in any order.
     /// </summary>
-    public static List<Clip> Clips(IReadOnlyList<Moment> moments)
+    public static List<Clip> Clips(IReadOnlyList<Moment> moments, GameMode mode = GameMode.Standard)
     {
         var clips = new List<Clip>();
         if (moments == null || moments.Count == 0) return clips;
@@ -185,7 +207,7 @@ public static class HighlightRules
         for (int i = 0; i < sorted.Count; i++)
         {
             Moment m = sorted[i];
-            float weight = Weight(sorted, i);
+            float weight = Weight(sorted, i, mode);
             bool joins = count > 0 && m.Time - sorted[i - 1].Time <= COMBO_WINDOW && (mask & SeatsOf(m)) != 0;
             if (!joins)
             {

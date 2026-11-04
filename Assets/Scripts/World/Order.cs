@@ -150,6 +150,10 @@ public class Order : MonoBehaviour
     [Tooltip("Different meshes of the package depending on the difficulty")]
     [SerializeField] private Mesh[] orderMesh;
 
+    /// <summary>A tier's package look (Easy 0 to Golden 3), for other things drawn like packages (ModeVisuals)</summary>
+    internal Material MaterialOf(int tier) => orderMaterials != null && tier < orderMaterials.Length ? orderMaterials[tier] : null;
+    internal Mesh MeshOf(int tier) => orderMesh != null && tier < orderMesh.Length ? orderMesh[tier] : null;
+
     [Header("Becon Indicator Info")]
     [SerializeField] BeconIndicator beconIndicator;
 

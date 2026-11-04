@@ -127,6 +127,7 @@ public class HighlightDirector : MonoBehaviour
         FeatSync.Bumped += OnBumped;
         FeatSync.Delivered += OnDelivered;
         FeatSync.Sank += OnSank;
+        ModeMatch.Happened += OnModeMoment;
         HighlightSync.Arrived += OnReelArrived;
     }
 
@@ -138,6 +139,7 @@ public class HighlightDirector : MonoBehaviour
         FeatSync.Bumped -= OnBumped;
         FeatSync.Delivered -= OnDelivered;
         FeatSync.Sank -= OnSank;
+        ModeMatch.Happened -= OnModeMoment;
         HighlightSync.Arrived -= OnReelArrived;
     }
 
@@ -267,7 +269,7 @@ public class HighlightDirector : MonoBehaviour
 
         try
         {
-            List<Clip> clips = HighlightRules.Pick(HighlightRules.Clips(Moments), RosterSeatIndices());
+            List<Clip> clips = HighlightRules.Pick(HighlightRules.Clips(Moments, HouseRules.Playing.Mode), RosterSeatIndices());
             EndByRound(clips, RoundEnd, Recording);
             if (clips.Count == 0)
                 return null;
@@ -458,6 +460,25 @@ public class HighlightDirector : MonoBehaviour
     void OnSank(int seat)
     {
         Log(MomentKind.Fall, seat, -1, 0f);
+    }
+
+    // Kings Crown, Infection, Hot Potato: their objectives (the authority's ModeMatch)
+    void OnModeMoment(ModeMoment moment)
+    {
+        Log(KindOf(moment.Kind), moment.Seat, moment.Other, moment.Strength);
+    }
+
+    internal static MomentKind KindOf(ModeMomentKind kind)
+    {
+        switch (kind)
+        {
+            case ModeMomentKind.CrownTaken: return MomentKind.CrownTaken;
+            case ModeMomentKind.Infected: return MomentKind.Infected;
+            case ModeMomentKind.LastCaught: return MomentKind.LastCaught;
+            case ModeMomentKind.PotatoPassed: return MomentKind.PotatoPassed;
+            case ModeMomentKind.PotatoExploded: return MomentKind.PotatoExploded;
+            default: return MomentKind.LastStanding;
+        }
     }
 
     void Log(MomentKind kind, int seat, int other, float strength)

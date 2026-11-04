@@ -24,6 +24,9 @@ public class RespawnManager : SingletonMonobehaviour<RespawnManager>
         }
     }
 
+    /// <summary>The scene's respawn points (all on the road), e.g. for where Kings Crown's crown lies</summary>
+    internal RespawnPoint[] Points => respawnPoints;
+
     private void Start()
     {
         if (gathered == null && RSPParent != null)

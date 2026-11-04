@@ -131,7 +131,11 @@ ROWS = [
     ("rules.summary.waves", "Summary line part; {0} is a number", "{0} WAVES"),
     ("rules.summary.round", "Summary line part and round timer value; {0} is minutes", "{0} MIN"),
     ("rules.note.experimental", "Shown when the mode or a mutator isn't the game as designed", "DEAD ON ARRIVAL WASN'T DESIGNED TO BE PLAYED THIS WAY. EXPECT ODD BALANCE AND SOME CHAOS."),
-
+    ("goldrush.rushhour", "Gold Rush hint: the last 30 seconds, each steal counts twice", "RUSH HOUR! STEALS COUNT DOUBLE"),
+    ("mode.start.kingscrown", "Hint as a Kings Crown match starts", "GRAB THE CROWN AND HOLD ON TO IT! BOOST INTO ITS HOLDER TO TAKE IT"),
+    ("mode.start.infection", "Hint as an Infection match starts", "HUNTERS: BOOST INTO THIEVES TO INFECT THEM. THIEVES: DON'T GET CAUGHT!"),
+    ("mode.start.hotpotato", "Hint as a Hot Potato match starts", "BOOST INTO SOMEONE TO PASS THE CURSED PACKAGE BEFORE IT GOES OFF!"),
+    ("hotpotato.out", "Hint to a player whose cursed package went off", "YOU'RE OUT! BOOST TO WATCH SOMEONE ELSE"),
     # Awards (keep them playful, not literal)
     ("award.goldengrip", "Award: held the golden delivery longest", "GOLDEN GRIP"),
     ("award.kleptoghost", "Award: most steals (the players are ghosts)", "KLEPTOGHOST"),
@@ -172,7 +176,10 @@ ROWS = [
     ("reel.caption.collision", "Caption: two players crashed into each other", "COLLISION DETECTED"),
     ("reel.caption.water", "Caption: a player fell in the water", "SUBJECT ENTERED WATER"),
     ("reel.caption.delivery", "Caption: a player delivered an order", "DELIVERY CONFIRMED"),
-
+    ("reel.caption.crown", "Caption: a player took the crown (Kings Crown)", "CROWN SEIZED"),
+    ("reel.caption.infection", "Caption: a hunter caught a thief (Infection)", "INFECTION SPREADING"),
+    ("reel.caption.explosion", "Caption: the cursed package was passed or went off (Hot Potato)", "PACKAGE DETONATED"),
+    ("reel.caption.survivor", "Caption: the last player still in (Hot Potato)", "LAST SURVIVOR"),
     # Dispatch (online lobby)
     ("dispatch.dispatched", "A player who's ready", "DISPATCHED"),
     ("dispatch.gettingready", "A player who isn't ready yet", "GETTING READY…"),
