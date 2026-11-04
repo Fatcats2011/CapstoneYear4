@@ -18,7 +18,7 @@ These are set up in Steamworks, under Stats & Achievements, with these exact API
 | `LAST_TO_FIRST` | Last to First | Be last when the golden order appears, then win. |
 | `FELL_IN_WATER` | Sleeping with the Fishes | Fall in the water. |
 
-- Each achievement needs two 256×256 JPG icons, one for unlocked and one for locked.
+- Each achievement needs two 256×256 JPG icons, one for unlocked and one for locked. They're in `docs/steam-store/achievements/` (`<API name>.jpg` and `<API name>_locked.jpg`), drawn by `python tools/achievement-icons.py`. Edit the script and re-run it; don't edit the JPGs by hand.
 - The test app (480, Spacewar) has none of the game's achievements. Until the game's own App ID exists, the first unlock of each logs one warning, `Steam: this app has no achievement …`, and nothing unlocks.
 
 **Who earns them** (`MatchFeats`):
