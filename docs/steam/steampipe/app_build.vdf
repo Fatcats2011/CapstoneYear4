@@ -1,6 +1,6 @@
 "AppBuild"
 {
-	"AppID" "APP_ID"
+	"AppID" "5553880"
 	"Desc" "Dead on Arrival Windows, macOS and Linux builds"
 
 	// Folder holding Windows\, macOS\ and Linux\ (relative to this file): Tools → Dead on Arrival → Build → All Three
@@ -13,7 +13,7 @@
 
 	"Depots"
 	{
-		"WINDOWS_DEPOT_ID"
+		"5553881"
 		{
 			"FileMapping"
 			{
@@ -28,7 +28,7 @@
 			"FileExclusion" "*_BurstDebugInformation_DoNotShip*"
 			"FileExclusion" "*_BackUpThisFolder_ButDontShipItWithYourGame*"
 		}
-		"MAC_DEPOT_ID"
+		"5553882"
 		{
 			"FileMapping"
 			{
@@ -40,7 +40,7 @@
 			"FileExclusion" "*_BurstDebugInformation_DoNotShip*"
 			"FileExclusion" "*_BackUpThisFolder_ButDontShipItWithYourGame*"
 		}
-		"LINUX_DEPOT_ID"
+		"5553883"
 		{
 			"FileMapping"
 			{
