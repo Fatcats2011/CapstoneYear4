@@ -30,3 +30,6 @@ Uploading to Steamworks (the user does that), new achievements, and stats.
 
 ## Revision (2026-11-04): simplified
 The first set (round badge, neon rim, gradient, outlines, 3D boxes) looked AI-made. Redrawn like most shipped Steam icons: full-bleed square, one flat night-purple background, one flat shape per icon, three colours across the set (white, gold, green), no rings, glows, gradients or outlines. Symbols: parcel; gold parcel + crown; ghost (no horns, user's call); parcel + green arrow over it (steal); same in gold; skull; tombstone "1"; green up arrow; fish over waves.
+
+## Revision 2 (2026-11-04): the game's own sprites
+User: use the game's assets where possible. Now: FIRST_DELIVERY = HUD easy package (PackageIcon_Small), GOLDEN_WIN = GoldPackageIcon 1, HARD_DELIVERY = hard package (PackageIcon_Large), STEAL / GOLDEN_STEAL = medium / gold package under a cyan arc, TUTORIAL_DONE = GhostScroll.png, LAST_TO_FIRST = doa_newarrow.png. The game has no 2D tombstone or fish, so WIN and FELL_IN_WATER stay drawn, in white and the arrow's cyan. Locked icons share one dark grey background (30) with the shape lifted above it.
