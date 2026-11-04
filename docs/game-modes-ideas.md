@@ -46,6 +46,8 @@ Names are placeholders and still need workshopping.
 ## Mutators
 Toggles that stack on top of any mode.
 
+**Built 2026-11-04:** Speed (50–200%), Low Gravity, Number of Waves (1–6), the per-mode rows and the "wasn't designed" note in MATCH RULES, all working online. The Round Timer row exists, but no mode uses it yet. The modes themselves are next, one plan each.
+
 **New**
 - **Speed:** a scalable slider (e.g. 0.5x to 2x) for movement speed.
 - **Low Gravity:** bigger jumps and floatier bumps.

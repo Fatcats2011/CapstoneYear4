@@ -23,7 +23,7 @@ public class FinalOrder : MonoBehaviour
     void Start()
     {
         // No golden round (the match rules): this scene only shows the results. Only the host's matters: it spawns orders
-        if (!HouseRules.Playing.GoldenOrder || GameManager.Instance.MainState == GameState.Results)
+        if (!HouseRules.Playing.GoldenOn || GameManager.Instance.MainState == GameState.Results)
             return;
         finalOrder.InitOrder();
     }

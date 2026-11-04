@@ -498,8 +498,12 @@ public class OnlineGame : MonoBehaviour
             session.DropUnreadyExtras(PlayerInstantiate.Instance.IsReady);
 
             // The seats nobody took fill with CPU drivers, unless the match rules say not (a public lobby always fills)
-            bool botsOn = session.FillsWithBots && HouseRules.Current.ForMatch(OrderManager.PublicLobby()).Bots;
+            HouseRules match = HouseRules.Current.ForMatch(OrderManager.PublicLobby());
+            bool botsOn = session.FillsWithBots && match.Bots;
             session.AddBots(BotFill.Needed(session.PlayersIn, botsOn));
+
+            // Every machine plays the host's mode and mutators (a client applies them as the match begins)
+            session.Match.ShareRules(match);
         }
         else if (!wasInMenus && menus && session.Match != null && session.Match.IsServer)
             session.RemoveBots(); // back in the lobby: the seats are people's again
@@ -528,6 +532,8 @@ public class OnlineGame : MonoBehaviour
 
     void ApplyHostState(GameState hostState)
     {
+        if (hostState == GameState.Begin && session.Match != null)
+            HouseRules.FollowHost(session.Match.Rules);
         if (GameManager.Instance != null)
             GameManager.Instance.ApplyGameState(ForClient(hostState));
     }

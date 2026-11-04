@@ -184,6 +184,18 @@ The room scene and the board are set up (`DispatchRoom`, `RoomClock`, the board 
 - Steals off in MATCH RULES: nobody chases.
 - Tune in `Assets/Scripts/Player/BotPersonality.cs` (weights) and `BotTactics.cs` (desperation gap, detour distance).
 
+## 16d. Mutators: playtest (20 minutes)
+
+Plan: `docs/superpowers/plans/2026-11-04-modes-framework-and-mutators.md`. Start opens MATCH RULES in player select.
+
+- New rows: WAVES (1–6), SPEED (50–200%), LOW GRAVITY. LENGTH is now called WAVE LENGTH (45s / 60s / 90s).
+- Changing any of them shows the "wasn't designed to be played this way" note.
+- Speed 50% and 200%, splitscreen: driving, drifting and boosting still feel controllable; bots keep up.
+- Low Gravity: scooters, cans and civilians float more. Back to the menu, then a normal match: everything falls normally again.
+- Waves 1 and 6: the clock starts at one and six wave lengths; the match ends into the golden round (or the results with Golden Order off).
+- Online (two editors): host with Speed 150% + Low Gravity; the joining machine drives at the same speed and gravity.
+- The MODE row appears once the first new mode is built.
+
 ## 16c. Accessibility: to build, then playtest
 
 For Steam's store-page accessibility section. None of these exist yet. Today Options → ACCESSIBILITY has only Reduce motion.

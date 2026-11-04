@@ -94,5 +94,78 @@ namespace DoA.Tests
             CollectionAssert.DoesNotContain(seen, GameState.FinalPackage);
             Assert.IsNotNull(ResultsMenu.Instance, "the golden scene's results");
         }
+
+        [UnityTest]
+        public IEnumerator SixWaves_LastSixWaveLengths_AndEndAfterTheSixth()
+        {
+            EditorSceneManager.playModeStartScene = AssetDatabase.LoadAssetAtPath<SceneAsset>(MENU_SCENE);
+            yield return new EnterPlayMode();
+            LogAssert.ignoreFailingMessages = true;
+            float deadline = Time.realtimeSinceStartup + 60;
+            while (State() != GameState.Menu && Time.realtimeSinceStartup < deadline)
+                yield return null;
+            TestPlayers.Add();
+            deadline = Time.realtimeSinceStartup + 10;
+            while (PlayerInstantiate.Instance.PlayerCount < 1 && Time.realtimeSinceStartup < deadline)
+                yield return null;
+            HouseRules.Current = new HouseRules(MatchLength.Short, true, false, true, GameMode.Standard, 6);
+
+            GameManager.Instance.SetGameState(GameState.PlayerSelect);
+            SceneFlow.Current.Rematch();
+            deadline = Time.realtimeSinceStartup + LOADING;
+            while (State() != GameState.Begin && Time.realtimeSinceStartup < deadline)
+                yield return null;
+            Assert.AreEqual(GameState.Begin, State(), "in the match");
+            yield return null;
+
+            OrderManager orders = OrderManager.Instance;
+            Assert.AreEqual(orders.WaveLength * 6, orders.TotalGameTime, 0.01f, "six waves' time");
+
+            orders.wave = 5;
+            orders.InitWave();
+            Assert.IsFalse(orders.FinalOrderActive, "the sixth wave still plays");
+            yield return null; // a frame of the sixth wave reads its quotas without throwing
+
+            orders.wave = 6;
+            orders.InitWave();
+            Assert.IsTrue(orders.FinalOrderActive, "past the sixth wave");
+            deadline = Time.realtimeSinceStartup + LOADING;
+            while (State() != GameState.Results && Time.realtimeSinceStartup < deadline)
+                yield return null;
+            Assert.AreEqual(GameState.Results, State(), "no golden order: the results");
+        }
+
+        [UnityTest]
+        public IEnumerator OneWave_EndsAfterTheFirst_IntoTheGoldenRound()
+        {
+            EditorSceneManager.playModeStartScene = AssetDatabase.LoadAssetAtPath<SceneAsset>(MENU_SCENE);
+            yield return new EnterPlayMode();
+            LogAssert.ignoreFailingMessages = true;
+            float deadline = Time.realtimeSinceStartup + 60;
+            while (State() != GameState.Menu && Time.realtimeSinceStartup < deadline)
+                yield return null;
+            TestPlayers.Add();
+            deadline = Time.realtimeSinceStartup + 10;
+            while (PlayerInstantiate.Instance.PlayerCount < 1 && Time.realtimeSinceStartup < deadline)
+                yield return null;
+            HouseRules.Current = new HouseRules(MatchLength.Normal, true, true, true, GameMode.Standard, 1);
+
+            GameManager.Instance.SetGameState(GameState.PlayerSelect);
+            SceneFlow.Current.Rematch();
+            deadline = Time.realtimeSinceStartup + LOADING;
+            while (State() != GameState.Begin && Time.realtimeSinceStartup < deadline)
+                yield return null;
+            Assert.AreEqual(GameState.Begin, State(), "in the match");
+            yield return null;
+
+            OrderManager orders = OrderManager.Instance;
+            Assert.AreEqual(orders.WaveLength, orders.TotalGameTime, 0.01f, "one wave's time");
+            Assert.IsFalse(orders.FinalOrderActive);
+
+            orders.wave = 1;
+            orders.InitWave();
+
+            Assert.IsTrue(orders.FinalOrderActive, "past the only wave: the golden round is next");
+        }
     }
 }

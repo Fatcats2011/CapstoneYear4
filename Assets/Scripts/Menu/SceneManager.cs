@@ -233,7 +233,7 @@ public class SceneManager : SingletonMonobehaviour<SceneManager>, ISceneFlow, IM
             }
 
             // No golden round (the match rules): no golden-round lesson to read, so nobody waits for A
-            bool golden = HouseRules.Playing.GoldenOrder;
+            bool golden = HouseRules.Playing.GoldenOn;
             if (golden)
                 tutorialImage.sprite = finalTut;
             ShowLoadingScreen();

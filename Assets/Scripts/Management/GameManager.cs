@@ -93,6 +93,7 @@ public class GameManager : SingletonMonobehaviour<GameManager>
         if (mainState == GameState.Menu || mainState == GameState.PlayerSelect)
         {
             TutorialManager.SkipNextTutorial = false;
+            MatchPhysics.Reset(); // the menus fall at normal gravity, whatever the last match's mutators were
             Raise(OnNewMatch);
         }
 
@@ -187,6 +188,7 @@ public class GameManager : SingletonMonobehaviour<GameManager>
     ///</summary>
     public void StartNewMatch()
     {
+        MatchPhysics.Reset();
         OnNewMatch?.Invoke();
     }
 

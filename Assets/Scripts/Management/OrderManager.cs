@@ -24,7 +24,13 @@ public class OrderManager : SingletonMonobehaviour<OrderManager>
     [SerializeField] private float waveLengthInSeconds = 20f;
 
     // A wave's length in this match: the match rules' Length stretches or shortens it (HouseRules)
-    float WaveLength => waveLengthInSeconds * HouseRules.Playing.WaveFactor;
+    internal float WaveLength => waveLengthInSeconds * HouseRules.Playing.WaveFactor;
+    internal float TotalGameTime => totalGameTime;
+
+    // This wave's order quotas: the authored rows (maxEasy...) spread over the waves played (WaveTable)
+    int EasyQuota => maxEasy[WaveTable.IndexFor(wave, HouseRules.Playing.WavesPlayed, maxEasy.Length)];
+    int MediumQuota => maxMedium[WaveTable.IndexFor(wave, HouseRules.Playing.WavesPlayed, maxMedium.Length)];
+    int HardQuota => maxHard[WaveTable.IndexFor(wave, HouseRules.Playing.WavesPlayed, maxHard.Length)];
     internal int wave = 0;
     private float waveTimer = 0f;
     private float gameTimer = 0f;
@@ -136,7 +142,7 @@ public class OrderManager : SingletonMonobehaviour<OrderManager>
         // HOTKEY
         if (DevTools.GetKeyDown(KeyCode.Alpha5))
         {
-            wave = 3;
+            wave = HouseRules.Playing.WavesPlayed;
             InitWave();
         }
 
@@ -170,15 +176,15 @@ public class OrderManager : SingletonMonobehaviour<OrderManager>
                         StopEasySpawn();
                         StopMediumSpawn();
                         StopHardSpawn();
-                        if (easy.Count > 0 && (currEasy < maxEasy[wave] || currEasy == 0)) // if the number of easy orders is below the quota
+                        if (easy.Count > 0 && (currEasy < EasyQuota || currEasy == 0)) // if the number of easy orders is below the quota
                         {
                             StartEasySpawn();
                         }
-                        else if (medium.Count > 0 && (currMedium < maxMedium[wave] || currMedium == 0)) // same for the medium orders
+                        else if (medium.Count > 0 && (currMedium < MediumQuota || currMedium == 0)) // same for the medium orders
                         {
                             StartMediumSpawn();
                         }
-                        else if (hard.Count > 0 && (currHard < maxHard[wave] || currHard == 0)) // and the hard orders
+                        else if (hard.Count > 0 && (currHard < HardQuota || currHard == 0)) // and the hard orders
                         {
                             StartHardSpawn();
                         }
@@ -192,7 +198,7 @@ public class OrderManager : SingletonMonobehaviour<OrderManager>
                 StopHardSpawn();
                 cooledDown = true;
             }
-            canSpawnOrders = currEasy < maxEasy[wave] || currMedium < maxMedium[wave] || currHard < maxHard[wave];
+            canSpawnOrders = currEasy < EasyQuota || currMedium < MediumQuota || currHard < HardQuota;
         }
         else if(!finalOrderActive && waveTimer <= 0)
         {
@@ -284,12 +290,13 @@ public class OrderManager : SingletonMonobehaviour<OrderManager>
 
         // This match's rules: the host's, or normal in a public lobby (HouseRules)
         HouseRules.Playing = HouseRules.Current.ForMatch(PublicLobby());
+        MatchPhysics.Apply(HouseRules.Playing);
 
         GetOrders();
         finalOrderActive = false;
         spawnNormalPackages = true;
         waveTimer = WaveLength;
-        totalGameTime = WaveLength * Mathf.Max(maxEasy.Length, maxMedium.Length, maxHard.Length);
+        totalGameTime = WaveLength * HouseRules.Playing.WavesPlayed;
         wave = 0;
         canSpawnOrders = true;
         gameStarted = true;
@@ -306,12 +313,8 @@ public class OrderManager : SingletonMonobehaviour<OrderManager>
             return;
 
         waveTimer = WaveLength;
-        try
-        {
-            // if this throws an error we know the final order should spawn
-            int maxOrders = maxEasy[wave] + maxMedium[wave] + maxHard[wave];
-        }
-        catch
+        // Past the last wave: the final order should spawn
+        if (wave >= HouseRules.Playing.WavesPlayed)
         {
             if (!finalOrderActive) // this is where post game clarity happens
             {

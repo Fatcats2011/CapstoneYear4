@@ -405,7 +405,7 @@ public class OrderHandler : MonoBehaviour
             return;
 
         // Steals off (the match rules): the bump still happens, but nothing changes hands. The tutorial still teaches it
-        if (!HouseRules.Playing.Steals && (GameManager.Instance == null || GameManager.Instance.MainState != GameState.Tutorial))
+        if (!HouseRules.Playing.StealsOn && (GameManager.Instance == null || GameManager.Instance.MainState != GameState.Tutorial))
             return;
 
         Order newOrder = victim.GetBestOrder();

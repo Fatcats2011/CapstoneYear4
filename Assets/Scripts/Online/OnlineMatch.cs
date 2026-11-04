@@ -27,6 +27,7 @@ public class OnlineMatch : NetworkBehaviour, IMatchLink
     readonly NetworkVariable<bool> finalOrder = new NetworkVariable<bool>(false);
     readonly NetworkVariable<double> autoStartAt = new NetworkVariable<double>(0);
     readonly NetworkVariable<int> goldenValue = new NetworkVariable<int>((int)Constants.OrderValue.Golden);
+    readonly NetworkVariable<int> rules = new NetworkVariable<int>(HouseRules.Normal.Pack());
 
     OnlineSession session;
 
@@ -50,6 +51,9 @@ public class OnlineMatch : NetworkBehaviour, IMatchLink
 
     /// <summary>What the golden order is worth on the host: it grows while the golden round goes on</summary>
     public int GoldenValue { get { return goldenValue.Value; } }
+
+    /// <summary>The match rules the host plays by, packed (HouseRules.Pack): the mode and the mutators every machine applies</summary>
+    public int Rules { get { return rules.Value; } }
 
     /// <summary>Clients: each change the host made to an order, in order with its states</summary>
     public event Action<OrderChange> OrderReceived;
@@ -467,6 +471,14 @@ public class OnlineMatch : NetworkBehaviour, IMatchLink
     {
         if (IsServer && goldenValue.Value != value)
             goldenValue.Value = value;
+    }
+
+    /// <summary>Host: shares the match rules (only a change goes out). Does nothing on a client</summary>
+    public void ShareRules(HouseRules match)
+    {
+        int packed = match.Pack();
+        if (IsServer && rules.Value != packed)
+            rules.Value = packed;
     }
 
     // The host is a client too: it skips its own messages below, as it acted on them already

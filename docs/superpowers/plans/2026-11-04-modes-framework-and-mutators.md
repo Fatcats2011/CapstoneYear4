@@ -81,7 +81,7 @@ This is plan 1 of 5. Plans 2–5 add the modes themselves (Gold Rush, Kings Crow
 
 **Interfaces:**
 - Consumes: Task 1's `ModeRules.For`, `GameModes.Playable`, `HouseRules` fields, choice arrays.
-- Produces: rows in this order, each present only if `ModeRules.For(mode, rule) != Hidden`: Mode (only if `GameModes.Playable.Length > 1`), Speed, Low Gravity, Waves, Wave Length, Round Timer, Steals, Golden Order, Bots. A `LockedOn` row shows "ON 🔒" (keys `word.on` + `rules.locked`) and `Step` does nothing on it.
+- Produces: rows in this order, each present only if `ModeRules.For(mode, rule) != Hidden`: Mode (only if `GameModes.Playable.Length > 1`), Wave Length, Waves, Round Timer, Steals, Golden Order, Bots, Speed, Low Gravity (as built: the existing rules first, then the mutators). Tests find rows with `RulesPanel.RowOf(Rule)` / `ModeRow`. A `LockedOn` row shows "ON 🔒" (keys `word.on` + `rules.locked`) and `Step` does nothing on it.
 - Loc keys: `rules.mode`, `rules.mode.standard`, `rules.mode.goldrush`, `rules.mode.kingscrown`, `rules.mode.infection`, `rules.mode.hotpotato`, `rules.speed`, `rules.lowgravity`, `rules.waves`, `rules.wavelength` (relabels the old `rules.length` row), `rules.roundtimer`, `rules.locked`, `rules.note.experimental`. Value labels: speed "100%", waves "3", round "3 MIN", wave length "45s"/"60s"/"90s".
 
 - [ ] **Step 1: Write failing tests** (`RulesPanelTests`)

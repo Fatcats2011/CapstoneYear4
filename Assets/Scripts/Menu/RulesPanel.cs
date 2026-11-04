@@ -111,23 +111,126 @@ public class RulesPanel : MonoBehaviour
         return panel;
     }
 
+    /// <summary>The rows in the order they show, when the mode shows them (the Mode row comes first)</summary>
+    static readonly Rule[] ORDER = { Rule.WaveLength, Rule.Waves, Rule.RoundTimer, Rule.Steals, Rule.GoldenOrder, Rule.Bots, Rule.Speed, Rule.LowGravity };
+
+    // The rules as picked so far: a row the mode hides keeps its value for when another mode shows it
+    GameMode mode;
+    MatchLength length;
+    int waves, speed, round;
+    bool steals, golden, bots, lowGravity;
+    readonly List<Rule?> rowRules = new List<Rule?>(); // null: the Mode row
+
     /// <summary>Opens on the rules picked. In a public lobby they're kept for later: the match plays normal</summary>
     public void Open(HouseRules rules, bool inPublicLobby = false)
     {
         publicLobby = inPublicLobby;
-        string[] lengths = { "rules.length.short", "rules.length.normal", "rules.length.long" };
-        OptionSetting length = OptionSetting.Keyed("rules.length", new[] { 0, 1, 2 }, choice => lengths[choice], (int)rules.Length);
-        OptionSetting steals = OptionSetting.KeyedToggle("rules.steals", "word.off", "word.on", rules.Steals ? 1 : 0);
-        OptionSetting golden = OptionSetting.KeyedToggle("rules.golden", "word.off", "word.on", rules.GoldenOrder ? 1 : 0);
-        OptionSetting bots = OptionSetting.KeyedToggle("rules.bots", "word.off", "word.on", rules.Bots ? 1 : 0);
-        foreach (OptionSetting setting in new[] { length, steals, golden, bots })
-            setting.Changed += OnChanged;
-        book = new OptionsBook(new OptionsPage("RULES", length, steals, golden, bots));
-        BuildRows();
+        mode = rules.Mode;
+        length = rules.Length;
+        waves = rules.Waves;
+        speed = rules.SpeedPercent;
+        round = rules.RoundMinutes;
+        steals = rules.Steals;
+        golden = rules.GoldenOrder;
+        bots = rules.Bots;
+        lowGravity = rules.LowGravity;
+        Rebuild(0);
 
         IsOpen = true;
         gameObject.SetActive(true);
         Show();
+    }
+
+    /// <summary>The row a rule shows on, or -1 when the mode hides it</summary>
+    public int RowOf(Rule rule) => rowRules.IndexOf(rule);
+
+    /// <summary>The Mode row, or -1 while only one mode can be played</summary>
+    public int ModeRow => rowRules.IndexOf(null);
+
+    // Makes the rows the mode shows, then selects the row given (or the last one)
+    void Rebuild(int row)
+    {
+        List<OptionSetting> settings = new List<OptionSetting>();
+        rowRules.Clear();
+        if (GameModes.Playable.Length > 1)
+        {
+            List<int> modes = new List<int>();
+            foreach (GameMode playable in GameModes.Playable)
+                modes.Add((int)playable);
+            OptionSetting modeRow = OptionSetting.Keyed("rules.mode", modes, choice => GameModes.Key((GameMode)choice), (int)mode);
+            modeRow.Changed += value => { mode = (GameMode)value; Changed(); Rebuild(Row); Show(); };
+            settings.Add(modeRow);
+            rowRules.Add(null);
+        }
+        foreach (Rule rule in ORDER)
+        {
+            RuleShow show = ModeRules.For(mode, rule);
+            if (show == RuleShow.Hidden)
+                continue;
+            OptionSetting setting = show == RuleShow.LockedOn ? Locked(rule) : MakeRow(rule);
+            setting.Changed += value => { Set(rule, value); Changed(); };
+            settings.Add(setting);
+            rowRules.Add(rule);
+        }
+        book = new OptionsBook(new OptionsPage("RULES", settings.ToArray()));
+        for (int i = 0; i < Mathf.Min(row, settings.Count - 1); i++)
+            book.Move(true);
+        BuildRows();
+    }
+
+    int Row => book != null ? book.Row : 0;
+
+    static readonly string[] LENGTHS = { "rules.length.short", "rules.length.normal", "rules.length.long" };
+    static readonly int[] LENGTH_SECONDS = { 45, 60, 90 };
+
+    OptionSetting MakeRow(Rule rule)
+    {
+        switch (rule)
+        {
+            case Rule.WaveLength:
+                return Labelled("rules.wavelength", new[] { 0, 1, 2 }, choice => Loc.Get("rules.value.seconds", LENGTH_SECONDS[choice]), (int)length);
+            case Rule.Waves:
+                return Labelled("rules.waves", HouseRules.WaveChoices, choice => choice.ToString(), waves);
+            case Rule.RoundTimer:
+                return Labelled("rules.roundtimer", HouseRules.RoundChoices, choice => Loc.Get("rules.summary.round", choice), round);
+            case Rule.Speed:
+                return Labelled("rules.speed", HouseRules.SpeedChoices, choice => Loc.Get("rules.value.percent", choice), speed);
+            case Rule.Steals:
+                return OptionSetting.KeyedToggle("rules.steals", "word.off", "word.on", steals ? 1 : 0);
+            case Rule.GoldenOrder:
+                return OptionSetting.KeyedToggle("rules.golden", "word.off", "word.on", golden ? 1 : 0);
+            case Rule.Bots:
+                return OptionSetting.KeyedToggle("rules.bots", "word.off", "word.on", bots ? 1 : 0);
+            default:
+                return OptionSetting.KeyedToggle("rules.lowgravity", "word.off", "word.on", lowGravity ? 1 : 0);
+        }
+    }
+
+    static OptionSetting Labelled(string labelKey, IEnumerable<int> choices, Func<int, string> labelOf, int value)
+    {
+        return new OptionSetting(labelKey, choices, labelOf, value) { LabelKey = labelKey };
+    }
+
+    // A rule the mode needs on: shows ON (LOCKED) and doesn't step
+    static OptionSetting Locked(Rule rule)
+    {
+        string key = rule == Rule.Steals ? "rules.steals" : rule == Rule.GoldenOrder ? "rules.golden" : "rules.bots";
+        return new OptionSetting(key, new[] { 1 }, choice => Loc.Get("rules.locked", Loc.Get("word.on")), 1) { LabelKey = key, Dimmed = () => true };
+    }
+
+    void Set(Rule rule, int value)
+    {
+        switch (rule)
+        {
+            case Rule.WaveLength: length = (MatchLength)value; break;
+            case Rule.Waves: waves = value; break;
+            case Rule.RoundTimer: round = value; break;
+            case Rule.Speed: speed = value; break;
+            case Rule.Steals: steals = value == 1; break;
+            case Rule.GoldenOrder: golden = value == 1; break;
+            case Rule.Bots: bots = value == 1; break;
+            case Rule.LowGravity: lowGravity = value == 1; break;
+        }
     }
 
     /// <summary>Up / down: the next rule, round from the last to the first</summary>
@@ -152,16 +255,9 @@ public class RulesPanel : MonoBehaviour
         gameObject.SetActive(false);
     }
 
-    HouseRules Picked
-    {
-        get
-        {
-            IReadOnlyList<OptionSetting> rules = book.Current.Settings;
-            return new HouseRules((MatchLength)rules[0].Value, rules[1].Value == 1, rules[2].Value == 1, rules[3].Value == 1);
-        }
-    }
+    HouseRules Picked => new HouseRules(length, steals, golden, bots, mode, waves, speed, lowGravity, round);
 
-    void OnChanged(int value)
+    void Changed()
     {
         HouseRules.Current = Picked;
         Kept?.Invoke(HouseRules.Current);
@@ -216,9 +312,22 @@ public class RulesPanel : MonoBehaviour
         for (int i = 0; i < rules.Count; i++)
         {
             names[i].color = values[i].color = i == book.Row ? SELECTED : Color.white;
-            values[i].text = i == book.Row ? "◀  " + rules[i].ValueLabel + "  ▶" : rules[i].ValueLabel;
+            bool arrows = i == book.Row && !rules[i].IsDimmed;
+            values[i].text = arrows ? "◀  " + rules[i].ValueLabel + "  ▶" : rules[i].ValueLabel;
         }
-        note.text = publicLobby ? Loc.Get("rules.note.public") : Picked.GoldenOrder ? "" : Loc.Get("rules.note.nogolden");
+        note.text = NoteFor(Picked, publicLobby);
+    }
+
+    static string NoteFor(HouseRules picked, bool publicLobby)
+    {
+        if (publicLobby)
+            return Loc.Get("rules.note.public");
+        List<string> lines = new List<string>();
+        if (ModeRules.For(picked.Mode, Rule.GoldenOrder) == RuleShow.Shown && !picked.GoldenOrder)
+            lines.Add(Loc.Get("rules.note.nogolden"));
+        if (picked.IsExperimental)
+            lines.Add(Loc.Get("rules.note.experimental"));
+        return string.Join("\n", lines);
     }
 
     static void Stretch(RectTransform rect)

@@ -693,6 +693,10 @@ public class BallDriving : MonoBehaviour
         if (orderHandler.HasGoldenOrder)
             totalForce *= goldenOrderMultiplier;
 
+        //The Speed mutator (MATCH RULES): everyone's force, and the top speed steering scales by
+        totalForce *= MatchPhysics.SpeedScale;
+        scaledVelocityMax = accelerationPower * MatchPhysics.SpeedScale * CSV_RATIO;
+
         //force ranges from 0 to about ~45-46 at the highest
 
         //Adds the force to move forward

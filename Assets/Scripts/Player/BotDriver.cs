@@ -393,7 +393,7 @@ public class BotDriver : MonoBehaviour, IDriveInput
             MyScore = myScore,
             LeaderScore = leader,
             Held = handler != null ? handler.HeldCount : 0,
-            StealsOn = HouseRules.Playing.Steals
+            StealsOn = HouseRules.Playing.StealsOn
         };
         int pick = BotTactics.Choose(situation, options, chosen != null ? targets.IndexOf(chosen) : -1);
         chosen = pick >= 0 ? targets[pick] : null;

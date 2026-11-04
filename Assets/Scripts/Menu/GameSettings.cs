@@ -59,6 +59,16 @@ public class GameSettings
     public int goldenOrder = 1;
     /// <summary>1: an online match fills its empty seats with CPU bots</summary>
     public int bots = 1;
+    /// <summary>GameMode (docs/game-modes-ideas.md)</summary>
+    public int mode = (int)GameMode.Standard;
+    /// <summary>How many waves (HouseRules.WaveChoices)</summary>
+    public int waves = HouseRules.DEFAULT_WAVES;
+    /// <summary>Driving speed in percent (HouseRules.SpeedChoices)</summary>
+    public int speed = HouseRules.DEFAULT_SPEED;
+    /// <summary>1: half gravity</summary>
+    public int lowGravity = 0;
+    /// <summary>Minutes of a match without waves (HouseRules.RoundChoices)</summary>
+    public int roundMinutes = HouseRules.DEFAULT_ROUND;
 
     /// <summary>The language picked on Options → LANGUAGE (a locale code); "" until picked: Steam's then (LanguageRules)</summary>
     public string language = "";
@@ -81,6 +91,7 @@ public class GameSettings
             + $"master={masterPosition}\nbgmute={backgroundMute}\nsplit={splitLayout}\nreducemotion={reduceMotion}\nunits={units}\n"
             + $"rumble={rumble}\ncolourblind={colourblind}\ntextsize={textSize}\n"
             + $"length={matchLength}\nsteals={steals}\ngolden={goldenOrder}\nbots={bots}\n"
+            + $"mode={mode}\nwaves={waves}\nspeed={speed}\nlowgravity={lowGravity}\nround={roundMinutes}\n"
             + $"language={language}\n";
     }
 
@@ -117,6 +128,11 @@ public class GameSettings
         copy.steals = steals;
         copy.goldenOrder = goldenOrder;
         copy.bots = bots;
+        copy.mode = mode;
+        copy.waves = waves;
+        copy.speed = speed;
+        copy.lowGravity = lowGravity;
+        copy.roundMinutes = roundMinutes;
         copy.language = language;
         return copy;
     }
@@ -217,6 +233,21 @@ public class GameSettings
                     break;
                 case "bots":
                     settings.bots = Mathf.Clamp(value, 0, 1);
+                    break;
+                case "mode":
+                    settings.mode = Mathf.Clamp(value, 0, (int)GameMode.HotPotato);
+                    break;
+                case "waves":
+                    settings.waves = HouseRules.Nearest(HouseRules.WaveChoices, value);
+                    break;
+                case "speed":
+                    settings.speed = HouseRules.Nearest(HouseRules.SpeedChoices, value);
+                    break;
+                case "lowgravity":
+                    settings.lowGravity = Mathf.Clamp(value, 0, 1);
+                    break;
+                case "round":
+                    settings.roundMinutes = HouseRules.Nearest(HouseRules.RoundChoices, value);
                     break;
             }
         }

@@ -44,7 +44,7 @@ public class SpawnManager : SingletonMonobehaviour<SpawnManager>
         {
             gameManager.SetGameState(GameState.StartingCutscene);
         }
-        else if (!HouseRules.Playing.GoldenOrder)
+        else if (!HouseRules.Playing.GoldenOn)
         {
             // No golden round (the match rules): this scene's podium shows the results straight away
             gameManager.SetGameState(GameState.Results);

@@ -25,8 +25,8 @@ namespace DoA.Tests
                 "hello,,HELLO,BONJOUR,\n" +
                 "steals,,{0} STEALS,{0} VOLS,\n" +
                 "rules.title,,MATCH RULES,RÈGLES,\n" +
-                "rules.length,,LENGTH,DURÉE,\n" +
-                "rules.length.normal,,NORMAL,NORMALE,\n");
+                "rules.wavelength,,WAVE LENGTH,DURÉE DES VAGUES,\n" +
+                "rules.value.seconds,,{0}S,{0} S,\n");
             Loc.SetLanguage("en");
         }
 
@@ -61,8 +61,8 @@ namespace DoA.Tests
 
             Assert.AreEqual("BONJOUR", text.text);
             Assert.AreEqual("RÈGLES", panel.Title);
-            Assert.AreEqual("NORMALE", panel.ValueOf(0));
-            Assert.AreEqual("DURÉE", panel.NameOf(0));
+            Assert.AreEqual("60 S", panel.ValueOf(panel.RowOf(Rule.WaveLength)));
+            Assert.AreEqual("DURÉE DES VAGUES", panel.NameOf(panel.RowOf(Rule.WaveLength)));
         }
 
         [Test]
