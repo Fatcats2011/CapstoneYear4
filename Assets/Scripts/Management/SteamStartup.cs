@@ -11,7 +11,7 @@ public static class SteamStartup
     /// <summary>
     /// The game's Steam App ID. Replace with the real one once Steamworks approves the app (and update steam_appid.txt)
     /// </summary>
-    public const uint APP_ID = TEST_APP_ID;
+    public const uint APP_ID = 5553880;
 
     ///<summary>
     /// Only a real App ID in a player build relaunches the game through the Steam client
