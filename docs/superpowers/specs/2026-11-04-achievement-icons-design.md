@@ -27,3 +27,6 @@ Steam needs two 256×256 JPG icons for each of the game's 9 achievements (unlock
 
 ## Not in scope
 Uploading to Steamworks (the user does that), new achievements, and stats.
+
+## Revision (2026-11-04): simplified
+The first set (round badge, neon rim, gradient, outlines, 3D boxes) looked AI-made. Redrawn like most shipped Steam icons: full-bleed square, one flat night-purple background, one flat shape per icon, three colours across the set (white, gold, green), no rings, glows, gradients or outlines. Symbols: parcel; gold parcel + crown; horned ghost; parcel + green arrow over it (steal); same in gold; skull; tombstone "1"; green up arrow; fish over waves.
