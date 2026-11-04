@@ -1,5 +1,5 @@
-import bpy, sys, mathutils
-A="D:/.PersonalWork/DoA/CapstoneYear4/Assets/"
+import bpy, os, sys, mathutils
+A = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))).replace("\\", "/") + "/Assets/"
 out=sys.argv[sys.argv.index("--")+1]; files=sys.argv[sys.argv.index("--")+2:]
 for fi,f in enumerate(files):
     bpy.ops.wm.read_factory_settings(use_empty=True)

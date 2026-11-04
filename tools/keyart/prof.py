@@ -1,5 +1,5 @@
-import bpy, mathutils
-A="D:/.PersonalWork/DoA/CapstoneYear4/Assets/"
+import bpy, os, mathutils
+A = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))).replace("\\", "/") + "/Assets/"
 bpy.ops.wm.read_factory_settings(use_empty=True)
 bpy.ops.import_scene.fbx(filepath=A+"Models/City Center Models/Clock Tower_Textured.fbx")
 o=[o for o in bpy.context.scene.objects if o.type=='MESH'][0]

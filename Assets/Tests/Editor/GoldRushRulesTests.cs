@@ -1,14 +1,32 @@
+using System.Reflection;
 using NUnit.Framework;
+using UnityEngine;
 
 namespace DoA.Tests
 {
     /// <summary>Gold Rush's numbers (GoldRushRules): more packages, the score drain, and rush hour's double steals</summary>
     public class GoldRushRulesTests
     {
+        GameObject ordersHolder;
+
         [TearDown]
         public void TearDown()
         {
             HouseRules.Playing = HouseRules.Normal;
+            OrderManager.instance = null;
+            if (ordersHolder != null)
+                Object.DestroyImmediate(ordersHolder);
+        }
+
+        // The match's order manager with timeLeft on its clock (inactive: its OnEnable needs the game's managers)
+        OrderManager OrdersAt(float timeLeft)
+        {
+            ordersHolder = new GameObject("Orders");
+            ordersHolder.SetActive(false);
+            OrderManager orders = ordersHolder.AddComponent<OrderManager>();
+            OrderManager.instance = orders;
+            typeof(OrderManager).GetField("gameTimer", BindingFlags.Instance | BindingFlags.NonPublic).SetValue(orders, timeLeft);
+            return orders;
         }
 
         static void PlayGoldRush()
@@ -46,6 +64,29 @@ namespace DoA.Tests
             PlayGoldRush();
 
             Assert.AreEqual(1, GoldRushRules.StealCounts());
+        }
+
+        [Test]
+        public void StealCounts_IsTwo_InRushHour_UntilTheWavesEnd()
+        {
+            PlayGoldRush();
+            OrderManager orders = OrdersAt(20f);
+            Assert.AreEqual(2, GoldRushRules.StealCounts());
+
+            orders.finalOrderActive = true;
+            Assert.AreEqual(1, GoldRushRules.StealCounts(), "the golden round");
+        }
+
+        [Test]
+        public void StealCounts_IsOne_BeforeRushHour_AndInOtherModes()
+        {
+            PlayGoldRush();
+            OrdersAt(45f);
+            Assert.AreEqual(1, GoldRushRules.StealCounts());
+
+            HouseRules.Playing = HouseRules.Normal;
+            typeof(OrderManager).GetField("gameTimer", BindingFlags.Instance | BindingFlags.NonPublic).SetValue(OrderManager.Instance, 20f);
+            Assert.AreEqual(1, GoldRushRules.StealCounts(), "Standard has no rush hour");
         }
 
         [Test]

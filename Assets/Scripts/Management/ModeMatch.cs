@@ -83,16 +83,25 @@ public class ModeMatch
     public bool IsOut(int seat) => seat >= 0 && (Out & 1 << seat) != 0;
     public bool IsOver => TimedModeRules.EndsEarly(Mode, Players, Infected, Out);
 
-    /// <summary>A player left mid-match: they hold nothing and count as out</summary>
-    public void Leave(int seat)
+    /// <summary>
+    /// A player left mid-match: they hold nothing and count as gone. The potato waits POTATO_DELAY before it's lit again;
+    /// in Infection a new hunter is picked when the last one left, so the thieves can still be caught
+    /// </summary>
+    public void Leave(int seat, float now)
     {
         if (seat < 0)
             return;
         Players &= ~(1 << seat);
+        Infected &= ~(1 << seat);
         if (CrownSeat == seat)
             CrownSeat = NONE; // back to its spot on the road
         if (PotatoSeat == seat)
+        {
             PotatoSeat = NONE;
+            nextPotatoAt = now + TimedModeRules.POTATO_DELAY;
+        }
+        if (Mode == GameMode.Infection && Infected == 0 && TimedModeRules.Count(Players) > 1)
+            Infected = 1 << RandomSeat(Players);
         Changed?.Invoke();
     }
 

@@ -1,5 +1,5 @@
-import bpy, sys, math, mathutils
-A = "D:/.PersonalWork/DoA/CapstoneYear4/Assets/"
+import bpy, os, sys, math, mathutils
+A = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))).replace("\\", "/") + "/Assets/"
 OUT = sys.argv[sys.argv.index("--")+1]
 files = sys.argv[sys.argv.index("--")+2:]
 print("BLENDER", bpy.app.version_string)

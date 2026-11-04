@@ -7,7 +7,7 @@ Also saves tools/keyart/keyart.blend so the shot can be tweaked by hand.
 import bpy, sys, math, os
 from mathutils import Vector
 
-ROOT = "D:/.PersonalWork/DoA/CapstoneYear4/"
+ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))).replace("\\", "/") + "/"
 A = ROOT + "Assets/"
 argv = sys.argv[sys.argv.index("--") + 1:] if "--" in sys.argv else []
 OUT = argv[0] if argv else ROOT + "docs/steam-store/keyart_render.png"

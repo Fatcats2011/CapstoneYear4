@@ -294,7 +294,7 @@ public class OrderHandler : MonoBehaviour
 
         // A timed mode: the crown goes back to the road, the potato waits for the next lighting, and they count as gone
         if (GameAuthority.IsAuthority && ModeMatch.Current != null)
-            ModeMatch.Current.Leave(OrderSync.SeatOf(this));
+            ModeMatch.Current.Leave(OrderSync.SeatOf(this), Time.time);
     }
 
     /// <summary>
@@ -446,8 +446,9 @@ public class OrderHandler : MonoBehaviour
         return paid;
     }
 
-    // Gold Rush's drain (GoldRushRules): when this player last delivered, and the part of a point not yet taken
-    float lastDelivery;
+    // Gold Rush's drain (GoldRushRules): when this player last delivered (below 0: not yet; a player seated after the
+    // match began gets the grace from their first drain), and the part of a point not yet taken
+    float lastDelivery = -1f;
     float drainCarry;
 
     /// <summary>Gold Rush: the drain waits GRACE_SECONDS from now (a delivery, or the match's start)</summary>
@@ -467,6 +468,8 @@ public class OrderHandler : MonoBehaviour
     /// <summary>Gold Rush, authority only: takes this frame's drain off the score. Returns the points taken</summary>
     internal int Drain(float deltaTime)
     {
+        if (lastDelivery < 0f)
+            StartDrainClock();
         int points = GoldRushRules.Drain(Time.time - lastDelivery, deltaTime, ref drainCarry, score);
         if (points > 0)
         {
@@ -492,13 +495,17 @@ public class OrderHandler : MonoBehaviour
     /// This player takes an order off a victim's scooter (a steal), with the grab and its whoosh. Online the host sends it
     /// as one change, and every client replays it
     /// </summary>
-    public void TakeOrderFrom(OrderHandler victim, Order order)
+    /// <param name="counts">How many times the steal counts (GoldRushRules.StealCounts); a client replaying the host's
+    /// steal passes the host's, so a clock a little behind never disagrees at rush hour's edge. 0: decide here</param>
+    public void TakeOrderFrom(OrderHandler victim, Order order, int counts = 0)
     {
         // Online, the host decides steals: a client shows the host's
         if (!OrderSync.MayChange)
             return;
 
-        using OrderSync.Scope change = OrderSync.Change(OrderChange.Steal(order.Key, OrderSync.SeatOf(this), OrderSync.SeatOf(victim)));
+        if (counts <= 0)
+            counts = GoldRushRules.StealCounts();
+        using OrderSync.Scope change = OrderSync.Change(OrderChange.Steal(order.Key, OrderSync.SeatOf(this), OrderSync.SeatOf(victim), counts > 1));
 
         playerAnimator.SetTrigger(HashReference._stealLeftTrigger);
         soundPool.PlayOrderTheft();
@@ -507,7 +514,7 @@ public class OrderHandler : MonoBehaviour
         if (StealsCount)
         {
             // The order is worth more now, here and on every machine that replays this steal (twice in Gold Rush's rush hour)
-            for (int count = GoldRushRules.StealCounts(); count > 0; count--)
+            for (int count = counts; count > 0; count--)
                 order.CountSteal();
         }
     }

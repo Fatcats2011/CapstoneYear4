@@ -1,5 +1,5 @@
-import bpy, sys, math, mathutils
-A="D:/.PersonalWork/DoA/CapstoneYear4/Assets/"
+import bpy, os, sys, math, mathutils
+A = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))).replace("\\", "/") + "/Assets/"
 out=sys.argv[sys.argv.index("--")+1]; f=sys.argv[sys.argv.index("--")+2]
 bpy.ops.wm.read_factory_settings(use_empty=True)
 bpy.ops.import_scene.fbx(filepath=A+f)

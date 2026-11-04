@@ -7,7 +7,6 @@ plus docs/steam-store/achievement-icons-preview.png (every icon at 256 and 64 px
 API names match Assets/Scripts/Steam/Achievement.cs. Style: like most Steam games' icons, the art fills the square,
 no rings, glows or gradients added; drawn shapes use white and the game arrow's cyan.
 """
-import glob
 import math
 import os
 
@@ -144,23 +143,24 @@ def locked(img):
     return grey.convert("RGB")
 
 
-def main():
-    os.makedirs(OUT, exist_ok=True)
-    for old in glob.glob(os.path.join(OUT, "*.jpg")):
-        os.remove(old)
-    sheet = Image.new("RGB", (len(ICONS) * 264 + 8, 264 + 2 * 72 + 8), (40, 40, 48))
-    for i, name in enumerate(ICONS):
+def main(out=OUT, preview=PREVIEW):
+    # Every icon is drawn before any file is touched, so a failure leaves the old icons; only this script's own files
+    # are replaced (other images in the folder stay)
+    drawn = []
+    for name in ICONS:
         full = render(name)
-        big = full.resize((256, 256), Image.LANCZOS)
-        grey = locked(full).resize((256, 256), Image.LANCZOS)
-        big.save(os.path.join(OUT, name + ".jpg"), quality=95, subsampling=0)
-        grey.save(os.path.join(OUT, name + "_locked.jpg"), quality=95, subsampling=0)
+        drawn.append((name, full.resize((256, 256), Image.LANCZOS), locked(full).resize((256, 256), Image.LANCZOS)))
+    os.makedirs(out, exist_ok=True)
+    sheet = Image.new("RGB", (len(ICONS) * 264 + 8, 264 + 2 * 72 + 8), (40, 40, 48))
+    for i, (name, big, grey) in enumerate(drawn):
+        big.save(os.path.join(out, name + ".jpg"), quality=95, subsampling=0)
+        grey.save(os.path.join(out, name + "_locked.jpg"), quality=95, subsampling=0)
         x = 8 + i * 264
         sheet.paste(big, (x, 8))
         sheet.paste(big.resize((64, 64), Image.LANCZOS), (x + 96, 272))
         sheet.paste(grey.resize((64, 64), Image.LANCZOS), (x + 96, 344))
-    sheet.save(PREVIEW)
-    print("wrote", len(ICONS) * 2, "icons to", OUT)
+    sheet.save(preview)
+    print("wrote", len(ICONS) * 2, "icons to", out)
 
 
 if __name__ == "__main__":

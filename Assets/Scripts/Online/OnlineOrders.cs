@@ -100,7 +100,7 @@ public class OnlineOrders : MonoBehaviour
                 handler.AddOrder(order);
                 break;
             case OrderChangeKind.Steal:
-                handler.TakeOrderFrom(victim, order);
+                handler.TakeOrderFrom(victim, order, change.Flag ? 2 : 1);
                 break;
             case OrderChangeKind.Deliver:
                 handler.DeliverOrder(order);

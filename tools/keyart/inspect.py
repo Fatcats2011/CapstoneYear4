@@ -1,5 +1,5 @@
 import bpy, sys, os
-A = "D:/.PersonalWork/DoA/CapstoneYear4/Assets/"
+A = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))).replace("\\", "/") + "/Assets/"
 files = sys.argv[sys.argv.index("--")+1:]
 for f in files:
     bpy.ops.wm.read_factory_settings(use_empty=True)

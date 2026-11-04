@@ -19,7 +19,8 @@ public struct OrderChange : INetworkSerializable
     public int Seat;
     /// <summary>Steal: the victim's seat; -1 otherwise</summary>
     public int Seat2;
-    /// <summary>Spawn: the order joins the order manager's active orders (InitOrder's shouldAdd). Drop: the player spins out</summary>
+    /// <summary>Spawn: the order joins the order manager's active orders (InitOrder's shouldAdd). Drop: the player spins out.
+    /// Steal: it counts twice (Gold Rush's rush hour, decided by the host)</summary>
     public bool Flag;
     /// <summary>Drop: the order in the second slot (OrderBook.NONE when it's empty)</summary>
     public int Order2;
@@ -74,9 +75,9 @@ public struct OrderChange : INetworkSerializable
     }
 
     /// <summary>A player steals the order from another: it moves from the victim's scooter to the thief's</summary>
-    public static OrderChange Steal(int order, int thief, int victim)
+    public static OrderChange Steal(int order, int thief, int victim, bool countsTwice = false)
     {
-        return new OrderChange { Kind = OrderChangeKind.Steal, Order = order, Seat = thief, Seat2 = victim };
+        return new OrderChange { Kind = OrderChangeKind.Steal, Order = order, Seat = thief, Seat2 = victim, Flag = countsTwice };
     }
 
     public void NetworkSerialize<T>(BufferSerializer<T> serializer) where T : IReaderWriter
@@ -103,7 +104,7 @@ public struct OrderChange : INetworkSerializable
             case OrderChangeKind.Deliver:
                 return Kind + " " + Order + " seat " + Seat;
             case OrderChangeKind.Steal:
-                return "Steal " + Order + " seat " + Seat + " from seat " + Seat2;
+                return "Steal " + Order + " seat " + Seat + " from seat " + Seat2 + (Flag ? " (counts twice)" : "");
             case OrderChangeKind.Drop:
                 return "Drop seat " + Seat + ": " + Order + " at " + Spot + " from " + Height + ", " + Order2 + " at " + Spot2 + " from " + Height2
                     + (Flag ? ", spins out" : "");

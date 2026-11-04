@@ -1,6 +1,7 @@
 """Checks the Steam achievement icons. Run: python -m unittest tools/test_achievement_icons.py"""
 import importlib.util
 import os
+import tempfile
 import unittest
 
 from PIL import Image, ImageStat
@@ -14,9 +15,14 @@ NAMES = {"FIRST_DELIVERY", "GOLDEN_WIN", "TUTORIAL_DONE", "STEAL", "GOLDEN_STEAL
          "HARD_DELIVERY", "WIN", "LAST_TO_FIRST", "FELL_IN_WATER"}
 
 
+# The icons are drawn into a temporary folder: the tests never touch the committed ones
+TEMP = tempfile.TemporaryDirectory()
+OUT = os.path.join(TEMP.name, "achievements")
+
+
 def files():
     for name in sorted(NAMES):
-        yield name, os.path.join(mod.OUT, name + ".jpg"), os.path.join(mod.OUT, name + "_locked.jpg")
+        yield name, os.path.join(OUT, name + ".jpg"), os.path.join(OUT, name + "_locked.jpg")
 
 
 def spread(img):
@@ -30,7 +36,11 @@ def luma(p):
 class AchievementIconTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        mod.main()
+        mod.main(OUT, os.path.join(TEMP.name, "preview.png"))
+
+    @classmethod
+    def tearDownClass(cls):
+        TEMP.cleanup()
 
     def test_all_nine_names(self):
         self.assertEqual(set(mod.ICONS), NAMES)

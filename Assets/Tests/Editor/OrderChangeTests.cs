@@ -20,6 +20,7 @@ namespace DoA.Tests
             yield return OrderChange.Erase(11);
             yield return OrderChange.EraseGold(13);
             yield return OrderChange.Steal(11, 0, 2);
+            yield return OrderChange.Steal(11, 0, 2, true);
         }
 
         [TestCaseSource(nameof(EveryKind))]
@@ -60,6 +61,14 @@ namespace DoA.Tests
             Assert.AreEqual(0, steal.Seat, "the thief");
             Assert.AreEqual(2, steal.Seat2, "the victim");
             Assert.AreEqual(-1, OrderChange.Pickup(11, 0).Seat2, "only a steal has a second seat");
+        }
+
+        [Test]
+        public void Steal_CarriesWhetherItCountsTwice()
+        {
+            // Gold Rush's rush hour: the host decides, so a client whose clock is a little behind still doubles twice
+            Assert.IsFalse(OrderChange.Steal(11, 0, 2).Flag);
+            Assert.IsTrue(OrderChange.Steal(11, 0, 2, true).Flag);
         }
 
         [Test]

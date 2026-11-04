@@ -187,7 +187,65 @@ namespace DoA.Tests
             Assert.IsTrue(match.IsOver);
             Assert.AreEqual(ModeMomentKind.LastStanding, moments[moments.Count - 1].Kind);
             Assert.AreEqual(other, moments[moments.Count - 1].Seat);
-            Assert.IsTrue(match.Strike(holder, other, 99f), "someone out can't hit anyone");
+        }
+
+        [Test]
+        public void HotPotato_TheHolderCantPassToSomeoneOut()
+        {
+            ModeMatch match = ModeMatch.Begin(GameMode.HotPotato, 0b0111, Vector3.zero, 0f, new System.Random(5));
+            Run(match, TimedModeRules.POTATO_DELAY, 0.1f);
+            int gone = match.PotatoSeat;
+            Run(match, match.FuseEnd, 0.2f);
+            Assert.IsTrue(match.IsOut(gone));
+
+            Run(match, match.FuseEnd + TimedModeRules.POTATO_DELAY + 1f, 0.1f);
+            int holder = match.PotatoSeat;
+            Assert.AreNotEqual(ModeMatch.NONE, holder, "the next potato is lit");
+
+            match.Strike(holder, gone, match.FuseLit + 5f);
+            Assert.AreEqual(holder, match.PotatoSeat, "someone out can't be passed the potato");
+            match.Strike(gone, holder, match.FuseLit + 5f);
+            Assert.AreEqual(holder, match.PotatoSeat, "someone out can't hit anyone");
+        }
+
+        [Test]
+        public void HotPotato_HolderLeaves_TheNextPotatoWaits()
+        {
+            ModeMatch match = ModeMatch.Begin(GameMode.HotPotato, FOUR, Vector3.zero, 0f, new System.Random(5));
+            float lit = TimedModeRules.POTATO_DELAY;
+            Run(match, lit, 0.1f);
+            match.Leave(match.PotatoSeat, lit + 1f);
+            Assert.AreEqual(ModeMatch.NONE, match.PotatoSeat);
+
+            Run(match, lit + 1.1f, TimedModeRules.POTATO_DELAY - 0.5f);
+            Assert.AreEqual(ModeMatch.NONE, match.PotatoSeat, "no potato before POTATO_DELAY");
+            Run(match, lit + 1f + TimedModeRules.POTATO_DELAY, 0.2f);
+            Assert.AreNotEqual(ModeMatch.NONE, match.PotatoSeat);
+        }
+
+        [Test]
+        public void Infection_LastHunterLeaves_ANewHunterIsPicked()
+        {
+            ModeMatch match = ModeMatch.Begin(GameMode.Infection, FOUR, Vector3.zero, 0f, new System.Random(3));
+            int hunter = match.FirstHunter;
+            match.Leave(hunter, 1f);
+
+            Assert.IsFalse(match.IsInfected(hunter), "someone gone isn't infected");
+            Assert.AreEqual(1, TimedModeRules.Count(match.Infected), "a new hunter");
+            Assert.AreEqual(match.Infected, match.Infected & match.Players, "the new hunter is still playing");
+            Assert.IsFalse(match.IsOver);
+        }
+
+        [Test]
+        public void Infection_AHunterLeaves_TheOthersKeepHunting()
+        {
+            ModeMatch match = ModeMatch.Begin(GameMode.Infection, FOUR, Vector3.zero, 0f, new System.Random(3));
+            int hunter = match.FirstHunter;
+            int caught = (hunter + 1) % 4;
+            match.Strike(hunter, caught, 1f);
+            match.Leave(hunter, 2f);
+
+            Assert.AreEqual(1 << caught, match.Infected, "no extra hunter while one is left");
         }
 
         [Test]

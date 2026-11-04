@@ -1,5 +1,7 @@
+using System;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using UnityEditor;
 using UnityEditor.Build.Reporting;
 using UnityEngine;
@@ -22,7 +24,17 @@ public static class PlatformBuilds
     [MenuItem(MENU + "macOS", false, 61)]
     public static void BuildMac()
     {
-        UnityEditor.OSXStandalone.UserBuildSettings.architecture = UnityEditor.Build.OSArchitecture.x64ARM64;
+        // UserBuildSettings lives in the macOS Build Support module: reached by name so this file still compiles where
+        // that module isn't installed (only the Mac build then fails)
+        PropertyInfo architecture = AppDomain.CurrentDomain.GetAssemblies()
+            .Select(a => a.GetType("UnityEditor.OSXStandalone.UserBuildSettings"))
+            .FirstOrDefault(t => t != null)?.GetProperty("architecture", BindingFlags.Public | BindingFlags.Static);
+        if (architecture == null)
+        {
+            Fail("Build StandaloneOSX: the macOS Build Support module isn't installed");
+            return;
+        }
+        architecture.SetValue(null, UnityEditor.Build.OSArchitecture.x64ARM64);
         Build(BuildTarget.StandaloneOSX, "Builds/macOS/Dead on Arrival.app");
     }
 
@@ -35,22 +47,41 @@ public static class PlatformBuilds
     [MenuItem(MENU + "All Three", false, 80)]
     public static void BuildAll()
     {
-        BuildLinux();
-        BuildMac();
-        BuildWindows();
+        // Stops at the first failure, so a broken build is never missed among the others' logs
+        Action[] builds = { BuildLinux, BuildMac, BuildWindows };
+        foreach (Action build in builds)
+        {
+            failed = false;
+            build();
+            if (failed)
+                return;
+        }
+    }
+
+    static bool failed;
+
+    static void Fail(string message)
+    {
+        failed = true;
+        Debug.LogError(message);
+        // Batch mode: a failed build must fail the command
+        if (Application.isBatchMode)
+            EditorApplication.Exit(1);
     }
 
     static void Build(BuildTarget target, string path)
     {
-        // A fresh folder: files left from an older build would ship with this one
+        // A fresh folder, built beside the last good one and swapped in only on success: files left from an older build
+        // would ship with this one, and a failed build must not leave nothing to upload
         string folder = Path.GetDirectoryName(path);
-        if (Directory.Exists(folder))
-            Directory.Delete(folder, true);
+        string staging = folder + ".building";
+        if (Directory.Exists(staging))
+            Directory.Delete(staging, true);
 
         BuildPlayerOptions options = new BuildPlayerOptions
         {
             scenes = EditorBuildSettings.scenes.Where(s => s.enabled).Select(s => s.path).ToArray(),
-            locationPathName = path,
+            locationPathName = Path.Combine(staging, Path.GetFileName(path)),
             target = target,
             targetGroup = BuildTargetGroup.Standalone,
             options = BuildOptions.None,
@@ -60,8 +91,13 @@ public static class PlatformBuilds
         BuildSummary summary = report.summary;
         Debug.Log($"Build {target}: {summary.result}, {summary.totalErrors} errors, {summary.totalSize / (1024 * 1024)} MB, {path}");
 
-        // Batch mode: a failed build must fail the command
-        if (summary.result != BuildResult.Succeeded && Application.isBatchMode)
-            EditorApplication.Exit(1);
+        if (summary.result != BuildResult.Succeeded)
+        {
+            Fail($"Build {target} failed; the last good build in {folder} is kept");
+            return;
+        }
+        if (Directory.Exists(folder))
+            Directory.Delete(folder, true);
+        Directory.Move(staging, folder);
     }
 }
