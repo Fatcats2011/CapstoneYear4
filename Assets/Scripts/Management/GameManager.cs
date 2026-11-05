@@ -89,6 +89,10 @@ public class GameManager : SingletonMonobehaviour<GameManager>
         if(mainState != GameState.Tutorial)
             Raise(OnSwapAnything);
 
+        // Modifiers last until the lobby: a rematch keeps the rules, and a new game starts from normal, the mode still picked
+        if (mainState == GameState.Menu || mainState == GameState.PlayerSelect)
+            HouseRules.ResetAfterMatch();
+
         // A match started from the menus teaches again, whatever a rematch left set
         if (mainState == GameState.Menu || mainState == GameState.PlayerSelect)
         {

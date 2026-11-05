@@ -90,6 +90,11 @@ public class ColourblindView : MonoBehaviour
     // dressing the ghost) becomes the one to go back to
     static void Dress(Dressed dressed, int seat, bool safe)
     {
+        // Infected (ModeVisuals dresses them): its colour marks them whatever this mode's on
+        ModeMatch match = ModeMatch.Current;
+        if (match != null && match.IsInfected(seat))
+            return;
+
         foreach (Renderer renderer in dressed.Ghost)
         {
             if (renderer == null)

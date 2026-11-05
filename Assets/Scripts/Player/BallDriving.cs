@@ -693,6 +693,10 @@ public class BallDriving : MonoBehaviour
         if (orderHandler.HasGoldenOrder)
             totalForce *= goldenOrderMultiplier;
 
+        //Applies slow from carrying Gold Rush's Mother Lode
+        if (orderHandler.CarryingLode)
+            totalForce *= GoldRushRules.LODE_CARRY_FORCE;
+
         //The Speed mutator (MATCH RULES): everyone's force, and the top speed steering scales by
         totalForce *= MatchPhysics.SpeedScale;
         scaledVelocityMax = accelerationPower * MatchPhysics.SpeedScale * CSV_RATIO;

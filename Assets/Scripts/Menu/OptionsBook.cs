@@ -64,10 +64,15 @@ public class OptionSetting
         return Keyed(labelKey, new[] { 0, 1 }, choice => keys[choice], value == 1 ? 1 : 0);
     }
 
-    /// <summary>Right (true) or left: the next choice. False at the end, or while dimmed</summary>
+    /// <summary>Whether stepping past the last choice comes round to the first, and back (MATCH RULES' Mode row)</summary>
+    public bool Wraps { get; set; }
+
+    /// <summary>Right (true) or left: the next choice. False at the end (unless it wraps), or while dimmed</summary>
     public bool Step(bool right)
     {
         int next = index + (right ? 1 : -1);
+        if (Wraps && values.Count > 1)
+            next = (next + values.Count) % values.Count;
         if (IsDimmed || next < 0 || next >= values.Count)
             return false;
 

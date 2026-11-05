@@ -200,17 +200,23 @@ public class PauseMenu : MonoBehaviour, IMouseMenu
         if (controls == null)
             controls = ControlsPanel.Build((RectTransform)transform, Resources.Load<TMP_FontAsset>(BANGERS));
 
+        OpenControlsFor(controls, player);
+        hostPauseGO.SetActive(false);
+        subPauseGO.SetActive(false);
+        if (connections != null)
+            connections.gameObject.SetActive(false);
+    }
+
+    /// <summary>Opens a Controls panel on a player's controls: the set of the device they're using, only their own devices heard</summary>
+    internal static void OpenControlsFor(ControlsPanel panel, PlayerInput player)
+    {
         BindingSet set = player.currentControlScheme == KeyboardControls.SCHEME ? BindingSet.Keyboard : BindingSet.Controller;
         Gamepad pad = null;
         foreach (InputDevice device in player.devices)
             pad = pad ?? device as Gamepad;
         int seat = PlayerInstantiate.Instance.Roster.IndexOf(player) + 1;
-        controls.Open(player.actions.FindActionMap(BindingStore.PLAYER_MAP), set, seat, device => Owns(player, device),
+        panel.Open(player.actions.FindActionMap(BindingStore.PLAYER_MAP), set, seat, device => Owns(player, device),
             GlyphRules.StyleFor(pad));
-        hostPauseGO.SetActive(false);
-        subPauseGO.SetActive(false);
-        if (connections != null)
-            connections.gameObject.SetActive(false);
     }
 
     /// <summary>B with the panel up: its own Back; once it closes, the pause list shows again</summary>

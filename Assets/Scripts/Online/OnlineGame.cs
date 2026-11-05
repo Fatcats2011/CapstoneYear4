@@ -36,6 +36,9 @@ public class OnlineGame : MonoBehaviour
     /// <summary>The game this machine plays online: none offline (Dispatch's board reads its players)</summary>
     public static OnlineGame Playing { get { return playing; } }
 
+    /// <summary>The rules the host has shared (HouseRules.Pack), or null before there's a match object to carry them</summary>
+    public int? SharedRules => session != null && session.Match != null ? session.Match.Rules : (int?)null;
+
     /// <summary>Everyone in the session, whichever machine they are on</summary>
     public IReadOnlyList<OnlinePlayer> Players { get { return session.Players; } }
 
@@ -589,6 +592,11 @@ public class OnlineGame : MonoBehaviour
     void Update()
     {
         sceneFlow.Tick(); // every frame of a load counts, so before anything here can return
+
+        // In the lobby, the host's picks go out as they change, for everyone's card (ModeLobbyCard; only a change is sent)
+        GameManager lobbyGame = GameManager.Instance;
+        if (lobbyGame != null && LobbyRules.InTheMenus(lobbyGame.MainState) && session.Match != null && session.Match.IsServer)
+            session.Match.ShareRules(HouseRules.Current.ForMatch(OrderManager.PublicLobby()));
 
         PlayerInstantiate players = PlayerInstantiate.Instance;
         HookPlayers(players);

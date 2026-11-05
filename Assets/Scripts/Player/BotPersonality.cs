@@ -60,9 +60,9 @@ public readonly struct BotProfile
 /// </summary>
 public static class BotPersonality
 {
-    static readonly BotProfile thief = new BotProfile(3f, 2f, 1f, 0f, 0.6f, 8f, 6f, 2.5f, 0, false);
-    static readonly BotProfile hunter = new BotProfile(0f, 1.5f, 3f, 120f, 0.2f, 5f, 5f, 2.5f, StealValueRules.HARD, false);
-    static readonly BotProfile courier = new BotProfile(0f, 0f, 1f, 0f, 1.2f, 0f, 0f, 1.2f, int.MaxValue, true);
+    static readonly BotProfile thief = new BotProfile(1.3f, 1.5f, 1f, 0f, 0.6f, 4f, 5f, 1.5f, 0, false);
+    static readonly BotProfile hunter = new BotProfile(0f, 1.5f, 3f, 120f, 0.2f, 5f, 5f, 1.5f, StealValueRules.HARD, false);
+    static readonly BotProfile courier = new BotProfile(0f, 0f, 1f, 0f, 0.9f, 0f, 0f, 1.2f, int.MaxValue, true);
 
     /// <summary>The personality of the bot seated rank-th (0 first): one thief, then a hunter, then couriers</summary>
     public static BotKind ForRank(int rank)

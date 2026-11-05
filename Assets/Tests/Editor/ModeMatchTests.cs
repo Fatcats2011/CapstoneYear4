@@ -248,6 +248,18 @@ namespace DoA.Tests
             Assert.AreEqual(1 << caught, match.Infected, "no extra hunter while one is left");
         }
 
+        [TestCase(GameMode.HotPotato, true)]
+        [TestCase(GameMode.Infection, true)]
+        [TestCase(GameMode.KingsCrown, false)]
+        public void EveryoneElseLeaves_EndsTheRound_ButNotAMatchPlayedAlone(GameMode mode, bool over)
+        {
+            ModeMatch match = ModeMatch.Begin(mode, 0b0011, Vector3.zero, 0f, new System.Random(3));
+            match.Leave(1, 1f);
+
+            Assert.AreEqual(over, match.IsOver, "the last player left");
+            Assert.IsFalse(ModeMatch.Begin(mode, 0b0001, Vector3.zero, 0f, new System.Random(3)).IsOver, "alone from the start");
+        }
+
         [Test]
         public void HotPotato_NeverEndsEarlyAlone()
         {

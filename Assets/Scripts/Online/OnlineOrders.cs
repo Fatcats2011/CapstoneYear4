@@ -57,6 +57,13 @@ public class OnlineOrders : MonoBehaviour
     /// </summary>
     public void Show(OrderChange change)
     {
+        // Gold Rush's nuggets aren't orders
+        if (change.Kind == OrderChangeKind.Nugget || change.Kind == OrderChangeKind.NuggetTaken)
+        {
+            MotherLode.Show(change);
+            return;
+        }
+
         Order order = OrderBook.Find(change.Order);
         OrderHandler handler = OrderSync.HandlerIn(change.Seat);
         OrderHandler victim = OrderSync.HandlerIn(change.Seat2); // a steal's
@@ -95,6 +102,9 @@ public class OnlineOrders : MonoBehaviour
         {
             case OrderChangeKind.Spawn:
                 order.InitOrder(change.Flag);
+                break;
+            case OrderChangeKind.SpawnLode:
+                order.InitOrder(change.Flag, true);
                 break;
             case OrderChangeKind.Pickup:
                 handler.AddOrder(order);

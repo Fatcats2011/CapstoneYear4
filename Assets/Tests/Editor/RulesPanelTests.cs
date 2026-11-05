@@ -117,7 +117,7 @@ namespace DoA.Tests
         public void GoldenOrderOff_SaysWhichAchievementsCantBeEarned()
         {
             panel.Open(HouseRules.Normal);
-            Assert.AreEqual("", panel.Note);
+            StringAssert.DoesNotContain("GOLDEN WIN", panel.Note);
 
             Select(panel.RowOf(Rule.GoldenOrder));
             panel.Step(false);
@@ -139,14 +139,27 @@ namespace DoA.Tests
         }
 
         [Test]
-        public void AMutator_SaysTheGameWasntDesignedForIt()
+        public void TheNote_DescribesTheModePicked()
         {
-            panel.Open(HouseRules.Normal);
+            foreach (GameMode mode in GameModes.Playable)
+            {
+                panel.Open(new HouseRules(MatchLength.Normal, true, true, true, mode));
+                Assert.AreEqual(Loc.Get(GameModes.DescriptionKey(mode)), panel.Note);
+                Assert.AreNotEqual(GameModes.DescriptionKey(mode), panel.Note, "the text exists");
+            }
+        }
 
-            Select(panel.RowOf(Rule.Speed));
+        [Test]
+        public void ModeRow_LoopsPastTheLastMode_AndBack()
+        {
+            GameModes.Playable = new[] { GameMode.Standard, GameMode.KingsCrown, GameMode.HotPotato };
+            panel.Open(new HouseRules(MatchLength.Normal, true, true, true, GameMode.HotPotato));
+
             panel.Step(true);
+            Assert.AreEqual(GameMode.Standard, HouseRules.Current.Mode, "right from the last");
 
-            StringAssert.Contains("WASN'T DESIGNED", panel.Note);
+            panel.Step(false);
+            Assert.AreEqual(GameMode.HotPotato, HouseRules.Current.Mode, "left from the first");
         }
 
         [Test]
@@ -187,7 +200,7 @@ namespace DoA.Tests
             Assert.AreEqual(-1, panel.RowOf(Rule.Waves));
             Assert.AreEqual(-1, panel.RowOf(Rule.GoldenOrder));
             Assert.AreNotEqual(-1, panel.RowOf(Rule.RoundTimer));
-            StringAssert.Contains("WASN'T DESIGNED", panel.Note);
+            Assert.AreEqual(Loc.Get(GameModes.DescriptionKey(GameMode.KingsCrown)), panel.Note);
         }
 
         [Test]

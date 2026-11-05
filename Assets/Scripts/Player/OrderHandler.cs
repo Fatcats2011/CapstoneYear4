@@ -40,6 +40,8 @@ public class OrderHandler : MonoBehaviour
                 || (order2 != null && order2.Value == Constants.OrderValue.Golden);
         }
     }
+    /// <summary>Whether Gold Rush's Mother Lode is on this scooter (it slows them: BallDriving)</summary>
+    public bool CarryingLode { get { return (order1 != null && order1.IsLode) || (order2 != null && order2.IsLode); } }
     private bool hasOrder = false;
     public bool HasOrder => hasOrder;
     /// <summary>How many orders it holds, 0-2 (a CPU driver weighs a detour by it: BotTactics)</summary>
@@ -168,7 +170,6 @@ public class OrderHandler : MonoBehaviour
             // Online, only the host changes scores, and counts deliveries for achievements: a client shows the host's
             if (GameAuthority.IsAuthority)
             {
-                StartDrainClock();
                 score += order1.Worth;
                 FeatSync.Deliver(OrderSync.SeatOf(this), rightOrder.Value);
             }
@@ -183,7 +184,6 @@ public class OrderHandler : MonoBehaviour
             soundPool.PlayOrderDropoff(key);
             if (GameAuthority.IsAuthority)
             {
-                StartDrainClock();
                 score += order2.Worth;
                 FeatSync.Deliver(OrderSync.SeatOf(this), rightOrder.Value);
             }
@@ -305,7 +305,7 @@ public class OrderHandler : MonoBehaviour
         Constants.OrderValue bestOrderScore = 0;
         try
         {
-            bestOrderScore = GetBestOrder().Value;
+            bestOrderScore = GetBestOrder().Look;
         }
         catch
         {
@@ -446,37 +446,11 @@ public class OrderHandler : MonoBehaviour
         return paid;
     }
 
-    // Gold Rush's drain (GoldRushRules): when this player last delivered (below 0: not yet; a player seated after the
-    // match began gets the grace from their first drain), and the part of a point not yet taken
-    float lastDelivery = -1f;
-    float drainCarry;
-
-    /// <summary>Gold Rush: the drain waits GRACE_SECONDS from now (a delivery, or the match's start)</summary>
-    internal void StartDrainClock()
-    {
-        lastDelivery = Time.time;
-        drainCarry = 0f;
-    }
-
-    /// <summary>Kings Crown, Infection, Hot Potato, authority only: points for holding the crown, staying free or staying in</summary>
+    /// <summary>Authority only: points for holding the crown, staying free, staying in, or a Gold Rush nugget</summary>
     internal void AddModePoints(int points)
     {
         score += points;
         ShowScore();
-    }
-
-    /// <summary>Gold Rush, authority only: takes this frame's drain off the score. Returns the points taken</summary>
-    internal int Drain(float deltaTime)
-    {
-        if (lastDelivery < 0f)
-            StartDrainClock();
-        int points = GoldRushRules.Drain(Time.time - lastDelivery, deltaTime, ref drainCarry, score);
-        if (points > 0)
-        {
-            score -= points;
-            ShowScore();
-        }
-        return points;
     }
 
     /// <summary>

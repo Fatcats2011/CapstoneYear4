@@ -13,11 +13,50 @@ public static class BotBrain
     /// <summary>Boosts only within this many degrees of the target...</summary>
     public const float BOOST_ANGLE = 15f;
     /// <summary>...and further than this, in metres (closer, it would overshoot)</summary>
-    public const float BOOST_DISTANCE = 40f;
+    public const float BOOST_DISTANCE = 25f;
     /// <summary>The least throttle in the sharpest turn</summary>
     public const float TURN_THROTTLE = 0.4f;
     /// <summary>A path corner this close on the ground (metres) counts as reached</summary>
     public const float CORNER_REACHED = 4f;
+
+    /// <summary>A corner turning less than this (degrees) needs no slowing</summary>
+    public const float GENTLE_TURN = 25f;
+    /// <summary>The speed (m/s) it can take a right-angle corner at, and how hard it can slow for one (m/s²)</summary>
+    public const float CORNER_SPEED = 15f, SLOWING = 22f;
+
+    /// <summary>
+    /// The fastest it should be going (m/s) to make a corner this far ahead (metres) that turns this much (degrees):
+    /// no limit for a gentle one, tighter the sharper it is, relaxing with the room left to slow down
+    /// </summary>
+    public static float SpeedFor(float distance, float turn)
+    {
+        float off = Mathf.Abs(turn);
+        if (off <= GENTLE_TURN)
+            return float.PositiveInfinity;
+        float atCorner = CORNER_SPEED * Mathf.Lerp(2f, 0.7f, Mathf.InverseLerp(GENTLE_TURN, 135f, off));
+        return Mathf.Sqrt(atCorner * atCorner + 2f * SLOWING * Mathf.Max(distance, 0f));
+    }
+
+    /// <summary>
+    /// Pedals to hold a speed limit: full ahead (or as the bearing says) under it; lifting within SPEED_MARGIN of it; on
+    /// the brake over it
+    /// </summary>
+    public static void Pedals(float speed, float limit, float bearing, out float accelerate, out float brake)
+    {
+        accelerate = Throttle(bearing);
+        brake = 0f;
+        if (speed > limit + SPEED_MARGIN)
+        {
+            accelerate = 0f;
+            brake = 1f;
+        }
+        else if (speed > limit)
+        {
+            accelerate = 0f;
+        }
+    }
+
+    const float SPEED_MARGIN = 3f;
 
     /// <summary>The spot nearest on the ground (height ignored), or -1 with none</summary>
     public static int Nearest(Vector3 from, IReadOnlyList<Vector3> spots)
@@ -87,21 +126,27 @@ public static class BotBrain
 }
 
 /// <summary>
-/// Whether a CPU driver is stuck: under a metre of progress in two seconds (a wall, a kerb, a corner) backs it out for a
-/// second, then it drives again
+/// Whether a CPU driver is stuck: under a metre of progress in 1.2 seconds (a wall, a kerb, a corner) backs it out, then it
+/// drives again. Stuck again soon after, it backs further, and Repeats says so (the driver gives up on what it went for)
 /// </summary>
 public class BotStuck
 {
-    public const float STUCK_AFTER = 2f;
+    public const float STUCK_AFTER = 1.2f;
     public const float PROGRESS = 1f;
     public const float REVERSE_FOR = 1f;
+    public const float REVERSE_MOST = 2.5f;
+    public const float AGAIN_WITHIN = 5f; // getting stuck this soon after driving off counts as the same spot
 
     Vector3 since;
     float watched;
     float reversing;
+    float sinceFreed = float.PositiveInfinity;
     bool started;
 
     public bool Reversing => reversing > 0f;
+
+    /// <summary>How many times running it's been stuck at the same spot, 0 when it's driving free</summary>
+    public int Repeats { get; private set; }
 
     /// <summary>A frame went by at this position: whether it's backing out now</summary>
     public bool Tick(Vector3 position, float deltaTime)
@@ -120,10 +165,14 @@ public class BotStuck
             {
                 since = position;
                 watched = 0f;
+                sinceFreed = 0f;
             }
             return Reversing;
         }
 
+        sinceFreed += deltaTime;
+        if (sinceFreed > AGAIN_WITHIN)
+            Repeats = 0;
         watched += deltaTime;
         if ((position - since).magnitude >= PROGRESS)
         {
@@ -132,7 +181,8 @@ public class BotStuck
         }
         else if (watched >= STUCK_AFTER)
         {
-            reversing = REVERSE_FOR;
+            Repeats++;
+            reversing = Mathf.Min(REVERSE_FOR * Repeats, REVERSE_MOST);
             watched = 0f;
         }
         return Reversing;

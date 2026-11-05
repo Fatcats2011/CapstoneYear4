@@ -17,7 +17,7 @@ namespace DoA.Tests
             Assert.IsTrue(chase.Tick(2, 5f, 2f), "6 s of a 5 s chase");
             Assert.IsTrue(chase.Barred(2));
             Assert.IsFalse(chase.Barred(3));
-            chase.Advance(7f);
+            chase.Advance(BotChase.FORGET_VICTIM + 1f);
             Assert.IsFalse(chase.Barred(2), "forgiven after FORGET_VICTIM");
         }
 

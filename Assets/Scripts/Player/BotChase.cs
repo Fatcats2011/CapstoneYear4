@@ -6,7 +6,7 @@ using System.Collections.Generic;
 /// </summary>
 public class BotChase
 {
-    public const float FORGET_VICTIM = 6f;
+    public const float FORGET_VICTIM = 12f;
 
     readonly Dictionary<int, float> barred = new Dictionary<int, float>();
     readonly List<int> seats = new List<int>();
@@ -31,6 +31,12 @@ public class BotChase
         victim = -1;
         chased = 0f;
         return true;
+    }
+
+    /// <summary>Gives up on this seat now (it can't be got at from here)</summary>
+    public void Bar(int seat)
+    {
+        barred[seat] = FORGET_VICTIM;
     }
 
     /// <summary>Whether this seat was given up on lately</summary>

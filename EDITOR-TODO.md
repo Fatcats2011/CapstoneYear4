@@ -202,24 +202,41 @@ Numbers to tune: `Assets/Scripts/Management/GoldRushRules.cs`.
 
 - MATCH RULES now has a MODE row: pick GOLD RUSH. STEALS shows ON (LOCKED).
 - Many more packages appear, and faster.
-- Stop delivering: after about 5 s your score ticks down about 2 points a second, never below 0. A delivery stops it.
+- Every 30 to 40 s after the last one has gone: "THE MOTHER LODE IS OUT! FOLLOW THE LIGHT". A huge gold package under a pillar of light, on every compass, the pillar following whoever carries it.
+- It slows its carrier, pays $250 to deliver, and doesn't double when stolen.
+- The carrier leaves a trail of small gold nuggets, one every 12 m. Anyone else driving through one gets $10; they go after 20 s.
+- Fall in the water or get robbed carrying it: it stays a Mother Lode.
 - Last 30 s of the waves: "RUSH HOUR! STEALS COUNT DOUBLE" shows; a stolen package grows twice as much.
-- The golden round plays as usual, with no drain.
-- 4 players or bots: packages never run out; bots don't bleed points sitting still.
-- Online (two editors): the joining machine sees the extra packages, the drain on everyone's score and the rush hour hint.
+- The golden round plays as usual, with no Mother Lode.
+- 4 players or bots: packages never run out; bots go for the Mother Lode.
+- Online (two editors): the joining machine sees the extra packages, the Mother Lode, its pillar and the nuggets (taken once, paid once), and the rush hour hint.
 
 ## 16f. Kings Crown, Infection, Hot Potato: playtest (45 minutes)
 
 Every choice made without asking is in `docs/game-modes-decisions.md`. Numbers: `Assets/Scripts/Management/TimedModeRules.cs`.
 
-- All three: no tutorial, no orders, the clock starts at the ROUND TIMER (2 / 3 / 5 min), a hint says what to do, the highlight reel plays, then the podium (no golden round).
-- **Kings Crown:** a gold crown spins on the road; drive through it to take it; it floats over the holder; boost into the holder to take it (not within 2 s of them taking it). The holder's score climbs 10/s.
-- **Infection:** one random hunter; boosting into a thief turns their ghost the hunter's colour. Free thieves' scores climb. Catching the last thief ends the round at once.
-- **Hot Potato:** a red-glowing package appears over someone after 3 s, ticking faster and faster; boost into someone to pass it (they can't pass straight back). When it goes off, that player vanishes and their screen follows someone else (Boost switches who). Falling in water doesn't put you out. Last one in ends the round; everyone is back on the podium.
+- All three: no tutorial, no orders, an info box says what to do and goes after 5 s, the highlight reel plays, then the podium (no golden round). Kings Crown and Infection run on the ROUND TIMER (2 / 3 / 5 min).
+- **Kings Crown:** a gold crown under a tall beacon, on the compass; drive through it to take it; it floats over the holder; boost into the holder to take it (not within 2 s of them taking it). The holder's boost recharges slower, the board shows time held and a crown on their row.
+- **Infection:** one random player starts infected: ashen white ghost, red name in bold, red picture on the board, red ghost on the compass. Boosting into someone infects them. No money on the board. Catching the last one ends the round at once.
+- **Hot Potato:** a large purple package in pink flame appears over someone after 3 s, with its seconds counting down on it and on the HUD clock; boost into someone to pass it (they can't pass straight back). At zero that player vanishes, gets a red X on the board, and watches someone else (named on screen; Boost switches who). Falling in water doesn't put you out. Last one in ends the round; everyone is back on the podium.
+- **Lobby:** the card at the top shows the mode and a stamp per changed modifier, on the joining machine too, updating as the host changes them. Modifiers go back to normal in the lobby and menus; a rematch keeps them; the mode stays. MATCH RULES' Mode row loops.
+- **Options:** CONTROLS page works from the title screen, with pad and keyboard. Title screen and menus fit on an ultrawide monitor.
 - **Bots** (online, Bots on): they chase the crown / thieves / the potato holder's targets and run away when they should.
 - **Highlight reel:** the crown changing hands, catches and explosions show, with CROWN SEIZED / INFECTION SPREADING / PACKAGE DETONATED / LAST SURVIVOR.
 - **Online (two editors):** the joining machine sees the crown, colours, potato, ticking and players out; an out player there spectates too.
 - Check the podium after Hot Potato: nobody stuck invisible or frozen; then a Standard match plays normally.
+
+## 16g. Record your matches, so the bots can learn from them (10 minutes of play, more is better)
+
+- Playing in the editor records by itself. In a Steam build, add `-recordmatches` to the game's launch options (other players' builds never record, and nothing leaves your PC).
+- Play at least 3 Standard matches on your own pad, as you normally would. The more of your own driving, the better.
+- See how you compare with the bots:
+
+  ```bash
+  python tools/analyse_matches.py
+  ```
+
+- Then tell Claude they're there: `%USERPROFILE%\AppData\LocalLow\<company>\<game>\matches`.
 
 ## 16c. Accessibility: to build, then playtest
 

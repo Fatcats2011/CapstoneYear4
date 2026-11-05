@@ -75,7 +75,7 @@ public class ControlsPanel : MonoBehaviour
         rect.SetParent(parent, false);
         rect.anchorMin = rect.anchorMax = rect.pivot = new Vector2(0.5f, 0.5f);
         Image back = root.GetComponent<Image>();
-        back.color = new Color(0f, 0f, 0f, 0.7f);
+        back.color = new Color(0f, 0f, 0f, 0.85f);
         back.raycastTarget = false;
         VerticalLayoutGroup layout = root.AddComponent<VerticalLayoutGroup>();
         layout.padding = new RectOffset(40, 40, 24, 24);

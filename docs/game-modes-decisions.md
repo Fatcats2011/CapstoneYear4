@@ -16,7 +16,8 @@ Everything here was decided during the build so work could keep moving. Each is 
 ## Gold Rush
 
 - **3× the order quotas**, spawn cooldown 1 s.
-- **Drain:** 2 points/s after 5 s without a delivery; the match's start counts as a delivery; never below 0; no drain in the golden round.
+- **Drain:** removed 2026-11-05 for the Mother Lode (below).
+- **Mother Lode (picked 2026-11-05, docs/gold-rush-brainstorm.md idea 1):** one at a time, 30 to 40 s after the last has gone. A free order from the Hard pool (then Medium, then Easy) turns into it, so it uses that order's pickup and drop-off. Pays a flat $250 that never doubles, because doubling $250 would decide a match on one steal; a thief still gets the usual pay. Its carrier keeps 80% of their engine and spills a $10 nugget every 12 m for anyone but themselves, gone after 20 s. Left untouched for 60 s it goes, so one that lands out of reach can't block the rest. It counts as a Hard delivery for achievements and awards. Three times the packages and rush hour stay.
 - **Rush hour = last 30 s of the waves:** each steal doubles the order twice and pays the thief twice (14 instead of 7). A hint announces it on every machine.
 - **Keeps the tutorial** (it's still a delivery mode).
 
@@ -67,9 +68,25 @@ Everything here was decided during the build so work could keep moving. Each is 
 
 - All new text was translated into the 13 languages by Claude (Sonnet) and needs the same native-speaker check as the rest.
 
+## Playtest round (2026-11-04): choices made without asking
+
+- **"Modifiers reset between games":** every rule except the mode and Bots goes back to normal when players return to the lobby or menus. A rematch from the results and Restart from the pause menu keep them (the user's call, 2026-11-05). A public lobby plays normal rules and leaves the host's picks alone. Modifiers saved when the game was quit midway don't come back at launch.
+- **The mode stays picked** between games; only the modifiers reset.
+- **Mode selector:** only the Mode row loops. The other rows still stop at their ends.
+- **Hot Potato has no round timer now:** the row is hidden and the round plays until one player is left (10 minute safety limit). The HUD clock shows the fuse and rests at 0:00 between fuses.
+- **Fuse length** stays random, 15 to 25 s, but is now shown.
+- **Kings Crown's money column shows time held** (0:42), since its points are time. Infection and Hot Potato show nothing there. Ranking still uses the hidden points.
+- **"Icon red on the map":** the game has no minimap (the prefab has a minimap camera, but nothing uses it), so infected players show as a red ghost on the compass, and their leaderboard picture and frame turn red.
+- **Infected colour:** ashen white with red rim and halftone. The picks are purple, red, green, yellow, blue and orange, and this also reads without colour vision.
+- **Crown holder's boost** recharges at the "carrying a package" rate.
+- **Spectating:** an out player's camera uses the watched player's own camera targets. Boost (A by default) moves to the next player. Text says BOOST, not A, because the button can be rebound and keyboards differ.
+- **Controls from the main menu:** a new CONTROLS page in Options, opening the same panel as the pause menu. Mouse can open it but, as in pause, the panel itself is pad and keyboard.
+- **Ultrawide:** any canvas fits the screen's height when the screen is wider than 16:9. Screens at 16:9 or narrower are unchanged.
+- **Lobby card:** "TONIGHT'S SHIFT", the mode, and a gold stamp for each changed modifier, top centre, on every machine.
+- **Bots:** they slow for sharp corners, watch for the road's edge 0.8 s ahead, only boost with clear road ahead, roam towards a rival when idle, and give up on a target after being stuck twice. Thief steal appetite 3 to 2, chase 8 s to 5 s; thief and hunter boost as often as every 1.5 s.
+- **Gold Rush:** unchanged. Ideas are in `docs/gold-rush-brainstorm.md`, waiting for a pick.
+
 ## Known gaps (playtest)
 
-- No scoreboard icon for the crown holder or who's infected/out; the 3D crown, colours and hiding carry it.
-- The ghost portraits on the scoreboard don't change colour when infected.
 - Rush hour's double steal is shown on clients from their own clock: right at the 30 s mark a client may show one doubling off (display only; the host's score is right).
 - Unfreezing an out player when a match ends early depends on the results flow re-freezing scooters for the podium; check the podium.

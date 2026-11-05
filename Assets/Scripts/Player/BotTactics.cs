@@ -14,6 +14,7 @@ public struct BotOption
     public BotOptionKind Kind;
     /// <summary>The order's Worth (a steal: the victim's best order's)</summary>
     public int Worth;
+    /// <summary>The golden order or Gold Rush's Mother Lode: worth a long drive whatever else it's worth</summary>
     public bool Golden;
     /// <summary>How far away it is, in metres</summary>
     public float Distance;
@@ -46,13 +47,15 @@ public static class BotTactics
     /// <summary>This far behind the leader, in points, a bot is fully desperate</summary>
     public const int FULL_GAP = 200;
     /// <summary>A bot carrying an order detours only for something this close, in metres</summary>
-    public const float DETOUR = 25f;
+    public const float DETOUR = 40f;
     /// <summary>What it's going for already scores this much more (so it doesn't flick between near equals)</summary>
     public const float STICKY = 1.25f;
     /// <summary>A steal from the leader scores this much more</summary>
     public const float LEADER_BONUS = 1.5f;
     /// <summary>A steal from a boosting victim scores this much (a clash, not a steal)</summary>
     public const float BOOSTING_VICTIM = 0.2f;
+    /// <summary>A rival further away than this (metres) is too far to catch at the same speed, unless they carry something golden</summary>
+    public const float FURTHEST_STEAL = 60f;
 
     /// <summary>How desperate a bot is: 0 level or leading, 1 at FULL_GAP behind the leader or more</summary>
     public static float Desperation(int myScore, int leaderScore)
@@ -81,7 +84,7 @@ public static class BotTactics
 
         float appetite = p.StealAppetite + p.DesperateSteal * d;
         // A golden order is big whatever its Worth (50, below an easy one's)
-        if (!s.StealsOn || appetite <= 0f || (o.Worth < p.MinStealWorth && !o.Golden))
+        if (!s.StealsOn || appetite <= 0f || (o.Worth < p.MinStealWorth && !o.Golden) || (o.Distance > FURTHEST_STEAL && !o.Golden))
             return float.NegativeInfinity;
         return value * appetite * (o.VictimLeads ? LEADER_BONUS : 1f) * (o.VictimBoosting ? BOOSTING_VICTIM : 1f) - distance;
     }

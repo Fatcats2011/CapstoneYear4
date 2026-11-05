@@ -42,6 +42,8 @@ public class Scoreboard : MonoBehaviour
 
     static readonly Color INK = new Color(0.06f, 0.05f, 0.08f, 1f);
     static readonly Color PAPER = new Color(1f, 1f, 1f, 0.2f); // mostly see through
+    static readonly Color INFECTED_TINT = new Color(1f, 0.35f, 0.35f, 1f); // over an infected player's picture
+    const float OUT_FADE = 0.55f;                                          // how solid an eliminated player's row is
 
     /// <summary>Each row's width: picture, name, money, two packages, and the slanted end</summary>
     internal const float ROW_WIDTH = ROW_HEIGHT + PAD + NAME_WIDTH + MONEY_WIDTH + PACKAGE_SPACING + PACKAGE + 2 * PAD + TIP;
@@ -82,8 +84,10 @@ public class Scoreboard : MonoBehaviour
         board.anchoredPosition = new Vector2(LEFT, 0f);
         board.sizeDelta = Vector2.zero;
 
+        // Not under the canvas: its scale follows the screen's size, and a copy built under it came out that much bigger
+        // or smaller than its camera's framing (from the second match on, once the canvas had been drawn)
         portraits = new GameObject("Scoreboard Portraits").transform;
-        portraits.SetParent(transform, false);
+        DontDestroyOnLoad(portraits.gameObject);
         Colourblind.Changed += Clear; // the ghost portraits are taken again, in the colours worn now
     }
 
@@ -91,6 +95,8 @@ public class Scoreboard : MonoBehaviour
     {
         Colourblind.Changed -= Clear;
         Clear();
+        if (portraits != null)
+            Destroy(portraits.gameObject);
         if (instance == this)
             instance = null;
     }
@@ -282,6 +288,17 @@ public class Scoreboard : MonoBehaviour
         return seat == FirstLocalSeat(roster) ? SteamNames.MyId() : 0;
     }
 
+    /// <summary>
+    /// What a row shows in its money column: dollars where money's the point, the time held in Kings Crown (its points are
+    /// time), nothing in Infection and Hot Potato, where staying clean or in is what counts
+    /// </summary>
+    internal static string ScoreText(GameMode mode, int points)
+    {
+        if (mode == GameMode.KingsCrown)
+            return DynamicNumberUI.TimerText(points / TimedModeRules.CROWN_POINTS_PER_SECOND);
+        return TimedModeRules.IsTimed(mode) ? "" : "$" + points;
+    }
+
     /// <summary>A seated player's name as the board shows it (the results' podium names it the same way)</summary>
     internal static string ShownName(int seat)
     {
@@ -362,8 +379,12 @@ public class Scoreboard : MonoBehaviour
         readonly GameObject seatBadge;               // colourblind mode: the seat's shape and number on the picture
         readonly GameObject[] stolenBadges = new GameObject[2]; // ...and a "!" on a stolen package
         readonly GhostPortrait ghost;
+        readonly CanvasGroup fade;
+        readonly Image pictureFrame;
+        readonly GameObject outCross;
         string shownName;
         int shownMoney = -1;
+        GameMode shownMode;
 
         public Row(RectTransform board, int seat, GameObject player, GhostPortrait ghost, float top)
         {
@@ -374,6 +395,8 @@ public class Scoreboard : MonoBehaviour
             float x = 0f;
             rect = Box(board, "Row " + (seat + 1), new Vector2(ROW_WIDTH, ROW_HEIGHT), Color.white);
             rect.GetComponent<Image>().sprite = Banner();
+            fade = rect.gameObject.AddComponent<CanvasGroup>();
+            fade.interactable = fade.blocksRaycasts = false;
             rect.anchorMin = rect.anchorMax = new Vector2(0f, 0.5f);
             rect.pivot = new Vector2(0f, 1f);
             rect.anchoredPosition = new Vector2(0f, top);
@@ -381,12 +404,21 @@ public class Scoreboard : MonoBehaviour
             // The picture, in a thick black frame filling the row's height
             RectTransform frame = Box(rect, "Picture Frame", new Vector2(ROW_HEIGHT, ROW_HEIGHT), INK);
             frame.anchoredPosition = new Vector2(x, 0f);
+            pictureFrame = frame.GetComponent<Image>();
             picture = new GameObject("Picture", typeof(RectTransform)).AddComponent<RawImage>();
             Fill(picture.rectTransform, frame, BORDER);
             picture.raycastTarget = false;
             seatBadge = Badge(frame, "Seat Badge", Colourblind.BadgeOf(seat), (seat + 1).ToString(), SEAT_BADGE,
                 new Vector2(ROW_HEIGHT - SEAT_BADGE * 0.75f, -(ROW_HEIGHT - SEAT_BADGE * 0.75f)),
                 Colourblind.ShapeOf(seat) == Colourblind.Shape.Triangle ? -SEAT_BADGE * 0.08f : 0f);
+            // Eliminated (Hot Potato): a red X over the picture, as solid as ever while the row fades
+            RectTransform cross = Box(frame, "Out Cross", new Vector2(ROW_HEIGHT, ROW_HEIGHT) * 1.1f, Color.white);
+            cross.pivot = new Vector2(0.5f, 0.5f);
+            cross.anchoredPosition = new Vector2(ROW_HEIGHT / 2f, -ROW_HEIGHT / 2f);
+            cross.GetComponent<Image>().sprite = ModeIcons.Cross();
+            cross.gameObject.AddComponent<CanvasGroup>().ignoreParentGroups = true;
+            outCross = cross.gameObject;
+            outCross.SetActive(false);
             x += ROW_HEIGHT + PAD;
 
             nameText = Label(rect, "Name", x, NAME_WIDTH, 28f, FontStyles.Bold);
@@ -425,11 +457,15 @@ public class Scoreboard : MonoBehaviour
                 shownName = name;
                 nameText.text = name;
             }
-            if (money != shownMoney)
+            // A row can come up a moment before the match's rules do: the mode counts as well as the money
+            GameMode mode = HouseRules.Playing.Mode;
+            if (money != shownMoney || mode != shownMode)
             {
                 shownMoney = money;
-                moneyText.text = "$" + money;
+                shownMode = mode;
+                moneyText.text = ScoreText(mode, money);
             }
+            ShowModeState(ModeMatch.Current);
 
             if (seatBadge.activeSelf != Colourblind.On)
                 seatBadge.SetActive(Colourblind.On);
@@ -450,6 +486,62 @@ public class Scoreboard : MonoBehaviour
             }
             ShowPackage(0, first, flameFrame);
             ShowPackage(1, second, flameFrame);
+
+            // What a timed mode has them holding goes where the packages would
+            ModeMatch match = ModeMatch.Current;
+            if (match != null && match.CrownSeat == Seat)
+                ShowHeld(ModeIcons.Crown(), null);
+            else if (match != null && match.PotatoSeat == Seat)
+                ShowHeld(CursedIcon(), PurpleFlame.PinkFrames[flameFrame % PurpleFlame.PinkFrames.Length]);
+        }
+
+        // The large package's icon, from any order in the scene
+        static Sprite cursedIcon;
+        static Sprite CursedIcon()
+        {
+            if (cursedIcon == null)
+            {
+                Order order = FindObjectOfType<Order>(true);
+                cursedIcon = order != null ? order.IconOf(2) : null;
+            }
+            return cursedIcon;
+        }
+
+        void ShowHeld(Sprite icon, Sprite flame)
+        {
+            icons[0].sprite = icon;
+            icons[0].enabled = icon != null;
+            flames[0].enabled = flame != null;
+            if (flame != null)
+                flames[0].sprite = flame;
+        }
+
+        // Who's infected or out, on this row
+        void ShowModeState(ModeMatch match)
+        {
+            bool infected = match != null && match.IsInfected(Seat);
+            bool eliminated = match != null && match.IsOut(Seat);
+            bool infection = match != null && match.Mode == GameMode.Infection;
+
+            FontStyles style = infection && !infected ? FontStyles.Normal : FontStyles.Bold;
+            if (eliminated)
+                style |= FontStyles.Strikethrough;
+            if (nameText.fontStyle != style)
+                nameText.fontStyle = style;
+            Color nameColour = infected ? ModeIcons.RED : INK;
+            if (nameText.color != nameColour)
+                nameText.color = nameColour;
+            Color frameColour = infected ? ModeIcons.RED : INK;
+            if (pictureFrame.color != frameColour)
+                pictureFrame.color = frameColour;
+            Color tint = infected ? INFECTED_TINT : Color.white;
+            if (picture.color != tint)
+                picture.color = tint;
+            if (outCross.activeSelf != eliminated)
+                outCross.SetActive(eliminated);
+            float alpha = eliminated ? OUT_FADE : 1f;
+            if (fade.alpha != alpha)
+                fade.alpha = alpha;
         }
 
         void ShowPackage(int slot, Order order, int flameFrame)

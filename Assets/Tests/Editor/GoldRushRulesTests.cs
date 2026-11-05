@@ -4,7 +4,7 @@ using UnityEngine;
 
 namespace DoA.Tests
 {
-    /// <summary>Gold Rush's numbers (GoldRushRules): more packages, the score drain, and rush hour's double steals</summary>
+    /// <summary>Gold Rush's numbers (GoldRushRules): more packages, the Mother Lode, and rush hour's double steals</summary>
     public class GoldRushRulesTests
     {
         GameObject ordersHolder;
@@ -89,42 +89,20 @@ namespace DoA.Tests
             Assert.AreEqual(1, GoldRushRules.StealCounts(), "Standard has no rush hour");
         }
 
-        [Test]
-        public void Drain_NothingDuringTheGrace()
+        [TestCase(0f, 30f)]
+        [TestCase(0.5f, 35f)]
+        [TestCase(1f, 40f)]
+        public void LodeWait_ThirtyToFortySeconds(float roll, float wait)
         {
-            float carry = 0f;
-
-            Assert.AreEqual(0, GoldRushRules.Drain(4.9f, 1f, ref carry, 100));
+            Assert.AreEqual(wait, GoldRushRules.LodeWait(roll), 0.001f);
         }
 
-        [Test]
-        public void Drain_TwoPointsASecond_AcrossFrames()
+        [TestCase(1, 0, 3.9f, true)]
+        [TestCase(1, 0, 4.1f, false)]
+        [TestCase(0, 0, 1f, false)]
+        public void TakesNugget_AnyoneNearButWhoSpilledIt(int seat, int spilledBy, float distance, bool takes)
         {
-            float carry = 0f;
-            int drained = 0;
-            for (int frame = 0; frame < 60; frame++)
-                drained += GoldRushRules.Drain(10f, 1f / 60f, ref carry, 100);
-
-            Assert.AreEqual(2, drained, 1, "about two points in a second of frames");
-        }
-
-        [Test]
-        public void Drain_NeverBelowZero()
-        {
-            float carry = 0f;
-
-            Assert.AreEqual(1, GoldRushRules.Drain(10f, 5f, ref carry, 1));
-            Assert.AreEqual(0, GoldRushRules.Drain(10f, 5f, ref carry, 0));
-        }
-
-        [Test]
-        public void Drain_ADeliveryClearsTheCarry()
-        {
-            float carry = 0.9f;
-
-            GoldRushRules.Drain(0f, 0.1f, ref carry, 100);
-
-            Assert.AreEqual(0f, carry);
+            Assert.AreEqual(takes, GoldRushRules.TakesNugget(seat, spilledBy, distance));
         }
     }
 }

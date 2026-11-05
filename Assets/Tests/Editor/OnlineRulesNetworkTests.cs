@@ -74,7 +74,8 @@ namespace DoA.Tests
             Assert.IsNotNull(other.Match, "joined");
             Assert.AreEqual(HouseRules.Normal.Pack(), other.Match.Rules, "normal until the host shares");
 
-            host.Match.ShareRules(Mutated);
+            // In the lobby the host's picks go out as they change, for everyone's card
+            HouseRules.Current = Mutated;
             deadline = Time.realtimeSinceStartup + WAIT;
             while (other.Match.Rules != Mutated.Pack() && Time.realtimeSinceStartup < deadline)
                 yield return null;

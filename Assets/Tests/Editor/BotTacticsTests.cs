@@ -141,8 +141,18 @@ namespace DoA.Tests
         [Test]
         public void Choose_HoldingOne_DetoursOnlyWhenClose()
         {
-            Assert.AreEqual(0, BotTactics.Choose(Level(BotKind.Thief, held: 1), new List<BotOption> { Order(65, 20f) }, -1));
-            Assert.AreEqual(-1, BotTactics.Choose(Level(BotKind.Thief, held: 1), new List<BotOption> { Order(65, 40f) }, -1));
+            Assert.AreEqual(0, BotTactics.Choose(Level(BotKind.Thief, held: 1), new List<BotOption> { Order(65, BotTactics.DETOUR - 5f) }, -1));
+            Assert.AreEqual(-1, BotTactics.Choose(Level(BotKind.Thief, held: 1), new List<BotOption> { Order(65, BotTactics.DETOUR + 5f) }, -1));
+        }
+
+        [Test]
+        public void Steal_TooFarToCatch_UnlessItsGolden()
+        {
+            BotOption far = Steal(80, BotTactics.FURTHEST_STEAL + 1f);
+
+            Assert.AreEqual(float.NegativeInfinity, BotTactics.Score(Level(BotKind.Thief), far));
+            far.Golden = true;
+            Assert.Greater(BotTactics.Score(Level(BotKind.Thief), far), float.NegativeInfinity);
         }
 
         [Test]

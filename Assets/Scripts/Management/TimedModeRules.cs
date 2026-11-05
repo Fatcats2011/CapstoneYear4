@@ -21,8 +21,10 @@ public static class TimedModeRules
     public const int CATCH_POINTS = 50;
 
     // Hot Potato
-    /// <summary>The fuse's length in seconds is random in this range, and never shown as a number</summary>
+    /// <summary>The fuse's length in seconds is random in this range; its seconds left count down on the package and the HUD's clock</summary>
     public const float FUSE_MIN = 15f, FUSE_MAX = 25f;
+    /// <summary>The round plays until one player is left; this only guards against a round that never ends (four fuses are far shorter)</summary>
+    public const float POTATO_ROUND_LIMIT = 600f;
     /// <summary>Seconds before the first potato appears, and before the next one after an explosion</summary>
     public const float POTATO_DELAY = 3f;
     /// <summary>Seconds after a pass the new holder can't pass it straight back</summary>
@@ -56,6 +58,13 @@ public static class TimedModeRules
             return 1f;
         float t = (now - lit) / (explodes - lit);
         return t < 0f ? 0f : t > 1f ? 1f : t;
+    }
+
+    /// <summary>Hot Potato: the fuse's whole seconds left as shown, counting down to 1 and then 0 as it goes off</summary>
+    public static int FuseSeconds(float now, float explodes)
+    {
+        float left = explodes - now;
+        return left <= 0f ? 0 : (int)System.Math.Ceiling(left);
     }
 
     /// <summary>Hot Potato: seconds between ticks, from 1 s when lit down to 0.15 s at the end</summary>

@@ -79,20 +79,38 @@ public readonly struct HouseRules : IEquatable<HouseRules>
         return show == RuleShow.LockedOn || (show == RuleShow.Shown && picked);
     }
 
-    /// <summary>The rules a match plays by: a public lobby's are always normal</summary>
-    public HouseRules ForMatch(bool publicLobby)
+    /// <summary>The same mode and bots, with every other rule back to normal</summary>
+    public HouseRules WithoutModifiers()
     {
-        return publicLobby ? Normal : this;
+        return new HouseRules(MatchLength.Normal, true, true, Bots, Mode);
     }
 
-    /// <summary>What differs from normal, in a line ("GOLD RUSH · SHORT · NO STEALS"); "" for normal</summary>
-    public string Summary
+    // A match has started since the modifiers were last put back (a rematch or restart plays on the same way until then)
+    static bool matchPlayed;
+
+    /// <summary>A match began on this machine: its modifiers go back once it's over</summary>
+    public static void MatchBegan() { matchPlayed = true; }
+
+    /// <summary>
+    /// A match is over (the results, or back at the menus): modifiers last one game, so the next starts from normal.
+    /// True when anything was reset, so the caller can keep it. The mode stays picked, and bots stay as they were
+    /// </summary>
+    public static bool ResetAfterMatch()
+    {
+        if (!matchPlayed)
+            return false;
+        matchPlayed = false;
+        savedModifiersStale = true;
+        Current = Current.WithoutModifiers();
+        return true;
+    }
+
+    /// <summary>The modifier names that differ from normal, for the lobby's card ("SHORT", "SPEED 150%"), without the mode</summary>
+    public List<string> Modifiers
     {
         get
         {
             List<string> parts = new List<string>();
-            if (Mode != GameMode.Standard)
-                parts.Add(Loc.Get(GameModes.Key(Mode)));
             if (Shows(Rule.WaveLength) && Length != MatchLength.Normal)
                 parts.Add(Loc.Get(Length == MatchLength.Short ? "rules.length.short" : "rules.length.long"));
             if (Shows(Rule.Steals) && !Steals)
@@ -109,11 +127,52 @@ public readonly struct HouseRules : IEquatable<HouseRules>
                 parts.Add(Loc.Get("rules.summary.waves", Waves));
             if (Shows(Rule.RoundTimer) && RoundMinutes != DEFAULT_ROUND)
                 parts.Add(Loc.Get("rules.summary.round", RoundMinutes));
+            return parts;
+        }
+    }
+
+    /// <summary>The rules a match plays by: a public lobby's are always normal</summary>
+    public HouseRules ForMatch(bool publicLobby)
+    {
+        return publicLobby ? Normal : this;
+    }
+
+    /// <summary>What differs from normal, in a line ("GOLD RUSH · SHORT · NO STEALS"); "" for normal</summary>
+    public string Summary
+    {
+        get
+        {
+            List<string> parts = Modifiers;
+            if (Mode != GameMode.Standard)
+                parts.Insert(0, Loc.Get(GameModes.Key(Mode)));
             return string.Join(" · ", parts);
         }
     }
 
     bool Shows(Rule rule) => ModeRules.For(Mode, rule) == RuleShow.Shown;
+
+    // What's saved may be a finished game's modifiers: true from launch and from each game's end, until the next picks are saved
+    static bool savedModifiersStale = true;
+
+    /// <summary>
+    /// The saved rules, as the menus load: without their modifiers if those are from a game already played (or quit midway)
+    /// </summary>
+    public static void LoadSaved(GameSettings settings)
+    {
+        Current = From(settings);
+        if (savedModifiersStale)
+            Current = Current.WithoutModifiers();
+    }
+
+    /// <summary>The host's picks were just saved: they're this game's, and load as they are</summary>
+    public static void PicksSaved() { savedModifiersStale = false; }
+
+    /// <summary>A fresh Play in the editor (statics can outlive one)</summary>
+    internal static void ResetForPlay()
+    {
+        savedModifiersStale = true;
+        matchPlayed = false;
+    }
 
     /// <summary>The rules saved in settings.cfg</summary>
     public static HouseRules From(GameSettings settings)

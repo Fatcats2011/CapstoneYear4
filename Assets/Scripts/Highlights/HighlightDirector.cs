@@ -186,7 +186,7 @@ public class HighlightDirector : MonoBehaviour
                 Time = now,
                 Pose = ScooterPose.Read(seat.Driving),
                 Flags = seat.Driving.Flags,
-                Carrying = held != null ? (byte)((int)held.Value + 1) : (byte)0,
+                Carrying = held != null ? (byte)((int)held.Look + 1) : (byte)0,
             });
         }
         Profiler.EndSample();

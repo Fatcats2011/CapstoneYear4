@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.IO;
 using TMPro;
 using UnityEngine;
+using UnityEngine.InputSystem;
 
 public class OptionsMenu : SingletonMonobehaviour<OptionsMenu>, IMouseMenu
 {
@@ -78,6 +79,38 @@ public class OptionsMenu : SingletonMonobehaviour<OptionsMenu>, IMouseMenu
     /// <summary>The pages (null until Start)</summary>
     internal OptionsBook Book => book;
 
+    OptionSetting controlsRow;
+    ControlsPanel controls;
+
+    /// <summary>Whoever works the Options menu now (MenuInteractions), whose controls the Controls page changes</summary>
+    internal PlayerInput Owner;
+
+    /// <summary>The Controls panel, while it's up: it takes the menu's buttons</summary>
+    internal ControlsPanel Controls => controls != null && controls.IsOpen ? controls : null;
+
+    /// <summary>Whether the selector is on the row that opens the Controls panel</summary>
+    internal bool OnControlsRow => OnCodePage && book.Selected == controlsRow;
+
+    // The Controls panel, as a pause menu opens it, for whoever works this menu. The page behind it hides while it's up
+    void OpenControls()
+    {
+        if (Owner == null || pageObjects.Count == 0)
+            return;
+        if (controls == null)
+            controls = ControlsPanel.Build((RectTransform)pageObjects[0].transform.parent, null);
+        PauseMenu.OpenControlsFor(controls, Owner);
+        pageObjects[book.Page - 1].SetActive(false);
+        if (selector != null)
+            selector.SetActive(false);
+    }
+
+    void AfterControls()
+    {
+        if (selector != null)
+            selector.SetActive(true);
+        ShowPage();
+    }
+
     /// <summary>The code-built rows on a page (none on GENERAL)</summary>
     internal IReadOnlyList<OptionRow> RowsOn(int page) => page > 0 && page <= pageRows.Count ? pageRows[page - 1] : new List<OptionRow>();
 
@@ -102,7 +135,8 @@ public class OptionsMenu : SingletonMonobehaviour<OptionsMenu>, IMouseMenu
             OptionsPage.Keyed("options.page.general"),
             OptionsPage.Keyed("options.page.display", FullscreenStyleSetting(), VSyncSetting(), FrameCapSetting(), QualitySetting(), SplitScreenSetting(), UnitsSetting()),
             OptionsPage.Keyed("options.page.audio", MasterSetting(), MusicSetting(), EffectsSetting(), BackgroundSetting()),
-            OptionsPage.Keyed("options.page.accessibility", ReduceMotionSetting(), RumbleSetting(), ColourblindSetting(), TextSizeSetting()));
+            OptionsPage.Keyed("options.page.accessibility", ReduceMotionSetting(), RumbleSetting(), ColourblindSetting(), TextSizeSetting()),
+            OptionsPage.Keyed("pause.controls", controlsRow = new OptionSetting("options.controls.open", new[] { 0 }, choice => ">", 0) { LabelKey = "options.controls.open" }));
 
         TMP_Text style = positions.GetComponentInChildren<TMP_Text>(true);
         float rowX = resolutionRow != null ? ((RectTransform)resolutionRow.transform).anchoredPosition.x : firstRow.anchoredPosition.x;
@@ -389,7 +423,7 @@ public class OptionsMenu : SingletonMonobehaviour<OptionsMenu>, IMouseMenu
     ///</summary>
     public void TurnPage(bool right)
     {
-        if (book == null)
+        if (book == null || Controls != null)
             return;
         book.TurnPage(right);
         ShowPage();
@@ -436,6 +470,8 @@ public class OptionsMenu : SingletonMonobehaviour<OptionsMenu>, IMouseMenu
         get
         {
             List<RectTransform> list = new List<RectTransform>();
+            if (Controls != null)
+                return list; // as in a pause menu: the panel's for the pad and keyboard
             if (OnCodePage)
                 foreach (OptionRow row in pageRows[book.Page - 1])
                     list.Add((RectTransform)row.transform);
@@ -465,6 +501,12 @@ public class OptionsMenu : SingletonMonobehaviour<OptionsMenu>, IMouseMenu
 
     void IMouseMenu.MouseClick(int row, Vector2 point, Camera camera)
     {
+        if (OnControlsRow)
+        {
+            OpenControls();
+            return;
+        }
+
         // A drawn row: straight to its point nearest the click (Off / On, a volume), one step at a time as the pad does
         GameObject[] points = OnCodePage ? null
             : optionSelected == OptionSelected.BGM ? bgmSelectorPositions
@@ -610,6 +652,17 @@ public class OptionsMenu : SingletonMonobehaviour<OptionsMenu>, IMouseMenu
     ///</summary>
     public void Confirm()
     {
+        if (Controls != null)
+        {
+            controls.Confirm();
+            return;
+        }
+        if (OnControlsRow)
+        {
+            OpenControls();
+            return;
+        }
+
         if (OnCodePage || optionSelected != OptionSelected.RESOLUTION || resolutionRow == null)
             return;
 
@@ -684,7 +737,7 @@ public class OptionsMenu : SingletonMonobehaviour<OptionsMenu>, IMouseMenu
         Colourblind.On = settings.colourblind == 1;
         TextSize.Set(settings.textSize);
         Units.Imperial = settings.units == 1;
-        HouseRules.Current = HouseRules.From(settings);
+        HouseRules.LoadSaved(settings);
 
         // The language: the one picked here before, else Steam's, else the PC's, else English (LanguageRules)
         Loc.SetLanguage(LanguageRules.Pick(settings.language, SteamNames.Language(), Application.systemLanguage));
@@ -699,6 +752,7 @@ public class OptionsMenu : SingletonMonobehaviour<OptionsMenu>, IMouseMenu
             current = new GameSettings(bgmPosition, sfxPosition, fullscreenPosition, qualityPosition);
         rules.Into(current);
         SaveOptions();
+        HouseRules.PicksSaved();
     }
 
     // On DISPLAY, AUDIO or ACCESSIBILITY: the book's rows, not the drawn ones
@@ -726,6 +780,12 @@ public class OptionsMenu : SingletonMonobehaviour<OptionsMenu>, IMouseMenu
     ///</summary>
     public void ScrollMenuUpDown(bool direction)
     {
+        if (Controls != null)
+        {
+            controls.Move(direction);
+            return;
+        }
+
         if (OnCodePage)
         {
             book.Move(direction);
@@ -769,6 +829,9 @@ public class OptionsMenu : SingletonMonobehaviour<OptionsMenu>, IMouseMenu
     ///</summary>
     public void ScrollMenuLeftRight(bool direction)
     {
+        if (Controls != null)
+            return;
+
         if (OnCodePage)
         {
             // Saved at once: Options can be left other ways than B (an invite accepted), or the game quit from it
@@ -910,6 +973,15 @@ public class OptionsMenu : SingletonMonobehaviour<OptionsMenu>, IMouseMenu
     ///</summary>
     public void ExitMenu()
     {
+        // B with the Controls panel up is its own Back; once it closes, the page shows again
+        if (Controls != null)
+        {
+            controls.Back();
+            if (!controls.IsOpen)
+                AfterControls();
+            return;
+        }
+
         // A size picked without A isn't kept
         if (resolutionRow != null)
             resolutionRow.Revert();

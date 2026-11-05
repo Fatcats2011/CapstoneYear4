@@ -14,7 +14,7 @@ namespace DoA.Tests
         [TestCase(GameMode.GoldRush, S, S, S, S, H, L, S, S)]
         [TestCase(GameMode.KingsCrown, S, S, H, H, S, L, H, S)]
         [TestCase(GameMode.Infection, S, S, H, H, S, H, H, S)]
-        [TestCase(GameMode.HotPotato, S, S, H, H, S, L, H, S)]
+        [TestCase(GameMode.HotPotato, S, S, H, H, H, L, H, S)]
         public void Table(GameMode mode, RuleShow speed, RuleShow lowGravity, RuleShow waves, RuleShow waveLength,
             RuleShow round, RuleShow steals, RuleShow golden, RuleShow bots)
         {

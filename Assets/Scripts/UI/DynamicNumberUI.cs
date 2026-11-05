@@ -114,13 +114,34 @@ public class DynamicNumberUI : MonoBehaviour
         centerText.text = "";
     }
 
+    // Hot Potato: the clock counts down to the next elimination, and rests at zero between fuses
+    void SetFuseClock(ModeMatch match)
+    {
+        inNormalGameplay = false;
+        dynamicWaveTimer.SetActive(true);
+        waveTimerDynamic.SetActive(true);
+        numHandler.SetFinalCountdown(false);
+        finalOrderNumber.gameObject.SetActive(false);
+        centerText.text = "";
+
+        string fuse = TimerText(match.PotatoSeat == ModeMatch.NONE ? 0 : TimedModeRules.FuseSeconds(Time.time, match.FuseEnd));
+        if (timer != fuse)
+        {
+            timer = fuse;
+            numHandler.UpdateTimerUI(timer);
+        }
+    }
+
     private void Update()
     {
         if (OrderManager.Instance != null)
         {
             if (OrderManager.Instance.GameStarted)
             {
-                if (!OrderManager.Instance.FinalOrderActive)
+                ModeMatch match = ModeMatch.Current;
+                if (match != null && match.Mode == GameMode.HotPotato && !OrderManager.Instance.FinalOrderActive)
+                    SetFuseClock(match);
+                else if (!OrderManager.Instance.FinalOrderActive)
                 {
                     if (OrderManager.Instance.GameTimer < 10f && OrderManager.Instance.GameTimer > 0f)
                     {

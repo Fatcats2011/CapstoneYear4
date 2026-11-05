@@ -4,7 +4,7 @@ using UnityEngine;
 /// <summary>
 /// What an order change does (OrderChange)
 /// </summary>
-public enum OrderChangeKind : byte { Spawn, Pickup, Deliver, Drop, Erase, EraseGold, Steal }
+public enum OrderChangeKind : byte { Spawn, Pickup, Deliver, Drop, Erase, EraseGold, Steal, SpawnLode, Nugget, NuggetTaken }
 
 /// <summary>
 /// One change to an order, as it travels online. The host makes it, and every client replays it through the same game
@@ -37,6 +37,24 @@ public struct OrderChange : INetworkSerializable
     public static OrderChange Spawn(int order, bool addToActive)
     {
         return new OrderChange { Kind = OrderChangeKind.Spawn, Order = order, Seat = -1, Seat2 = -1, Flag = addToActive };
+    }
+
+    /// <summary>The order appears at its pickup as Gold Rush's Mother Lode</summary>
+    public static OrderChange SpawnLode(int order, bool addToActive)
+    {
+        return new OrderChange { Kind = OrderChangeKind.SpawnLode, Order = order, Seat = -1, Seat2 = -1, Flag = addToActive };
+    }
+
+    /// <summary>The Mother Lode's carrier (their seat) spills a nugget here. Order is the nugget's id, not an order's key</summary>
+    public static OrderChange Nugget(int id, Vector3 spot, int seat)
+    {
+        return new OrderChange { Kind = OrderChangeKind.Nugget, Order = id, Seat = seat, Seat2 = -1, Spot = spot };
+    }
+
+    /// <summary>A player (their seat) takes a nugget. Order is the nugget's id, not an order's key</summary>
+    public static OrderChange NuggetTaken(int id, int seat)
+    {
+        return new OrderChange { Kind = OrderChangeKind.NuggetTaken, Order = id, Seat = seat, Seat2 = -1 };
     }
 
     /// <summary>A player picks the order up</summary>
@@ -99,7 +117,8 @@ public struct OrderChange : INetworkSerializable
         switch (Kind)
         {
             case OrderChangeKind.Spawn:
-                return "Spawn " + Order + (Flag ? " (active)" : "");
+            case OrderChangeKind.SpawnLode:
+                return Kind + " " + Order + (Flag ? " (active)" : "");
             case OrderChangeKind.Pickup:
             case OrderChangeKind.Deliver:
                 return Kind + " " + Order + " seat " + Seat;

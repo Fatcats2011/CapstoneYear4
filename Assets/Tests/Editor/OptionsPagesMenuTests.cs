@@ -96,7 +96,7 @@ namespace DoA.Tests
 
             OptionsMenu options = OptionsMenu.Instance;
             Assert.IsNotNull(options.Book, "the pages were built");
-            Assert.AreEqual(4, options.Book.Pages.Count);
+            Assert.AreEqual(5, options.Book.Pages.Count);
             GameObject drawnRow = options.ResolutionRow.gameObject;
 
             // Music and Effects are on AUDIO, not GENERAL (playtest, 2026-10-24): GENERAL starts at Fullscreen
@@ -129,6 +129,8 @@ namespace DoA.Tests
 
             // ACCESSIBILITY, the other way round: Reduce motion applies at once
             options.TurnPage(false);
+            options.TurnPage(false);
+            Assert.AreEqual("CONTROLS", options.Book.Current.Name);
             options.TurnPage(false);
             Assert.AreEqual("ACCESSIBILITY", options.Book.Current.Name);
             options.ScrollMenuLeftRight(true);

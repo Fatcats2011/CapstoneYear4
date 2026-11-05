@@ -1,0 +1,17 @@
+{
+  "test": { "seats": 1, "mode": "Standard", "seconds": 25 },
+  "01_menus_rules_4player_standard": { "menus": 1, "seats": 4, "mode": "Standard", "length": "Short", "seconds": 400, "width": 1920, "height": 1080 },
+  "02_standard_fullscreen": { "seats": 1, "mode": "Standard", "seconds": 420 },
+  "03_standard_fullscreen_nohud": { "seats": 1, "mode": "Standard", "length": "Short", "golden": 0, "hud": 0, "seconds": 300 },
+  "04_standard_2player_split": { "seats": 2, "mode": "Standard", "length": "Short", "golden": 0, "seconds": 300, "width": 1920, "height": 1080 },
+  "05_goldrush_fullscreen": { "seats": 1, "mode": "GoldRush", "golden": 0, "seconds": 300 },
+  "06_goldrush_4player_split": { "seats": 4, "mode": "GoldRush", "length": "Short", "golden": 0, "seconds": 240, "width": 1920, "height": 1080 },
+  "07_kingscrown_fullscreen": { "seats": 1, "mode": "KingsCrown", "round": 3, "seconds": 240 },
+  "08_kingscrown_4player_split": { "seats": 4, "mode": "KingsCrown", "round": 2, "seconds": 180, "width": 1920, "height": 1080 },
+  "09_infection_fullscreen": { "seats": 1, "mode": "Infection", "round": 3, "seconds": 240 },
+  "10_infection_4player_split": { "seats": 4, "mode": "Infection", "round": 2, "seconds": 180, "width": 1920, "height": 1080 },
+  "11_hotpotato_fullscreen": { "seats": 1, "mode": "HotPotato", "seconds": 240 },
+  "12_hotpotato_4player_split": { "seats": 4, "mode": "HotPotato", "seconds": 240, "width": 1920, "height": 1080 },
+  "13_mutator_low_gravity": { "seats": 1, "mode": "Standard", "lowgravity": 1, "length": "Short", "golden": 0, "seconds": 180 },
+  "14_mutator_speed_200": { "seats": 1, "mode": "Standard", "speed": 200, "length": "Short", "golden": 0, "seconds": 180 }
+}

@@ -179,7 +179,7 @@ public static class Colourblind
     }
 
     // A colour property moved to a colour, keeping its alpha (the shader reads some alphas as strengths)
-    static void Tint(Material material, string property, Color colour)
+    internal static void Tint(Material material, string property, Color colour)
     {
         if (!material.HasProperty(property))
             return;

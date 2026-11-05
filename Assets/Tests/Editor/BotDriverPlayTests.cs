@@ -180,6 +180,8 @@ namespace DoA.Tests
             while (!GiveOrder(carrier) && Time.realtimeSinceStartup < deadline)
                 yield return null;
             Assert.IsTrue(GiveOrder(carrier), "player 2 carries an order (" + OrderManager.Instance.ActiveOrders.Count + " orders out, state " + State() + ")");
+            // Within reach: it doesn't chase someone too far off to catch (BotTactics.FURTHEST_STEAL)
+            carrier.GetComponent<BallDriving>().Sphere.GetComponent<Rigidbody>().position = scooter.Sphere.transform.position + scooter.transform.forward * 20f;
             bool chased = false;
             deadline = Time.realtimeSinceStartup + WATCH;
             while (!chased && Time.realtimeSinceStartup < deadline)

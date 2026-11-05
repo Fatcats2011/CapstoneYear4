@@ -23,7 +23,8 @@ public static class ModeRules
             case Rule.GoldenOrder:
                 return HasDeliveries(mode) ? RuleShow.Shown : RuleShow.Hidden;
             case Rule.RoundTimer:
-                return HasDeliveries(mode) ? RuleShow.Hidden : RuleShow.Shown;
+                // Hot Potato plays until one player is left: its clock is the fuse
+                return HasDeliveries(mode) || mode == GameMode.HotPotato ? RuleShow.Hidden : RuleShow.Shown;
             case Rule.Steals:
                 if (mode == GameMode.Standard)
                     return RuleShow.Shown;

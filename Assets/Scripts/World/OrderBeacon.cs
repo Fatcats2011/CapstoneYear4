@@ -50,7 +50,7 @@ public class OrderBeacon : MonoBehaviour
         this.transform.position = order.transform.position;
 
         // set the color of the dissolve
-        switch(order.Value)
+        switch(order.Look)
         {
             case Constants.OrderValue.Easy:
                 dissolveRend.material.color = flameColors[0];

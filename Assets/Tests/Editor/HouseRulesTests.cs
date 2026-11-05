@@ -12,6 +12,52 @@ namespace DoA.Tests
         public void TearDown()
         {
             HouseRules.Current = HouseRules.Normal;
+            HouseRules.ResetForPlay();
+        }
+
+        [Test]
+        public void Modifiers_LastOneGame_TheModeAndBotsStay()
+        {
+            HouseRules.ResetForPlay();
+            HouseRules picked = new HouseRules(MatchLength.Long, false, false, false, GameMode.HotPotato, 5, 150, true, 5);
+            HouseRules.Current = picked;
+
+            Assert.IsFalse(HouseRules.ResetAfterMatch(), "no match yet: the picks stay");
+            Assert.AreEqual(picked, HouseRules.Current);
+
+            HouseRules.MatchBegan();
+            Assert.IsTrue(HouseRules.ResetAfterMatch());
+            Assert.AreEqual(new HouseRules(MatchLength.Normal, true, true, false, GameMode.HotPotato), HouseRules.Current);
+            Assert.IsFalse(HouseRules.ResetAfterMatch(), "only once per match");
+        }
+
+        [Test]
+        public void Saved_Modifiers_DontComeBack_ButTheNextGamesPicksDo()
+        {
+            HouseRules.ResetForPlay();
+            GameSettings settings = new GameSettings(5, 5, 1);
+            new HouseRules(MatchLength.Long, true, true, true, GameMode.Infection, 3, 150).Into(settings);
+
+            HouseRules.LoadSaved(settings);
+            Assert.AreEqual(GameMode.Infection, HouseRules.Current.Mode);
+            Assert.AreEqual(100, HouseRules.Current.SpeedPercent);
+
+            HouseRules.PicksSaved();
+            HouseRules.LoadSaved(settings);
+            Assert.AreEqual(150, HouseRules.Current.SpeedPercent, "picked since: the menus loading again keep them");
+
+            HouseRules.MatchBegan();
+            HouseRules.ResetAfterMatch();
+            HouseRules.LoadSaved(settings);
+            Assert.AreEqual(100, HouseRules.Current.SpeedPercent, "that game's over: they don't come back");
+        }
+
+        [Test]
+        public void Modifiers_NameOnlyWhatDiffers_WithoutTheMode()
+        {
+            Assert.IsEmpty(new HouseRules(MatchLength.Normal, true, true, true, GameMode.GoldRush).Modifiers);
+            CollectionAssert.AreEqual(new[] { "SPEED 150%", "LOW GRAVITY" },
+                new HouseRules(MatchLength.Normal, true, true, true, GameMode.KingsCrown, 3, 150, true).Modifiers);
         }
 
         [Test]

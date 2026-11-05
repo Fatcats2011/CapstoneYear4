@@ -22,26 +22,42 @@ public static class PurpleFlame
     static readonly Color DEEP = new Color(0.45f, 0.05f, 0.95f, 1f);
     static readonly Color HOT = new Color(0.97f, 0.7f, 1f, 1f);
 
-    static Sprite[] frames;
+    static readonly Color PINK_DEEP = new Color(1f, 0.08f, 0.62f, 1f);
+    static readonly Color PINK_HOT = new Color(1f, 0.8f, 0.95f, 1f);
+
+    static Sprite[] frames, pinkFrames;
 
     /// <summary>The flipbook's frames, made the first time they're asked for</summary>
-    public static Sprite[] Frames
+    public static Sprite[] Frames => frames ?? (frames = Draw("Purple Flame", DEEP, HOT));
+
+    /// <summary>The same flame in pink: round the cursed package (Hot Potato)</summary>
+    public static Sprite[] PinkFrames => pinkFrames ?? (pinkFrames = Draw("Pink Flame", PINK_DEEP, PINK_HOT));
+
+    static Sprite[] Draw(string name, Color deep, Color hot)
     {
-        get
+        Sprite[] drawn = new Sprite[FRAMES];
+        for (int f = 0; f < FRAMES; f++)
         {
-            if (frames == null)
-            {
-                frames = new Sprite[FRAMES];
-                for (int f = 0; f < FRAMES; f++)
-                {
-                    Texture2D texture = new Texture2D(SIZE, SIZE, TextureFormat.RGBA32, false) { name = "Purple Flame " + f, wrapMode = TextureWrapMode.Clamp };
-                    texture.SetPixels(Pixels((float)f / FRAMES));
-                    texture.Apply();
-                    frames[f] = Sprite.Create(texture, new Rect(0, 0, SIZE, SIZE), new Vector2(0.5f, 0.5f));
-                }
-            }
-            return frames;
+            Color[] pixels = Pixels((float)f / FRAMES);
+            for (int i = 0; i < pixels.Length; i++)
+                pixels[i] = Recolour(pixels[i], deep, hot);
+            Texture2D texture = new Texture2D(SIZE, SIZE, TextureFormat.RGBA32, false) { name = name + " " + f, wrapMode = TextureWrapMode.Clamp };
+            texture.SetPixels(pixels);
+            texture.Apply();
+            drawn[f] = Sprite.Create(texture, new Rect(0, 0, SIZE, SIZE), new Vector2(0.5f, 0.5f));
         }
+        return drawn;
+    }
+
+    // A pixel of the purple flame moved to another pair of colours, as hot as it was
+    static Color Recolour(Color pixel, Color deep, Color hot)
+    {
+        if (deep == DEEP)
+            return pixel;
+        float heat = Mathf.InverseLerp(DEEP.g, HOT.g, pixel.g);
+        Color colour = Color.Lerp(deep, hot, heat);
+        colour.a = pixel.a;
+        return colour;
     }
 
     /// <summary>One frame's pixels at a point of the loop (0 up to 1)</summary>

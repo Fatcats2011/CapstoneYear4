@@ -1,9 +1,9 @@
 using UnityEngine;
 
 /// <summary>
-/// Gold Rush (docs/game-modes-ideas.md): many more packages, a score that drains while a player isn't delivering, and
-/// steals that count double in the last 30 seconds (rush hour). Every number is here, to tune in playtests. The host
-/// (or this PC offline) runs it: OrderManager spawns and drains, OrderHandler pays; scores reach clients as always
+/// Gold Rush (docs/gold-rush-brainstorm.md): many more packages, a Mother Lode for everyone to fight over every 30 to 40
+/// seconds (MotherLode), and steals that count double in the last 30 seconds (rush hour). Every number is here, to tune in
+/// playtests. The host (or this PC offline) runs it: OrderManager spawns, MotherLode pays; scores reach clients as always
 /// </summary>
 public static class GoldRushRules
 {
@@ -11,12 +11,27 @@ public static class GoldRushRules
     public const int QUOTA_MULTIPLIER = 3;
     /// <summary>Seconds between spawns (the scene's cooldownTime otherwise)</summary>
     public const float SPAWN_COOLDOWN = 1f;
-    /// <summary>Points lost per second while not delivering</summary>
-    public const float DRAIN_PER_SECOND = 2f;
-    /// <summary>Seconds after a delivery (or the match's start) before the drain starts</summary>
-    public const float GRACE_SECONDS = 5f;
     /// <summary>The last seconds of the waves, when each steal counts twice (the order doubles twice, the thief is paid twice)</summary>
     public const float RUSH_HOUR_SECONDS = 30f;
+
+    /// <summary>The wait for the next Mother Lode, from when the last one is gone, in seconds</summary>
+    public const float LODE_WAIT_MIN = 30f, LODE_WAIT_MAX = 40f;
+    /// <summary>What delivering it pays, however often it was stolen (a steal still pays the thief as usual)</summary>
+    public const int LODE_WORTH = 250;
+    /// <summary>How much larger than a golden package it looks</summary>
+    public const float LODE_SCALE = 2.5f;
+    /// <summary>The share of its engine a scooter keeps while carrying it</summary>
+    public const float LODE_CARRY_FORCE = 0.8f;
+    /// <summary>Nobody's got it for this long, in seconds (it may have landed out of reach): it goes, and another comes in its time</summary>
+    public const float LODE_UNTOUCHED_LIMIT = 60f;
+    /// <summary>The carrier spills a gold nugget each time they've driven this far, in metres</summary>
+    public const float NUGGET_SPACING = 12f;
+    /// <summary>What a nugget pays whoever drives through it</summary>
+    public const int NUGGET_WORTH = 10;
+    /// <summary>How close to a nugget takes it, in metres</summary>
+    public const float NUGGET_REACH = 4f;
+    /// <summary>How long a nugget stays on the road, in seconds</summary>
+    public const float NUGGET_LIFE = 20f;
 
     public static bool Playing => HouseRules.Playing.Mode == GameMode.GoldRush;
 
@@ -44,20 +59,15 @@ public static class GoldRushRules
         return rush ? 2 : 1;
     }
 
-    /// <summary>
-    /// The points drained this frame from a player who last delivered sinceDelivery seconds ago. carry keeps the part of a
-    /// point not yet taken between frames. A score never goes below zero
-    /// </summary>
-    public static int Drain(float sinceDelivery, float deltaTime, ref float carry, int score)
+    /// <summary>The wait for the next Mother Lode, for a roll from 0 to 1</summary>
+    public static float LodeWait(float roll)
     {
-        if (sinceDelivery < GRACE_SECONDS || score <= 0)
-        {
-            carry = 0f;
-            return 0;
-        }
-        carry += DRAIN_PER_SECOND * deltaTime;
-        int points = Mathf.FloorToInt(carry);
-        carry -= points;
-        return Mathf.Min(points, score);
+        return Mathf.Lerp(LODE_WAIT_MIN, LODE_WAIT_MAX, roll);
+    }
+
+    /// <summary>Whether a seat takes a nugget it's this close to: anyone near it but the player who spilled it</summary>
+    public static bool TakesNugget(int seat, int spilledBy, float distance)
+    {
+        return seat != spilledBy && distance <= NUGGET_REACH;
     }
 }

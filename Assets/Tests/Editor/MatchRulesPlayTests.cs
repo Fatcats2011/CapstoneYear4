@@ -136,7 +136,7 @@ namespace DoA.Tests
         }
 
         [UnityTest]
-        public IEnumerator GoldRush_AScoreDrains_UntilADelivery()
+        public IEnumerator GoldRush_TheMotherLode_SlowsItsCarrier_AndPaysOnDelivery()
         {
             EditorSceneManager.playModeStartScene = AssetDatabase.LoadAssetAtPath<SceneAsset>(MENU_SCENE);
             yield return new EnterPlayMode();
@@ -160,21 +160,21 @@ namespace DoA.Tests
             Assert.IsTrue(HouseRules.Playing.StealsOn, "Gold Rush locks steals on");
 
             OrderHandler player = ScoreManager.Instance.orderHandlers[0];
-            player.Score = 100;
-            for (float until = Time.realtimeSinceStartup + GoldRushRules.GRACE_SECONDS - 1f; Time.realtimeSinceStartup < until;)
-                yield return null;
-            Assert.AreEqual(100, player.Score, "nothing drains during the grace");
+            Assert.IsTrue(OrderManager.Instance.SpawnLode(), "a free order to send out");
+            Order lode = Order.CurrentLode;
+            Assert.IsNotNull(lode);
+            Assert.IsTrue(lode.IsLode);
+            Assert.AreEqual(GoldRushRules.LODE_WORTH, lode.Worth);
 
-            for (float until = Time.realtimeSinceStartup + 4f; Time.realtimeSinceStartup < until;)
-                yield return null;
-            Assert.Less(player.Score, 100, "drained after the grace");
-            Assert.Greater(player.Score, 85, "about two points a second");
+            player.AddOrder(lode);
+            Assert.IsTrue(player.CarryingLode);
+            lode.CountSteal();
+            Assert.AreEqual(GoldRushRules.LODE_WORTH, lode.Worth, "a steal doesn't double it");
 
             int before = player.Score;
-            player.StartDrainClock(); // as a delivery does
-            for (float until = Time.realtimeSinceStartup + 2f; Time.realtimeSinceStartup < until;)
-                yield return null;
-            Assert.AreEqual(before, player.Score, "a delivery restarts the grace");
+            player.DeliverOrder(lode);
+            Assert.AreEqual(before + GoldRushRules.LODE_WORTH, player.Score);
+            Assert.IsFalse(player.CarryingLode);
         }
 
         [UnityTest]

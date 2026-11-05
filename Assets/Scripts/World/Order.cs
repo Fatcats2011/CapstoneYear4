@@ -16,7 +16,16 @@ public class Order : MonoBehaviour
     // what it is worth now: its price doubled for each (StealValueRules)
     private int steals;
     public int Steals { get { return steals; } }
-    public int Worth { get { return StealValueRules.Worth(value, steals); } }
+    public int Worth { get { return isLode ? GoldRushRules.LODE_WORTH : StealValueRules.Worth(value, steals); } }
+
+    // Gold Rush's Mother Lode: this order, for as long as it's out, looks and pays as one (MotherLode)
+    private bool isLode;
+    public bool IsLode { get { return isLode; } }
+    /// <summary>The Mother Lode out now, if any. Every machine that replays its spawn knows</summary>
+    internal static Order CurrentLode { get; private set; }
+
+    /// <summary>The tier this order looks like: the Mother Lode looks golden, whatever pool it came from</summary>
+    internal Constants.OrderValue Look { get { return isLode ? Constants.OrderValue.Golden : value; } }
 
     /// <summary>The seats already paid for stealing this order (StealValueRules.Pay): only the host's scores use it</summary>
     internal readonly HashSet<int> PaidThieves = new HashSet<int>();
@@ -43,12 +52,12 @@ public class Order : MonoBehaviour
     }
 
     /// <summary>Whether it's been stolen, so it's worth more than its price (the golden order never is: it doesn't double)</summary>
-    internal bool WorthMoreForSteals { get { return steals > 0 && value != Constants.OrderValue.Golden; } }
+    internal bool WorthMoreForSteals { get { return steals > 0 && value != Constants.OrderValue.Golden && !isLode; } }
 
     // The index of this order's tier in the per-tier tables (meshes, materials, scales, glows): Easy 0 to Golden 3
     private int PackageType()
     {
-        switch (value)
+        switch (Look)
         {
             case Constants.OrderValue.Medium: return 1;
             case Constants.OrderValue.Hard: return 2;
@@ -64,7 +73,7 @@ public class Order : MonoBehaviour
         if (orderMeshObject == null || value == Constants.OrderValue.Golden)
             return;
 
-        float size = meshScale[PackageType()] * StealValueRules.Swell(steals);
+        float size = meshScale[PackageType()] * (isLode ? GoldRushRules.LODE_SCALE : StealValueRules.Swell(steals));
         orderMeshObject.transform.localScale = new Vector3(size, size, size);
     }
 
@@ -153,6 +162,7 @@ public class Order : MonoBehaviour
     /// <summary>A tier's package look (Easy 0 to Golden 3), for other things drawn like packages (ModeVisuals)</summary>
     internal Material MaterialOf(int tier) => orderMaterials != null && tier < orderMaterials.Length ? orderMaterials[tier] : null;
     internal Mesh MeshOf(int tier) => orderMesh != null && tier < orderMesh.Length ? orderMesh[tier] : null;
+    internal Sprite IconOf(int tier) => possiblePackageTypes != null && tier < possiblePackageTypes.Length ? possiblePackageTypes[tier] : null;
 
     [Header("Becon Indicator Info")]
     [SerializeField] BeconIndicator beconIndicator;
@@ -216,14 +226,18 @@ public class Order : MonoBehaviour
     /// <summary>
     /// This method initializes this order to be ready for pickup. It also initializes the beacon for this order.
     /// </summary>
-    public void InitOrder(bool shouldAdd = true)
+    /// <param name="lode">It's sent out as Gold Rush's Mother Lode</param>
+    public void InitOrder(bool shouldAdd = true, bool lode = false)
     {
         // Online, the host spawns orders: a client shows the host's spawn
         if (!OrderSync.MayChange)
             return;
 
-        using OrderSync.Scope change = OrderSync.Change(OrderChange.Spawn(key, shouldAdd));
+        using OrderSync.Scope change = OrderSync.Change(lode ? OrderChange.SpawnLode(key, shouldAdd) : OrderChange.Spawn(key, shouldAdd));
 
+        isLode = lode;
+        if (lode)
+            CurrentLode = this;
         ResetSteals();
         OrderManager.Instance.OnMainGameFinishes += EraseWhenSwappingToGold;
 
@@ -242,13 +256,14 @@ public class Order : MonoBehaviour
         // set mesh based on package type
         meshRenderer.material = orderMaterials[packageType];
         meshFilter.mesh = orderMesh[packageType];
-        orderMeshObject.transform.localScale = new Vector3(meshScale[packageType], meshScale[packageType], meshScale[packageType]);
+        float size = meshScale[packageType] * (isLode ? GoldRushRules.LODE_SCALE : 1f);
+        orderMeshObject.transform.localScale = new Vector3(size, size, size);
 
         // beacon and compass marker information
         beacon.InitBeacon(this, packageType);
         compassMarker.icon = possiblePackageTypes[packageType];
         compassMarker.InitalizeCompassUIOnAllPlayers();
-        beconIndicator.InitalizeBeconIndicator(value);
+        beconIndicator.InitalizeBeconIndicator(Look);
 
         // glow up gurl
         glow.SetVector4("GlowColour", glowColors[packageType]);
@@ -389,7 +404,7 @@ public class Order : MonoBehaviour
         StartPickupCooldownCoroutine();
 
 
-        beconIndicator.InitalizeBeconIndicator(value);
+        beconIndicator.InitalizeBeconIndicator(Look);
     }
 
     /// <summary>
@@ -497,6 +512,10 @@ public class Order : MonoBehaviour
             OrderManager.Instance.ReparentOrder(gameObject);
 
         beconIndicator.RemoveBeconIndicator();
+
+        isLode = false;
+        if (CurrentLode == this)
+            CurrentLode = null;
     }
 
     /// <summary>

@@ -158,6 +158,7 @@ public class RulesPanel : MonoBehaviour
             foreach (GameMode playable in GameModes.Playable)
                 modes.Add((int)playable);
             OptionSetting modeRow = OptionSetting.Keyed("rules.mode", modes, choice => GameModes.Key((GameMode)choice), (int)mode);
+            modeRow.Wraps = true;
             modeRow.Changed += value => { mode = (GameMode)value; Changed(); Rebuild(Row); Show(); };
             settings.Add(modeRow);
             rowRules.Add(null);
@@ -284,6 +285,7 @@ public class RulesPanel : MonoBehaviour
             size.preferredHeight = ROW_HEIGHT;
             TMP_Text name = Text(row.transform, "Name", font, ROW_SIZE, TextAlignmentOptions.Left);
             TMP_Text value = Text(row.transform, "Value", font, ROW_SIZE, TextAlignmentOptions.Right);
+            value.richText = false; // its arrows are plain < and >: Bangers has no arrow signs
             Stretch(name.rectTransform);
             Stretch(value.rectTransform);
             name.text = setting.Label;
@@ -313,7 +315,7 @@ public class RulesPanel : MonoBehaviour
         {
             names[i].color = values[i].color = i == book.Row ? SELECTED : Color.white;
             bool arrows = i == book.Row && !rules[i].IsDimmed;
-            values[i].text = arrows ? "◀  " + rules[i].ValueLabel + "  ▶" : rules[i].ValueLabel;
+            values[i].text = arrows ? "<  " + rules[i].ValueLabel + "  >" : rules[i].ValueLabel;
         }
         note.text = NoteFor(Picked, publicLobby);
     }
@@ -322,11 +324,9 @@ public class RulesPanel : MonoBehaviour
     {
         if (publicLobby)
             return Loc.Get("rules.note.public");
-        List<string> lines = new List<string>();
+        List<string> lines = new List<string> { Loc.Get(GameModes.DescriptionKey(picked.Mode)) };
         if (ModeRules.For(picked.Mode, Rule.GoldenOrder) == RuleShow.Shown && !picked.GoldenOrder)
             lines.Add(Loc.Get("rules.note.nogolden"));
-        if (picked.IsExperimental)
-            lines.Add(Loc.Get("rules.note.experimental"));
         return string.Join("\n", lines);
     }
 

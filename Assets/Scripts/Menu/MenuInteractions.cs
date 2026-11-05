@@ -182,6 +182,8 @@ public class MenuInteractions : MonoBehaviour
     {
         // Reference options menu every time we swap
         optionsMenu = OptionsMenu.Instance;
+        if (hostPlayer)
+            optionsMenu.Owner = playerInput; // whose controls its Controls page changes
 
         uiHandler.EastFaceEvent.AddListener(OptionsExit);
         uiHandler.SouthFaceEvent.AddListener(OptionsConfirm);

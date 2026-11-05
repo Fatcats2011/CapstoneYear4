@@ -42,6 +42,7 @@ public class ModeMatch
     {
         Mode = mode;
         Players = players;
+        startedWith = TimedModeRules.Count(players);
         this.random = random;
     }
 
@@ -81,7 +82,10 @@ public class ModeMatch
 
     public bool IsInfected(int seat) => seat >= 0 && (Infected & 1 << seat) != 0;
     public bool IsOut(int seat) => seat >= 0 && (Out & 1 << seat) != 0;
-    public bool IsOver => TimedModeRules.EndsEarly(Mode, Players, Infected, Out);
+    public bool IsOver => TimedModeRules.EndsEarly(Mode, Players, Infected, Out) || (Mode != GameMode.KingsCrown && startedWith > 1 && TimedModeRules.Count(Players) <= 1);
+
+    // How many players it began with: everyone else leaving Hot Potato or Infection ends it (a player alone from the start plays on)
+    readonly int startedWith;
 
     /// <summary>
     /// A player left mid-match: they hold nothing and count as gone. The potato waits POTATO_DELAY before it's lit again;

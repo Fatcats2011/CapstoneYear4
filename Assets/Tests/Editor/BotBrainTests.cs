@@ -85,9 +85,9 @@ namespace DoA.Tests
             BotStuck stuck = new BotStuck();
 
             Assert.IsFalse(stuck.Tick(Vector3.zero, 0.1f));
-            for (int i = 0; i < 25; i++)
+            for (int i = 0; i < 15; i++)
                 stuck.Tick(new Vector3(0.01f * i, 0, 0), 0.1f);
-            Assert.IsTrue(stuck.Reversing, "barely moved in 2.5 s");
+            Assert.IsTrue(stuck.Reversing, "barely moved in 1.5 s");
 
             for (int i = 0; i < 12; i++)
                 stuck.Tick(Vector3.zero, 0.1f);

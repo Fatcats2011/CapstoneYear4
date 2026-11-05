@@ -25,7 +25,8 @@ public class OrderManager : SingletonMonobehaviour<OrderManager>
 
     // A wave's length in this match: the match rules' Length stretches or shortens it (HouseRules)
     // A mode without deliveries plays one wave as long as its Round Timer (ModeReferee)
-    internal float WaveLength => TimedModeRules.IsTimed(HouseRules.Playing.Mode) ? HouseRules.Playing.RoundMinutes * 60f
+    internal float WaveLength => HouseRules.Playing.Mode == GameMode.HotPotato ? TimedModeRules.POTATO_ROUND_LIMIT
+        : TimedModeRules.IsTimed(HouseRules.Playing.Mode) ? HouseRules.Playing.RoundMinutes * 60f
         : waveLengthInSeconds * HouseRules.Playing.WaveFactor;
     internal float TotalGameTime => totalGameTime;
 
@@ -132,6 +133,7 @@ public class OrderManager : SingletonMonobehaviour<OrderManager>
     internal void Update()
     {
         WatchRushHour(); // every machine, from its own clock
+        WatchGoldenRound();
 
         // Online, the host runs the waves, the order spawns and the golden order's value; clients show what it sends
         if (!GameAuthority.IsAuthority)
@@ -167,7 +169,6 @@ public class OrderManager : SingletonMonobehaviour<OrderManager>
                 }
             }
         }
-        DrainGoldRush();
         if (RoundRunning && ModeReferee.Tick() && !finalOrderActive)
         {
             // Kings Crown is never decided early; Infection and Hot Potato are once nobody's left to catch or explode
@@ -303,12 +304,11 @@ public class OrderManager : SingletonMonobehaviour<OrderManager>
 
         // This match's rules: the host's, or normal in a public lobby (HouseRules)
         HouseRules.Playing = HouseRules.Current.ForMatch(PublicLobby());
+        // A public lobby plays normal: the host's own picks weren't played, so they stay
+        if (!PublicLobby())
+            HouseRules.MatchBegan();
         MatchPhysics.Apply(HouseRules.Playing);
         ModeReferee.Begin(HouseRules.Playing.Mode);
-        if (ScoreManager.Instance != null)
-            foreach (OrderHandler handler in ScoreManager.Instance.orderHandlers)
-                if (handler != null)
-                    handler.StartDrainClock();
 
         GetOrders();
         finalOrderActive = false;
@@ -321,10 +321,44 @@ public class OrderManager : SingletonMonobehaviour<OrderManager>
         EnableSpawning();
     }
 
+    /// <summary>The golden round ends this long after the players can drive, in seconds: a package nobody can deliver mustn't hold a match up forever</summary>
+    internal const float GOLDEN_LIMIT = 180f;
+    /// <summary>Everyone's told this long before that, in seconds</summary>
+    internal const float GOLDEN_WARNING = 20f;
+    internal float goldenEnds = -1f;
+    bool goldenWarned;
+
+    /// <summary>
+    /// The golden round's time limit. Time up counts as a delivery by whoever holds it: they keep what it's grown to, without
+    /// its base value, and it's the results. With nobody holding it, it's only the results. Every machine warns from its own
+    /// clock; the host ends it
+    /// </summary>
+    void WatchGoldenRound()
+    {
+        if (GameManager.Instance == null || GameManager.Instance.MainState != GameState.FinalPackage || finalOrder == null || !finalOrder.IsActive)
+        {
+            goldenEnds = -1f;
+            goldenWarned = false;
+            return;
+        }
+        if (Time.time < PlayerInstantiate.DrivingFrom)
+            return;
+        if (goldenEnds < 0f)
+            goldenEnds = Time.time + GOLDEN_LIMIT;
+        if (!goldenWarned && Time.time >= goldenEnds - GOLDEN_WARNING)
+        {
+            goldenWarned = true;
+            if (ControllerPrompts.Instance != null)
+                ControllerPrompts.Instance.ShowHint(Loc.Get("golden.ending"), 5f);
+        }
+        if (GameAuthority.IsAuthority && Time.time >= goldenEnds)
+            finalOrder.EraseOrder();
+    }
+
     bool rushHourShown;
 
     /// <summary>Whether the waves' clock is running in the match (not the tutorial, not past the last wave)</summary>
-    bool RoundRunning
+    internal bool RoundRunning
     {
         get
         {
@@ -346,22 +380,22 @@ public class OrderManager : SingletonMonobehaviour<OrderManager>
     }
 
     /// <summary>
-    /// Gold Rush: while the waves run, each player's score drains when they haven't delivered for a while
-    /// (GoldRushRules). Authority only, like every score change; scores reach clients as always
+    /// Gold Rush: sends the next free order out as the Mother Lode (MotherLode), from the farthest-travelling tier that has
+    /// one free. False with none free: it tries again. It goes back to its own tier's pool like any order
     /// </summary>
-    void DrainGoldRush()
+    internal bool SpawnLode()
     {
-        if (!GoldRushRules.Playing || !RoundRunning || ScoreManager.Instance == null)
-            return;
-
-        bool changed = false;
-        foreach (OrderHandler handler in ScoreManager.Instance.orderHandlers)
+        foreach (List<Order> pool in new[] { hard, medium, easy })
         {
-            if (handler != null && handler.Drain(Time.deltaTime) > 0)
-                changed = true;
+            if (pool.Count == 0)
+                continue;
+            Order order = pool[0];
+            pool.RemoveAt(0);
+            IncrementCounters(order.Value, 1);
+            order.InitOrder(true, true);
+            return true;
         }
-        if (changed)
-            ScoreManager.Instance.UpdatePlacement();
+        return false;
     }
 
     /// <summary>
