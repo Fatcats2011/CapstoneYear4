@@ -89,7 +89,7 @@ Online multiplayer is being built in steps (roadmap Phase 3: `docs/superpowers/p
   - A scooter that falls in the water disappears on other machines, and bumps nobody there, until it rises from its grave where its machine shows it.
   - Until its machine sends a first position, it stays where it was (its podium).
 - **The host runs the match:** its states (cutscenes, waves, results) and its match clock reach every machine.
-  - Until Phase 3F there was no tutorial online, and players started in the city. Now they start in their tutorial lanes.
+  - There is no tutorial online: players start in the city (`TutorialManager.Skipping`). Phase 3F's online tutorial is switched off.
 - **Back to the menu:**
   - The host takes everyone back, from its pause menu, or from the results when the rematch vote ends that way (Rematch, below).
   - Online, the menu opens on player select, the lobby, not the title screen (`MainMenu.Start`). Everyone can ready up again, and Y and B work there.
@@ -152,9 +152,11 @@ Online multiplayer is being built in steps (roadmap Phase 3: `docs/superpowers/p
   - A client ends an order's fall, throw or pickup cooldown before it replays the next change to it (`Order.FinishMoves`), so late messages don't trip over its animations.
   - The orders a client's player holds when the host takes everyone back go back to their own scene (`Order.ReturnHome`): none rides into the menu.
 
-### Phase 3F: the tutorial online
+### Phase 3F: the tutorial online (switched off)
 
-- **Online matches start with the tutorial, as local ones do.**
+**Online matches now skip the tutorial:** `TutorialManager.Skipping` is true whenever `GameAuthority.IsOnline` is, so the opening cutscene hands over to the first wave and everyone starts in the city (see Rematch, No tutorial). The code below is still in the project but doesn't run in a match. This section records how it worked:
+
+- **Online matches started with the tutorial, as local ones do.**
   - Each player starts at the start of their seat's lane, with its instructions, tutorial order and cardboard cutout.
   - The tutorial orders are the host's, like every order (Phase 3E).
 - **Stealing from the cutout:** boosting into it opens your lane's barrier at once. The host hands you the cutout's order, and every machine shows it on your scooter. Every machine shows the other lanes' steals too.
@@ -381,10 +383,10 @@ Playing with strangers is opt-in: a lobby is created friends only, exactly as be
   - Editor 2's player moves to the second podium, in the second company's colours.
   - Each editor shows the other's scooter.
   - Editor 1 shows `Online: player 1 joined (2 in)`.
-- **Two players in one editor (Phase 3J):** in editor 2's player select, press A on a second controller (F1 adds a test pad). It joins, and a moment later sits in the third seat, with its own view; editor 1 shows its scooter on the third podium. B on that second player gives the seat back in both editors.
+- **Two players in one editor (Phase 3J, only with `OnlineRules.OnePlayerPerMachine` set to `false`):** in editor 2's player select, press A on a second controller (F1 adds a test pad). It joins, and a moment later sits in the third seat, with its own view; editor 1 shows its scooter on the third podium. B on that second player gives the seat back in both editors.
 - Change colour or hat in one editor and watch the other.
 - Ready up in both. After the countdown both show the loading screen, and the game appears in both at once: the host waits for the other editor.
-  - The opening cutscene plays in each, then each player drives their own lane of the tutorial. The first wave starts once both have driven out of it into the city.
+  - The opening cutscene plays in each, then the first wave starts with both players in the city (no tutorial online).
   - Drive in one editor and watch the other: the scooter moves there, boosting and drifting.
   - Pick up and deliver orders in either editor: both show them on the scooter that holds them, with the same scores.
   - Boost into the other editor's scooter: steals and clashes show in both. Drive both into the water at one spot: they rise on different points.

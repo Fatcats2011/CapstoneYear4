@@ -17,6 +17,9 @@ public class Scoreboard : MonoBehaviour
     /// <summary>Over the players' views and HUDs, under the menus' overlays (prompts, rules, the reel)</summary>
     internal const int SORTING_ORDER = 50;
 
+    // The whole board drawn smaller than the sizes below (and bigger with the text size setting)
+    const float BOARD_SCALE = 0.7f;
+
     // Sizes in the 1920 × 1080 reference
     internal const float ROW_HEIGHT = 64f;
     internal const float ROW_GAP = 8f;
@@ -38,7 +41,7 @@ public class Scoreboard : MonoBehaviour
     const float STOLEN_BADGE = 34f;
 
     static readonly Color INK = new Color(0.06f, 0.05f, 0.08f, 1f);
-    static readonly Color PAPER = new Color(1f, 1f, 1f, 0.97f);
+    static readonly Color PAPER = new Color(1f, 1f, 1f, 0.2f); // mostly see through
 
     /// <summary>Each row's width: picture, name, money, two packages, and the slanted end</summary>
     internal const float ROW_WIDTH = ROW_HEIGHT + PAD + NAME_WIDTH + MONEY_WIDTH + PACKAGE_SPACING + PACKAGE + 2 * PAD + TIP;
@@ -223,7 +226,7 @@ public class Scoreboard : MonoBehaviour
         List<int> ranked = Ranking(seats, MoneyIn);
         float[] tops = RowTops(ranked.Count);
         float step = 1f - Mathf.Exp(-SLIDE_SPEED * Time.unscaledDeltaTime);
-        board.localScale = Vector3.one * TextSize.Scale; // the whole board grows with the text size setting
+        board.localScale = Vector3.one * (BOARD_SCALE * TextSize.Scale);
         int flame = Mathf.FloorToInt(Time.unscaledTime * FLAME_FPS);
 
         foreach (Row row in rows)

@@ -92,7 +92,7 @@ namespace DoA.Tests
         {
             float middle = Scoreboard.ROW_HEIGHT / 2f;
             Color inside = Scoreboard.BannerAt(Scoreboard.ROW_WIDTH / 3f, middle);
-            Assert.Greater(inside.a, 0.95f, "almost opaque");
+            Assert.AreEqual(0.2f, inside.a, 0.01f, "mostly see through");
             Assert.Greater(inside.r, 0.95f, "white");
             Assert.Less(Scoreboard.BannerAt(1f, middle).r, 0.1f, "a black edge");
 

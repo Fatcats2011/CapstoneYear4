@@ -1,13 +1,13 @@
 # Steam Store Page — Draft
 
-Built from what the game actually contains (updated 2026-11-03: bots, steal value, live scoreboard, highlight reel, match rules; tutorial removed). Edit freely; items marked ⚠️ depend on open legal checks in `LICENSES.md`.
+Built from what the game actually contains (updated 2026-11-04: game modes and mutators added; emotes and couch players online removed, since neither is in the game). The tutorial only runs in local delivery matches. Edit freely; items marked ⚠️ depend on open legal checks in `LICENSES.md`.
 
 ## Basics
 
 - **Title:** Dead on Arrival
 - **Developer / Publisher:** The Boo Crew
-- **Players:** 1–4. Local split-screen, online over Steam (friends or matchmaking), or both at once: two players on one PC can join an online match together. Online, empty seats fill with CPU rivals unless the host turns Bots off. Remote Play Together once it's enabled in Steamworks.
-- **Controller:** Full controller support. One player can use the keyboard (button prompts show controller buttons until the keyboard prompt art lands).
+- **Players:** 1–4. Local split-screen, or online over Steam (friends or matchmaking) with one player per PC. Online, empty seats fill with CPU rivals unless the host turns Bots off. Remote Play Together once it's enabled in Steamworks.
+- **Controller:** Full controller support. One player can use the keyboard (prompts show keyboard keys where that art exists, and controller buttons elsewhere).
 - **Steam features:** 9 achievements, Steam Cloud (settings), Rich Presence, invites from the friends list.
 - **Suggested tags:** Racing, Party Game, Local Multiplayer, Split Screen, Online PvP, PvP, Multiplayer, Arcade, Driving, Casual, Funny, Cartoony, Colorful, Stylized
 - **Steamworks checkboxes:** Online PvP, Shared/Split Screen PvP, Remote Play Together, Steam Achievements, Steam Cloud, Full controller support, Single-player. Solo play is online-only: Online Play hosts a friends-only lobby, a lone ready player starts the match (`DispatchRules.EveryoneReady`), and the three empty seats fill with bots (Bots rule on by default; `OnlineBotsNetworkTests` covers it over a direct connection). Offline has no bots. ⚠️ Play one solo match through Steam by hand before ticking it.
@@ -34,23 +34,27 @@ Built from what the game actually contains (updated 2026-11-03: bots, steal valu
 
 **Rivals with personality.** Online, CPU couriers fill the empty seats, so you can also play solo against three of them. One loves to steal, one hunts the big packages, one just wants to deliver — and they all keep an eye on the scoreboard.
 
-**Make it yours.** Pick your ghost's color and hat, send emotes mid-race, set the match length and rules, then watch the highlight reel and see who tops the podium.
+**Change the game.** Switch from the standard race to Gold Rush, Kings Crown, Infection or Hot Potato, or change the speed, gravity, number of waves and match length.
 
-**Couch or online.** Play split-screen on one screen, invite friends over Steam, or let matchmaking find a lobby. Bring a friend on the couch into an online match too.
+**Make it yours.** Pick your ghost's color and hat, then watch the highlight reel and see who tops the podium.
+
+**Couch or online.** Play split-screen on one screen, invite friends over Steam, or let matchmaking find a lobby.
 
 ## Features
 
 - 1–4 player local split-screen chaos
-- Online play over Steam: invite friends or find a match, with couch players joining together
+- Online play over Steam: invite friends or find a match
 - CPU rivals with their own personalities fill empty online seats, or play solo against three of them (online)
 - Phase-Boost through buildings and into rivals to steal their deliveries
 - Stolen packages grow in value with every steal
 - Live scoreboard showing everyone's money and what they're carrying
 - Drift boosts, slipstreams, pedestrians and props to knock around
 - Three waves of rising order difficulty, then a Golden Order showdown
-- Match rules: length, steals, Golden Order and bots
+- 5 game modes: Standard, Gold Rush, Kings Crown, Infection and Hot Potato ⚠️ (the 4 new modes haven't been playtested: `EDITOR-TODO.md` 16d–f)
+- Match rules: wave length and count, round timer, steals, Golden Order, bots, driving speed and low gravity
 - An end-of-round highlight reel of the best moments
-- Ghost colors, hats and emotes
+- Ghost colors and hats
+- Accessibility options: reduce motion, rumble off, colourblind mode and larger text
 - In 16 languages: English, French, German, Italian, Dutch, Spanish, Latin American Spanish, Portuguese, Brazilian Portuguese, Polish, Turkish, Czech, Romanian, Hungarian, Swedish and Danish
 - Rematch with one button, and an award for every player at the results (Kleptoghost, Butterfingers, Fish Food...)
 - Four rival delivery companies ⚠️ (names pending legal review)

@@ -35,12 +35,18 @@ Up to 4 players, one controller each (Xbox, PlayStation and Switch Pro controlle
 ## Match rules
 
 - In player select (local) or Dispatch (the online host), **Start** opens **MATCH RULES**; only the player who works the menus can. Up / down pick a rule, left / right change it, **A** or **B** close it (Start too).
-- **LENGTH:** SHORT, NORMAL or LONG: each wave lasts 0.75×, 1× or 1.5× as long.
-- **STEALS:** OFF still bumps a rival, but takes and drops nothing. The tutorial's steal lesson still works.
-  - **What a steal does** (STEALS on): the order is worth double what it was, each time it is stolen (an Easy order stolen twice pays 4×). The golden order is the exception: it keeps its worth, which grows 1 a second while it is held. The thief is paid 7 at once for taking a package, once per order, even if they never deliver it; a bump that takes nothing pays nothing. A stolen order looks larger the more it has been stolen. STEALS: OFF turns all of this off.
-  - **Prices:** Easy 55, Medium 65, Hard 80 (set by the time each takes to score), the golden order 50 and +1 a second. All the numbers are constants in `StealValueRules`.
-- **GOLDEN ORDER:** OFF ends the match after the last wave, straight to the results. Golden Win, Golden Steal and Last to First can't be earned then (the panel says so).
-- The rules are kept in `settings.cfg` (`length`, `steals`, `golden`). Online the host's rules run the match; a public lobby (matchmaking, or an open lobby) always plays the normal rules. Clients aren't shown the host's rules yet.
+- **MODE:** STANDARD, GOLD RUSH, KINGS CROWN, INFECTION or HOT POTATO. A mode decides which rows below show (`ModeRules`). Any mode but Standard, or changed waves, speed or gravity, shows a note that the game wasn't designed to be played this way. See `docs/game-modes-ideas.md`.
+- **WAVE LENGTH** (Standard, Gold Rush): 45 s, 60 s or 90 s. Normal is 60 s.
+- **WAVES** (Standard, Gold Rush): 1 to 6. Normal is 3.
+- **ROUND TIMER** (Kings Crown, Infection, Hot Potato): 2, 3 or 5 minutes. Normal is 3. These modes play one round on this timer, with no orders, golden round or tutorial.
+- **STEALS** (Standard; locked on in Gold Rush, Kings Crown and Hot Potato; not used in Infection): OFF still bumps a rival, but takes and drops nothing. The tutorial's steal lesson still works.
+  - **What a steal does** (STEALS on): the order is worth double what it was, each time it is stolen (an Easy order stolen twice pays 4×). The golden order is the exception: it keeps its worth, which grows 5 every 2.5 s while it is held. The thief is paid 7 at once for taking a package, once per order per thief, even if they never deliver it; a bump that takes nothing pays nothing. A stolen order looks larger the more it has been stolen. STEALS: OFF turns all of this off.
+  - **Prices:** Easy 55, Medium 65, Hard 80 (set by the time each takes to score), the golden order 50 and +5 every 2.5 s. The prices and steal pay are constants in `StealValueRules`; the golden growth is on `OrderManager` in the main scene.
+- **GOLDEN ORDER** (Standard, Gold Rush): OFF ends the match after the last wave, straight to the results. Golden Win, Golden Steal and Last to First can't be earned then (the panel says so).
+- **BOTS:** ON fills empty online seats with CPU rivals. Local matches have no bots.
+- **SPEED:** everyone's driving speed: 50%, 75%, 100%, 125%, 150% or 200%. Normal is 100%.
+- **LOW GRAVITY:** ON halves gravity.
+- The rules are kept in `settings.cfg` (the rule keys in the table below). Online the host's rules run the match on every machine; a public lobby (matchmaking, or an open lobby) always plays the normal rules. Clients aren't shown the host's rule choices yet.
 
 ## The pause menu
 
@@ -99,7 +105,7 @@ The game joins players itself (`PlayerJoiner`, Phase 5A): the scene's `PlayerInp
 | Menus: open the lobby to anyone, or back to friends only (online player select, host) | R |
 | Loading screen: ready | Space or Enter |
 
-- **Button prompts still show controller buttons:** read A as Space, B as Backspace and Start as Escape. Keyboard prompt art is still to come.
+- **Button prompts follow the device in use (`ButtonGlyph`):** a prompt shows keyboard art where it has some, and the controller button where it doesn't. There, read A as Space, B as Backspace and Start as Escape.
 - **The mouse works the menus, not the driving:** on the title screen, Options (every page), Credits and the pause menu of whoever paused, moving over a row selects it, a left click does what A does there (on an Options row it steps the value towards the click; on the Resolution size it applies it), and a right click does what B does. A click only counts while the cursor shows (it moved in the last 2 s), so a click that brings the window back never quits or leaves a match. On a drawn Options row a click goes to the choice nearest it; on the Resolution size it applies it, either side steps. Join first (any key, or any pad button): with nobody in, the mouse does nothing. Player select, Dispatch, the Controls panel, Restart's question and the results still need a pad or the keyboard.
 - **A lost controller:** if a player's controller is unplugged mid-match, only another controller can take their place, not the keyboard.
 - **Dev hotkeys:** in the editor and in development builds, some letters double as dev hotkeys (`docs/dev-hotkeys.md`): S skips the tutorial, B refills boost, R respawns everyone, and T drops everyone's orders. Drive with the arrows when testing there. Release builds have no dev hotkeys.
@@ -114,10 +120,10 @@ Options has four pages, turned with **LB / RB** (L1 / R1; **F / R** on the keybo
 
 | Page | Rows |
 |---|---|
-| GENERAL | The drawn screen: Music, Effects, Fullscreen, Resolution (A applies it) |
-| DISPLAY | Fullscreen style (BORDERLESS / EXCLUSIVE; dimmed while windowed), VSync, Frame cap (dimmed while VSync is on), Quality, Split-screen (two players: BOXED / STACKED / SIDE BY SIDE) |
-| AUDIO | Master (0–100%), In the background (MUTE / KEEP PLAYING: muting never pauses the game) |
-| ACCESSIBILITY | Reduce motion (no boost FOV kick, no speed-up FOV, no speed lines) |
+| GENERAL | The drawn screen: Fullscreen, Resolution (A applies it), Language |
+| DISPLAY | Fullscreen style (BORDERLESS / EXCLUSIVE; dimmed while windowed), VSync, Frame cap (dimmed while VSync is on), Quality, Split-screen (two players: BOXED / STACKED / SIDE BY SIDE), Units (METRIC / IMPERIAL) |
+| AUDIO | Master (0–100%), Music, Effects, In the background (MUTE / KEEP PLAYING: muting never pauses the game) |
+| ACCESSIBILITY | Reduce motion (no boost FOV kick, no speed-up FOV, no speed lines), Rumble, Colourblind mode (each player's shape badge and colourblind-safe player colours), Text size (100%, 125%, 150%) |
 
 ## Display settings in settings.cfg
 
@@ -147,10 +153,20 @@ The file:
 | `split` | 0–2 | 0 | Two players: 0 boxed, 1 stacked, 2 side by side |
 | `master` | 0–10 | 10 | Overall volume in tenths |
 | `bgmute` | 0, 1 | 0 | 1: silent while the window isn't focused |
+| `units` | 0, 1 | 0 | Distances: 0 metres, 1 feet |
 | `reducemotion` | 0, 1 | 0 | 1: Reduce motion |
-| `length` | 0–2 | 1 | Match rules: 0 short, 1 normal, 2 long |
+| `rumble` | 0, 1 | 1 | 0: pads never shake |
+| `colourblind` | 0, 1 | 0 | 1: Colourblind mode |
+| `textsize` | 0–2 | 0 | All text: 0 100%, 1 125%, 2 150% |
+| `mode` | 0–4 | 0 | Match rules: 0 Standard, 1 Gold Rush, 2 Kings Crown, 3 Infection, 4 Hot Potato |
+| `length` | 0–2 | 1 | Match rules: wave length, 0 short, 1 normal, 2 long |
+| `waves` | 1–6 | 3 | Match rules: how many waves |
+| `round` | 2, 3, 5 | 3 | Match rules: round timer, in minutes |
 | `steals` | 0, 1 | 1 | Match rules: 0 no steals |
 | `golden` | 0, 1 | 1 | Match rules: 0 no golden round |
+| `bots` | 0, 1 | 1 | Match rules: 0 no bots online |
+| `speed` | 50, 75, 100, 125, 150, 200 | 100 | Match rules: driving speed in percent |
+| `lowgravity` | 0, 1 | 0 | Match rules: 1 half gravity |
 
 How a saved size is used (`DisplayRules`):
 - **Fullscreen:** a size the monitor doesn't list falls back to the desktop's.
