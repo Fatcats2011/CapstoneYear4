@@ -790,6 +790,168 @@ MonoBehaviour:
     m_Localized: "TEXTGR\xD6SSE"
     m_Metadata:
       m_Items: []
+  - m_Id: 4721212820164608
+    m_Localized: MODUS
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212857913344
+    m_Localized: STANDARD
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212857913345
+    m_Localized: GOLDRAUSCH
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212857913346
+    m_Localized: "K\xD6NIGSKRONE"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212857913347
+    m_Localized: INFEKTION
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212857913348
+    m_Localized: HEISSE KARTOFFEL
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212857913349
+    m_Localized: TEMPO
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212862107648
+    m_Localized: GERINGE SCHWERKRAFT
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212862107649
+    m_Localized: WELLEN
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212862107650
+    m_Localized: "WELLENL\xC4NGE"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212862107651
+    m_Localized: RUNDENTIMER
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212862107652
+    m_Localized: '{0} (GESPERRT)'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212862107653
+    m_Localized: '{0}%'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212862107654
+    m_Localized: '{0}S'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212862107655
+    m_Localized: TEMPO {0}%
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212862107656
+    m_Localized: '{0} WELLEN'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212862107657
+    m_Localized: '{0} MIN'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212862107658
+    m_Localized: DAS GOLDENE PAKET WIRD IN 20 SEKUNDEN KALT!
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212862107659
+    m_Localized: "RUSHHOUR! DIEBST\xC4HLE Z\xC4HLEN DOPPELT"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212862107660
+    m_Localized: DIE GOLDADER IST DA! FOLGE DEM LICHT
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212862107661
+    m_Localized: "STEUERUNG \xC4NDERN"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212862107662
+    m_Localized: HEUTIGE SCHICHT
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212862107663
+    m_Localized: "BOOST: N\xC4CHSTER SPIELER"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212866301952
+    m_Localized: DU SCHAUST {0} ZU
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212866301953
+    m_Localized: "K\xC4MPFE UM DIE GOLDADER! SAMMLE DAS VERLORENE GOLD"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212866301954
+    m_Localized: "BOOSTE IN JEMANDEN, UM DAS VERFLUCHTE PAKET WEITERZUGEBEN. ENDET
+      DER COUNTDOWN, FLIEGT SEIN TR\xC4GER RAUS. WER \xDCBRIG BLEIBT, GEWINNT."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212866301955
+    m_Localized: "EIN SPIELER STARTET INFIZIERT UND STECKT ANDERE AN, INDEM ER IN
+      SIE BOOSTET. BLEIB SO LANGE WIE M\xD6GLICH GESUND, UM ZU PUNKTEN."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212866301956
+    m_Localized: "HALTE DIE KRONE, UM ZU PUNKTEN. BOOSTE IN IHREN TR\xC4GER, UM SIE
+      ZU NEHMEN. MIT KRONE L\xC4DT DEIN BOOST LANGSAMER. DIE L\xC4NGSTE HERRSCHAFT
+      GEWINNT."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212866301957
+    m_Localized: "DREIMAL SO VIELE PAKETE. IMMER WIEDER ERSCHEINT EINE RIESIGE GOLDADER:
+      SIE MACHT LANGSAM, BRINGT 250 $ UND VERLIERT GOLD F\xDCR IHRE VERFOLGER. IN
+      DEN LETZTEN 30 SEKUNDEN Z\xC4HLEN DIEBST\xC4HLE DOPPELT."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212866301958
+    m_Localized: "LIEFERE PAKETE, BESTIEHL DEINE RIVALEN UND K\xC4MPFE UM DIE GOLDENE
+      BESTELLUNG. DAS MEISTE GELD GEWINNT."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212866301959
+    m_Localized: "FOLGE DEM LEUCHTFEUER UND SCHNAPP DIR DIE KRONE! BOOSTE IN IHREN
+      TR\xC4GER, UM SIE ZU NEHMEN"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212866301960
+    m_Localized: 'INFIZIERTE: BOOSTET IN ALLE ANDEREN. ALLE ANDEREN: LASST EUCH NICHT
+      ERWISCHEN!'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212866301961
+    m_Localized: DU HAST DAS VERFLUCHTE PAKET? BOOSTE IN JEMANDEN, BEVOR DER COUNTDOWN
+      ENDET!
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212866301962
+    m_Localized: DU BIST RAUS!
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212866301963
+    m_Localized: KRONE ERGRIFFEN
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212866301964
+    m_Localized: INFEKTION BREITET SICH AUS
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212866301965
+    m_Localized: PAKET DETONIERT
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212866301966
+    m_Localized: "LETZTER \xDCBERLEBENDER"
+    m_Metadata:
+      m_Items: []
   references:
     version: 2
     RefIds: []

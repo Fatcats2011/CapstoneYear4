@@ -791,6 +791,168 @@ MonoBehaviour:
     m_Localized: TEXTSTORLEK
     m_Metadata:
       m_Items: []
+  - m_Id: 4721212820164608
+    m_Localized: "L\xC4GE"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212857913344
+    m_Localized: STANDARD
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212857913345
+    m_Localized: GULDFEBER
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212857913346
+    m_Localized: KUNGAKRONAN
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212857913347
+    m_Localized: SMITTA
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212857913348
+    m_Localized: VARM POTATIS
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212857913349
+    m_Localized: FART
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212862107648
+    m_Localized: "L\xC5G GRAVITATION"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212862107649
+    m_Localized: "V\xC5GOR"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212862107650
+    m_Localized: "V\xC5GL\xC4NGD"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212862107651
+    m_Localized: RUNDTIMER
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212862107652
+    m_Localized: "{0} (L\xC5ST)"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212862107653
+    m_Localized: '{0}%'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212862107654
+    m_Localized: '{0}S'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212862107655
+    m_Localized: FART {0}%
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212862107656
+    m_Localized: "{0} V\xC5GOR"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212862107657
+    m_Localized: '{0} MIN'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212862107658
+    m_Localized: GULDPAKETET KALLNAR OM 20 SEKUNDER!
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212862107659
+    m_Localized: "RUSNINGSTID! ST\xD6LDER R\xC4KNAS DUBBELT"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212862107660
+    m_Localized: "MODER\xC5DERN \xC4R H\xC4R! F\xD6LJ LJUSET"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212862107661
+    m_Localized: "\xC4NDRA KONTROLLER"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212862107662
+    m_Localized: "KV\xC4LLENS SKIFT"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212862107663
+    m_Localized: "BOOST: N\xC4STA SPELARE"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212866301952
+    m_Localized: "DU TITTAR P\xC5 {0}"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212866301953
+    m_Localized: "SL\xC5SS OM MODER\xC5DERN! TA GULDET SOM SPILLS"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212866301954
+    m_Localized: "BOOSTA IN I N\xC5GON F\xD6R ATT L\xC4MNA \xD6VER DET F\xD6RBANNADE
+      PAKETET. N\xC4R NEDR\xC4KNINGEN \xC4R SLUT \xC5KER B\xC4RAREN UT. DEN SISTA
+      KVAR VINNER."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212866301955
+    m_Localized: "EN SPELARE B\xD6RJAR SMITTAD OCH SPRIDER DET GENOM ATT BOOSTA IN
+      I ANDRA. H\xC5LL DIG FRISK S\xC5 L\xC4NGE DU KAN F\xD6R ATT F\xC5 PO\xC4NG."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212866301956
+    m_Localized: "H\xC5LL KRONAN F\xD6R ATT F\xC5 PO\xC4NG. BOOSTA IN I B\xC4RAREN
+      F\xD6R ATT TA DEN. MED KRONAN LADDAS DIN BOOST L\xC5NGSAMMARE. L\xC4NGST STYRE
+      VINNER."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212866301957
+    m_Localized: "TRE G\xC5NGER S\xC5 M\xC5NGA PAKET. EN ENORM MODER\xC5DER AV GULD
+      DYKER HELA TIDEN UPP: DEN \xC4R TUNG, GER 250 $ OCH SPILLER GULD TILL DEM SOM
+      JAGAR DEN. ST\xD6LDER R\xC4KNAS DUBBELT DE SISTA 30 SEKUNDERNA."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212866301958
+    m_Localized: "LEVERERA PAKET, STJ\xC4L FR\xC5N RIVALERNA OCH SL\xC5SS OM DEN
+      GYLLENE ORDERN. MEST PENGAR VINNER."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212866301959
+    m_Localized: "F\xD6LJ LJUSPELAREN OCH TA KRONAN! BOOSTA IN I B\xC4RAREN F\xD6R
+      ATT TA DEN"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212866301960
+    m_Localized: "SMITTADE: BOOSTA IN I ALLA ANDRA. ALLA ANDRA: BLI INTE F\xC5NGADE!"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212866301961
+    m_Localized: "HAR DU DET F\xD6RBANNADE PAKETET? BOOSTA IN I N\xC5GON INNAN NEDR\xC4KNINGEN
+      \xC4R SLUT!"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212866301962
+    m_Localized: "DU \xC4R UTE!"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212866301963
+    m_Localized: KRONAN TAGEN
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212866301964
+    m_Localized: SMITTAN SPRIDS
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212866301965
+    m_Localized: PAKETET DETONERADE
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212866301966
+    m_Localized: "SISTA \xD6VERLEVANDE"
+    m_Metadata:
+      m_Items: []
   references:
     version: 2
     RefIds: []

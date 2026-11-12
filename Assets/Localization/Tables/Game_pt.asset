@@ -790,6 +790,168 @@ MonoBehaviour:
     m_Localized: TAMANHO DO TEXTO
     m_Metadata:
       m_Items: []
+  - m_Id: 4721212820164608
+    m_Localized: MODO
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212857913344
+    m_Localized: "PADR\xC3O"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212857913345
+    m_Localized: CORRIDA DO OURO
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212857913346
+    m_Localized: COROA DO REI
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212857913347
+    m_Localized: "INFEC\xC7\xC3O"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212857913348
+    m_Localized: BATATA QUENTE
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212857913349
+    m_Localized: VELOCIDADE
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212862107648
+    m_Localized: GRAVIDADE BAIXA
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212862107649
+    m_Localized: ONDAS
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212862107650
+    m_Localized: "DURA\xC7\xC3O DA ONDA"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212862107651
+    m_Localized: TEMPO DA RODADA
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212862107652
+    m_Localized: '{0} (BLOQUEADO)'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212862107653
+    m_Localized: '{0}%'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212862107654
+    m_Localized: '{0}S'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212862107655
+    m_Localized: VELOCIDADE {0}%
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212862107656
+    m_Localized: '{0} ONDAS'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212862107657
+    m_Localized: '{0} MIN'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212862107658
+    m_Localized: O PACOTE DOURADO ESFRIA EM 20 SEGUNDOS!
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212862107659
+    m_Localized: HORA DO RUSH! ROUBOS VALEM EM DOBRO
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212862107660
+    m_Localized: "O FIL\xC3O APARECEU! SIGA A LUZ"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212862107661
+    m_Localized: ALTERAR CONTROLES
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212862107662
+    m_Localized: O TURNO DE HOJE
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212862107663
+    m_Localized: "TURBO: PR\xD3XIMO JOGADOR"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212866301952
+    m_Localized: ASSISTINDO {0}
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212866301953
+    m_Localized: "DISPUTE O FIL\xC3O! PEGUE O OURO QUE ELE DERRAMA"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212866301954
+    m_Localized: "BATA EM ALGU\xC9M COM TURBO PARA PASSAR O PACOTE AMALDI\xC7OADO.
+      QUANDO A CONTAGEM ACABAR, QUEM ESTIVER COM ELE EST\xC1 FORA. O \xDALTIMO VENCE."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212866301955
+    m_Localized: "UM JOGADOR COME\xC7A INFECTADO E CONTAMINA OS OUTROS BATENDO COM
+      TURBO. FIQUE LIMPO O M\xC1XIMO QUE PUDER PARA PONTUAR."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212866301956
+    m_Localized: "SEGURE A COROA PARA PONTUAR. BATA COM TURBO EM QUEM A USA PARA
+      TOM\xC1-LA. US\xC1-LA DEIXA A RECARGA DO TURBO MAIS LENTA. O REINADO MAIS LONGO
+      VENCE."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212866301957
+    m_Localized: "O TRIPLO DE PACOTES. UM ENORME FIL\xC3O DE OURO VIVE APARECENDO:
+      \xC9 LENTO DE CARREGAR, PAGA $ 250 E DERRAMA OURO PARA QUEM O PERSEGUE. ROUBOS
+      VALEM O DOBRO NOS \xDALTIMOS 30 SEGUNDOS."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212866301958
+    m_Localized: ENTREGUE PACOTES, ROUBE DOS RIVAIS E DISPUTE O PEDIDO DOURADO. QUEM
+      TIVER MAIS DINHEIRO VENCE.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212866301959
+    m_Localized: "SIGA O FEIXE E PEGUE A COROA! BATA COM TURBO EM QUEM A USA PARA
+      TOM\xC1-LA"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212866301960
+    m_Localized: "INFECTADOS: BATAM COM TURBO NOS OUTROS. OS OUTROS: N\xC3O SEJAM
+      PEGOS!"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212866301961
+    m_Localized: "EST\xC1 COM O PACOTE AMALDI\xC7OADO? BATA COM TURBO EM ALGU\xC9M
+      ANTES QUE A CONTAGEM ACABE!"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212866301962
+    m_Localized: "VOC\xCA EST\xC1 FORA!"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212866301963
+    m_Localized: COROA TOMADA
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212866301964
+    m_Localized: "INFEC\xC7\xC3O SE ESPALHANDO"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212866301965
+    m_Localized: PACOTE DETONADO
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212866301966
+    m_Localized: "\xDALTIMO SOBREVIVENTE"
+    m_Metadata:
+      m_Items: []
   references:
     version: 2
     RefIds: []

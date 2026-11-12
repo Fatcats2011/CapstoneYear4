@@ -4,15 +4,17 @@ using UnityEngine.UI;
 
 /// <summary>
 /// The rematch vote on the results screen, built by code under the results canvas (no prefab edits): the A REMATCH and
-/// B BACK TO LOBBY prompts (ButtonGlyph art from ButtonArtSet.Results, words only without it), a READY or OUT mark under
-/// each player's score, and the countdown. In the scores' font
+/// B BACK TO LOBBY prompts (ButtonGlyph art from ButtonArtSet.Results, words only without it), the countdown, and each
+/// player's READY or OUT: a tag on their results card (ResultsAwardsView), or without cards a mark under their score.
+/// In the scores' font
 /// </summary>
 public class ResultsVoteView : MonoBehaviour
 {
     const float PROMPT_HEIGHT = 56f;
     const float CORNER_X = 60f; // in from the left edge
-    const float LABEL_SIZE = 48f;
+    const float LABEL_SIZE = 42f;
     const float LINE_SIZE = 44f;
+    const float COUNTDOWN_SIZE = 36f; // short of the title in the top middle, in the longest languages too
     static readonly Color DIMMED = new Color(1f, 1f, 1f, 0.35f);
 
     Canvas canvas; // the view covers it all, whatever box it's under
@@ -21,19 +23,21 @@ public class ResultsVoteView : MonoBehaviour
     TMP_Text[] marks;
     Color[] scoreColours;
     int[] seatOfScore; // the seat each score shows: the scores are in finishing order
+    ResultsAwardsView cards; // the players' cards, which carry the marks (null: the marks sit under the scores)
 
     /// <summary>Builds the view under parent, in the font of the scores (one per seat)</summary>
-    public static ResultsVoteView Build(Transform parent, TMP_Text[] scores)
+    public static ResultsVoteView Build(Transform parent, TMP_Text[] scores, ResultsAwardsView cards = null)
     {
         GameObject root = new GameObject("Rematch Vote", typeof(RectTransform));
         root.transform.SetParent(parent, false);
         ResultsVoteView view = root.AddComponent<ResultsVoteView>();
+        view.cards = cards;
         view.canvas = parent.GetComponentInParent<Canvas>();
         view.CoverCanvas();
         TMP_FontAsset font = scores.Length > 0 && scores[0] != null ? scores[0].font : null;
 
         // The top-left corner: the title takes the top middle, the scores and their award cards the bottom
-        view.line = Text(root.transform, "Countdown", font, LINE_SIZE);
+        view.line = Text(root.transform, "Countdown", font, COUNTDOWN_SIZE);
         view.line.alignment = TextAlignmentOptions.Left;
         Place(view.line.rectTransform, new Vector2(CORNER_X, -60), new Vector2(700, 60));
 
@@ -59,6 +63,8 @@ public class ResultsVoteView : MonoBehaviour
             if (scores[i] == null)
                 continue;
             view.scoreColours[i] = scores[i].color;
+            if (cards != null)
+                continue;
             TMP_Text mark = Text(scores[i].transform, "Rematch Mark", font, LINE_SIZE);
             RectTransform rect = mark.rectTransform;
             rect.anchorMin = rect.anchorMax = new Vector2(0.5f, 0f);
@@ -112,10 +118,17 @@ public class ResultsVoteView : MonoBehaviour
 
         for (int i = 0; i < marks.Length; i++)
         {
-            if (marks[i] == null)
+            if (scores[i] == null)
                 continue;
             int seat = seatOfScore != null ? (i < seatOfScore.Length ? seatOfScore[i] : -1) : i;
             bool shown = seat >= 0 && scores[i].gameObject.activeInHierarchy;
+            if (cards != null)
+            {
+                cards.ShowVote(i, !shown ? VoteMark.None : board.HasVoted(seat) ? VoteMark.Ready : board.IsIn(seat) ? VoteMark.None : VoteMark.Out);
+                continue;
+            }
+            if (marks[i] == null)
+                continue;
             marks[i].text = !shown ? "" : board.HasVoted(seat) ? Loc.Get("results.ready") : board.IsIn(seat) ? "" : Loc.Get("results.out");
             scores[i].color = shown && !board.IsIn(seat) ? scoreColours[i] * DIMMED : scoreColours[i];
         }

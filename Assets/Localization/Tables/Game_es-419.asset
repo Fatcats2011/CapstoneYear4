@@ -789,6 +789,169 @@ MonoBehaviour:
     m_Localized: "TAMA\xD1O DEL TEXTO"
     m_Metadata:
       m_Items: []
+  - m_Id: 4721212820164608
+    m_Localized: MODO
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212857913344
+    m_Localized: "EST\xC1NDAR"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212857913345
+    m_Localized: FIEBRE DEL ORO
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212857913346
+    m_Localized: CORONA DEL REY
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212857913347
+    m_Localized: "INFECCI\xD3N"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212857913348
+    m_Localized: PATATA CALIENTE
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212857913349
+    m_Localized: VELOCIDAD
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212862107648
+    m_Localized: GRAVEDAD BAJA
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212862107649
+    m_Localized: OLEADAS
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212862107650
+    m_Localized: "DURACI\xD3N DE OLEADA"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212862107651
+    m_Localized: TIEMPO DE RONDA
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212862107652
+    m_Localized: '{0} (BLOQUEADO)'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212862107653
+    m_Localized: '{0}%'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212862107654
+    m_Localized: '{0}S'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212862107655
+    m_Localized: VELOCIDAD {0}%
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212862107656
+    m_Localized: '{0} OLEADAS'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212862107657
+    m_Localized: '{0} MIN'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212862107658
+    m_Localized: "\xA1EL PAQUETE DORADO SE ENFR\xCDA EN 20 SEGUNDOS!"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212862107659
+    m_Localized: "\xA1HORA PUNTA! LOS ROBOS CUENTAN DOBLE"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212862107660
+    m_Localized: "\xA1LA VETA MADRE EST\xC1 AQU\xCD! SIGUE LA LUZ"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212862107661
+    m_Localized: CAMBIAR CONTROLES
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212862107662
+    m_Localized: EL TURNO DE ESTA NOCHE
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212862107663
+    m_Localized: 'TURBO: SIGUIENTE JUGADOR'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212866301952
+    m_Localized: VIENDO A {0}
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212866301953
+    m_Localized: "\xA1LUCHA POR LA VETA MADRE! RECOGE EL ORO QUE SUELTA"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212866301954
+    m_Localized: "EMBISTE A ALGUIEN CON TURBO PARA PASARLE EL PAQUETE MALDITO. AL
+      ACABAR LA CUENTA ATR\xC1S, QUIEN LO TENGA QUEDA ELIMINADO. GANA EL \xDALTIMO
+      EN PIE."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212866301955
+    m_Localized: "UN JUGADOR EMPIEZA INFECTADO Y CONTAGIA A LOS DEM\xC1S EMBISTI\xC9NDOLOS
+      CON TURBO. MANTENTE SANO TODO LO QUE PUEDAS PARA PUNTUAR."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212866301956
+    m_Localized: "CONSERVA LA CORONA PARA PUNTUAR. EMBISTE CON TURBO A QUIEN LA LLEVA
+      PARA QUIT\xC1RSELA. LLEVARLA HACE QUE EL TURBO SE RECARGUE M\xC1S LENTO. GANA
+      EL REINADO M\xC1S LARGO."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212866301957
+    m_Localized: "EL TRIPLE DE PAQUETES. NO DEJA DE APARECER UNA ENORME VETA MADRE
+      DE ORO: ES LENTA DE LLEVAR, PAGA 250 $ Y SUELTA ORO PARA QUIEN LA PERSIGUE.
+      LOS ROBOS VALEN DOBLE EN LOS \xDALTIMOS 30 SEGUNDOS."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212866301958
+    m_Localized: "ENTREGA PAQUETES, ROBA A TUS RIVALES Y LUCHA POR EL PEDIDO DORADO.
+      GANA QUIEN M\xC1S DINERO TENGA."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212866301959
+    m_Localized: "\xA1SIGUE LA BALIZA Y COGE LA CORONA! EMBISTE CON TURBO A QUIEN
+      LA LLEVA PARA QUIT\xC1RSELA"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212866301960
+    m_Localized: "INFECTADOS: EMBESTID CON TURBO A LOS DEM\xC1S. LOS DEM\xC1S: \xA1QUE
+      NO OS PILLEN!"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212866301961
+    m_Localized: "\xBFTIENES EL PAQUETE MALDITO? \xA1EMBISTE A ALGUIEN CON TURBO
+      ANTES DE QUE ACABE LA CUENTA ATR\xC1S!"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212866301962
+    m_Localized: "\xA1EST\xC1S FUERA!"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212866301963
+    m_Localized: CORONA ARREBATADA
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212866301964
+    m_Localized: "INFECCI\xD3N EXPANDI\xC9NDOSE"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212866301965
+    m_Localized: PAQUETE DETONADO
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212866301966
+    m_Localized: "\xDALTIMO SUPERVIVIENTE"
+    m_Metadata:
+      m_Items: []
   references:
     version: 2
     RefIds: []

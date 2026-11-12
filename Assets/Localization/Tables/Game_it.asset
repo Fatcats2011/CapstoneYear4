@@ -791,6 +791,168 @@ MonoBehaviour:
     m_Localized: DIMENSIONE TESTO
     m_Metadata:
       m_Items: []
+  - m_Id: 4721212820164608
+    m_Localized: "MODALIT\xC0"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212857913344
+    m_Localized: STANDARD
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212857913345
+    m_Localized: CORSA ALL'ORO
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212857913346
+    m_Localized: CORONA DEL RE
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212857913347
+    m_Localized: INFEZIONE
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212857913348
+    m_Localized: PATATA BOLLENTE
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212857913349
+    m_Localized: "VELOCIT\xC0"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212862107648
+    m_Localized: "GRAVIT\xC0 RIDOTTA"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212862107649
+    m_Localized: ONDATE
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212862107650
+    m_Localized: DURATA ONDATA
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212862107651
+    m_Localized: TIMER DEL ROUND
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212862107652
+    m_Localized: '{0} (BLOCCATO)'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212862107653
+    m_Localized: '{0}%'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212862107654
+    m_Localized: '{0}S'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212862107655
+    m_Localized: "VELOCIT\xC0 {0}%"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212862107656
+    m_Localized: '{0} ONDATE'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212862107657
+    m_Localized: '{0} MIN'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212862107658
+    m_Localized: IL PACCO D'ORO SI RAFFREDDA TRA 20 SECONDI!
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212862107659
+    m_Localized: ORA DI PUNTA! I FURTI VALGONO DOPPIO
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212862107660
+    m_Localized: "IL FILONE \xC8 ARRIVATO! SEGUI LA LUCE"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212862107661
+    m_Localized: CAMBIA COMANDI
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212862107662
+    m_Localized: IL TURNO DI STASERA
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212862107663
+    m_Localized: 'TURBO: GIOCATORE SUCCESSIVO'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212866301952
+    m_Localized: STAI GUARDANDO {0}
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212866301953
+    m_Localized: LOTTA PER IL FILONE! RACCOGLI L'ORO CHE PERDE
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212866301954
+    m_Localized: "COLPISCI QUALCUNO CON IL TURBO PER PASSARE IL PACCO MALEDETTO.
+      ALLA FINE DEL CONTO ALLA ROVESCIA CHI LO HA \xC8 ELIMINATO. VINCE L'ULTIMO
+      RIMASTO."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212866301955
+    m_Localized: "UN GIOCATORE INIZIA INFETTO E CONTAGIA GLI ALTRI COLPENDOLI CON
+      IL TURBO. RESTA SANO IL PI\xD9 A LUNGO POSSIBILE PER FARE PUNTI."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212866301956
+    m_Localized: "TIENI LA CORONA PER FARE PUNTI. SCONTRATI CON IL TURBO CONTRO CHI
+      LA PORTA PER PRENDERLA. INDOSSARLA RALLENTA LA RICARICA DEL TURBO. VINCE IL
+      REGNO PI\xD9 LUNGO."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212866301957
+    m_Localized: "IL TRIPLO DEI PACCHI. APPARE DI CONTINUO UN ENORME FILONE D'ORO:
+      \xC8 LENTO DA TRASPORTARE, VALE 250 $ E PERDE ORO PER CHI LO INSEGUE. NEGLI
+      ULTIMI 30 SECONDI I FURTI VALGONO DOPPIO."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212866301958
+    m_Localized: "CONSEGNA PACCHI, RUBA AI RIVALI, POI LOTTA PER L'ORDINE D'ORO.
+      VINCE CHI HA PI\xD9 SOLDI."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212866301959
+    m_Localized: SEGUI IL FARO E PRENDI LA CORONA! COLPISCI CHI LA PORTA CON IL TURBO
+      PER RUBARLA
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212866301960
+    m_Localized: 'INFETTI: COLPITE TUTTI CON IL TURBO. GLI ALTRI: NON FATEVI PRENDERE!'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212866301961
+    m_Localized: HAI IL PACCO MALEDETTO? COLPISCI QUALCUNO CON IL TURBO PRIMA DELLA
+      FINE DEL CONTO ALLA ROVESCIA!
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212866301962
+    m_Localized: SEI FUORI!
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212866301963
+    m_Localized: CORONA CONQUISTATA
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212866301964
+    m_Localized: INFEZIONE IN DIFFUSIONE
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212866301965
+    m_Localized: PACCO ESPLOSO
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212866301966
+    m_Localized: ULTIMO SOPRAVVISSUTO
+    m_Metadata:
+      m_Items: []
   references:
     version: 2
     RefIds: []

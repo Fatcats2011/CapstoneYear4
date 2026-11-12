@@ -8,7 +8,8 @@ using UnityEngine.UI;
 /// each player's own score and placement HUD). One row per player, stacked by money: rows slide up and down as the
 /// money changes, and first place is drawn bigger. Each row: the player's picture (their Steam picture: one per machine,
 /// on that machine's first player. Anyone else, bots included, gets their own ghost in its colour and hat:
-/// GhostPortrait), their name, their money, and the packages they hold (a stolen one, worth more, burns purple). Built
+/// GhostPortrait) with a small crown on it if they won the match this one is a rematch of (RematchCrown), their name,
+/// their money, and the packages they hold (a stolen one, worth more, burns purple). Built
 /// in code on a screen overlay canvas, so no scene or prefab holds it. Everything it shows, every machine already has:
 /// scores and held orders follow the host online (OnlineOrders, OrderSync)
 /// </summary>
@@ -39,6 +40,8 @@ public class Scoreboard : MonoBehaviour
     const float FLAME_FPS = 14f;
     const float SEAT_BADGE = 30f;   // colourblind mode's badges
     const float STOLEN_BADGE = 34f;
+    internal const float CROWN = 40f;      // the rematch winner's crown, on the picture's top-left corner
+    const float CROWN_TILT = 22f;
 
     static readonly Color INK = new Color(0.06f, 0.05f, 0.08f, 1f);
     static readonly Color PAPER = new Color(1f, 1f, 1f, 0.2f); // mostly see through
@@ -358,6 +361,13 @@ public class Scoreboard : MonoBehaviour
         }
     }
 
+    /// <summary>Whether a seat's row shows the winner's crown (tests); false without the row</summary>
+    internal static bool CrownShownFor(int seat)
+    {
+        Row row = instance != null ? instance.rows.Find(r => r.Seat == seat) : null;
+        return row != null && row.CrownShown;
+    }
+
     void Clear()
     {
         foreach (Row row in rows)
@@ -382,9 +392,12 @@ public class Scoreboard : MonoBehaviour
         readonly CanvasGroup fade;
         readonly Image pictureFrame;
         readonly GameObject outCross;
+        readonly GameObject crown;
         string shownName;
         int shownMoney = -1;
         GameMode shownMode;
+
+        public bool CrownShown => crown.activeSelf;
 
         public Row(RectTransform board, int seat, GameObject player, GhostPortrait ghost, float top)
         {
@@ -419,6 +432,17 @@ public class Scoreboard : MonoBehaviour
             cross.gameObject.AddComponent<CanvasGroup>().ignoreParentGroups = true;
             outCross = cross.gameObject;
             outCross.SetActive(false);
+            // The rematch winner's crown, tilted on the picture's top-left corner, as solid as ever too
+            RectTransform crownRect = Box(frame, "Winner Crown", new Vector2(CROWN, CROWN), Color.white);
+            crownRect.pivot = new Vector2(0.5f, 0.5f);
+            crownRect.anchoredPosition = new Vector2(CROWN * 0.22f, CROWN * 0.12f);
+            crownRect.localRotation = Quaternion.Euler(0f, 0f, CROWN_TILT);
+            Image crownImage = crownRect.GetComponent<Image>();
+            crownImage.sprite = RematchCrown.Art();
+            crownImage.preserveAspect = true;
+            crownRect.gameObject.AddComponent<CanvasGroup>().ignoreParentGroups = true;
+            crown = crownRect.gameObject;
+            crown.SetActive(false);
             x += ROW_HEIGHT + PAD;
 
             nameText = Label(rect, "Name", x, NAME_WIDTH, 28f, FontStyles.Bold);
@@ -469,6 +493,8 @@ public class Scoreboard : MonoBehaviour
 
             if (seatBadge.activeSelf != Colourblind.On)
                 seatBadge.SetActive(Colourblind.On);
+            if (crown.activeSelf != RematchCrown.Wears(Seat))
+                crown.SetActive(RematchCrown.Wears(Seat));
 
             Texture shown = steamPicture != null ? steamPicture : ghost != null ? ghost.Texture : null;
             if (picture.texture != shown)

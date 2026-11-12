@@ -794,6 +794,171 @@ MonoBehaviour:
     m_Localized: VELIKOST TEXTU
     m_Metadata:
       m_Items: []
+  - m_Id: 4721212820164608
+    m_Localized: "RE\u017DIM"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212857913344
+    m_Localized: "STANDARDN\xCD"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212857913345
+    m_Localized: "ZLAT\xC1 HORE\u010CKA"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212857913346
+    m_Localized: "KR\xC1LOVSK\xC1 KORUNA"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212857913347
+    m_Localized: INFEKCE
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212857913348
+    m_Localized: "HORK\xDD BRAMBOR"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212857913349
+    m_Localized: RYCHLOST
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212862107648
+    m_Localized: "N\xCDZK\xC1 GRAVITACE"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212862107649
+    m_Localized: VLNY
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212862107650
+    m_Localized: "D\xC9LKA VLNY"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212862107651
+    m_Localized: "\u010CAS KOLA"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212862107652
+    m_Localized: "{0} (ZAM\u010CENO)"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212862107653
+    m_Localized: '{0}%'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212862107654
+    m_Localized: '{0}S'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212862107655
+    m_Localized: RYCHLOST {0}%
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212862107656
+    m_Localized: '{0} VLNY'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212862107657
+    m_Localized: '{0} MIN'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212862107658
+    m_Localized: "ZLAT\xDD BAL\xCDK ZA 20 SEKUND VYCHLADNE!"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212862107659
+    m_Localized: "\u0160PI\u010CKA! KR\xC1DE\u017DE SE PO\u010C\xCDTAJ\xCD DVOJN\xC1SOB"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212862107660
+    m_Localized: "ZLAT\xC1 \u017D\xCDLA JE TADY! JE\u010E ZA SV\u011ATLEM"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212862107661
+    m_Localized: "ZM\u011ANIT OVL\xC1D\xC1N\xCD"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212862107662
+    m_Localized: "DNE\u0160N\xCD SM\u011ANA"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212862107663
+    m_Localized: "BOOST: DAL\u0160\xCD HR\xC1\u010C"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212866301952
+    m_Localized: "SLEDUJE\u0160: {0}"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212866301953
+    m_Localized: "BOJUJ O ZLATOU \u017D\xCDLU! SB\xCDREJ VYSYPAN\xC9 ZLATO"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212866301954
+    m_Localized: "VRA\u017D DO N\u011AKOHO S BOOSTEM A P\u0158EDEJ PROKLET\xDD BAL\xCDK.
+      KDO HO DR\u017D\xCD NA KONCI ODPO\u010CTU, VYPAD\xC1. VYHR\xC1V\xC1 POSLEDN\xCD
+      VE H\u0158E."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212866301955
+    m_Localized: "JEDEN HR\xC1\u010C ZA\u010C\xCDN\xC1 NAKA\u017DEN\xDD A \u0160\xCD\u0158\xCD
+      N\xC1KAZU N\xC1RAZEM S BOOSTEM. Z\u016ESTA\u0147 \u010CIST\xDD CO NEJD\xC9L
+      A SB\xCDREJ BODY."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212866301956
+    m_Localized: "DR\u017D KORUNU A SB\xCDREJ BODY. VRA\u017D DO JEJ\xCDHO NOSITELE
+      S BOOSTEM A VEZMI MU JI. S KORUNOU SE BOOST NAB\xCDJ\xCD POMALEJI. VYHR\xC1V\xC1
+      NEJDEL\u0160\xCD VL\xC1DA."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212866301957
+    m_Localized: "T\u0158IKR\xC1T V\xCDC BAL\xCDK\u016E. ST\xC1LE SE OBJEVUJE OBROVSK\xC1
+      ZLAT\xC1 \u017D\xCDLA: ZPOMALUJE, VYNESE 250 $ A SYPE ZLATO PRO TY, KDO JI
+      HON\xCD. V POSLEDN\xCDCH 30 SEKUND\xC1CH SE KR\xC1DE\u017DE PO\u010C\xCDTAJ\xCD
+      DVOJN\xC1SOB."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212866301958
+    m_Localized: "DORU\u010CUJ BAL\xCDKY, KRA\u010E SOUPE\u0158\u016EM A PAK BOJUJ
+      O ZLATOU ZAK\xC1ZKU. VYHR\xC1V\xC1 NEJV\xCDC PEN\u011AZ."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212866301959
+    m_Localized: "JE\u010E ZA MAJ\xC1KEM A \u010CAPNI KORUNU! VRA\u017D DO NOSITELE
+      S BOOSTEM A VEZMI MU JI"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212866301960
+    m_Localized: "NAKA\u017DEN\xCD: VRAZTE S BOOSTEM DO OSTATN\xCDCH. OSTATN\xCD:
+      NENECHTE SE CHYTIT!"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212866301961
+    m_Localized: "M\xC1\u0160 PROKLET\xDD BAL\xCDK? VRA\u017D DO N\u011AKOHO S BOOSTEM,
+      NE\u017D ODPO\u010CET SKON\u010C\xCD!"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212866301962
+    m_Localized: VYPADL JSI!
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212866301963
+    m_Localized: "KORUNA ZABR\xC1NA"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212866301964
+    m_Localized: "INFEKCE SE \u0160\xCD\u0158\xCD"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212866301965
+    m_Localized: "BAL\xCDK EXPLODOVAL"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212866301966
+    m_Localized: "POSLEDN\xCD P\u0158E\u017DIV\u0160\xCD"
+    m_Metadata:
+      m_Items: []
   references:
     version: 2
     RefIds: []

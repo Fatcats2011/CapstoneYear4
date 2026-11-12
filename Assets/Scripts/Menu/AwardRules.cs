@@ -6,7 +6,8 @@ using System.Linq;
 /// 1. each player takes their best award that they top alone;
 /// 2. a player still without one takes the best of what's left: for each award nobody has, by rank, the player still
 ///    without one with the highest count (above 0), ties to the lower seat;
-/// 3. anyone still without is a TOURIST (it can repeat).
+/// 3. anyone still without is a TOURIST (it can repeat). ROAD TRIP (distance) ranks last: everyone drives, so it only
+///    goes to one player who'd otherwise be a tourist.
 /// Its card says the joke name (Name) and a plain count (Line), never "most": step 2 can give it to someone who wasn't
 /// top. See docs/superpowers/specs/2026-10-24-awards-design.md
 /// </summary>
@@ -15,7 +16,8 @@ public static class AwardRules
     /// <summary>The awards a count can win, best first</summary>
     public static readonly Award[] PRIORITY =
     {
-        Award.GoldenGrip, Award.Kleptoghost, Award.BusyBee, Award.HighRoller, Award.Butterfingers, Award.FishFood,
+        Award.GoldenGrip, Award.Kleptoghost, Award.BusyBee, Award.HighRoller, Award.FrontRunner, Award.Hothead,
+        Award.RoadHog, Award.Butterfingers, Award.FishFood, Award.RoadTrip,
     };
 
     /// <summary>Each playing seat's award</summary>
@@ -73,6 +75,10 @@ public static class AwardRules
             case Award.Kleptoghost: return Loc.Get("award.kleptoghost");
             case Award.BusyBee: return Loc.Get("award.busybee");
             case Award.HighRoller: return Loc.Get("award.highroller");
+            case Award.FrontRunner: return Loc.Get("award.frontrunner");
+            case Award.Hothead: return Loc.Get("award.hothead");
+            case Award.RoadHog: return Loc.Get("award.roadhog");
+            case Award.RoadTrip: return Loc.Get("award.roadtrip");
             case Award.Butterfingers: return Loc.Get("award.butterfingers");
             case Award.FishFood: return Loc.Get("award.fishfood");
             case Award.Tourist: return Loc.Get("award.tourist");
@@ -89,6 +95,10 @@ public static class AwardRules
             case Award.Kleptoghost: return Counted(count, "steal");
             case Award.BusyBee: return Counted(count, "delivery");
             case Award.HighRoller: return Counted(count, "hard");
+            case Award.FrontRunner: return Loc.Get("award.line.frontrunner", count);
+            case Award.Hothead: return Counted(count, "clash");
+            case Award.RoadHog: return Counted(count, "bump");
+            case Award.RoadTrip: return Loc.Get("award.line.roadtrip", count);
             case Award.Butterfingers: return Counted(count, "robbed");
             case Award.FishFood: return Counted(count, "swim");
             case Award.Tourist: return Loc.Get("award.line.tourist");

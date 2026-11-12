@@ -22,12 +22,8 @@ public class ResultsMenu : SingletonMonobehaviour<ResultsMenu>
 
     private IEnumerator resultsRoutine;
 
-    /// <summary>How tall each player's name over their score is, in the score's own units (the award cards sit above it)</summary>
-    internal const float NAME_LINE = 30f;
-
     private ResultsVote vote; // the rematch vote, opened once the scores are up
-    private TMP_Text[] names; // each player's name over their score
-    private ResultsAwardsView awards; // the award cards, shown with the scores
+    private ResultsAwardsView awards; // the players' cards (name, score, award, the match's numbers), shown with the scores
 
     private void OnEnable()
     {
@@ -43,6 +39,9 @@ public class ResultsMenu : SingletonMonobehaviour<ResultsMenu>
 
     /// <summary>Whether the results camera shows (tests)</summary>
     internal bool ResultsCameraOn => cam != null && cam.enabled;
+
+    /// <summary>The camera on the podium (tests film through it)</summary>
+    internal Camera ResultsCamera => cam;
 
     /// <summary>Whether the scores are up (tests)</summary>
     internal bool ScoresShown => canvasElements != null && canvasElements.activeSelf && resultsCanvas.enabled;
@@ -92,66 +91,61 @@ public class ResultsMenu : SingletonMonobehaviour<ResultsMenu>
         resultsCanvas.enabled = true;
         StartCoroutine(QuitDelay());
 
-        for (int i = 0; i < PlayerInstantiate.Instance.PlayerCount; i++)
+        if (awards == null)
+            awards = ResultsAwardsView.Build(canvasElements.transform, displayText);
+
+        int players = PlayerInstantiate.Instance.PlayerCount;
+        Transform winner = players > 0 ? ScooterOf(ScoreManager.Instance.GetHandlerOfIndex(0)) : null;
+        int[] seats = new int[players];
+        int[] placements = new int[players];
+        for (int i = 0; i < players; i++)
         {
             OrderHandler currHandler = ScoreManager.Instance.GetHandlerOfIndex(i);
+            if (currHandler == null)
+            {
+                seats[i] = -1;
+                continue;
+            }
 
-            // Set player animations
+            // The pose of their place, and their acts on the podium (PodiumActs)
             Animator playerAnim = currHandler.PlayerAnimator;
-            playerAnim.SetInteger(HashReference._endStatusFloat, i + 1);
+            if (playerAnim != null)
+                playerAnim.SetInteger(HashReference._endStatusFloat, PodiumActs.PoseOf(i));
+            PodiumPerformer.On(ScooterOf(currHandler), playerAnim, i, players, winner, null);
 
-            if (currHandler != null)
+            seats[i] = OrderSync.SeatOf(currHandler);
+            placements[i] = currHandler.Placement;
+            if (i < displayText.Length)
             {
                 displayText[i].gameObject.SetActive(true);
-                displayText[i].text = "$" + currHandler.Score;
-                ShowName(i, OrderSync.SeatOf(currHandler));
+                displayText[i].text = ScoreText(currHandler.Score);
+                awards.ShowPlayer(i, seats[i], currHandler.Placement, seats[i] >= 0 ? Scoreboard.ShownName(seats[i]) : "", displayText[i].text);
             }
         }
+        // Whoever stands alone in first wears the crown if everyone votes for a rematch
+        RematchCrown.Won(RematchCrown.Winner(seats, placements));
         ShowAwards();
     }
 
-    // Each player's name just over their score, as the scoreboard showed it (playtest, 2026-11-03: the podium had none)
-    private void ShowName(int score, int seat)
+    // A score as its card shows it: money, or in Kings Crown the time the crown was held
+    private static string ScoreText(int score)
     {
-        if (names == null)
-            names = new TMP_Text[displayText.Length];
-        if (names[score] == null)
-            names[score] = NameLabel(displayText[score]);
-        names[score].text = seat >= 0 ? Scoreboard.ShownName(seat) : "";
-        names[score].enabled = true;
+        string text = Scoreboard.ScoreText(HouseRules.Playing.Mode, score);
+        return text.Length > 0 ? text : "$" + score;
     }
 
-    // A label on top of a score's text box, inside its margins, aligned like it and in its font and colour
-    private static TMP_Text NameLabel(TMP_Text score)
+    // The scooter's model, which the podium acts move: under the avatar the handler's Control sits in
+    private static Transform ScooterOf(OrderHandler handler)
     {
-        TextMeshProUGUI label = new GameObject("Player Name", typeof(RectTransform)).AddComponent<TextMeshProUGUI>();
-        RectTransform rect = label.rectTransform;
-        rect.SetParent(score.transform, false);
-        rect.anchorMin = new Vector2(0f, 1f);
-        rect.anchorMax = Vector2.one;
-        rect.pivot = new Vector2(0.5f, 0f);
-        rect.offsetMin = new Vector2(score.margin.x, score.margin.y);
-        rect.offsetMax = new Vector2(-score.margin.z, score.margin.y + NAME_LINE);
-        if (score.font != null)
-            label.font = score.font;
-        label.color = score.color;
-        label.horizontalAlignment = score.horizontalAlignment;
-        label.verticalAlignment = VerticalAlignmentOptions.Bottom;
-        label.enableWordWrapping = false;
-        label.enableAutoSizing = true;
-        label.fontSizeMin = 12f;
-        label.fontSizeMax = 24f;
-        label.overflowMode = TextOverflowModes.Ellipsis;
-        label.raycastTarget = false;
-        return label;
+        if (handler == null || handler.transform.parent == null)
+            return null;
+        return handler.transform.parent.Find(ScooterLook.MODEL);
     }
 
-    // Each player's award card over their score, from the awards picked here or sent by the host (MatchAwards): now, or
-    // as they arrive while the scores are up
+    // Each player's award and numbers on their card, from the awards picked here or sent by the host (MatchAwards): now,
+    // or as they arrive while the scores are up
     private void ShowAwards()
     {
-        if (awards == null)
-            awards = ResultsAwardsView.Build(canvasElements.transform, displayText);
         awards.Follow(SeatOfScores());
     }
 
@@ -185,23 +179,17 @@ public class ResultsMenu : SingletonMonobehaviour<ResultsMenu>
         {
             displayText[i].enabled = false;
         }
-        if (names != null)
-        {
-            foreach (TMP_Text name in names)
-            {
-                if (name != null)
-                    name.enabled = false;
-            }
-        }
         if (awards != null)
             awards.Hide();
 
-        // Reset player result animations
+        // The ghosts stop their acts and their poses
+        PodiumPerformer.StopAll();
         for (int i = 0; i < PlayerInstantiate.Instance.PlayerCount; i++)
         {
             OrderHandler currHandler = ScoreManager.Instance.GetHandlerOfIndex(i);
-            Animator playerAnim = currHandler.PlayerAnimator;
-            playerAnim.SetInteger(HashReference._endStatusFloat, 0);
+            Animator playerAnim = currHandler != null ? currHandler.PlayerAnimator : null;
+            if (playerAnim != null)
+                playerAnim.SetInteger(HashReference._endStatusFloat, 0);
         }
     }
 
@@ -219,7 +207,7 @@ public class ResultsMenu : SingletonMonobehaviour<ResultsMenu>
         if (vote == null)
             return;
         if (vote.View == null)
-            vote.View = ResultsVoteView.Build(canvasElements.transform, displayText);
+            vote.View = ResultsVoteView.Build(canvasElements.transform, displayText, awards);
 
         // The scores are in finishing order (UpdateResults): each mark goes under its own player's
         vote.View.ShowSeats(SeatOfScores());

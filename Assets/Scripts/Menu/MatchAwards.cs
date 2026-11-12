@@ -4,8 +4,9 @@ using UnityEngine;
 
 /// <summary>
 /// The end-of-match awards on this machine. Where the rules run (this PC offline, the host online) it counts what the
-/// game raises (FeatSync: deliveries, steals, robberies, falls) and who holds the golden order in the golden round
-/// (MatchStats), and picks the awards as the results start (AwardSync.Decide; online OnlineAwards shares them). An online
+/// game raises (FeatSync: deliveries, steals, robberies, falls, bumps, clashes), who holds the golden order in the
+/// golden round, who is alone in first place and how far everyone drives (MatchStats), and picks the awards as the
+/// results start (AwardSync.Decide; online OnlineAwards shares them). An online
 /// client counts nothing: the host's arrive. ResultsMenu shows them. A new match (GameManager.OnNewMatch) forgets the
 /// last. Made once the first scene has loaded, as SteamFeatures. See docs/superpowers/specs/2026-10-24-awards-design.md
 /// </summary>
@@ -15,6 +16,20 @@ public class MatchAwards : MonoBehaviour
 
     /// <summary>Whether the player in a seat holds the golden order now; tests swap it</summary>
     internal Func<int, bool> HoldsGolden = HandlerHoldsGolden;
+
+    /// <summary>The money of the player in a seat, or -1 with nobody there; tests swap it</summary>
+    internal Func<int, int> MoneyOf = HandlerMoney;
+
+    /// <summary>Where the scooter of the player in a seat is (false: nobody there); tests swap it</summary>
+    internal PlaceIn PlaceOf = HandlerPlace;
+
+    internal delegate bool PlaceIn(int seat, out Vector3 place);
+
+    /// <summary>Faster than any scooter drives: a jump this quick is a respawn or a start, not driving (metres a second)</summary>
+    internal const float TELEPORT_SPEED = 80f;
+
+    readonly Vector3[] lastPlace = new Vector3[Constants.MAX_PLAYERS];
+    readonly bool[] hasLastPlace = new bool[Constants.MAX_PLAYERS];
 
     readonly MatchStats stats = new MatchStats();
     GameManager watched; // the game manager whose states this follows
@@ -62,6 +77,8 @@ public class MatchAwards : MonoBehaviour
         FeatSync.Stole += OnStole;
         FeatSync.Robbed += OnRobbed;
         FeatSync.Sank += OnSank;
+        FeatSync.Bumped += OnBumped;
+        FeatSync.Struck += OnStruck;
     }
 
     /// <summary>Stops counting</summary>
@@ -72,6 +89,8 @@ public class MatchAwards : MonoBehaviour
         FeatSync.Stole -= OnStole;
         FeatSync.Robbed -= OnRobbed;
         FeatSync.Sank -= OnSank;
+        FeatSync.Bumped -= OnBumped;
+        FeatSync.Struck -= OnStruck;
     }
 
     void Update()
@@ -81,16 +100,62 @@ public class MatchAwards : MonoBehaviour
         Tick(Time.deltaTime, MainState);
     }
 
-    /// <summary>A frame went by: in the golden round, whoever holds the golden order held it that much longer</summary>
+    /// <summary>
+    /// A frame went by. While the match is driven (not the tutorial): whoever is alone in first place led that much
+    /// longer, and everyone drove as far as they moved. In the golden round, whoever holds the golden order held it
+    /// that much longer
+    /// </summary>
     internal void Tick(float deltaTime, GameState state)
     {
-        if (state != GameState.FinalPackage || !GameAuthority.IsAuthority)
+        bool driving = state == GameState.Begin || state == GameState.MainLoop || state == GameState.FinalPackage;
+        if (!driving || !GameAuthority.IsAuthority)
+        {
+            ForgetPlaces();
             return;
+        }
+
+        int leader = -1, most = 0;
         for (int seat = 0; seat < Constants.MAX_PLAYERS; seat++)
         {
-            if (HoldsGolden(seat))
+            int money = MoneyOf(seat);
+            if (money > most)
+            {
+                most = money;
+                leader = seat;
+            }
+            else if (money == most)
+                leader = -1; // a tie leads nobody
+            CountDriving(seat, deltaTime);
+
+            if (state == GameState.FinalPackage && HoldsGolden(seat))
                 stats.HeldGolden(seat, deltaTime);
         }
+        if (leader >= 0)
+            stats.Led(leader, deltaTime);
+    }
+
+    // How far a seat's scooter moved over the ground since the last frame, unless it jumped (a respawn)
+    void CountDriving(int seat, float deltaTime)
+    {
+        if (!PlaceOf(seat, out Vector3 place))
+        {
+            hasLastPlace[seat] = false;
+            return;
+        }
+        if (hasLastPlace[seat] && deltaTime > 0f)
+        {
+            float metres = new Vector2(place.x - lastPlace[seat].x, place.z - lastPlace[seat].z).magnitude;
+            if (metres <= TELEPORT_SPEED * deltaTime)
+                stats.Drove(seat, metres);
+        }
+        lastPlace[seat] = place;
+        hasLastPlace[seat] = true;
+    }
+
+    void ForgetPlaces()
+    {
+        for (int seat = 0; seat < hasLastPlace.Length; seat++)
+            hasLastPlace[seat] = false;
     }
 
     /// <summary>The results start: where the rules run, the awards for these seats are picked</summary>
@@ -104,6 +169,7 @@ public class MatchAwards : MonoBehaviour
     internal void NewMatch()
     {
         stats.NewMatch();
+        ForgetPlaces();
         AwardSync.Clear();
     }
 
@@ -153,6 +219,21 @@ public class MatchAwards : MonoBehaviour
             stats.Sank(seat, MainState);
     }
 
+    void OnBumped(int bumper, int victim, float strength)
+    {
+        if (GameAuthority.IsAuthority)
+            stats.Bumped(bumper, MainState);
+    }
+
+    // A clash (both boosting, no steal) counts for both of them
+    void OnStruck(int attacker, int victim, bool steal, bool golden)
+    {
+        if (steal || !GameAuthority.IsAuthority)
+            return;
+        stats.Clashed(attacker, MainState);
+        stats.Clashed(victim, MainState);
+    }
+
     static GameState MainState
     {
         get { return GameManager.Instance != null ? GameManager.Instance.MainState : GameState.Default; }
@@ -162,6 +243,19 @@ public class MatchAwards : MonoBehaviour
     {
         OrderHandler handler = OrderSync.HandlerIn(seat);
         return handler != null && handler.HoldsGoldenOrder;
+    }
+
+    static int HandlerMoney(int seat)
+    {
+        OrderHandler handler = OrderSync.HandlerIn(seat);
+        return handler != null ? handler.Score : -1;
+    }
+
+    static bool HandlerPlace(int seat, out Vector3 place)
+    {
+        OrderHandler handler = OrderSync.HandlerIn(seat);
+        place = handler != null ? handler.transform.position : default;
+        return handler != null;
     }
 
     static List<int> RosterSeats()

@@ -790,6 +790,166 @@ MonoBehaviour:
     m_Localized: "TEKSTST\xD8RRELSE"
     m_Metadata:
       m_Items: []
+  - m_Id: 4721212820164608
+    m_Localized: TILSTAND
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212857913344
+    m_Localized: STANDARD
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212857913345
+    m_Localized: GULDFEBER
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212857913346
+    m_Localized: KONGEKRONEN
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212857913347
+    m_Localized: SMITTE
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212857913348
+    m_Localized: VARM KARTOFFEL
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212857913349
+    m_Localized: FART
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212862107648
+    m_Localized: LAV TYNGDEKRAFT
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212862107649
+    m_Localized: "B\xD8LGER"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212862107650
+    m_Localized: "B\xD8LGEL\xC6NGDE"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212862107651
+    m_Localized: RUNDETIMER
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212862107652
+    m_Localized: "{0} (L\xC5ST)"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212862107653
+    m_Localized: '{0}%'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212862107654
+    m_Localized: '{0}S'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212862107655
+    m_Localized: FART {0}%
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212862107656
+    m_Localized: "{0} B\xD8LGER"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212862107657
+    m_Localized: '{0} MIN'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212862107658
+    m_Localized: GULDPAKKEN BLIVER KOLD OM 20 SEKUNDER!
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212862107659
+    m_Localized: "MYLDRETID! TYVERI T\xC6LLER DOBBELT"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212862107660
+    m_Localized: "GULD\xC5REN ER HER! F\xD8LG LYSET"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212862107661
+    m_Localized: SKIFT STYRING
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212862107662
+    m_Localized: AFTENENS VAGT
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212862107663
+    m_Localized: "BOOST: N\xC6STE SPILLER"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212866301952
+    m_Localized: DU SER {0}
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212866301953
+    m_Localized: "K\xC6MP OM GULD\xC5REN! SAML GULDET OP, DER FALDER AF"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212866301954
+    m_Localized: "BOOST IND I NOGEN FOR AT GIVE DEN FORBANDEDE PAKKE VIDERE. N\xC5R
+      NEDT\xC6LLINGEN SLUTTER, ER B\xC6REREN UDE. DEN SIDSTE TILBAGE VINDER."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212866301955
+    m_Localized: "EN SPILLER STARTER SMITTET OG SPREDER DET VED AT BOOSTE IND I ANDRE.
+      HOLD DIG RASK S\xC5 L\xC6NGE DU KAN FOR AT SCORE."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212866301956
+    m_Localized: "HOLD KRONEN FOR AT SCORE. BOOST IND I B\xC6REREN FOR AT TAGE DEN.
+      MED KRONEN LADER DIT BOOST LANGSOMMERE. L\xC6NGSTE REGERINGSTID VINDER."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212866301957
+    m_Localized: "TRE GANGE S\xC5 MANGE PAKKER. EN K\xC6MPE GULD\xC5RE DUKKER HELE
+      TIDEN OP: DEN ER TUNG AT B\xC6RE, GIVER 250 $ OG TABER GULD TIL DEM, DER JAGER
+      DEN. TYVERIER T\xC6LLER DOBBELT DE SIDSTE 30 SEKUNDER."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212866301958
+    m_Localized: "LEVER PAKKER, STJ\xC6L FRA DINE RIVALER, OG K\xC6MP OM DEN GYLDNE
+      ORDRE. FLEST PENGE VINDER."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212866301959
+    m_Localized: "F\xD8LG LYSS\xD8JLEN OG TAG KRONEN! BOOST IND I B\xC6REREN FOR
+      AT TAGE DEN"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212866301960
+    m_Localized: 'SMITTEDE: BOOST IND I ALLE ANDRE. ALLE ANDRE: BLIV IKKE FANGET!'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212866301961
+    m_Localized: "HAR DU DEN FORBANDEDE PAKKE? BOOST IND I NOGEN, F\xD8R NEDT\xC6LLINGEN
+      SLUTTER!"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212866301962
+    m_Localized: DU ER UDE!
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212866301963
+    m_Localized: KRONEN ERHVERVET
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212866301964
+    m_Localized: SMITTEN SPREDER SIG
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212866301965
+    m_Localized: PAKKEN DETONEREDE
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212866301966
+    m_Localized: SIDSTE OVERLEVENDE
+    m_Metadata:
+      m_Items: []
   references:
     version: 2
     RefIds: []

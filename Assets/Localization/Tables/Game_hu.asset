@@ -794,6 +794,170 @@ MonoBehaviour:
     m_Localized: "SZ\xD6VEGM\xC9RET"
     m_Metadata:
       m_Items: []
+  - m_Id: 4721212820164608
+    m_Localized: "M\xD3D"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212857913344
+    m_Localized: "SZABV\xC1NYOS"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212857913345
+    m_Localized: "ARANYL\xC1Z"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212857913346
+    m_Localized: "KIR\xC1LY KORON\xC1JA"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212857913347
+    m_Localized: "FERT\u0150Z\xC9S"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212857913348
+    m_Localized: "FORR\xD3 BURGONYA"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212857913349
+    m_Localized: "SEBESS\xC9G"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212862107648
+    m_Localized: "ALACSONY GRAVIT\xC1CI\xD3"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212862107649
+    m_Localized: "HULL\xC1MOK"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212862107650
+    m_Localized: "HULL\xC1M HOSSZA"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212862107651
+    m_Localized: "K\xD6R ID\u0150Z\xCDT\u0150"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212862107652
+    m_Localized: "{0} (Z\xC1ROLVA)"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212862107653
+    m_Localized: '{0}%'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212862107654
+    m_Localized: '{0}MP'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212862107655
+    m_Localized: "SEBESS\xC9G {0}%"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212862107656
+    m_Localized: "{0} HULL\xC1M"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212862107657
+    m_Localized: '{0} PERC'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212862107658
+    m_Localized: "AZ ARANYCSOMAG 20 M\xC1SODPERC M\xDALVA KIH\u0170L!"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212862107659
+    m_Localized: "CS\xDACSID\u0150! A LOP\xC1SOK DUPL\xC1N SZ\xC1M\xCDTANAK"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212862107660
+    m_Localized: "MEGJELENT AZ ARANY\xC9R! K\xD6VESD A F\xC9NYT"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212862107661
+    m_Localized: "IR\xC1NY\xCDT\xC1S M\xD3DOS\xCDT\xC1SA"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212862107662
+    m_Localized: "A MAI ESTI M\u0170SZAK"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212862107663
+    m_Localized: "TURB\xD3: K\xD6VETKEZ\u0150 J\xC1T\xC9KOS"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212866301952
+    m_Localized: "N\xC9ZETT J\xC1T\xC9KOS: {0}"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212866301953
+    m_Localized: "HARCOLJ AZ ARANY\xC9R\xC9RT! SZEDD FEL A KIHULL\xD3 ARANYAT"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212866301954
+    m_Localized: "\xDCTK\xD6ZZ VALAKIBE TURB\xD3VAL, HOGY \xC1TADD AZ \xC1TKOZOTT
+      CSOMAGOT. A VISSZASZ\xC1ML\xC1L\xC1S V\xC9G\xC9N AKIN\xC9L VAN, KIESIK. AZ
+      UTOLS\xD3 NYER."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212866301955
+    m_Localized: "EGY J\xC1T\xC9KOS FERT\u0150Z\xD6TTEN KEZD, \xC9S TURB\xD3S \xDCTK\xD6Z\xC9SSEL
+      TERJESZTI A K\xD3RT. MARADJ TISZTA, AM\xCDG CSAK LEHET, A PONTOK\xC9RT."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212866301956
+    m_Localized: "TARTSD N\xC1LAD A KORON\xC1T A PONTOK\xC9RT. \xDCTK\xD6ZZ TURB\xD3VAL
+      A VISEL\u0150J\xC9BE, HOGY ELVEDD. KORON\xC1VAL LASSABBAN T\xD6LT A TURB\xD3.
+      A LEGHOSSZABB URALKOD\xC1S NYER."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212866301957
+    m_Localized: "H\xC1ROMSZOR ANNYI CSOMAG. \xDAJRA \xC9S \xDAJRA MEGJELENIK EGY
+      \xD3RI\xC1SI ARANY\xC9R: LASS\xDA CIPELNI, 250 $-T \xC9R, \xC9S ARANYAT SZ\xD3R
+      AZ \xDCLD\xD6Z\u0150INEK. AZ UTOLS\xD3 30 M\xC1SODPERCBEN A LOP\xC1S DUPL\xC1N
+      SZ\xC1M\xCDT."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212866301958
+    m_Localized: "SZ\xC1LL\xCDTS CSOMAGOKAT, LOPJ A RIV\xC1LISOKT\xD3L, MAJD HARCOLJ
+      AZ ARANY RENDEL\xC9S\xC9RT. A LEGT\xD6BB P\xC9NZ NYER."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212866301959
+    m_Localized: "K\xD6VESD A F\xC9NYOSZLOPOT, \xC9S KAPD EL A KORON\xC1T! \xDCTK\xD6ZZ
+      TURB\xD3VAL A VISEL\u0150J\xC9BE, HOGY ELVEDD"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212866301960
+    m_Localized: "FERT\u0150Z\xD6TTEK: \xDCTK\xD6ZZETEK TURB\xD3VAL A T\xD6BBIEKBE.
+      T\xD6BBIEK: NE HAGYJ\xC1TOK MAGATOKAT!"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212866301961
+    m_Localized: "N\xC1LAD AZ \xC1TKOZOTT CSOMAG? \xDCTK\xD6ZZ VALAKIBE TURB\xD3VAL
+      A VISSZASZ\xC1ML\xC1L\xC1S V\xC9GE EL\u0150TT!"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212866301962
+    m_Localized: "KIEST\xC9L!"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212866301963
+    m_Localized: KORONA ELFOGLALVA
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212866301964
+    m_Localized: "A FERT\u0150Z\xC9S TERJED"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212866301965
+    m_Localized: A CSOMAG ROBBANT
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212866301966
+    m_Localized: "AZ UTOLS\xD3 T\xDAL\xC9L\u0150"
+    m_Metadata:
+      m_Items: []
   references:
     version: 2
     RefIds: []

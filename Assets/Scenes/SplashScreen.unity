@@ -38,7 +38,6 @@ RenderSettings:
   m_ReflectionIntensity: 1
   m_CustomReflection: {fileID: 0}
   m_Sun: {fileID: 0}
-  m_IndirectSpecularColor: {r: 0.12731749, g: 0.13414757, b: 0.1210787, a: 1}
   m_UseRadianceAmbientProbe: 0
 --- !u!157 &3
 LightmapSettings:
@@ -331,8 +330,12 @@ MonoBehaviour:
     _sceneOB: {fileID: 102900000, guid: ec94474063af98c47990cc5638e2176b, type: 3}
     _name: Alex Player Testing
     _path: Assets/Scenes/Alex Player Testing.unity
-    _buildIndex: 0
+    _buildIndex: 1
   splashScreenAnim: {fileID: 1700314697}
+  engineClip: {fileID: 8300000, guid: 2897a11c31064bd4eaa633e0924ec938, type: 3}
+  engineDelay: 1.5
+  revAt: 2.5
+  revTime: 0.75
 --- !u!4 &1306208737
 Transform:
   m_ObjectHideFlags: 0

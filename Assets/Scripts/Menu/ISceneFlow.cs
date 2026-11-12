@@ -95,12 +95,13 @@ public static class SceneFlow
 
 /// <summary>
 /// What every machine does when a rematch starts: the next match starts fresh (GameManager.OnNewMatch) and skips its
-/// tutorial (TutorialManager.SkipNextTutorial)
+/// tutorial (TutorialManager.SkipNextTutorial), and the last match's winner wears the crown (RematchCrown)
 /// </summary>
 public static class MatchReset
 {
     public static void ForRematch()
     {
+        RematchCrown.Rematch(); // the last match's winner wears the crown for this one
         if (GameManager.Instance != null)
             GameManager.Instance.StartNewMatch();
         TutorialManager.SkipNextTutorial = true;

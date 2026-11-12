@@ -790,6 +790,169 @@ MonoBehaviour:
     m_Localized: TAILLE DU TEXTE
     m_Metadata:
       m_Items: []
+  - m_Id: 4721212820164608
+    m_Localized: MODE
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212857913344
+    m_Localized: STANDARD
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212857913345
+    m_Localized: "RU\xC9E VERS L'OR"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212857913346
+    m_Localized: COURONNE DU ROI
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212857913347
+    m_Localized: INFECTION
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212857913348
+    m_Localized: PATATE CHAUDE
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212857913349
+    m_Localized: VITESSE
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212862107648
+    m_Localized: "FAIBLE GRAVIT\xC9"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212862107649
+    m_Localized: VAGUES
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212862107650
+    m_Localized: "DUR\xC9E DES VAGUES"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212862107651
+    m_Localized: CHRONO DE MANCHE
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212862107652
+    m_Localized: "{0} (VERROUILL\xC9)"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212862107653
+    m_Localized: '{0}%'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212862107654
+    m_Localized: '{0}S'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212862107655
+    m_Localized: VITESSE {0}%
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212862107656
+    m_Localized: '{0} VAGUES'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212862107657
+    m_Localized: '{0} MIN'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212862107658
+    m_Localized: "LE COLIS DOR\xC9 REFROIDIT DANS 20 SECONDES !"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212862107659
+    m_Localized: HEURE DE POINTE ! LES VOLS COMPTENT DOUBLE
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212862107660
+    m_Localized: "LE FILON EST L\xC0 ! SUIVEZ LA LUMI\xC8RE"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212862107661
+    m_Localized: MODIFIER LES COMMANDES
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212862107662
+    m_Localized: SERVICE DE CE SOIR
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212862107663
+    m_Localized: 'BOOST : JOUEUR SUIVANT'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212866301952
+    m_Localized: VOUS REGARDEZ {0}
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212866301953
+    m_Localized: BATTEZ-VOUS POUR LE FILON ! RAMASSEZ L'OR QU'IL PERD
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212866301954
+    m_Localized: "FONCEZ EN BOOST SUR QUELQU'UN POUR LUI PASSER LE COLIS MAUDIT.
+      \xC0 LA FIN DU COMPTE \xC0 REBOURS, SON PORTEUR EST \xC9LIMIN\xC9. LE DERNIER
+      EN LICE GAGNE."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212866301955
+    m_Localized: "UN JOUEUR COMMENCE INFECT\xC9 ET CONTAMINE LES AUTRES EN FON\xC7ANT
+      SUR EUX EN BOOST. RESTEZ SAIN LE PLUS LONGTEMPS POSSIBLE POUR MARQUER."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212866301956
+    m_Localized: "GARDEZ LA COURONNE POUR MARQUER. FONCEZ EN BOOST SUR SON PORTEUR
+      POUR LA PRENDRE. LA PORTER RALENTIT LA RECHARGE DU BOOST. LE PLUS LONG R\xC8GNE
+      GAGNE."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212866301957
+    m_Localized: "TROIS FOIS PLUS DE COLIS. UN \xC9NORME FILON D'OR APPARA\xCET SANS
+      CESSE : LENT \xC0 TRANSPORTER, IL RAPPORTE 250 $ ET PERD DE L'OR POUR CEUX
+      QUI LE POURSUIVENT. LES VOLS COMPTENT DOUBLE LES 30 DERNI\xC8RES SECONDES."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212866301958
+    m_Localized: LIVREZ DES COLIS, VOLEZ VOS RIVAUX, PUIS BATTEZ-VOUS POUR LA COMMANDE
+      EN OR. LE PLUS RICHE GAGNE.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212866301959
+    m_Localized: SUIVEZ LE FAISCEAU ET PRENEZ LA COURONNE ! FONCEZ EN BOOST SUR SON
+      PORTEUR POUR LA VOLER
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212866301960
+    m_Localized: "INFECT\xC9S : FONCEZ EN BOOST SUR LES AUTRES. LES AUTRES : NE VOUS
+      FAITES PAS ATTRAPER !"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212866301961
+    m_Localized: "VOUS AVEZ LE COLIS MAUDIT ? FONCEZ EN BOOST SUR QUELQU'UN AVANT
+      LA FIN DU COMPTE \xC0 REBOURS !"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212866301962
+    m_Localized: "VOUS \xCATES \xC9LIMIN\xC9 !"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212866301963
+    m_Localized: COURONNE SAISIE
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212866301964
+    m_Localized: PROPAGATION DE L'INFECTION
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212866301965
+    m_Localized: "COLIS D\xC9TON\xC9"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212866301966
+    m_Localized: DERNIER SURVIVANT
+    m_Metadata:
+      m_Items: []
   references:
     version: 2
     RefIds: []

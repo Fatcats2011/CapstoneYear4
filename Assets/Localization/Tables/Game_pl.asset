@@ -792,6 +792,171 @@ MonoBehaviour:
     m_Localized: ROZMIAR TEKSTU
     m_Metadata:
       m_Items: []
+  - m_Id: 4721212820164608
+    m_Localized: TRYB
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212857913344
+    m_Localized: STANDARDOWY
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212857913345
+    m_Localized: "GOR\u0104CZKA Z\u0141OTA"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212857913346
+    m_Localized: "KORONA KR\xD3LA"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212857913347
+    m_Localized: "ZARA\u017BENIE"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212857913348
+    m_Localized: "GOR\u0104CY ZIEMNIAK"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212857913349
+    m_Localized: "PR\u0118DKO\u015A\u0106"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212862107648
+    m_Localized: NISKA GRAWITACJA
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212862107649
+    m_Localized: FALE
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212862107650
+    m_Localized: "D\u0141UGO\u015A\u0106 FALI"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212862107651
+    m_Localized: CZAS RUNDY
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212862107652
+    m_Localized: '{0} (ZABLOKOWANE)'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212862107653
+    m_Localized: '{0}%'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212862107654
+    m_Localized: '{0}S'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212862107655
+    m_Localized: "PR\u0118DKO\u015A\u0106 {0}%"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212862107656
+    m_Localized: '{0} FAL'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212862107657
+    m_Localized: '{0} MIN'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212862107658
+    m_Localized: "Z\u0141OTA PACZKA STYGNIE ZA 20 SEKUND!"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212862107659
+    m_Localized: "GODZINA SZCZYTU! KRADZIE\u017BE LICZ\u0104 SI\u0118 PODW\xD3JNIE"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212862107660
+    m_Localized: "Z\u0141OTA \u017BY\u0141A SI\u0118 POJAWI\u0141A! JED\u0179 ZA
+      \u015AWIAT\u0141EM"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212862107661
+    m_Localized: "ZMIE\u0143 STEROWANIE"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212862107662
+    m_Localized: DZISIEJSZA ZMIANA
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212862107663
+    m_Localized: "DOPALACZ: NAST\u0118PNY GRACZ"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212866301952
+    m_Localized: "OGL\u0104DASZ: {0}"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212866301953
+    m_Localized: "WALCZ O Z\u0141OT\u0104 \u017BY\u0141\u0118! ZBIERAJ WYSYPANE Z\u0141OTO"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212866301954
+    m_Localized: "UDERZ KOGO\u015A DOPALACZEM, BY PRZEKAZA\u0106 PRZEKL\u0118T\u0104
+      PACZK\u0118. GDY ODLICZANIE SI\u0118 SKO\u0143CZY, JEJ POSIADACZ ODPADA. WYGRYWA
+      OSTATNI GRACZ."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212866301955
+    m_Localized: "JEDEN GRACZ ZACZYNA ZARA\u017BONY I ROZNOSI INFEKCJ\u0118, UDERZAJ\u0104C
+      W INNYCH DOPALACZEM. POZOSTA\u0143 ZDROWY JAK NAJD\u0141U\u017BEJ, BY ZDOBYWA\u0106
+      PUNKTY."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212866301956
+    m_Localized: "TRZYMAJ KORON\u0118, BY ZDOBYWA\u0106 PUNKTY. UDERZ DOPALACZEM
+      W JEJ POSIADACZA, BY J\u0104 ZABRA\u0106. Z KORON\u0104 DOPALACZ \u0141ADUJE
+      SI\u0118 WOLNIEJ. WYGRYWA NAJD\u0141U\u017BSZE PANOWANIE."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212866301957
+    m_Localized: "TRZY RAZY WI\u0118CEJ PACZEK. CI\u0104GLE POJAWIA SI\u0118 OGROMNA
+      Z\u0141OTA \u017BY\u0141A: SPOWALNIA, DAJE 250 $ I GUBI Z\u0141OTO DLA \u015ACIGAJ\u0104CYCH.
+      W OSTATNICH 30 SEKUNDACH KRADZIE\u017BE LICZ\u0104 SI\u0118 PODW\xD3JNIE."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212866301958
+    m_Localized: "DOSTARCZAJ PACZKI, OKRADAJ RYWALI, A POTEM WALCZ O Z\u0141OTE ZAM\xD3WIENIE.
+      WYGRYWA NAJBOGATSZY."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212866301959
+    m_Localized: "LE\u0106 ZA SYGNA\u0141EM I Z\u0141AP KORON\u0118! UDERZ DOPALACZEM
+      W JEJ POSIADACZA, BY J\u0104 ZABRA\u0106"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212866301960
+    m_Localized: "ZARA\u017BENI: UDERZAJCIE DOPALACZEM W RESZT\u0118. RESZTA: NIE
+      DAJCIE SI\u0118 Z\u0141APA\u0106!"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212866301961
+    m_Localized: "MASZ PRZEKL\u0118T\u0104 PACZK\u0118? UDERZ KOGO\u015A DOPALACZEM,
+      ZANIM ODLICZANIE SI\u0118 SKO\u0143CZY!"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212866301962
+    m_Localized: ODPADASZ!
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212866301963
+    m_Localized: "KORONA PRZEJ\u0118TA"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212866301964
+    m_Localized: "ZARA\u017BENIE SI\u0118 ROZPRZESTRZENIA"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212866301965
+    m_Localized: "PACZKA WYBUCH\u0141A"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212866301966
+    m_Localized: "OSTATNI OCALA\u0141Y"
+    m_Metadata:
+      m_Items: []
   references:
     version: 2
     RefIds: []

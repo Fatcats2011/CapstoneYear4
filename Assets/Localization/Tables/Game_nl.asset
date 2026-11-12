@@ -792,6 +792,166 @@ MonoBehaviour:
     m_Localized: TEKSTGROOTTE
     m_Metadata:
       m_Items: []
+  - m_Id: 4721212820164608
+    m_Localized: MODUS
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212857913344
+    m_Localized: STANDAARD
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212857913345
+    m_Localized: GOLDRUSH
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212857913346
+    m_Localized: KONINGSKROON
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212857913347
+    m_Localized: INFECTIE
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212857913348
+    m_Localized: HETE AARDAPPEL
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212857913349
+    m_Localized: SNELHEID
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212862107648
+    m_Localized: LAGE ZWAARTEKRACHT
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212862107649
+    m_Localized: GOLVEN
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212862107650
+    m_Localized: GOLFDUUR
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212862107651
+    m_Localized: RONDETIMER
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212862107652
+    m_Localized: '{0} (VERGRENDELD)'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212862107653
+    m_Localized: '{0}%'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212862107654
+    m_Localized: '{0}S'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212862107655
+    m_Localized: SNELHEID {0}%
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212862107656
+    m_Localized: '{0} GOLVEN'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212862107657
+    m_Localized: '{0} MIN'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212862107658
+    m_Localized: HET GOUDEN PAKKET WORDT KOUD OVER 20 SECONDEN!
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212862107659
+    m_Localized: SPITSUUR! STELEN TELT DUBBEL
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212862107660
+    m_Localized: DE GOUDADER IS ER! VOLG HET LICHT
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212862107661
+    m_Localized: BESTURING WIJZIGEN
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212862107662
+    m_Localized: DIENST VAN VANAVOND
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212862107663
+    m_Localized: 'BOOST: VOLGENDE SPELER'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212866301952
+    m_Localized: JE KIJKT NAAR {0}
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212866301953
+    m_Localized: VECHT OM DE GOUDADER! PAK HET GOUD DAT ERUIT VALT
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212866301954
+    m_Localized: BOOST TEGEN IEMAND OM HET VERVLOEKTE PAKKET DOOR TE GEVEN. ALS DE
+      TELLER AFLOOPT, LIGT DE DRAGER ERUIT. WIE OVERBLIJFT, WINT.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212866301955
+    m_Localized: EEN SPELER BEGINT BESMET EN STEEKT ANDEREN AAN DOOR ERTEGEN TE BOOSTEN.
+      BLIJF ZO LANG MOGELIJK SCHOON OM TE SCOREN.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212866301956
+    m_Localized: HOUD DE KROON VAST OM TE SCOREN. BOOST TEGEN DE DRAGER OM HEM AF
+      TE PAKKEN. MET DE KROON LAADT JE BOOST TRAGER OP. DE LANGSTE REGERING WINT.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212866301957
+    m_Localized: 'DRIE KEER ZOVEEL PAKKETTEN. STEEDS WEER VERSCHIJNT EEN ENORME GOUDADER:
+      TRAAG OM TE DRAGEN, LEVERT $ 250 OP EN VERLIEST GOUD VOOR WIE HEM ACHTERVOLGT.
+      DIEFSTAL TELT DUBBEL IN DE LAATSTE 30 SECONDEN.'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212866301958
+    m_Localized: BEZORG PAKKETTEN, BEROOF JE RIVALEN EN VECHT OM DE GOUDEN BESTELLING.
+      WIE HET MEESTE GELD HEEFT, WINT.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212866301959
+    m_Localized: VOLG HET BAKEN EN PAK DE KROON! BOOST TEGEN DE DRAGER OM HEM AF
+      TE PAKKEN
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212866301960
+    m_Localized: 'BESMET: BOOST TEGEN IEDEREEN. DE REST: LAAT JE NIET PAKKEN!'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212866301961
+    m_Localized: HEB JE HET VERVLOEKTE PAKKET? BOOST TEGEN IEMAND VOORDAT DE TELLER
+      AFLOOPT!
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212866301962
+    m_Localized: JE LIGT ERUIT!
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212866301963
+    m_Localized: KROON GEGREPEN
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212866301964
+    m_Localized: INFECTIE VERSPREIDT ZICH
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212866301965
+    m_Localized: PAKKET GEDETONEERD
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212866301966
+    m_Localized: LAATSTE OVERLEVENDE
+    m_Metadata:
+      m_Items: []
   references:
     version: 2
     RefIds: []

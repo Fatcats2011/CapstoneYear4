@@ -779,6 +779,158 @@ MonoBehaviour:
     m_Key: options.textsize
     m_Metadata:
       m_Items: []
+  - m_Id: 4721212820164608
+    m_Key: rules.mode
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212857913344
+    m_Key: rules.mode.standard
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212857913345
+    m_Key: rules.mode.goldrush
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212857913346
+    m_Key: rules.mode.kingscrown
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212857913347
+    m_Key: rules.mode.infection
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212857913348
+    m_Key: rules.mode.hotpotato
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212857913349
+    m_Key: rules.speed
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212862107648
+    m_Key: rules.lowgravity
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212862107649
+    m_Key: rules.waves
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212862107650
+    m_Key: rules.wavelength
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212862107651
+    m_Key: rules.roundtimer
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212862107652
+    m_Key: rules.locked
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212862107653
+    m_Key: rules.value.percent
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212862107654
+    m_Key: rules.value.seconds
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212862107655
+    m_Key: rules.summary.speed
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212862107656
+    m_Key: rules.summary.waves
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212862107657
+    m_Key: rules.summary.round
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212862107658
+    m_Key: golden.ending
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212862107659
+    m_Key: goldrush.rushhour
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212862107660
+    m_Key: goldrush.lode
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212862107661
+    m_Key: options.controls.open
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212862107662
+    m_Key: lobby.tonight
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212862107663
+    m_Key: spectate.switch
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212866301952
+    m_Key: spectate.watching
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212866301953
+    m_Key: mode.start.goldrush
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212866301954
+    m_Key: rules.desc.hotpotato
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212866301955
+    m_Key: rules.desc.infection
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212866301956
+    m_Key: rules.desc.kingscrown
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212866301957
+    m_Key: rules.desc.goldrush
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212866301958
+    m_Key: rules.desc.standard
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212866301959
+    m_Key: mode.start.kingscrown
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212866301960
+    m_Key: mode.start.infection
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212866301961
+    m_Key: mode.start.hotpotato
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212866301962
+    m_Key: hotpotato.out
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212866301963
+    m_Key: reel.caption.crown
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212866301964
+    m_Key: reel.caption.infection
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212866301965
+    m_Key: reel.caption.explosion
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212866301966
+    m_Key: reel.caption.survivor
+    m_Metadata:
+      m_Items: []
   m_Metadata:
     m_Items: []
   m_KeyGenerator:

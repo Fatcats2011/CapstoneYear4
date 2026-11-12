@@ -793,6 +793,171 @@ MonoBehaviour:
     m_Localized: "MET\u0130N BOYUTU"
     m_Metadata:
       m_Items: []
+  - m_Id: 4721212820164608
+    m_Localized: MOD
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212857913344
+    m_Localized: STANDART
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212857913345
+    m_Localized: "ALTIN H\xDCCUMU"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212857913346
+    m_Localized: KRALIN TACI
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212857913347
+    m_Localized: "ENFEKS\u0130YON"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212857913348
+    m_Localized: SICAK PATATES
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212857913349
+    m_Localized: HIZ
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212862107648
+    m_Localized: "D\xDC\u015E\xDCK YER\xC7EK\u0130M\u0130"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212862107649
+    m_Localized: DALGALAR
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212862107650
+    m_Localized: "DALGA S\xDCRES\u0130"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212862107651
+    m_Localized: "TUR S\xDCRES\u0130"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212862107652
+    m_Localized: "{0} (K\u0130L\u0130TL\u0130)"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212862107653
+    m_Localized: '{0}%'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212862107654
+    m_Localized: '{0}SN'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212862107655
+    m_Localized: HIZ {0}%
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212862107656
+    m_Localized: '{0} DALGA'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212862107657
+    m_Localized: '{0} DK'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212862107658
+    m_Localized: "ALTIN PAKET 20 SAN\u0130YE SONRA SO\u011EUYOR!"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212862107659
+    m_Localized: "YO\u011EUN SAAT! \xC7ALMALAR \xC7\u0130FT SAYILIR"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212862107660
+    m_Localized: "ANA DAMAR \xC7IKTI! I\u015EI\u011EI TAK\u0130P ET"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212862107661
+    m_Localized: "KONTROLLER\u0130 DE\u011E\u0130\u015ET\u0130R"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212862107662
+    m_Localized: "BU GECEK\u0130 VARD\u0130YA"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212862107663
+    m_Localized: "TAKV\u0130YE: SONRAK\u0130 OYUNCU"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212866301952
+    m_Localized: "\u0130ZLENEN: {0}"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212866301953
+    m_Localized: "ANA DAMAR \u0130\xC7\u0130N SAVA\u015E! D\xD6K\xDCLEN ALTINI TOPLA"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212866301954
+    m_Localized: "LANETL\u0130 PAKET\u0130 VERMEK \u0130\xC7\u0130N B\u0130R\u0130NE
+      TAKV\u0130YEYLE \xC7ARP. GER\u0130 SAYIM B\u0130T\u0130NCE EL\u0130NDE TUTAN
+      ELEN\u0130R. SON KALAN KAZANIR."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212866301955
+    m_Localized: "B\u0130R OYUNCU ENFEKTE BA\u015ELAR VE TAKV\u0130YEYLE \xC7ARPARAK
+      BULA\u015ETIRIR. PUAN \u0130\xC7\u0130N OLAB\u0130LD\u0130\u011E\u0130NCE UZUN
+      S\xDCRE TEM\u0130Z KAL."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212866301956
+    m_Localized: "PUAN \u0130\xC7\u0130N TACI EL\u0130NDE TUT. ALMAK \u0130\xC7\u0130N
+      SAH\u0130B\u0130NE TAKV\u0130YEYLE \xC7ARP. TACI TAKMAK TAKV\u0130YEN\u0130N
+      DOLUMUNU YAVA\u015ELATIR. EN UZUN H\xDCK\xDCMDARLIK KAZANIR."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212866301957
+    m_Localized: "\xDC\xC7 KAT PAKET. S\xDCREKL\u0130 DEV B\u0130R ALTIN ANA DAMAR
+      \xC7IKAR: TA\u015EIMASI YAVA\u015ETIR, 250 $ KAZANDIRIR VE KOVALAYANLARA ALTIN
+      D\xD6KER. SON 30 SAN\u0130YEDE \xC7ALMALAR \xC7\u0130FT SAYILIR."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212866301958
+    m_Localized: "PAKETLER\u0130 TESL\u0130M ET, RAK\u0130PLER\u0130NDEN \xC7AL,
+      SONRA ALTIN S\u0130PAR\u0130\u015E \u0130\xC7\u0130N SAVA\u015E. EN \xC7OK
+      PARASI OLAN KAZANIR."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212866301959
+    m_Localized: "\u0130\u015EARET\u0130 TAK\u0130P ET VE TACI KAP! ALMAK \u0130\xC7\u0130N
+      SAH\u0130B\u0130NE TAKV\u0130YEYLE \xC7ARP"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212866301960
+    m_Localized: "ENFEKTEL\u0130LER: D\u0130\u011EERLER\u0130NE TAKV\u0130YEYLE \xC7ARPIN.
+      D\u0130\u011EERLER\u0130: YAKALANMAYIN!"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212866301961
+    m_Localized: "LANETL\u0130 PAKET SENDE M\u0130? GER\u0130 SAYIM B\u0130TMEDEN
+      B\u0130R\u0130NE TAKV\u0130YEYLE \xC7ARP!"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212866301962
+    m_Localized: "ELEND\u0130N!"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212866301963
+    m_Localized: "TA\xC7 ELE GE\xC7\u0130R\u0130LD\u0130"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212866301964
+    m_Localized: "ENFEKS\u0130YON YAYILIYOR"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212866301965
+    m_Localized: PAKET PATLADI
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212866301966
+    m_Localized: SON HAYATTA KALAN
+    m_Metadata:
+      m_Items: []
   references:
     version: 2
     RefIds: []

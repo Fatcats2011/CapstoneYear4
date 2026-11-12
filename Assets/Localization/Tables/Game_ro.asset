@@ -792,6 +792,170 @@ MonoBehaviour:
     m_Localized: DIMENSIUNE TEXT
     m_Metadata:
       m_Items: []
+  - m_Id: 4721212820164608
+    m_Localized: MOD
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212857913344
+    m_Localized: STANDARD
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212857913345
+    m_Localized: FEBRA AURULUI
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212857913346
+    m_Localized: COROANA REGELUI
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212857913347
+    m_Localized: "INFEC\u021AIE"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212857913348
+    m_Localized: CARTOF FIERBINTE
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212857913349
+    m_Localized: "VITEZ\u0102"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212862107648
+    m_Localized: "GRAVITA\u021AIE REDUS\u0102"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212862107649
+    m_Localized: VALURI
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212862107650
+    m_Localized: DURATA VALULUI
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212862107651
+    m_Localized: "TIMP RUND\u0102"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212862107652
+    m_Localized: '{0} (BLOCAT)'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212862107653
+    m_Localized: '{0}%'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212862107654
+    m_Localized: '{0}S'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212862107655
+    m_Localized: "VITEZ\u0102 {0}%"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212862107656
+    m_Localized: '{0} VALURI'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212862107657
+    m_Localized: '{0} MIN'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212862107658
+    m_Localized: "PACHETUL DE AUR SE R\u0102CE\u0218TE \xCEN 20 DE SECUNDE!"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212862107659
+    m_Localized: "ORA DE V\xC2RF! FURTURILE CONTEAZ\u0102 DUBLU"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212862107660
+    m_Localized: "FILONUL A AP\u0102RUT! URMEAZ\u0102 LUMINA"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212862107661
+    m_Localized: "SCHIMB\u0102 COMENZILE"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212862107662
+    m_Localized: "TURA DE DISEAR\u0102"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212862107663
+    m_Localized: "TURBO: JUC\u0102TORUL URM\u0102TOR"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212866301952
+    m_Localized: "\xCEL URM\u0102RE\u0218TI PE {0}"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212866301953
+    m_Localized: "LUPT\u0102 PENTRU FILON! ADUN\u0102 AURUL CARE CADE"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212866301954
+    m_Localized: "LOVE\u0218TE PE CINEVA CU TURBO CA S\u0102-I DAI PACHETUL BLESTEMAT.
+      LA FINALUL NUM\u0102R\u0102TORII, CINE \xCEL ARE E ELIMINAT. ULTIMUL R\u0102MAS
+      C\xC2\u0218TIG\u0102."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212866301955
+    m_Localized: "UN JUC\u0102TOR \xCENCEPE INFECTAT \u0218I \xCEI CONTAMINEAZ\u0102
+      PE CEILAL\u021AI LOVINDU-I CU TURBO. R\u0102M\xC2I CURAT C\xC2T MAI MULT CA
+      S\u0102 MARCHEZI."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212866301956
+    m_Localized: "\u021AINE COROANA CA S\u0102 MARCHEZI. LOVE\u0218TE CU TURBO PE
+      CEL CARE O POART\u0102 CA S-O IEI. CU COROANA, TURBO SE \xCENCARC\u0102 MAI
+      \xCENCET. CEA MAI LUNG\u0102 DOMNIE C\xC2\u0218TIG\u0102."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212866301957
+    m_Localized: "DE TREI ORI MAI MULTE PACHETE. APARE MEREU UN FILON URIA\u0218
+      DE AUR: E GREU DE C\u0102RAT, ADUCE 250 $ \u0218I PIERDE AUR PENTRU CEI CARE
+      \xCEL URM\u0102RESC. \xCEN ULTIMELE 30 DE SECUNDE FURTURILE CONTEAZ\u0102 DUBLU."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212866301958
+    m_Localized: "LIVREAZ\u0102 PACHETE, FUR\u0102 DE LA RIVALI, APOI LUPT\u0102
+      PENTRU COMANDA DE AUR. CEI MAI MUL\u021AI BANI C\xC2\u0218TIG\u0102."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212866301959
+    m_Localized: "URMEAZ\u0102 FARUL \u0218I IA COROANA! LOVE\u0218TE CU TURBO PE
+      CEL CARE O POART\u0102 CA S-O IEI"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212866301960
+    m_Localized: "INFECTA\u021AI: LOVI\u021AI-I CU TURBO PE CEILAL\u021AI. CEILAL\u021AI:
+      NU V\u0102 L\u0102SA\u021AI PRIN\u0218I!"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212866301961
+    m_Localized: "AI PACHETUL BLESTEMAT? LOVE\u0218TE PE CINEVA CU TURBO \xCENAINTE
+      S\u0102 SE TERMINE NUM\u0102R\u0102TOAREA!"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212866301962
+    m_Localized: "E\u0218TI ELIMINAT!"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212866301963
+    m_Localized: "COROAN\u0102 PRELUAT\u0102"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212866301964
+    m_Localized: "INFEC\u021AIE \xCEN R\u0102SP\xC2NDIRE"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212866301965
+    m_Localized: COLET DETONAT
+    m_Metadata:
+      m_Items: []
+  - m_Id: 4721212866301966
+    m_Localized: "ULTIMUL SUPRAVIE\u021AUITOR"
+    m_Metadata:
+      m_Items: []
   references:
     version: 2
     RefIds: []

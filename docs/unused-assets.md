@@ -69,7 +69,7 @@ Biggest subfolders:
 - `Assets/Audio/Music/March 11 Final.wav`: 28.5 MB
 - `Assets/Audio/Music/March 11 Main.wav`: 28.2 MB
 - `Assets/Audio/Music/April 13 Main.wav`: 24.9 MB
-- `Assets/Audio/TEST/78651__justinbw__moped-motor.wav`: 5.3 MB
+- `Assets/Audio/TEST/78651__justinbw__moped-motor.wav`: 5.3 MB (the source `tools/intro-engine.py` cuts `Assets/Audio/SFX/IntroEngine.wav` from: keep it, or keep a copy, to regenerate the clip)
 - `Assets/Audio/TEST/28. Coconut Mall.mp3`: 5.1 MB
 - `Assets/Audio/Closed Playtest/B1/b1_final.mp3`: 4.2 MB
 - `Assets/Audio/Closed Playtest/B2/b2_menu.mp3`: 4.2 MB

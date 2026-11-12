@@ -716,7 +716,7 @@ public class OnlineGame : MonoBehaviour
             }
 
             OnlinePlayer owner = player; // their Steam ID may arrive after their scooter
-            SteamIcon.Attach(avatar, () => owner != null ? owner.SteamId : 0);
+            SteamIcon.Attach(avatar, () => owner != null ? owner.SteamId : 0, () => owner != null ? owner.Seat : -1);
             remotes[player] = new RemotePlayer { Avatar = avatar, Seat = seat, Forced = forced, Ready = forced };
             waiting.RemoveAt(i);
         }

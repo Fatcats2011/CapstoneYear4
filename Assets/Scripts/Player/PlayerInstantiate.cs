@@ -786,6 +786,7 @@ public class PlayerInstantiate : SingletonMonobehaviour<PlayerInstantiate>
     /// </summary>
     internal void ClearFinishPoses()
     {
+        PodiumPerformer.StopAll();
         foreach (PlayerSlot slot in roster.Players)
         {
             OrderHandler orders = slot.Player != null ? slot.Player.GetComponentInChildren<OrderHandler>(true) : null;

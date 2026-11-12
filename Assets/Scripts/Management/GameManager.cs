@@ -97,6 +97,7 @@ public class GameManager : SingletonMonobehaviour<GameManager>
         if (mainState == GameState.Menu || mainState == GameState.PlayerSelect)
         {
             TutorialManager.SkipNextTutorial = false;
+            RematchCrown.Clear(); // the winner's crown lasts a rematch, not a new game
             MatchPhysics.Reset(); // the menus fall at normal gravity, whatever the last match's mutators were
             ModeMatch.End();
             Raise(OnNewMatch);
