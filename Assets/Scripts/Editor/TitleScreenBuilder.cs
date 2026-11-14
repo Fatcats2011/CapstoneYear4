@@ -27,18 +27,31 @@ public static class TitleScreenBuilder
     public const string INTRO_RIG = "Menu Ghost Animations";
     public const string INTRO_PICTURE = "Menu Ghost Reveal";
     public const string BACKDROP = "Title Backdrop";
+    /// <summary>The first build's painted fog and floor glow, now real on the stage</summary>
     public const string FOG = "Title Fog";
     public const string FLOOR = "Title Floor";
+    public const string ROAD = "Title Road";
+    public const string VERGE = "Title Verge";
+    public const string MIST = "Title Mist";
+    public const string GROUND_MIST = "Title Ground Mist";
     public const string GHOSTS = "Title Ghosts";
     public const string FADE = "Title Fade";
     /// <summary>What the builder puts behind the logo, back to front</summary>
-    public static readonly string[] Behind = { BACKDROP, FOG, FLOOR, GHOSTS };
+    public static readonly string[] Behind = { BACKDROP, GHOSTS };
     /// <summary>What the old title screen had that the new one doesn't</summary>
-    public static readonly string[] Old = { "Background Purple", "Background Pink", FADE };
+    public static readonly string[] Old = { "Background Purple", "Background Pink", FADE, FOG, FLOOR };
 
     const string BACKDROP_SPRITE = "Assets/Sprites/Title/TitleBackdrop.png";
-    const string FOG_TEXTURE = "Assets/Sprites/Title/TitleFog.png";
-    const string FLOOR_SPRITE = "Assets/Sprites/Title/TitleFloor.png";
+    const string ROAD_TEXTURE = "Assets/Sprites/Title/TitleRoad.png";
+    const string PUFF_TEXTURE = "Assets/Sprites/Title/TitleMistPuff.png";
+    const string SHADOW_TEXTURE = "Assets/Sprites/Title/TitleShadow.png";
+    const string ROAD_MATERIAL = "Assets/Materials/Title/TitleRoad.mat";
+    const string MIST_MATERIAL = "Assets/Materials/Title/TitleMist.mat";
+    const string SHADOW_MATERIAL = "Assets/Materials/Title/TitleShadow.mat";
+    const string VERGE_MATERIAL = "Assets/Materials/Title/TitleVerge.mat";
+    const string PICTURE_MATERIAL = "Assets/Materials/Title/TitleStagePicture.mat";
+    const string MIST_SHADER = "DoA/Title Mist";
+    public const string PICTURE_SHADER = "DoA/UI Premultiplied";
     const string GOLDEN = "Assets/Materials/Title/TitleGolden.mat";
     const string ENGINE = "Assets/Audio/SFX/IntroEngine.wav";
     const string SPLASH_CLIP = "Assets/Animations/SplashScreen/Animate.anim";
@@ -57,13 +70,55 @@ public static class TitleScreenBuilder
     // Far from the menu's world, out of every other camera's sight: behind and to one side of the intro's rig
     // (at -1119.75, 1.69, -9.18, its cameras looking along +z), so neither films the other
     static readonly Vector3 StageAt = new Vector3(-1419.75f, 1.69f, -309.18f);
-    const float FOG_ALPHA = 0.22f;
-    /// <summary>The mist lies along the road: from and to, up the screen</summary>
-    const float FOG_FROM = 0.17f, FOG_TO = 0.56f;
-    // The floor glow: a soft band where the lane meets the screen (canvas units from the screen's middle)
-    static readonly Color FloorColour = new Color(0.52f, 0.30f, 0.85f, 0.20f);
-    const float FLOOR_Y = -235f;
-    const float FLOOR_HEIGHT = 260f;
+    // The road: across the lane from z -2.6 to 3.6, long enough to run past both edges of the screen. Its texture is
+    // ROAD_TILE units long (tools/title-backdrop.py)
+    const float ROAD_NEAR = -2.6f, ROAD_FAR = 3.6f, ROAD_LENGTH = 64f, ROAD_TILE = 8f;
+    /// <summary>The near verge runs from the road to past the bottom of the screen</summary>
+    const float VERGE_NEAR = -14f;
+
+    /// <summary>A layer of mist: where its puffs are born (a box on the stage), how big, how long they live, how fast they drift right and their colours</summary>
+    struct MistLayer
+    {
+        public string name;
+        public Vector3 centre, box;
+        public float sizeMin, sizeMax, lifeMin, lifeMax, driftMin, driftMax;
+        public int count;
+        public Color a, b;
+    }
+
+    static readonly MistLayer[] MistLayers =
+    {
+        // Low and thick along the road, round the wheels
+        new MistLayer
+        {
+            name = GROUND_MIST, centre = new Vector3(0f, 0.3f, 0.8f), box = new Vector3(28f, 0.3f, 5.2f),
+            sizeMin = 1.4f, sizeMax = 2.6f, lifeMin = 10f, lifeMax = 16f, driftMin = 0.15f, driftMax = 0.35f, count = 170,
+            a = new Color(0.80f, 0.74f, 1f, 0.17f), b = new Color(0.66f, 0.60f, 0.92f, 0.11f),
+        },
+        // Higher, bigger and fainter, behind the lane, so it never hangs over the screen below the road
+        new MistLayer
+        {
+            name = MIST, centre = new Vector3(0f, 1.3f, 4.5f), box = new Vector3(30f, 1f, 5f),
+            sizeMin = 2.8f, sizeMax = 5f, lifeMin = 14f, lifeMax = 22f, driftMin = 0.25f, driftMax = 0.45f, count = 80,
+            a = new Color(0.78f, 0.70f, 1f, 0.09f), b = new Color(0.60f, 0.52f, 0.90f, 0.05f),
+        },
+    };
+
+    /// <summary>
+    /// The intro's crew standing on the title stage's road. Their picture is laid over the title, so they have to land
+    /// where the road shows: the rig's cameras look up past their animation by INTRO_LOOK_UP (the lead ghost, which
+    /// the animation moves, onto the road's near side), and the three still ghosts behind it stand lower than they
+    /// were posed (onto its far side). Rig-local positions
+    /// </summary>
+    const float INTRO_LOOK_UP = 6.5f;
+    static readonly System.Collections.Generic.Dictionary<string, Vector3> IntroCrewOnTheRoad =
+        new System.Collections.Generic.Dictionary<string, Vector3>
+    {
+        { "Menu Ghost 1", new Vector3(5.12f, -1.95f, 7.29f) },
+        { "Menu Ghost 2", new Vector3(3.12f, -1.62f, 7.79f) },
+        { "Menu Ghost 3", new Vector3(0.88f, -1.61f, 7.61f) },
+    };
+
     /// <summary>The engine starts this long before the wiper does, and revs away as it crosses</summary>
     public const float ENGINE_LEAD = 1f;
 
@@ -126,25 +181,9 @@ public static class TitleScreenBuilder
         backdrop.sprite = SpriteAt(BACKDROP_SPRITE);
         backdrop.color = Color.white;
 
-        RawImage fog = Ui<RawImage>(FOG, canvas.transform);
-        fog.texture = FogTexture();
-        fog.color = new Color(0.75f, 0.6f, 1f, FOG_ALPHA);
-        fog.rectTransform.anchorMin = new Vector2(0f, FOG_FROM);
-        fog.rectTransform.anchorMax = new Vector2(1f, FOG_TO);
-        fog.gameObject.AddComponent<TitleBackdrop>();
-
-        Image floor = Ui<Image>(FLOOR, canvas.transform);
-        floor.sprite = FloorSprite();
-        floor.color = FloorColour;
-        RectTransform floorRect = floor.rectTransform;
-        floorRect.anchorMin = new Vector2(0f, 0.5f);
-        floorRect.anchorMax = new Vector2(1f, 0.5f);
-        floorRect.pivot = new Vector2(0.5f, 0.5f);
-        floorRect.anchoredPosition = new Vector2(0f, FLOOR_Y);
-        floorRect.sizeDelta = new Vector2(0f, FLOOR_HEIGHT);
-
         RawImage ghosts = Ui<RawImage>(GHOSTS, canvas.transform);
         ghosts.color = Color.white;
+        ghosts.material = PictureMaterial();
         ghosts.enabled = false; // the stage turns it on with the show
 
         for (int i = 0; i < Behind.Length; i++)
@@ -157,6 +196,16 @@ public static class TitleScreenBuilder
             throw new System.InvalidOperationException("The menu scene has lost its intro (" + INTRO_RIG + " and " + INTRO_PICTURE + ").");
         introPicture.SetAsLastSibling();
         introPicture.GetComponent<Graphic>().raycastTarget = false;
+        MenuGhostReveal reveal = introRig.GetComponent<MenuGhostReveal>();
+        reveal.lookUp = INTRO_LOOK_UP;
+        EditorUtility.SetDirty(reveal);
+        foreach (var ghost in IntroCrewOnTheRoad)
+        {
+            Transform still = introRig.transform.Find(ghost.Key);
+            if (still == null)
+                throw new System.InvalidOperationException("The intro has lost " + ghost.Key + ".");
+            still.localPosition = ghost.Value;
+        }
 
         // The stage
         GameObject stageObject = new GameObject(STAGE);
@@ -174,6 +223,7 @@ public static class TitleScreenBuilder
         data.renderPostProcessing = false;
         data.renderShadows = false;
         data.antialiasing = AntialiasingMode.None;
+        data.requiresDepthTexture = true; // the mist fades where it meets the road
 
         // The scene's moonlight is the key. Two rims from behind pick the ghosts out of the dark: the logo's green and purple
         Rim(stageObject.transform, "Title Rim Green", new Vector3(-9f, 6f, 7f), new Color(0.45f, 1f, 0.4f), 110f);
@@ -186,6 +236,10 @@ public static class TitleScreenBuilder
         stage.colours = All<PlayerColorInformationSO>(COLOURS);
         stage.companies = All<CompanyInformation>(COMPANIES);
         stage.goldenMaterial = GoldenMaterial();
+        stage.shadowMaterial = MistMaterial(SHADOW_MATERIAL, SHADOW_TEXTURE, new Color(0f, 0f, 0f, 0.55f), 0f);
+        Road(stageObject.transform);
+        Material mist = MistMaterial(MIST_MATERIAL, PUFF_TEXTURE, Color.white, 1.2f);
+        stage.mist = MistLayers.Select(layer => Mist(stageObject.transform, layer, mist)).ToArray();
         stage.popFont = AssetDatabase.LoadAssetAtPath<TMP_FontAsset>(FONT);
         stage.stageCamera = camera;
         stage.ghostImage = ghosts;
@@ -209,6 +263,108 @@ public static class TitleScreenBuilder
         light.range = 60f;
         light.shadows = LightShadows.None;
         light.lightmapBakeType = LightmapBakeType.Realtime;
+    }
+
+    /// <summary>The road the ghosts ride along: a long flat strip</summary>
+    static void Road(Transform stage)
+    {
+        GameObject road = new GameObject(ROAD);
+        road.transform.SetParent(stage, false);
+        road.transform.localPosition = new Vector3(0f, 0f, (ROAD_NEAR + ROAD_FAR) / 2f);
+        road.transform.localRotation = Quaternion.Euler(90f, 0f, 0f);   // flat, facing up; the texture's top is the far kerb
+        road.transform.localScale = new Vector3(ROAD_LENGTH, ROAD_FAR - ROAD_NEAR, 1f);
+        road.AddComponent<MeshFilter>().sharedMesh = Resources.GetBuiltinResource<Mesh>("Quad.fbx");
+        MeshRenderer look = road.AddComponent<MeshRenderer>();
+        look.sharedMaterial = RoadMaterial();
+        look.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+        look.receiveShadows = false;
+
+        // The near verge is the backdrop's painting; this only gives the mist something to fade against there
+        GameObject verge = new GameObject(VERGE);
+        verge.transform.SetParent(stage, false);
+        verge.transform.localPosition = new Vector3(0f, 0f, (VERGE_NEAR + ROAD_NEAR) / 2f);
+        verge.transform.localRotation = Quaternion.Euler(90f, 0f, 0f);
+        verge.transform.localScale = new Vector3(ROAD_LENGTH, ROAD_NEAR - VERGE_NEAR, 1f);
+        verge.AddComponent<MeshFilter>().sharedMesh = Resources.GetBuiltinResource<Mesh>("Quad.fbx");
+        MeshRenderer ground = verge.AddComponent<MeshRenderer>();
+        ground.sharedMaterial = MaterialAt(VERGE_MATERIAL, Shader.Find("DoA/Depth Only"));
+        ground.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+        ground.receiveShadows = false;
+    }
+
+    /// <summary>One layer of mist: soft puffs born all along the road, drifting slowly right and turning as they go</summary>
+    static ParticleSystem Mist(Transform stage, MistLayer layer, Material material)
+    {
+        GameObject holder = new GameObject(layer.name);
+        holder.transform.SetParent(stage, false);
+        holder.transform.localPosition = layer.centre;
+        ParticleSystem mist = holder.AddComponent<ParticleSystem>();
+        mist.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
+
+        ParticleSystem.MainModule main = mist.main;
+        main.duration = 10f;
+        main.loop = true;
+        main.prewarm = true;
+        main.playOnAwake = true;
+        main.startLifetime = new ParticleSystem.MinMaxCurve(layer.lifeMin, layer.lifeMax);
+        main.startSpeed = 0f;
+        main.startSize = new ParticleSystem.MinMaxCurve(layer.sizeMin, layer.sizeMax);
+        main.startRotation = new ParticleSystem.MinMaxCurve(0f, 2f * Mathf.PI);
+        main.startColor = new ParticleSystem.MinMaxGradient(layer.a, layer.b);
+        main.maxParticles = layer.count;
+        main.simulationSpace = ParticleSystemSimulationSpace.Local;
+        main.scalingMode = ParticleSystemScalingMode.Hierarchy;
+        main.gravityModifier = 0f;
+
+        ParticleSystem.EmissionModule emission = mist.emission;
+        emission.rateOverTime = layer.count / ((layer.lifeMin + layer.lifeMax) / 2f);
+
+        ParticleSystem.ShapeModule shape = mist.shape;
+        shape.shapeType = ParticleSystemShapeType.Box;
+        shape.scale = layer.box;
+
+        ParticleSystem.VelocityOverLifetimeModule drift = mist.velocityOverLifetime;
+        drift.enabled = true;
+        drift.space = ParticleSystemSimulationSpace.Local;
+        drift.x = new ParticleSystem.MinMaxCurve(layer.driftMin, layer.driftMax);
+        drift.y = new ParticleSystem.MinMaxCurve(0f, 0.02f);
+        drift.z = new ParticleSystem.MinMaxCurve(-0.04f, 0.04f);
+
+        ParticleSystem.ColorOverLifetimeModule fade = mist.colorOverLifetime;
+        fade.enabled = true;
+        Gradient inAndOut = new Gradient();
+        inAndOut.SetKeys(
+            new[] { new GradientColorKey(Color.white, 0f), new GradientColorKey(Color.white, 1f) },
+            new[] { new GradientAlphaKey(0f, 0f), new GradientAlphaKey(1f, 0.25f), new GradientAlphaKey(1f, 0.7f), new GradientAlphaKey(0f, 1f) });
+        fade.color = inAndOut;
+
+        ParticleSystem.RotationOverLifetimeModule turn = mist.rotationOverLifetime;
+        turn.enabled = true;
+        turn.z = new ParticleSystem.MinMaxCurve(-0.15f, 0.15f);
+
+        ParticleSystem.SizeOverLifetimeModule grow = mist.sizeOverLifetime;
+        grow.enabled = true;
+        grow.size = new ParticleSystem.MinMaxCurve(1f, AnimationCurve.Linear(0f, 0.85f, 1f, 1.2f));
+
+        // Pushed aside by a passing scooter (TitleActor's wake), then settling again
+        ParticleSystem.ExternalForcesModule forces = mist.externalForces;
+        forces.enabled = true;
+        forces.multiplier = 1f;
+        ParticleSystem.LimitVelocityOverLifetimeModule settle = mist.limitVelocityOverLifetime;
+        settle.enabled = true;
+        settle.limit = 10f;
+        settle.dampen = 0f;
+        settle.drag = 0.8f;
+
+        ParticleSystemRenderer look = holder.GetComponent<ParticleSystemRenderer>();
+        look.renderMode = ParticleSystemRenderMode.Billboard;
+        look.alignment = ParticleSystemRenderSpace.View;
+        look.sortMode = ParticleSystemSortMode.Distance;
+        look.sharedMaterial = material;
+        look.maxParticleSize = 4f;
+        look.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+        look.receiveShadows = false;
+        return mist;
     }
 
     // ---------------------------------------------------------------- The boot intro
@@ -282,46 +438,75 @@ public static class TitleScreenBuilder
         return AssetDatabase.LoadAssetAtPath<Sprite>(path);
     }
 
-    static Texture2D FogTexture()
+    /// <summary>A texture of the stage's, imported uncompressed with mipmaps (they are seen at a slant), wrapping or not</summary>
+    static Texture2D StageTexture(string path, bool repeat)
     {
-        TextureImporter importer = (TextureImporter)AssetImporter.GetAtPath(FOG_TEXTURE);
+        TextureImporter importer = (TextureImporter)AssetImporter.GetAtPath(path);
         if (importer == null)
-            throw new System.InvalidOperationException(FOG_TEXTURE + " is missing: run tools/title-backdrop.py.");
-        if (importer.wrapMode != TextureWrapMode.Repeat || !importer.alphaIsTransparency
+            throw new System.InvalidOperationException(path + " is missing: run tools/title-backdrop.py.");
+        TextureWrapMode wrap = repeat ? TextureWrapMode.Repeat : TextureWrapMode.Clamp;
+        if (importer.textureType != TextureImporterType.Default || importer.wrapMode != wrap || !importer.mipmapEnabled
             || importer.textureCompression != TextureImporterCompression.Uncompressed)
         {
             importer.textureType = TextureImporterType.Default;
-            importer.wrapMode = TextureWrapMode.Repeat;
-            importer.alphaIsTransparency = true;
-            importer.mipmapEnabled = false;
+            importer.wrapMode = wrap;
+            importer.mipmapEnabled = true;
+            importer.anisoLevel = 8;
+            importer.alphaIsTransparency = !repeat;
             importer.textureCompression = TextureImporterCompression.Uncompressed;
             importer.SaveAndReimport();
         }
-        return AssetDatabase.LoadAssetAtPath<Texture2D>(FOG_TEXTURE);
+        return AssetDatabase.LoadAssetAtPath<Texture2D>(path);
     }
 
-    /// <summary>A soft white ellipse, clear at its edges: the floor glow, tinted and stretched on the canvas</summary>
-    static Sprite FloorSprite()
+    /// <summary>A material asset, made the first time and set up again every build</summary>
+    static Material MaterialAt(string path, Shader shader)
     {
-        if (!File.Exists(FLOOR_SPRITE))
+        if (shader == null)
+            throw new System.InvalidOperationException("A shader for " + path + " is missing.");
+        Material material = AssetDatabase.LoadAssetAtPath<Material>(path);
+        if (material == null)
         {
-            const int W = 256, H = 64;
-            Texture2D texture = new Texture2D(W, H, TextureFormat.RGBA32, false);
-            for (int y = 0; y < H; y++)
-            {
-                for (int x = 0; x < W; x++)
-                {
-                    float dx = (x + 0.5f) / W * 2f - 1f, dy = (y + 0.5f) / H * 2f - 1f;
-                    float d = Mathf.Clamp01(1f - Mathf.Sqrt(dx * dx + dy * dy));
-                    float a = d * d * (3f - 2f * d);
-                    texture.SetPixel(x, y, new Color(1f, 1f, 1f, a));
-                }
-            }
-            File.WriteAllBytes(FLOOR_SPRITE, texture.EncodeToPNG());
-            Object.DestroyImmediate(texture);
-            AssetDatabase.ImportAsset(FLOOR_SPRITE);
+            Directory.CreateDirectory(Path.GetDirectoryName(path));
+            material = new Material(shader);
+            AssetDatabase.CreateAsset(material, path);
         }
-        return SpriteAt(FLOOR_SPRITE);
+        material.shader = shader;
+        return material;
+    }
+
+    /// <summary>
+    /// Worn asphalt, unlit: it shows its texture's night colours as they are, like the painted backdrop it meets. Lit,
+    /// it took the menu scene's flat grey ambient light and turned pale
+    /// </summary>
+    static Material RoadMaterial()
+    {
+        Material road = MaterialAt(ROAD_MATERIAL, Shader.Find("Universal Render Pipeline/Unlit"));
+        road.SetTexture("_BaseMap", StageTexture(ROAD_TEXTURE, true));
+        road.SetTextureScale("_BaseMap", new Vector2(ROAD_LENGTH / ROAD_TILE, 1f));
+        road.SetColor("_BaseColor", Color.white);
+        EditorUtility.SetDirty(road);
+        return road;
+    }
+
+    /// <summary>A see-through card of the stage's (DoA/Title Mist): a mist puff, or a shadow when soft is zero</summary>
+    static Material MistMaterial(string path, string texture, Color tint, float soft)
+    {
+        Material mist = MaterialAt(path, Shader.Find(MIST_SHADER));
+        mist.SetTexture("_MainTex", StageTexture(texture, false));
+        mist.SetColor("_Color", tint);
+        mist.SetFloat("_SoftDistance", soft);
+        mist.renderQueue = 3000;
+        EditorUtility.SetDirty(mist);
+        return mist;
+    }
+
+    /// <summary>The canvas picture of the stage: its texture holds premultiplied colour</summary>
+    static Material PictureMaterial()
+    {
+        Material picture = MaterialAt(PICTURE_MATERIAL, Shader.Find(PICTURE_SHADER));
+        EditorUtility.SetDirty(picture);
+        return picture;
     }
 
     /// <summary>The golden parcel's look: gold that glows a little by itself, since the stage has no bloom</summary>

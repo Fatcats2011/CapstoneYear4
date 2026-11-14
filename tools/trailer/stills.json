@@ -1,0 +1,9 @@
+{
+  "test": { "seats": 1, "mode": "Standard", "length": "Short", "golden": 0, "seconds": 45 },
+  "solo_hud": { "seats": 1, "mode": "Standard", "seconds": 420 },
+  "split4": { "seats": 4, "mode": "Standard", "length": "Short", "seconds": 300, "width": 2560, "height": 1440 },
+  "photo_a": { "seats": 1, "mode": "Standard", "seconds": 420 },
+  "photo_b": { "seats": 1, "mode": "Standard", "length": "Short", "seconds": 300 },
+  "photo_c": { "seats": 1, "mode": "Standard", "length": "Short", "golden": 0, "seconds": 300 },
+  "photo_lowgravity": { "seats": 1, "mode": "Standard", "lowgravity": 1, "length": "Short", "golden": 0, "seconds": 180 }
+}

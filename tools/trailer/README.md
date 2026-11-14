@@ -6,6 +6,8 @@ Records bots playing the game to MP4, for the trailer. None of this goes in the 
 - `python tools/trailer/record.py [take names]`: plays each take in `takes.json`, one game launch per take, into `../TrailerFootage`. A game window opens on the desktop. Don't press Space or Enter in it, or a keyboard player joins. Nothing plays through the speakers.
 - `python tools/trailer/cut.py`: cuts each take's best moments into `clips/` using its `.events.csv`, without re-encoding, and writes `INDEX.md`.
 
+- `python tools/trailer/stills.py [take names]`: store screenshots instead of video. Plays each take in `stills.json` and saves PNGs into `../SteamScreenshots/raw/<take>`: `view/` is the screen as the players see it (HUD, split screen), `photo/` is a second free camera in the same live match with no HUD, at 3840x2160. Both fire on a timer, when scooters come close, and in a burst after each logged event. Extra options per take: `photowidth`, `photoheight`, `viewevery`, `photoevery` (seconds).
+
 Takes are set in `takes.json`: `seats` (1 full screen with CPU rivals; 2 or 4 split screen), `mode`, `speed`, `lowgravity`, `waves`, `length`, `round`, `golden`, `hud`, `menus`, `seconds`, `width`, `height`.
 
 Each take's log ends with `TRAILER wrote N frames, R repeated`: R is how many frames the game drew too slowly for 60 fps. Record with nothing else heavy running, or R climbs. Needs `ffmpeg` on the PATH and an NVIDIA GPU (h264_nvenc).

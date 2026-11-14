@@ -1421,6 +1421,26 @@ public class BallDriving : MonoBehaviour
         sphereBody.AddForce(away.normalized * force, ForceMode.Impulse);
     }
 
+    // A steal's jolt: the pad's shake and the camera's kick, harder for the player who was robbed. The thief's is a
+    // short spike over their boost's rumble
+    const float STEAL_RUMBLE_LOW = 0.7f, STEAL_RUMBLE_HIGH = 1f, STEAL_RUMBLE_TIME = 0.2f, STEAL_KICK = 3f;
+    const float ROBBED_RUMBLE_LOW = 0.8f, ROBBED_RUMBLE_HIGH = 1f, ROBBED_RUMBLE_TIME = 0.4f, ROBBED_KICK = 6f;
+
+    /// <summary>
+    /// This player stole an order, or was robbed of one: their pad shakes and their camera kicks (StealCallout). Rumble
+    /// and Reduce motion switch them off (Comfort). A player with no pad or camera here feels nothing
+    /// </summary>
+    public void StealJolt(bool robbed)
+    {
+        if (rumble != null)
+        {
+            rumble.RumblePulse(pad, robbed ? ROBBED_RUMBLE_LOW : STEAL_RUMBLE_LOW, robbed ? ROBBED_RUMBLE_HIGH : STEAL_RUMBLE_HIGH,
+                robbed ? ROBBED_RUMBLE_TIME : STEAL_RUMBLE_TIME);
+        }
+        if (orbitalCamera != null)
+            orbitalCamera.Kick(Comfort.Kick(robbed ? ROBBED_KICK : STEAL_KICK));
+    }
+
     /// <summary>
     /// Changes speed line value based on speed and boosting state
     /// </summary>

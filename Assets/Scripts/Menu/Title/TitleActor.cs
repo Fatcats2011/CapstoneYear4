@@ -15,11 +15,19 @@ public class TitleActor : MonoBehaviour
     static readonly Vector3 CARRY_AT = new Vector3(0f, 0.95f, -0.75f);
     /// <summary>The rack (model space): a package stands on this height, its front face at this z, behind the seat and the ghost's tail</summary>
     static readonly Vector3 RACK = new Vector3(0f, 0.62f, -0.72f);
+    /// <summary>The soft shadow under the scooter: across and along it, how dark, and just above the road</summary>
+    static readonly Vector2 SHADOW_SIZE = new Vector2(1.0f, 2.3f);
+    const float SHADOW_DARK = 0.55f, SHADOW_Y = 0.02f;
+    /// <summary>The wake: how far round the scooter the mist is pushed aside, and how hard</summary>
+    const float WAKE_RANGE = 1.7f, WAKE_PUSH = -1.2f;
 
     GameObject avatar; // the scooter (PlayerAvatar), under the tilt
     Animator animator;
     Transform model;
     Transform package;
+    Transform shadow;
+    Renderer shadowLook;
+    MaterialPropertyBlock shadowTint;
 
     /// <summary>The level pivot the scooter sits on, +z its nose: lean, wheelies and wobbles go here, and the root is the path</summary>
     public Transform Model => model;
@@ -33,7 +41,7 @@ public class TitleActor : MonoBehaviour
     /// <summary>
     /// Makes a stage ghost under parent. It's built switched off, so none of the scooter's scripts ever start
     /// </summary>
-    public static TitleActor Create(GameObject avatarPrefab, Transform parent, string name)
+    public static TitleActor Create(GameObject avatarPrefab, Transform parent, string name, Material shadowMaterial = null)
     {
         // The ghost's own root (the path) and a level pivot on the floor under it (the tilt), then the scooter: the
         // scooter's own parts are turned this way and that, so skits never touch them
@@ -47,9 +55,63 @@ public class TitleActor : MonoBehaviour
         actor.avatar = avatar;
         actor.model = tilt.transform;
         actor.TurnOffTheGame();
+        if (shadowMaterial != null)
+            actor.MakeShadow(shadowMaterial);
+        actor.MakeWake();
         root.transform.SetParent(parent, false);
         root.SetActive(true);
+        // Awake runs on switching on even for a switched-off script: the scooter's SoundPool has just made its pool
+        // of sources, which are silenced too
+        foreach (AudioSource sound in actor.GetComponentsInChildren<AudioSource>(true))
+            sound.enabled = false;
         return actor;
+    }
+
+    /// <summary>A soft dark patch on the road under the scooter, so it sits on the road rather than over it</summary>
+    void MakeShadow(Material material)
+    {
+        GameObject quad = new GameObject("Shadow");
+        quad.transform.SetParent(transform, false);
+        quad.transform.localRotation = Quaternion.Euler(90f, 0f, 0f);   // flat on the road, its length along the nose
+        quad.AddComponent<MeshFilter>().sharedMesh = Resources.GetBuiltinResource<Mesh>("Quad.fbx");
+        MeshRenderer look = quad.AddComponent<MeshRenderer>();
+        look.sharedMaterial = material;
+        look.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+        look.receiveShadows = false;
+        shadow = quad.transform;
+        shadowLook = look;
+        shadowTint = new MaterialPropertyBlock();
+        PlaceShadow();
+    }
+
+    /// <summary>The mist parts round the scooter as it rides through (the stage's mist feels external forces)</summary>
+    void MakeWake()
+    {
+        GameObject wake = new GameObject("Wake");
+        wake.transform.SetParent(transform, false);
+        wake.transform.localPosition = new Vector3(0f, 0.6f, 0f);
+        ParticleSystemForceField field = wake.AddComponent<ParticleSystemForceField>();
+        field.shape = ParticleSystemForceFieldShape.Sphere;
+        field.startRange = 0f;
+        field.endRange = WAKE_RANGE;
+        field.gravity = WAKE_PUSH;
+    }
+
+    void LateUpdate()
+    {
+        if (shadow != null)
+            PlaceShadow();
+    }
+
+    /// <summary>The shadow stays on the road under the ghost: smaller and fainter the higher it is (a hop, a leap)</summary>
+    void PlaceShadow()
+    {
+        float lift = Mathf.Max(0f, transform.localPosition.y + (model != null ? model.localPosition.y : 0f));
+        float k = 1f / (1f + lift * 0.45f);
+        shadow.localPosition = new Vector3(0f, SHADOW_Y - transform.localPosition.y, 0f);
+        shadow.localScale = new Vector3(SHADOW_SIZE.x * k, SHADOW_SIZE.y * k, 1f);
+        shadowTint.SetColor("_Color", new Color(0f, 0f, 0f, SHADOW_DARK * k));
+        shadowLook.SetPropertyBlock(shadowTint);
     }
 
     void TurnOffTheGame()

@@ -70,6 +70,9 @@ public class Order : MonoBehaviour
     // The golden order keeps its size: it doesn't double
     private void ApplyStealLook()
     {
+        // ...and wears a "×2" stamp that doubles with each steal (WorthStamp)
+        WorthStamp.Refresh(this, orderMeshObject != null ? orderMeshObject.transform : null);
+
         if (orderMeshObject == null || value == Constants.OrderValue.Golden)
             return;
 

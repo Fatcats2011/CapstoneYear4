@@ -192,7 +192,7 @@ Online multiplayer is being built in steps (roadmap Phase 3: `docs/superpowers/p
     - That pair hasn't been hit in the last 2 s, either way round: when both machines ask about one bump, the first request wins.
     - It's a steal if the host sees the victim not boosting, a clash if it sees them boosting. The asker's own boost isn't checked: its flags can arrive after its request.
   - **A steal's effect on orders** travels as Phase 3E order changes: the stolen order moving (`OrderChange.Steal`), then the victim's drop.
-  - **Bounces:** `PlayerHit` tells every machine about a steal or clash (`SendHit`), and each machine bounces only its own player.
+  - **Bounces:** `PlayerHit` tells every machine about a steal or clash (`SendHit`), and each machine bounces only its own player. A steal's hit also carries what the bump did (`BumpOutcome`: stolen, slots full, nothing to steal, steals off, a mode's hit) and what the thief was paid; each machine announces it (`StealFeedback`) so its players' callouts match the host's. An outcome a build doesn't know shows nothing.
   - **`OnlineSteals`** (added by `OnlineGame`) is the glue for steals and clashes.
   - **Respawns:**
     - A client whose player falls in the water asks the host where they rise (`RespawnSync`, `AskRespawn`), and waits, hidden, for up to 2 s. With no answer, it picks its own point as before.

@@ -42,6 +42,12 @@ Inventory for the Steam release (2026-09-22). "Used" = referenced by a build sce
   - `Game Object Pick Up Sound Effect.mp3` (Pickup), `Level Up Sound Effect.mp3` (Boost Charged), `Whoosh sound effect.mp3` (Steal): titles like YouTube "free sound effect" uploads, origin unknown. ❌ replace unless someone finds the source and license.
   - `MenuUI/Enter_1`, `Pause`, `Return_1`, `Scroll_1` (UI sounds), `angry.wav`, `joy.wav`, `laugh.mp3`, `sigh.mp3` (emotes), `placeholder_miniboost.wav` (Mini Boost): origin unknown. ⚠️ Ask the Mellors whether they made them; replace any they didn't.
   - To swap one, point its Audio Object (`Assets/Audio/Audio Objects/...`) at the new clip.
+- `Assets/Resources/Audio/Feedback/` — the player feedback sounds, by Kenney (www.kenney.nl), **CC0** ✅ (each pack's `License.txt`: "Creative Commons Zero, CC0 ... free to use in personal, educational and commercial projects"; crediting Kenney is optional). Fetched 2026-11-14.
+  - `robbed.ogg` (a player loses an order): `minimize_006.ogg` from Interface Sounds 1.0, https://kenney.nl/assets/interface-sounds
+  - `thud.ogg` (a bump that takes nothing): `impactSoft_medium_001.ogg` from Impact Sounds 1.0, https://kenney.nl/assets/impact-sounds
+  - `cursed.ogg` (the cursed package lands on a player, Hot Potato): `error_006.ogg` from Interface Sounds 1.0, https://kenney.nl/assets/interface-sounds
+  - `warning.ogg` (30 seconds left, Kings Crown and Infection): `impactBell_heavy_002.ogg` from Impact Sounds 1.0, https://kenney.nl/assets/impact-sounds
+  - Loaded by name (`FeedbackSounds`), not through an Audio Object. A `steal` file placed here would replace the Steal whoosh above, which still plays.
 
 ## Art, models, textures
 

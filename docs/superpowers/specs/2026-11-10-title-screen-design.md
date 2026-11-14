@@ -55,11 +55,11 @@ The user did not say what is wrong with the current screen; the above is what th
 |                                              (A) Select      |
 +--------------------------------------------------------------+
 ```
-- **Backdrop:** full-screen, a moonlit graveyard road in purple-blacks drawn as flat silhouettes (moon and stars top right, far hills, chapel, dead trees, gravestones, iron fence, then the road the ghosts ride along), with a thin mist drifting along the road (user asked for a new idea 2026-11-10: the first plain glow and fog looked pixelated; it was block compression, so these textures are imported uncompressed). Replaces `Background Purple` and `Background Pink` on the title canvas only.
+- **Backdrop:** full-screen, a moonlit graveyard in purple-blacks drawn as flat silhouettes (moon and stars top right, far hills, chapel, dead trees, gravestones, iron fence), imported uncompressed (the first one looked pixelated from block compression). The road and mist are not painted (user, 2026-11-12: the painted road and fog looked odd, asked for realtime fog): a real road on the stage, ghosts with soft shadows on it, and realtime particle mist that drifts along it and parts round the scooters. The road sits low, under the entries (user, 2026-11-12: shift it down, then lower again; stage camera pitched -0.5 degrees), with no grass along it. Replaces `Background Purple` and `Background Pink` on the title canvas only.
 - **Logo:** `DoA-Logo_02-08-24` (the sprite used today), in the top left where it is today (user, 2026-11-10). A slow gentle bob. The backdrop's glow sits behind it.
 - **Entries, selector, button prompt, P1 controller text, language flag:** same objects, same positions, same wiring.
 - **Draw order, back to front:** backdrop → ghost show → logo → entries, selector and prompts. Ghosts never draw over text.
-- **Intro:** the old phase into the menu stays (user, 2026-11-11: it had been removed and was put back). The purple left by the boot wiper is a ghost against the camera; it pulls back to the crew in silhouette, the title wipes in behind them, the crew holds a beat and rides off right, then the first skit starts. No fade from black.
+- **Intro:** the old phase into the menu stays (user, 2026-11-11: it had been removed and was put back). The purple left by the boot wiper is a ghost against the camera; it pulls back to the crew in silhouette, the title wipes in behind them, the crew holds a beat and rides off right, then the first skit starts. The crew stands on the title's road (user, 2026-11-12: they were floating above it). No fade from black.
 
 ### The stage
 - A `Title Stage` object where the old rig is (far from the world, same place), holding one camera, a ground-less lane and the cast.

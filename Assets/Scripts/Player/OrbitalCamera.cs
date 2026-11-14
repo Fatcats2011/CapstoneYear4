@@ -67,8 +67,9 @@ public class OrbitalCamera : MonoBehaviour
 
             CameraFocus.transform.localPosition = new Vector3(CameraFocus.transform.localPosition.x, smoothYAxis, CameraFocus.transform.localPosition.z);
 
-            virtualCameraMain.m_Lens.FieldOfView = fovValue;
-            virtualCameraIcon.m_Lens.FieldOfView = fovValue;
+            float kick = KickAt(kickDegrees, Time.time - kickedAt);
+            virtualCameraMain.m_Lens.FieldOfView = fovValue + kick;
+            virtualCameraIcon.m_Lens.FieldOfView = fovValue + kick;
 
         }
         // Reset look behind
@@ -96,6 +97,26 @@ public class OrbitalCamera : MonoBehaviour
 
             CameraFocus.transform.localPosition = new Vector3(CameraFocus.transform.localPosition.x, smoothYAxis, CameraFocus.transform.localPosition.z);
         }
+    }
+
+    // A steal's kick: the view jumps wider and eases back (BallDriving.StealJolt)
+    internal const float KICK_SECONDS = 0.25f;
+    float kickDegrees;
+    float kickedAt = -KICK_SECONDS;
+
+    /// <summary>Widens the view by some degrees at once, easing back over KICK_SECONDS. Comfort decides whether it kicks at all</summary>
+    public void Kick(float degrees)
+    {
+        kickDegrees = degrees;
+        kickedAt = Time.time;
+    }
+
+    /// <summary>How much of a kick is left a time after it: all of it at first, none from KICK_SECONDS</summary>
+    internal static float KickAt(float degrees, float age)
+    {
+        if (age < 0f || age >= KICK_SECONDS)
+            return 0f;
+        return degrees * (1f - age / KICK_SECONDS);
     }
 
     // The boost's wide view (FovHold)

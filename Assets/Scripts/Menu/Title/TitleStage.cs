@@ -19,7 +19,6 @@ public class TitleStage : MonoBehaviour
     public const int POOL = 4;
     /// <summary>The pause between two skits (seconds)</summary>
     public const float GAP = 1.5f;
-    /// <summary>The title screen fading up from black, once (seconds)</summary>
     /// <summary>How long a package left lying on the stage takes to shrink away when its skit ends (seconds)</summary>
     public const float LEFT_BEHIND = 0.3f;
     /// <summary>How far past the screen's edge a ghost waits and leaves: more than a scooter's length</summary>
@@ -29,7 +28,7 @@ public class TitleStage : MonoBehaviour
 
     // The camera: low and far, a long lens, so the ghosts ride past nearly side-on with a little of the floor showing
     internal static readonly Vector3 CAMERA_AT = new Vector3(0f, 2.6f, -19f);
-    internal const float CAMERA_PITCH = 4f;
+    internal const float CAMERA_PITCH = -0.5f;
     internal const float CAMERA_FOV = 26f;
 
     [Header("The cast")]
@@ -37,6 +36,12 @@ public class TitleStage : MonoBehaviour
     [Tooltip("Small, medium, large")]
     [SerializeField] internal GameObject[] packagePrefabs;
     [SerializeField] internal Material goldenMaterial;
+    [Tooltip("The soft shadow under each scooter (none: no shadows)")]
+    [SerializeField] internal Material shadowMaterial;
+
+    [Header("The set")]
+    [Tooltip("The mist drifting over the road: it plays while the show is filmed and waits while it isn't")]
+    [SerializeField] internal ParticleSystem[] mist;
 
     [Header("The wardrobe")]
     [SerializeField] internal PlayerHatInformationSO[] hats;
@@ -105,7 +110,7 @@ public class TitleStage : MonoBehaviour
         actors = new TitleActor[POOL];
         for (int i = 0; i < POOL; i++)
         {
-            actors[i] = TitleActor.Create(avatarPrefab, transform, "Title Ghost " + (i + 1));
+            actors[i] = TitleActor.Create(avatarPrefab, transform, "Title Ghost " + (i + 1), shadowMaterial);
             actors[i].Park(ParkingSpot(i));
         }
 
@@ -167,6 +172,18 @@ public class TitleStage : MonoBehaviour
             KeepPicture();
         if (ghostImage != null)
             ghostImage.enabled = on;
+        if (mist != null)
+        {
+            foreach (ParticleSystem layer in mist)
+            {
+                if (layer == null)
+                    continue;
+                if (on && !layer.isPlaying)
+                    layer.Play(true);
+                else if (!on)
+                    layer.Pause(true);
+            }
+        }
     }
 
     IEnumerator Show()

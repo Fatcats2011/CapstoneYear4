@@ -386,7 +386,7 @@ namespace DoA.Tests
             CollectionAssert.AreEqual(steals, OfKind(heardY, OrderChangeKind.Steal), "the same everywhere");
             OrderChange steal = steals[0];
             Assert.IsTrue((steal.Seat == 1 && steal.Seat2 == 2) || (steal.Seat == 2 && steal.Seat2 == 1), "one of them robbed the other: " + steal);
-            CollectionAssert.AreEqual(new[] { PlayerHit.Steal(steal.Seat, steal.Seat2) }, hitsX.Hits);
+            CollectionAssert.AreEqual(new[] { PlayerHit.Steal(steal.Seat, steal.Seat2, BumpOutcome.Stolen, StealValueRules.STEAL_PAY) }, hitsX.Hits, "the hit says an order changed hands, and what the thief was paid");
             CollectionAssert.AreEqual(hitsX.Hits, hitsY.Hits);
             Assert.AreSame(Handler(steal.Seat), first.PlayerHolding, "the winner holds both orders here");
             Assert.AreSame(Handler(steal.Seat), second.PlayerHolding);
@@ -431,7 +431,7 @@ namespace DoA.Tests
             deadline = Time.realtimeSinceStartup + WAIT;
             while (hitsX.Hits.Count < 3 && Time.realtimeSinceStartup < deadline)
                 yield return null;
-            Assert.AreEqual(PlayerHit.Steal(0, winner), hitsX.Hits[hitsX.Hits.Count - 1]);
+            Assert.AreEqual(PlayerHit.Steal(0, winner, BumpOutcome.Stolen, StealValueRules.STEAL_PAY), hitsX.Hits[hitsX.Hits.Count - 1]);
 
             log.MachinesLeave(); // Windows may report a leaving machine's closed port: see LogCollector.CLOSED_PORT
             x.Leave();

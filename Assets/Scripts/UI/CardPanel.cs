@@ -1,23 +1,17 @@
-using System;
 using UnityEngine;
 
 /// <summary>
-/// The results cards' shapes, drawn once in code (as ModeIcons): the medal's disc and the cards' rounded panel, both
-/// white, to be tinted
+/// The results cards' rounded panel, drawn once in code (as ModeIcons): white, to be tinted
 /// </summary>
-public static class StatIcons
+public static class CardPanel
 {
-    const int SIZE = 96;
     const int PANEL = 48;       // the panel's picture, in pixels: its corners stay round at any size (9-sliced)
     const float CORNER = 14f;   // the panel's corner radius, in pixels
 
-    static Sprite disc, panel;
-
-    /// <summary>A white disc (the medal behind a finishing place)</summary>
-    public static Sprite Disc() => disc != null ? disc : disc = Draw("Medal Disc", (u, v) => Mathf.Sqrt(u * u + v * v) - 0.94f, (u, v) => Color.white);
+    static Sprite panel;
 
     /// <summary>A white rounded rectangle whose corners stay round at any size (an Image of type Sliced)</summary>
-    public static Sprite Panel()
+    public static Sprite Get()
     {
         if (panel != null)
             return panel;
@@ -40,22 +34,4 @@ public static class StatIcons
         return panel;
     }
 
-    static Sprite Draw(string name, Func<float, float, float> distance, Func<float, float, Color> colour)
-    {
-        Color[] pixels = new Color[SIZE * SIZE];
-        for (int y = 0; y < SIZE; y++)
-        {
-            for (int x = 0; x < SIZE; x++)
-            {
-                float u = (x + 0.5f) / SIZE * 2f - 1f, v = (y + 0.5f) / SIZE * 2f - 1f;
-                Color shown = colour(u, v);
-                shown.a = Mathf.Clamp01(-distance(u, v) * SIZE / 2f + 0.5f);
-                pixels[y * SIZE + x] = shown.a <= 0f ? Color.clear : shown;
-            }
-        }
-        Texture2D texture = new Texture2D(SIZE, SIZE, TextureFormat.RGBA32, false) { name = name, wrapMode = TextureWrapMode.Clamp };
-        texture.SetPixels(pixels);
-        texture.Apply();
-        return Sprite.Create(texture, new Rect(0, 0, SIZE, SIZE), new Vector2(0.5f, 0.5f), SIZE);
-    }
 }

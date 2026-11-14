@@ -1,16 +1,23 @@
-"""Paints the title screen's backdrop and its mist: a moonlit graveyard road in purple-blacks, all flat silhouettes
-(far hills, a graveyard skyline with a chapel, dead trees and an iron fence, then the road the ghosts ride along),
-and a soft band of mist the title scene drifts along the road.
+"""Paints the title screen's backdrop and the textures of its stage.
+
+The backdrop is a moonlit graveyard in purple-blacks, all flat silhouettes: far hills, a graveyard skyline with a
+chapel, dead trees and an iron fence, and the dark ground running down to the bottom of the screen. The road the
+ghosts ride along is not painted: it is real, on the title stage, and so is the mist that drifts over it.
 
 Run: python tools/title-backdrop.py
-Writes Assets/Sprites/Title/TitleBackdrop.png (1920x1080 RGB) and Assets/Sprites/Title/TitleFog.png (1024x512 RGBA,
-white with the mist in alpha, tiles seamlessly left to right, clear at its top and bottom).
+Writes, in Assets/Sprites/Title:
+  TitleBackdrop.png  1920x1080 RGB, the picture behind the stage
+  TitleRoad.png      1024x512 RGB, 8 by 6.2 units of road: kerbs at the top and bottom, a dashed line in the middle;
+                     tiles left to right
+  TitleMistPuff.png  256x256 RGBA, white with one soft lumpy puff of mist in alpha, clear at its edges
+  TitleShadow.png    128x128 RGBA, black with a soft round shadow in alpha
 
-Both are imported uncompressed (TitleScreenBuilder sets it): block compression turns dark, smooth pictures like these
+They are imported uncompressed (TitleScreenBuilder sets it): block compression turns dark, smooth pictures like these
 into visible squares. Shapes are drawn at twice the size and scaled down, so their edges are smooth.
 
-Where things sit comes from the stage's camera (TitleStage: 2.6 up, 19 back, pitched 4 degrees, 26 degree view): the
-true horizon is 35% of the way down the screen and the ghosts' wheels touch the ground between 61% and 67%.
+Where things sit comes from the stage's camera (TitleStage: 2.6 up, 19 back, pitched -0.5 degrees (looking a little up), 26 degree view): the
+true horizon is 48% of the way down the screen, the road (z -2.6 to 3.6 on the stage) covers 77% to 86% of the way
+down, and the ghosts' wheels touch it between 78% and 84%.
 """
 import math
 import os
@@ -35,11 +42,11 @@ MOON_R = 105
 MOON = (0xEC, 0xE0, 0xFF)
 HILLS = (0x1E, 0x0E, 0x38)
 YARD = (0x13, 0x09, 0x25)   # the graveyard and everything standing in it
-ROAD_TOP, ROAD_BOTTOM = 0.575, 0.735
-ROAD = (0x1B, 0x0E, 0x30)
-VERGE = (0x0B, 0x06, 0x16)
-LINE = (0x3A, 0x24, 0x5E)
-FOG_W, FOG_H = 1024, 512
+ROAD_FAR = 0.768                    # where the stage's road's far kerb meets the screen
+ROAD_W, ROAD_H = 1024, 512          # 8 units of road along it, 6.2 across
+ROAD_UNITS = (8.0, 6.2)
+PUFF = 256
+BLOB = 128
 
 
 def lerp(a, b, t):
@@ -200,38 +207,117 @@ def graveyard(draw, rnd):
         u += rnd.uniform(0.018, 0.045)
 
 
-def road(img):
-    """The road is a band a touch lighter than the graveyard, soft at its edges, with a worn dashed line, and the
-    verge below it falls away to near black"""
-    y = np.arange(H * SS, dtype=np.float64)[:, None] / (H * SS)
+def ground(img):
+    """Under the graveyard the ground runs on to the bottom of the screen, darkening"""
     px = np.asarray(img).astype(np.float64)
+    y = np.arange(H * SS, dtype=np.float64)[:, None] / (H * SS)
+    fall = np.clip((y - ROAD_FAR) / (1 - ROAD_FAR), 0, 1)
+    px *= (1 - 0.5 * fall)[..., None]
+    return Image.fromarray(np.clip(np.round(px), 0, 255).astype(np.uint8), "RGB")
 
-    def smooth(a, b, v):
-        t = np.clip((v - a) / (b - a), 0, 1)
-        return t * t * (3 - 2 * t)
 
-    on_road = smooth(ROAD_TOP - 0.006, ROAD_TOP + 0.006, y) * (1 - smooth(ROAD_BOTTOM - 0.006, ROAD_BOTTOM + 0.006, y))
-    below = smooth(ROAD_BOTTOM - 0.006, ROAD_BOTTOM + 0.006, y)
-    # Lighter down the middle of the road, where the moon catches it
-    mid = (ROAD_TOP + ROAD_BOTTOM) / 2
-    sheen = np.exp(-((y - mid) / 0.05) ** 2)
-    road_colour = np.array(ROAD)[None, None, :] * (1 + 0.28 * sheen)[..., None]
-    fall = np.clip((y - ROAD_BOTTOM) / (1 - ROAD_BOTTOM), 0, 1)
-    verge = np.array(VERGE)[None, None, :] * (1 - 0.55 * fall)[..., None]
-    px = px * (1 - on_road)[..., None] + road_colour * on_road[..., None]
-    px = px * (1 - below)[..., None] + verge * below[..., None]
-    out = Image.fromarray(np.clip(np.round(px), 0, 255).astype(np.uint8), "RGB")
+def periodic_noise(rng, h, w, scale, power=1.0):
+    """Smooth noise that wraps left to right and top to bottom, from -1 to 1: white noise low-passed in the frequency
+    domain"""
+    fy = np.fft.fftfreq(h)[:, None] * h
+    fx = np.fft.fftfreq(w)[None, :] * w
+    r = np.sqrt(fx ** 2 + fy ** 2)
+    spectrum = np.exp(-(r / scale) ** 2) / (1 + r) ** power
+    n = np.fft.ifft2(np.fft.fft2(rng.standard_normal((h, w))) * spectrum).real
+    n -= n.mean()
+    return n / np.abs(n).max()
 
+
+def road_texture():
+    """Worn asphalt at night, purple-grey, with stone kerbs along both edges and a dashed line down the middle. The top
+    of the picture is the far kerb. It wraps left to right, so the road can run as long as it likes. The road is unlit,
+    like the painted backdrop, so these are the colours it shows"""
+    rng = np.random.default_rng(SEED + 2)
+    rnd = random.Random(SEED + 2)
+    ppu_x, ppu_y = ROAD_W / ROAD_UNITS[0], ROAD_H / ROAD_UNITS[1]
+
+    base = np.array((46, 38, 64), np.float64)
+    img = np.ones((ROAD_H, ROAD_W, 3)) * base
+    img += 9 * periodic_noise(rng, ROAD_H, ROAD_W, 6.0)[..., None]         # patches
+    img += 5 * periodic_noise(rng, ROAD_H, ROAD_W, 60.0, 0.2)[..., None]   # grain
+    img += rng.normal(0, 3, (ROAD_H, ROAD_W, 1))                           # grit
+
+    # Two worn lanes, smoother and a touch darker where the wheels go
+    v = np.arange(ROAD_H, dtype=np.float64)[:, None] / ROAD_H
+    for lane in (0.30, 0.70):
+        img -= 5 * np.exp(-((v - lane) / 0.07) ** 2)[..., None]
+
+    out = Image.fromarray(np.clip(np.round(img), 0, 255).astype(np.uint8), "RGB")
     draw = ImageDraw.Draw(out, "RGBA")
-    ly = mid * H * SS
-    x = -40 * SS
-    while x < W * SS:
-        draw.rounded_rectangle((x, ly - 2.5 * SS, x + 70 * SS, ly + 2.5 * SS), radius=2 * SS, fill=LINE + (150,))
-        x += 150 * SS
-    # The kerbs: a hair of light along each edge
-    for edge in (ROAD_TOP, ROAD_BOTTOM):
-        draw.line((0, edge * H * SS, W * SS, edge * H * SS), fill=LINE + (70,), width=SS)
+
+    # Cracks: short jagged dark lines, drawn three times so they wrap
+    for _ in range(14):
+        x, y = rnd.uniform(0, ROAD_W), rnd.uniform(0.12, 0.88) * ROAD_H
+        pts = [(x, y)]
+        for _ in range(rnd.randint(3, 6)):
+            x += rnd.uniform(-22, 22)
+            y += rnd.uniform(-10, 10)
+            pts.append((x, y))
+        for dx in (-ROAD_W, 0, ROAD_W):
+            draw.line([(px + dx, py) for px, py in pts], fill=(22, 17, 32, 170), width=2)
+
+    # The dashed line: 1.8 long every 4, a little worn
+    mid = ROAD_H / 2
+    half = 0.06 * ppu_y
+    for start in (0.4, 4.4):
+        x0, x1 = start * ppu_x, (start + 1.8) * ppu_x
+        for dx in (-ROAD_W, 0, ROAD_W):
+            draw.rectangle((x0 + dx, mid - half, x1 + dx, mid + half), fill=(150, 140, 178, 235))
+    line = np.asarray(out).astype(np.float64)
+    wear = periodic_noise(rng, ROAD_H, ROAD_W, 40.0, 0.3)
+    worn = (wear > 0.25)[..., None] & (np.abs(np.arange(ROAD_H) - mid) <= half + 1)[:, None, None]
+    line = np.where(worn, line * 0.55 + base * 0.45, line)
+    out = Image.fromarray(np.clip(np.round(line), 0, 255).astype(np.uint8), "RGB")
+    draw = ImageDraw.Draw(out, "RGBA")
+
+    # The kerbs: pale stone blocks with dark joints, a gutter on the road's side
+    kerb = int(0.30 * ppu_y)
+    gutter = int(0.06 * ppu_y)
+    block = 0.7 * ppu_x
+    blocks = int(round(ROAD_W / block))
+    block = ROAD_W / blocks                 # a whole number of blocks, so the joints wrap too
+    for top, gutter_at in ((0, kerb), (ROAD_H - kerb, ROAD_H - kerb - gutter)):
+        draw.rectangle((0, top, ROAD_W, top + kerb), fill=(84, 74, 106))
+        draw.rectangle((0, gutter_at, ROAD_W, gutter_at + gutter), fill=(24, 19, 34))
+        for i in range(blocks):
+            x = i * block
+            shade = rnd.randint(-10, 10)
+            draw.rectangle((x + 2, top + 2, x + block - 2, top + kerb - 2), fill=(84 + shade, 74 + shade, 106 + shade))
+            draw.line((x, top, x, top + kerb), fill=(30, 24, 42), width=3)
+    # The kerbs' top edges catch the light
+    draw.line((0, kerb - 3, ROAD_W, kerb - 3), fill=(112, 102, 138), width=2)
+    draw.line((0, ROAD_H - kerb + 2, ROAD_W, ROAD_H - kerb + 2), fill=(112, 102, 138), width=2)
     return out
+
+
+def puff():
+    """One lumpy puff of mist: a soft round falloff broken up by cloud noise"""
+    rng = np.random.default_rng(SEED + 3)
+    y, x = np.mgrid[0:PUFF, 0:PUFF].astype(np.float64)
+    r = np.sqrt((x - PUFF / 2 + 0.5) ** 2 + (y - PUFF / 2 + 0.5) ** 2) / (PUFF / 2)
+    fall = np.clip(1 - r, 0, 1) ** 1.6
+    n = periodic_noise(rng, PUFF, PUFF, 3.5, 1.2)   # a few broad lumps, not cauliflower
+    a = np.clip(fall * (0.8 + 0.3 * n), 0, 1)
+    a[r >= 0.98] = 0
+    rgba = np.empty((PUFF, PUFF, 4), np.uint8)
+    rgba[..., :3] = 255
+    rgba[..., 3] = np.round(a / a.max() * 255).astype(np.uint8)
+    return Image.fromarray(rgba, "RGBA")
+
+
+def blob():
+    """A soft round shadow, black, for under a scooter"""
+    y, x = np.mgrid[0:BLOB, 0:BLOB].astype(np.float64)
+    r = np.sqrt((x - BLOB / 2 + 0.5) ** 2 + (y - BLOB / 2 + 0.5) ** 2) / (BLOB / 2)
+    a = np.clip(1 - r * r, 0, 1) ** 2
+    rgba = np.zeros((BLOB, BLOB, 4), np.uint8)
+    rgba[..., 3] = np.round(a * 255).astype(np.uint8)
+    return Image.fromarray(rgba, "RGBA")
 
 
 def vignette(img):
@@ -252,42 +338,22 @@ def backdrop():
     draw = ImageDraw.Draw(img)
     hills(draw)
     graveyard(draw, rnd)
-    img = road(img)
+    img = ground(img)
     return vignette(img.resize((W, H), Image.LANCZOS))
-
-
-def mist():
-    """Cloud noise made in the frequency domain, so it wraps left to right by construction, faded out towards the top
-    and bottom so it lies along the road as a band"""
-    rng = np.random.default_rng(SEED + 1)
-    fx = np.fft.fftfreq(FOG_W)[None, :] * FOG_W
-    fy = np.fft.fftfreq(FOG_H)[:, None] * FOG_H
-    r = np.sqrt(fx ** 2 + (fy * 2.2) ** 2)      # stretched sideways: long wisps
-    spectrum = np.exp(-(r / 5.0) ** 2) / (1 + r) ** 0.6
-    n = np.fft.ifft2(np.fft.fft2(rng.standard_normal((FOG_H, FOG_W))) * spectrum).real
-    n = (n - n.min()) / (n.max() - n.min())
-    v = np.arange(FOG_H, dtype=np.float64)[:, None] / (FOG_H - 1)
-    band = np.exp(-((v - 0.5) / 0.2) ** 2)
-    band[v[:, 0] < 0.02] = 0
-    band[v[:, 0] > 0.98] = 0
-    a = np.clip(n * 1.25 - 0.1, 0, 1) * band
-    rgba = np.empty((FOG_H, FOG_W, 4), np.uint8)
-    rgba[..., :3] = 255
-    rgba[..., 3] = np.round(a * 255).astype(np.uint8)
-    return Image.fromarray(rgba, "RGBA")
 
 
 def main():
     os.makedirs(OUT, exist_ok=True)
     b = backdrop()
     b.save(os.path.join(OUT, "TitleBackdrop.png"))
-    f = mist()
-    f.save(os.path.join(OUT, "TitleFog.png"))
+    road_texture().save(os.path.join(OUT, "TitleRoad.png"))
+    puff().save(os.path.join(OUT, "TitleMistPuff.png"))
+    blob().save(os.path.join(OUT, "TitleShadow.png"))
     px = np.asarray(b).reshape(-1, 3)
     print("backdrop min", px.min(axis=0), "max", px.max(axis=0), "mean", px.mean(axis=0).round(1))
-    al = np.asarray(f)[..., 3].astype(int)
-    print("mist alpha range", al.min(), al.max(), "mean", al.mean().round(1),
-          "seam jump L/R", np.abs(al[:, 0] - al[:, -1]).mean().round(2), "top/bottom rows", al[0].max(), al[-1].max())
+    road = np.asarray(Image.open(os.path.join(OUT, "TitleRoad.png"))).astype(int)
+    print("road seam jump L/R", np.abs(road[:, 0] - road[:, -1]).mean().round(2),
+          "typical step", np.abs(np.diff(road, axis=1)).mean().round(2))
 
 
 if __name__ == "__main__":

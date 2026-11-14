@@ -23,7 +23,11 @@ public class MenuGhostReveal : MonoBehaviour
     [Tooltip("Seconds a ghost takes to ride off, and the gap between one leaving and the next")]
     [SerializeField] internal float leaveTime = 0.9f;
     [SerializeField] internal float leaveGap = 0.15f;
+    [Tooltip("Degrees the rig's cameras look up past what MenuIntro animates, so the crew stands on the title stage's " +
+        "road beneath it (TitleScreenBuilder sets it to match the stage's camera)")]
+    [SerializeField] internal float lookUp;
     Material menuGhostRevealMaterial;
+    Camera[] rigCameras;
 
     /// <summary>The crew has gone and the picture is off: the title screen is the show's</summary>
     public bool Done { get; private set; }
@@ -35,8 +39,18 @@ public class MenuGhostReveal : MonoBehaviour
         menuGhostRevealMaterial.SetFloat("_Cutoff", 0);
 
         menuGhostRevealObject.enabled = true;
+        rigCameras = GetComponentsInChildren<Camera>(true);
 
         StartCoroutine(WaitToStart());
+    }
+
+    /// <summary>After the animator has posed the cameras each frame: tip them up a little more</summary>
+    void LateUpdate()
+    {
+        if (lookUp == 0f || animator == null || !animator.enabled || rigCameras == null)
+            return;
+        foreach (Camera rigCamera in rigCameras)
+            rigCamera.transform.localRotation *= Quaternion.Euler(-lookUp, 0f, 0f);
     }
 
     void OnDestroy()

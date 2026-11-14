@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using TMPro;
+using DG.Tweening;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -134,6 +135,36 @@ public class NumberHandler : MonoBehaviour
         StartCoroutine(animateNumber(finalOrderCountdownImage, time));
     }
 
+    // The pulse in progress on the timer's digits, and what to put their scale back to if a new one starts over it
+    private Tween timerPulse;
+    private Transform pulsedDigits;
+    private Vector3 pulsedScale;
+
+    /// <summary>
+    /// A short grow-and-shrink of the timer's digits, to draw the eye to the clock (30 seconds left). A pulse still going is
+    /// ended first, with the digits put back to their size. Does nothing outside play mode, or with no timer digits
+    /// </summary>
+    internal void PulseTimer()
+    {
+        if (!Application.isPlaying || timerImages == null || timerImages.Length == 0 || timerImages[0] == null)
+            return;
+
+        // The digits' holders share one parent: that is what grows
+        Transform holder = timerImages[0].transform.parent;
+        Transform digits = holder != null ? holder.parent : null;
+        if (digits == null)
+            return;
+
+        if (timerPulse != null && timerPulse.IsActive())
+            timerPulse.Kill();
+        if (pulsedDigits != null)
+            pulsedDigits.localScale = pulsedScale;
+
+        pulsedDigits = digits;
+        pulsedScale = digits.localScale;
+        timerPulse = digits.DOPunchScale(pulsedScale * 0.25f, 0.4f, 1, 0.5f);
+    }
+
     public void UpdateOrderValueUI(string passedInScore)
     {
         finalOrderValue = passedInScore;
@@ -166,6 +197,14 @@ public class NumberHandler : MonoBehaviour
     public void SetFinalCountdown(bool enabled)
     {
         finalOrderTextObject.SetActive(enabled);
+        if (enabled)
+        {
+            // "Golden Order In..." with a golden round, "Time's Up In..." without. The placed text follows the language
+            // by itself (PlacedText) but leaves alone any words code wrote there, and this is called every frame
+            TMP_Text countdown = finalOrderTextObject.GetComponentInChildren<TMP_Text>(true);
+            if (countdown != null)
+                countdown.text = Loc.Get(ModeFeedbackRules.CountdownKey(HouseRules.Playing.GoldenOn));
+        }
         finalOrderCountdownImage.transform.parent.gameObject.SetActive(enabled);
     }
 

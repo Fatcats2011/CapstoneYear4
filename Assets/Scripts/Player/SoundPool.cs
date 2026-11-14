@@ -250,17 +250,58 @@ public class SoundPool : MonoBehaviour
     }
     public void PlayOrderTheft()
     {
+        // The steal's own sound, or the old whoosh while the game has no file for it (FeedbackSounds)
+        AudioClip steal = FeedbackSounds.Clip(FeedbackSounds.STEAL);
         if (RemoteAvatar.IsRemote(this))
         {
-            PlayAtDistance("whoosh");
+            if (steal != null)
+                PlayClipAtDistance(steal, FeedbackSounds.Volume(FeedbackSounds.STEAL));
+            else
+                PlayAtDistance("whoosh");
             return;
         }
         if (!shouldPlay)
             return;
 
+        if (steal != null)
+        {
+            PlayFeedback(FeedbackSounds.STEAL);
+            return;
+        }
         AudioSource source = GetAvailableSource();
         SoundManager.Instance.PlaySFX("whoosh", source);
         StartCoroutine(KillSource(source));
+    }
+
+    /// <summary>
+    /// A sound only this player hears, for what just happened to them (FeedbackSounds: robbed, a bump that took nothing).
+    /// A sound the game has no file for plays nothing
+    /// </summary>
+    public void PlayFeedback(string name)
+    {
+        AudioClip clip = FeedbackSounds.Clip(name);
+        if (clip == null || !shouldPlay)
+            return;
+
+        PlayClip(GetAvailableSource(), clip, FeedbackSounds.Volume(name));
+    }
+
+    // A one-shot of a clip the sound manager doesn't hold, on a pooled source
+    private void PlayClip(AudioSource source, AudioClip clip, float volume)
+    {
+        source.clip = clip;
+        source.volume = volume;
+        source.gameObject.SetActive(true);
+        source.Play();
+        StartCoroutine(KillSource(source));
+    }
+
+    // Another machine's scooter: a clip, as loud as its distance from this machine's player allows
+    private void PlayClipAtDistance(AudioClip clip, float volume)
+    {
+        float heard = RemoteSound.VolumeAt(transform.position);
+        if (heard > 0f)
+            PlayClip(GetAvailableSource(), clip, volume * heard);
     }
     public void PlayDeathSound()
     {

@@ -9,8 +9,8 @@ namespace DoA.Tests
 {
     /// <summary>
     /// The title screen as the builder (TitleScreenBuilder) leaves the menu scene: everything the old screen had wired
-    /// is still wired, the new pictures sit behind the logo and let the mouse through, the old ghost rig is gone, and
-    /// the stage has the game's wardrobe. Opens the menu scene in the editor, without Play Mode
+    /// is still wired, the new pictures sit behind the logo and let the mouse through, the intro's ghost rig is kept, and
+    /// the stage has the game's wardrobe, its road and its mist. Opens the menu scene in the editor, without Play Mode
     /// </summary>
     public class TitleScreenSceneTests
     {
@@ -125,6 +125,22 @@ namespace DoA.Tests
             Assert.AreEqual(2, rig.GetComponentsInChildren<Camera>(true).Length, "the intro's two cameras");
             Assert.Greater(Vector3.Distance(rig.transform.position, stageObject.transform.position), 200f, "the stage is out of the intro's sight");
             Assert.AreEqual(0, stageObject.GetComponentsInChildren<AudioListener>(true).Length, "no ears on the stage");
+
+            // The set: a real road and realtime mist, and the picture shown as the premultiplied colour it holds
+            Transform road = stageObject.transform.Find(TitleScreenBuilder.ROAD);
+            Assert.IsNotNull(road, "the road");
+            Assert.IsNotNull(road.GetComponent<MeshRenderer>().sharedMaterial.GetTexture("_BaseMap"), "the road's surface");
+            Assert.AreEqual(2, stage.mist.Length, "two layers of mist");
+            CollectionAssert.AllItemsAreNotNull(stage.mist);
+            foreach (ParticleSystem layer in stage.mist)
+            {
+                Assert.IsTrue(layer.main.prewarm, layer.name + " is already lying there when the title appears");
+                Assert.IsTrue(layer.externalForces.enabled, layer.name + " parts round the scooters");
+            }
+            Assert.IsNotNull(stage.shadowMaterial, "the scooters' shadows");
+            Assert.AreEqual(TitleScreenBuilder.PICTURE_SHADER, stage.ghostImage.material.shader.name, "the stage's picture is shown premultiplied");
+            Assert.IsTrue(stage.stageCamera.GetComponent<UnityEngine.Rendering.Universal.UniversalAdditionalCameraData>().requiresDepthTexture,
+                "the mist fades against the road");
         }
 
         [Test]

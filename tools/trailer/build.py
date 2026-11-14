@@ -63,6 +63,7 @@ def main():
     editor = os.path.join(COPY, 'Assets', 'Scripts', 'Editor')
     os.makedirs(trailer, exist_ok=True)
     shutil.copy(os.path.join(HERE, 'TrailerDirector.cs'), trailer)
+    shutil.copy(os.path.join(HERE, 'TrailerStills.cs'), trailer)
     shutil.copy(os.path.join(HERE, 'TrailerBuild.cs'), editor)
 
     log = os.path.join(COPY, 'build.log')

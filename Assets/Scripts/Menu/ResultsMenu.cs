@@ -23,7 +23,9 @@ public class ResultsMenu : SingletonMonobehaviour<ResultsMenu>
     private IEnumerator resultsRoutine;
 
     private ResultsVote vote; // the rematch vote, opened once the scores are up
-    private ResultsAwardsView awards; // the players' cards (name, score, award, the match's numbers), shown with the scores
+    private ResultsAwardsView awards; // the players' cards (picture, name, score, award), shown with the scores
+    private Transform portraits;      // the ghost copies the cards' pictures are taken of, far from the city
+    private readonly List<GhostPortrait> ghosts = new List<GhostPortrait>();
 
     private void OnEnable()
     {
@@ -107,6 +109,9 @@ public class ResultsMenu : SingletonMonobehaviour<ResultsMenu>
                 continue;
             }
 
+            // Their picture, taken before the acts start moving the scooter
+            System.Func<Texture> picture = PictureOf(OrderSync.SeatOf(currHandler));
+
             // The pose of their place, and their acts on the podium (PodiumActs)
             Animator playerAnim = currHandler.PlayerAnimator;
             if (playerAnim != null)
@@ -119,12 +124,50 @@ public class ResultsMenu : SingletonMonobehaviour<ResultsMenu>
             {
                 displayText[i].gameObject.SetActive(true);
                 displayText[i].text = ScoreText(currHandler.Score);
-                awards.ShowPlayer(i, seats[i], currHandler.Placement, seats[i] >= 0 ? Scoreboard.ShownName(seats[i]) : "", displayText[i].text);
+                awards.ShowPlayer(i, seats[i], currHandler.Placement, seats[i] >= 0 ? Scoreboard.ShownName(seats[i]) : "", displayText[i].text, picture);
             }
         }
         // Whoever stands alone in first wears the crown if everyone votes for a rematch
         RematchCrown.Won(RematchCrown.Winner(seats, placements));
         ShowAwards();
+    }
+
+    // A seat's picture for its card: their Steam picture as the scoreboard shows it (asked until Steam has it), or
+    // else their ghost in its colour and hat (GhostPortrait)
+    private System.Func<Texture> PictureOf(int seat)
+    {
+        if (seat < 0)
+            return null;
+        ulong id = Scoreboard.PictureIdOf(seat);
+        if (id != 0)
+            return () => SteamAvatars.Get(id);
+
+        if (portraits == null)
+            portraits = new GameObject("Results Portraits").transform;
+        GhostPortrait ghost = GhostPortrait.Of(HighlightReel.Avatar(PlayerInstantiate.Instance.Roster[seat]), seat, portraits);
+        if (ghost == null)
+            return null;
+        ghosts.Add(ghost);
+        return () =>
+        {
+            ghost.Tick();
+            return ghost.Texture;
+        };
+    }
+
+    private void ClearPortraits()
+    {
+        foreach (GhostPortrait ghost in ghosts)
+            ghost.Destroy();
+        ghosts.Clear();
+        if (portraits != null)
+            Destroy(portraits.gameObject);
+        portraits = null;
+    }
+
+    private void OnDestroy()
+    {
+        ClearPortraits();
     }
 
     // A score as its card shows it: money, or in Kings Crown the time the crown was held
@@ -181,6 +224,7 @@ public class ResultsMenu : SingletonMonobehaviour<ResultsMenu>
         }
         if (awards != null)
             awards.Hide();
+        ClearPortraits();
 
         // The ghosts stop their acts and their poses
         PodiumPerformer.StopAll();

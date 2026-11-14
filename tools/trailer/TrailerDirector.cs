@@ -47,6 +47,7 @@ public class TrailerDirector : MonoBehaviour
     AudioListener tapped;
     StreamWriter events;
     Order lastLode;
+    TrailerStills stills;
 
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
     static void Launch()
@@ -299,6 +300,17 @@ public class TrailerDirector : MonoBehaviour
             return;
         recording = true;
 
+        events = new StreamWriter(Path.Combine(folder, take + ".events.csv"));
+        events.WriteLine("seconds,event,seat,other,detail");
+        Listen(true);
+        recordStart = Time.realtimeSinceStartup;
+        if (Int("stills", 0) == 1)
+        {
+            // Store screenshots instead of a video: see TrailerStills
+            stills = TrailerStills.Begin(gameObject, folder, take, Arg);
+            return;
+        }
+
         target = new RenderTexture(Screen.width, Screen.height, 0, RenderTextureFormat.ARGB32);
         ProcessStartInfo info = new ProcessStartInfo
         {
@@ -314,10 +326,6 @@ public class TrailerDirector : MonoBehaviour
         encoderIn = encoder.StandardInput.BaseStream;
         writer = new Thread(WriteFrames) { IsBackground = true };
         writer.Start();
-
-        events = new StreamWriter(Path.Combine(folder, take + ".events.csv"));
-        events.WriteLine("seconds,event,seat,other,detail");
-        Listen(true);
 
         File.WriteAllText(Path.Combine(folder, take + ".audio.txt"), AudioSettings.outputSampleRate + " " + ChannelCount());
         AudioTap.Begin(Path.Combine(folder, take + ".f32le"), ChannelCount());
@@ -402,6 +410,12 @@ public class TrailerDirector : MonoBehaviour
     {
         Listen(false);
         recording = false;
+        if (stills != null)
+        {
+            yield return stills.Finish();
+            events.Close();
+            yield break;
+        }
         yield return null;
         AsyncGPUReadback.WaitAllRequests();
         frameQueue.CompleteAdding();
@@ -441,6 +455,8 @@ public class TrailerDirector : MonoBehaviour
     {
         events.WriteLine((Time.realtimeSinceStartup - recordStart).ToString("0.00", CultureInfo.InvariantCulture) + "," + name + "," + seat + "," + other + "," + detail);
         events.Flush();
+        if (stills != null)
+            stills.OnEvent(name, seat, other);
     }
 
     void OnStruck(int attacker, int victim, bool steal, bool golden) => Log(!steal ? "clash" : golden ? "golden_steal" : "steal", attacker, victim, "");

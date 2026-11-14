@@ -238,6 +238,71 @@ Every choice made without asking is in `docs/game-modes-decisions.md`. Numbers: 
 
 - Then tell Claude they're there: `%USERPROFILE%\AppData\LocalLow\<company>\<game>\matches`.
 
+## 16h. Steal feedback: playtest (20 minutes)
+
+Play 4 players (bots are fine) in split screen, then a match in two editors online.
+
+- **The line** (bottom middle of each player's own view, just over the horn charge bars):
+  - Steal an order: you read `STOLE FROM <name> +$7`, in gold. Steal the same order again: no `+$7`.
+  - Get robbed: you read `<name> TOOK YOUR ORDER`, in red.
+  - Boost into a rival while holding two orders: `SLOTS FULL`. Into one holding nothing: `NOTHING TO STEAL`.
+  - Turn the Steals rule off and bump someone: `STEALS ARE OFF`.
+  - Can you read each line in a quarter-screen view? Does it stay clear of the compass, the scoreboard and the horn bars?
+  - Nobody but the two players in the bump gets a line.
+- **The stamp:**
+  - A stolen package shows `×2` over it, then `×4`; you can read it on a rival's scooter from each view.
+  - The scoreboard shows the same stamp on that package. The golden order and the Mother Lode never show one.
+  - Tell Claude if it sits too high, too low or too big (one number each).
+- **Feel:**
+  - A steal shakes both pads and kicks both cameras, harder for the victim.
+  - Rumble off: no shake. Reduce motion on: no kick.
+- **Sounds:** the victim hears their own "robbed" sound (a low falling sweep), and a bump that takes nothing gives a dull thud. The steal keeps its whoosh.
+  - Can you hear both over the music without them drowning it? Tell Claude "louder" or "quieter" for either (one number each). Both follow the SFX volume.
+- **Online:** both machines show the same lines and stamps for the same bump.
+- **Modes:** in Kings Crown, Infection and Hot Potato, a hit that moves the crown, tags or passes the package shows no steal line.
+
+## 16i. Score gains: playtest (15 minutes)
+
+Play 4 players (bots are fine) in split screen, then a match in two editors online.
+
+- **Your line** (the same small line as 16h, in gold):
+  - Deliver an order: `DELIVERED +$65` (or its price).
+  - Deliver a stolen order: `DELIVERED ×2 +$130`.
+  - Deliver the golden order: `GOLDEN ORDER +$...`, the whole amount it paid.
+  - Gold Rush: deliver the Mother Lode: `MOTHER LODE +$250`. Nuggets give no line.
+  - Kings Crown and Infection: no line each second.
+- **The scoreboard:**
+  - A small `+$65` shows beside that player's money for about a second, and the number counts up.
+  - Nuggets picked up quickly read as one growing `+$30`.
+  - The `+$` stays inside the row and can be read. Tell Claude if it is too small or badly placed.
+  - A new match starts with no `+$` and no lead call.
+- **Lead change:**
+  - Pass the leader: you read `YOU TOOK THE LEAD`; they read `<name> TOOK THE LEAD`, in red. Nobody else gets a line.
+  - The first money of a match calls nothing. A tie calls nothing.
+  - Deliver and take the lead at once: the `DELIVERED` line shows first, then the lead line.
+- **Online:** both machines show the same lines and the same `+$`.
+
+## 16j. Mode goals and event calls: playtest (30 minutes)
+
+Play Kings Crown, Infection and Hot Potato with 4 players (bots are fine) in split screen, then one of them in two editors online.
+
+- **The goal tag** (two or three small words under the compass, in your own view):
+  - It comes up once the mode's info box has gone, and goes after 25 seconds.
+  - Kings Crown: `GET THE CROWN`, then `KEEP THE CROWN` when you hold it. Each change brings it back for 25 seconds.
+  - Infection: `DON'T GET CAUGHT`, then `CATCH THEM` once you are infected.
+  - Hot Potato: `STAY AWAY`, then `PASS IT!` when the package is yours. Out: no tag.
+  - Standard and Gold Rush: no tag.
+  - Can you read it in a quarter-screen view? Is it clear of the compass and the info box? Tell Claude "lower", "smaller" and so on.
+- **Your line** (the same small line as 16h):
+  - Kings Crown: `YOU HAVE THE CROWN`; lose it and read `<name> TOOK YOUR CROWN`.
+  - Infection: `YOU'RE INFECTED` when caught (and for the first hunter); the only hunter reads `CAUGHT <name>`; the last free player reads `YOU'RE THE LAST ONE FREE`.
+  - Hot Potato: `YOU HAVE THE CURSED PACKAGE` with its sound; the passer reads `PASSED TO <name>`; everyone else reads `<name> IS OUT`.
+- **Round ending:**
+  - Kings Crown and Infection: at 30 seconds everyone reads `30 SECONDS LEFT`, hears the warning once, and the timer digits pulse.
+  - The last-10-seconds countdown reads `Time's Up In...` in Kings Crown and Infection, and still `Golden Order In...` in Standard.
+- **Sounds:** the cursed-package and 30-second sounds can be heard over the music without drowning it. Tell Claude "louder" or "quieter" for either.
+- **Online:** both machines show the same tags and lines for the same event.
+
 ## 16c. Accessibility: to build, then playtest
 
 For Steam's store-page accessibility section. None of these exist yet. Today Options → ACCESSIBILITY has only Reduce motion.

@@ -7,7 +7,7 @@ namespace DoA.Tests
 {
     /// <summary>
     /// The players' cards on the results screen (ResultsAwardsView): one per score, for the seat that score shows (the
-    /// scores are in finishing order), along the bottom of the screen under its score, with the player's place, name
+    /// scores are in finishing order), along the bottom of the screen under its score, with the player's picture framed in their place's colour, name
     /// and score, their award and their rematch vote. The scene's own scores and title are
     /// restyled, and awards that arrive once the cards are up still show
     /// </summary>
@@ -85,11 +85,18 @@ namespace DoA.Tests
             TMP_Text[] scores = Scores(2, out RectTransform box);
             ResultsAwardsView view = ResultsAwardsView.Build(box, scores);
 
-            view.ShowPlayer(0, 2, 1, "Faty2k", "$975");
+            Texture2D steam = new Texture2D(4, 4);
+            Texture shown = null;
+            view.ShowPlayer(0, 2, 1, "Faty2k", "$975", () => shown);
             view.ShowPlayer(1, -1, 2, "", "");
 
             Assert.IsTrue(view.CardOf(0).activeSelf, "a client's card is up before the host's awards reach it");
-            Assert.AreEqual("1", view.PlaceText(0));
+            Assert.IsNull(view.Picture(0), "Steam hasn't sent the picture yet: the frame alone");
+            Assert.AreEqual(1f, view.FrameColour(0).b < 0.5f ? 1f : 0f, "first place's frame is gold");
+            shown = steam;
+            view.Settle();
+            Assert.AreSame(steam, view.Picture(0), "the picture shows once it arrives");
+            Object.DestroyImmediate(steam);
             Assert.AreEqual("Faty2k", view.PlayerName(0));
             Assert.AreEqual("$975", view.Money(0));
             Assert.IsFalse(view.AwardShown(0));

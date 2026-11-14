@@ -6,9 +6,9 @@ using UnityEngine;
 ///   the host judges its own player's at once.
 /// - Host: judges each hit with its own view (StealRules), and takes a machine's request only for that machine's own
 ///   seat. A steal moves the victim's best order to the thief and drops the rest: order changes every client replays
-///   (OnlineOrders). Then every machine hears the hit (PlayerHit).
+///   (OnlineOrders). Then every machine hears the hit (PlayerHit), with what the bump did and what the thief was paid.
 /// - Every machine: for each hit, the players it drives bounce (Show): a robbed player away from the thief, both
-///   players in a clash. On a client the host's hits wait with its other messages (OnlineGame).
+///   players in a clash. A steal's hit is announced for the callouts (StealFeedback). On a client the host's hits wait with its other messages (OnlineGame).
 /// OnlineGame adds it next to OnlineTutorial. See docs/online.md
 /// </summary>
 public class OnlineSteals : MonoBehaviour
@@ -92,8 +92,8 @@ public class OnlineSteals : MonoBehaviour
         if (verdict == HitVerdict.Steal)
         {
             // The orders first: every client replays the steal and the victim's drop, in order (OnlineOrders)
-            thief.StealFrom(target);
-            hit = PlayerHit.Steal(attacker, victim);
+            BumpNotice notice = thief.StealFrom(target);
+            hit = PlayerHit.Steal(attacker, victim, notice.Outcome, notice.Paid);
         }
         else
         {
@@ -124,6 +124,8 @@ public class OnlineSteals : MonoBehaviour
 
         if (hit.Kind == HitKind.Steal)
         {
+            // What the bump did, for each player's callout here (an outcome this build doesn't know says nothing)
+            StealFeedback.Announce(new BumpNotice(hit.Attacker, hit.Victim, (BumpOutcome)hit.Outcome, hit.Paid));
             if (!RemoteAvatar.IsRemote(victim))
                 victim.BounceFrom(attacker);
             return;

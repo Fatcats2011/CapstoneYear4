@@ -1,6 +1,6 @@
 /// <summary>
-/// Options → Accessibility → Reduce motion: with it on, boosting never widens the view (OrbitalCamera) and the speed
-/// lines never show (BallDriving). Rumble: with it off, no pad shakes (Rumbler). Saved in settings.cfg
+/// Options → Accessibility → Reduce motion: with it on, boosting never widens the view (OrbitalCamera), a steal
+/// never kicks the camera, and the speed lines never show (BallDriving). Rumble: with it off, no pad shakes (Rumbler). Saved in settings.cfg
 /// </summary>
 public static class Comfort
 {
@@ -22,6 +22,12 @@ public static class Comfort
     public static float TargetFov(bool boostWide, float boostFov, float normalFov)
     {
         return boostWide && !ReduceMotion ? boostFov : normalFov;
+    }
+
+    /// <summary>How far a camera kicks (a steal: OrbitalCamera.Kick): not at all with reduced motion</summary>
+    public static float Kick(float wanted)
+    {
+        return ReduceMotion ? 0f : wanted;
     }
 
     /// <summary>The speed lines' value to show: none with reduced motion</summary>

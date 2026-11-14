@@ -8,7 +8,8 @@ public enum VoteMark { None, Ready, Out }
 /// <summary>
 /// The players' cards on the results screen, built by code (no prefab edits): one under each ghost on the podium, along
 /// the bottom of the screen, so the podium itself stays clear. A card has
-/// - a medal with the finishing place, the player's name and their score;
+/// - the player's picture (their Steam picture, or their ghost: as the scoreboard shows them) in a frame of their
+///   place's colour (gold, silver, bronze, grey), with their name and score beside it;
 /// - their award, filling the rest of the card: its joke name over its plain count (AwardRules);
 /// - a READY or OUT tag on its top edge once the rematch vote opens (ResultsVoteView).
 /// The winner's card is a little bigger, edged in gold. The cards slide up one after another, the winner's last.
@@ -25,7 +26,8 @@ public class ResultsAwardsView : MonoBehaviour
     const float BOTTOM = 20f;          // the cards' gap from the bottom of the screen
     const float EDGE = 12f;            // ...and at least this from its sides
     const float PAD = 12f;
-    const float MEDAL = 58f;
+    const float PICTURE = 76f;         // the player's picture, framed
+    const float FRAME = 4f;
     const float HEADER = 84f;
     const float AWARD = 128f;          // the award's block: the rest of the card under the header
     const float WINNER_SCALE = 1.07f;
@@ -61,8 +63,10 @@ public class ResultsAwardsView : MonoBehaviour
         public GameObject Root;
         public RectTransform Rect;
         public CanvasGroup Fade;
-        public Image Medal;
-        public TMP_Text Place, Player, Money, Award, Line, Vote;
+        public Image Frame;
+        public RawImage Picture;
+        public System.Func<Texture> PictureOf; // asked each frame: a Steam picture can arrive late
+        public TMP_Text Player, Money, Award, Line, Vote;
         public GameObject VoteTag;
         public Image VoteBack;
         public GameObject AwardBlock;
@@ -147,16 +151,19 @@ public class ResultsAwardsView : MonoBehaviour
 
         // The winner's gold edge, then the panel
         if (place == 0)
-            Stretch(Box(card.Rect, "Gold Edge", StatIcons.Panel(), GOLD, true), -4f);
+            Stretch(Box(card.Rect, "Gold Edge", CardPanel.Get(), GOLD, true), -4f);
         // (solid on the winner's, or the gold behind would tint it)
-        Stretch(Box(card.Rect, "Panel", StatIcons.Panel(), place == 0 ? WINNER_PANEL : PANEL, true), 0f);
+        Stretch(Box(card.Rect, "Panel", CardPanel.Get(), place == 0 ? WINNER_PANEL : PANEL, true), 0f);
 
-        // The header: the medal, then the name over the score
-        card.Medal = Box(card.Rect, "Medal", StatIcons.Disc(), MEDALS[Mathf.Clamp(place, 0, MEDALS.Length - 1)], false);
-        At(card.Medal.rectTransform, PAD, -PAD - (HEADER - MEDAL) / 2f, MEDAL, MEDAL);
-        card.Place = Text(card.Medal.transform, "Place", font, 40f, INK, TextAlignmentOptions.Center);
-        Stretch(card.Place.rectTransform, 4f);
-        float textLeft = PAD + MEDAL + 12f;
+        // The header: the picture in its place's colour, then the name over the score
+        card.Frame = Box(card.Rect, "Picture Frame", CardPanel.Get(), MEDALS[Mathf.Clamp(place, 0, MEDALS.Length - 1)], true);
+        At(card.Frame.rectTransform, PAD, -PAD - (HEADER - PICTURE) / 2f, PICTURE, PICTURE);
+        card.Picture = new GameObject("Picture", typeof(RectTransform)).AddComponent<RawImage>();
+        card.Picture.transform.SetParent(card.Frame.transform, false);
+        Stretch(card.Picture.rectTransform, FRAME);
+        card.Picture.raycastTarget = false;
+        card.Picture.enabled = false;
+        float textLeft = PAD + PICTURE + 12f;
         card.Player = Text(card.Rect, "Player", font, 28f, Color.white, TextAlignmentOptions.BottomLeft);
         At(card.Player.rectTransform, textLeft, -PAD, WIDTH - textLeft - PAD, 36f);
         card.Money = Text(card.Rect, "Money", font, 46f, MONEY, TextAlignmentOptions.TopLeft);
@@ -175,7 +182,7 @@ public class ResultsAwardsView : MonoBehaviour
         At(card.Line.rectTransform, 0f, -74f, WIDTH - 2f * PAD, 44f);
 
         // The vote's tag, half over the top edge
-        card.VoteBack = Box(card.Rect, "Vote", StatIcons.Panel(), READY, true);
+        card.VoteBack = Box(card.Rect, "Vote", CardPanel.Get(), READY, true);
         card.VoteTag = card.VoteBack.gameObject;
         RectTransform tag = card.VoteBack.rectTransform;
         tag.anchorMin = tag.anchorMax = new Vector2(1f, 1f);
@@ -195,7 +202,8 @@ public class ResultsAwardsView : MonoBehaviour
     internal GameObject CardOf(int score) { return cards[score]?.Root; }
     internal string PlayerName(int score) { return cards[score].Player.text; }
     internal string Money(int score) { return cards[score].Money.text; }
-    internal string PlaceText(int score) { return cards[score].Place.text; }
+    internal Texture Picture(int score) { return cards[score].Picture.enabled ? cards[score].Picture.texture : null; }
+    internal Color FrameColour(int score) { return cards[score].Frame.color; }
     internal string AwardName(int score) { return cards[score].Award.text; }
     internal string AwardLine(int score) { return cards[score].Line.text; }
     internal bool AwardShown(int score) { return cards[score].AwardBlock.activeSelf; }
@@ -203,10 +211,11 @@ public class ResultsAwardsView : MonoBehaviour
     internal TMP_Text Title => title;
 
     /// <summary>
-    /// A score's player: the card comes up with their finishing place (1 = first; ties share one), name and score. A
-    /// seat of -1 is nobody: no card
+    /// A score's player: the card comes up with their picture (asked each frame until there is one: null shows the
+    /// frame alone) framed in their finishing place's colour (1 = first; ties share one), name and score. A seat of -1
+    /// is nobody: no card
     /// </summary>
-    public void ShowPlayer(int score, int seat, int place, string player, string money)
+    public void ShowPlayer(int score, int seat, int place, string player, string money, System.Func<Texture> picture = null)
     {
         Card card = score >= 0 && score < cards.Length ? cards[score] : null;
         if (card == null)
@@ -216,8 +225,9 @@ public class ResultsAwardsView : MonoBehaviour
             card.Root.SetActive(false);
             return;
         }
-        card.Place.text = Mathf.Max(1, place).ToString();
-        card.Medal.color = MEDALS[Mathf.Clamp(place - 1, 0, MEDALS.Length - 1)];
+        card.Frame.color = MEDALS[Mathf.Clamp(place - 1, 0, MEDALS.Length - 1)];
+        card.PictureOf = picture;
+        ShowPicture(card);
         card.Player.text = player;
         card.Money.text = money;
         card.Named = true;
@@ -243,7 +253,6 @@ public class ResultsAwardsView : MonoBehaviour
             }
             if (!card.Named)
             {
-                card.Place.text = (i + 1).ToString();
                 card.Player.text = "P" + (seat + 1);
                 card.Money.text = scores[i] != null ? scores[i].text : "";
             }
@@ -254,6 +263,25 @@ public class ResultsAwardsView : MonoBehaviour
             card.Award.text = AwardRules.Name(award);
             card.Line.text = AwardRules.Line(award, board.CountOf(seat));
         }
+    }
+
+    // Each card's picture, as its source has it now
+    void ShowPictures()
+    {
+        foreach (Card card in cards)
+        {
+            if (card != null && card.Root.activeSelf)
+                ShowPicture(card);
+        }
+    }
+
+    static void ShowPicture(Card card)
+    {
+        Texture shown = card.PictureOf != null ? card.PictureOf() : null;
+        if (card.Picture.texture != shown)
+            card.Picture.texture = shown;
+        if (card.Picture.enabled != (shown != null))
+            card.Picture.enabled = shown != null;
     }
 
     /// <summary>A score's player's rematch vote: READY, OUT (they left: the card fades), or nothing yet</summary>
@@ -303,6 +331,7 @@ public class ResultsAwardsView : MonoBehaviour
     internal void Settle()
     {
         clock = 1000f;
+        ShowPictures();
         Place();
         Move();
     }
@@ -339,6 +368,7 @@ public class ResultsAwardsView : MonoBehaviour
     void LateUpdate()
     {
         clock += Time.unscaledDeltaTime;
+        ShowPictures();
         Place();
         Move();
     }

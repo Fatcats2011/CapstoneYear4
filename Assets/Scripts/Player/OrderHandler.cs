@@ -74,6 +74,13 @@ public class OrderHandler : MonoBehaviour
         soundPool = GetComponent<SoundPool>();
         tutHandler = GetComponent<TutorialHandler>();
 
+        // This machine's player reads their steals in their own view (another machine's scooter has no HUD here)
+        if (!RemoteAvatar.IsRemote(this))
+        {
+            StealCallout.AddTo(this, numberHandler);
+            GoalTag.AddTo(this, numberHandler);
+        }
+
         SetDrivingIndicators();
     }
 
@@ -173,6 +180,7 @@ public class OrderHandler : MonoBehaviour
                 score += order1.Worth;
                 FeatSync.Deliver(OrderSync.SeatOf(this), rightOrder.Value);
             }
+            AnnounceDelivery(order1);
             order1.DeliverOrder();
             order1 = null;
             ScoreManager.Instance.UpdatePlacement();
@@ -187,6 +195,7 @@ public class OrderHandler : MonoBehaviour
                 score += order2.Worth;
                 FeatSync.Deliver(OrderSync.SeatOf(this), rightOrder.Value);
             }
+            AnnounceDelivery(order2);
             order2.DeliverOrder();
             order2 = null;
             ScoreManager.Instance.UpdatePlacement();
@@ -203,6 +212,29 @@ public class OrderHandler : MonoBehaviour
 
         if (tutHandler != null && tutHandler.HasLearnt)
             ball.SetBoostModifier(hasOrder);
+    }
+
+    /// <summary>
+    /// Tells this machine that this player's delivery paid, and why (ScoreFeedback), before the order resets. Every machine
+    /// that replays the delivery does it, so each shows the line for the players it drives. Changes no score
+    /// </summary>
+    private void AnnounceDelivery(Order order)
+    {
+        ScoreFeedback.AnnounceGain(OrderSync.SeatOf(this), GainFeedbackRules.ReasonFor(order.Value, order.IsLode),
+            DeliveryPay(order), StealFeedbackRules.StampText(order.Value, order.IsLode, order.Steals));
+    }
+
+    /// <summary>
+    /// What a delivery of this order pays on this machine: the Mother Lode's worth, the golden order's full value (what it
+    /// has grown to while held: the order manager's, or its worth with none), otherwise the order's worth
+    /// </summary>
+    internal static int DeliveryPay(Order order)
+    {
+        if (order.IsLode)
+            return order.Worth;
+        if (order.Value == Constants.OrderValue.Golden && OrderManager.Instance != null)
+            return OrderManager.Instance.FinalOrderValue;
+        return order.Worth;
     }
 
     /// <summary>
@@ -395,7 +427,7 @@ public class OrderHandler : MonoBehaviour
     /// <param name="victimPlayer">Player being stolen from</param>
     private void StealOrder(OrderHandler victimPlayer)
     {
-        StealFrom(victimPlayer);
+        StealFeedback.Announce(StealFrom(victimPlayer));
         victimPlayer.BounceFrom(this);
     }
 
@@ -405,26 +437,29 @@ public class OrderHandler : MonoBehaviour
     /// machine bounces them (OnlineSteals)
     /// </summary>
     /// <param name="victim">Player being stolen from</param>
-    public void StealFrom(OrderHandler victim)
+    /// <returns>What the bump did, for the callouts (StealFeedback). A machine that doesn't decide steals says nothing
+    /// (a mode's hit shows no line)</returns>
+    public BumpNotice StealFrom(OrderHandler victim)
     {
+        int thiefSeat = OrderSync.SeatOf(this), victimSeat = OrderSync.SeatOf(victim);
         if (!GameAuthority.IsAuthority)
-            return;
+            return new BumpNotice(thiefSeat, victimSeat, BumpOutcome.ModeHit, 0);
 
         // Kings Crown, Infection, Hot Potato: the hit moves the crown or the potato, or catches a thief, instead (ModeMatch)
-        if (ModeReferee.Strike(this, victim))
-            return;
+        BumpOutcome outcome = JudgeBump(victim, ModeReferee.Strike(this, victim));
 
-        // Steals off (the match rules): the bump still happens, but nothing changes hands. The tutorial still teaches it
-        if (!HouseRules.Playing.StealsOn && (GameManager.Instance == null || GameManager.Instance.MainState != GameState.Tutorial))
-            return;
+        // A mode's hit, or steals off (the match rules): the bump still happens, but nothing changes hands
+        if (outcome == BumpOutcome.ModeHit || outcome == BumpOutcome.StealsOff)
+            return new BumpNotice(thiefSeat, victimSeat, outcome, 0);
 
-        Order newOrder = victim.GetBestOrder();
-        if (newOrder != null && (order1 == null || order2 == null))
+        int paid = 0;
+        if (outcome == BumpOutcome.Stolen)
         {
+            Order newOrder = victim.GetBestOrder();
             TakeOrderFrom(victim, newOrder);
             if (StealsCount)
             {
-                PayForSteal(newOrder, OrderSync.SeatOf(this));
+                paid = PayForSteal(newOrder, thiefSeat);
                 ShowScore();
                 ScoreManager.Instance.UpdatePlacement();
             }
@@ -433,6 +468,18 @@ public class OrderHandler : MonoBehaviour
         victim.DropEverything(victim.order1Position.position, victim.order2Position.position);
 
         SetDrivingIndicators();
+        return new BumpNotice(thiefSeat, victimSeat, outcome, paid);
+    }
+
+    /// <summary>
+    /// What this player's bump into a victim does (StealFeedbackRules.Outcome): a mode took the hit, steals are off (the
+    /// tutorial still teaches them), the victim holds nothing, this player has no room, or an order changes hands
+    /// </summary>
+    internal BumpOutcome JudgeBump(OrderHandler victim, bool modeTookIt)
+    {
+        bool stealsOn = HouseRules.Playing.StealsOn
+            || (GameManager.Instance != null && GameManager.Instance.MainState == GameState.Tutorial);
+        return StealFeedbackRules.Outcome(modeTookIt, stealsOn, victim.GetBestOrder() != null, order1 == null || order2 == null);
     }
 
     /// <summary>

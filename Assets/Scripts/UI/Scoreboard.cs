@@ -9,9 +9,11 @@ using UnityEngine.UI;
 /// money changes, and first place is drawn bigger. Each row: the player's picture (their Steam picture: one per machine,
 /// on that machine's first player. Anyone else, bots included, gets their own ghost in its colour and hat:
 /// GhostPortrait) with a small crown on it if they won the match this one is a rematch of (RematchCrown), their name,
-/// their money, and the packages they hold (a stolen one, worth more, burns purple). Built
+/// their money, and the packages they hold (a stolen one, worth more, burns purple and wears its "×2"). Built
 /// in code on a screen overlay canvas, so no scene or prefab holds it. Everything it shows, every machine already has:
-/// scores and held orders follow the host online (OnlineOrders, OrderSync)
+/// scores and held orders follow the host online (OnlineOrders, OrderSync).
+/// A rise in a player's money also shows a small "+$" over their number for a moment while the number counts up to its
+/// new total (MoneyShow), and the board watches the ranking so a change of first place is announced (WatchLead)
 /// </summary>
 public class Scoreboard : MonoBehaviour
 {
@@ -40,8 +42,13 @@ public class Scoreboard : MonoBehaviour
     const float FLAME_FPS = 14f;
     const float SEAT_BADGE = 30f;   // colourblind mode's badges
     const float STOLEN_BADGE = 34f;
+    const float STAMP_SIZE = 20f;    // a stolen package's "×2"
+    const float STAMP_WIDTH = 44f;
     internal const float CROWN = 40f;      // the rematch winner's crown, on the picture's top-left corner
     const float CROWN_TILT = 22f;
+    const float GAIN_SIZE = 16f;     // the "+$" over a row's money
+    const float GAIN_HEIGHT = 20f;
+    const float GAIN_TOP = 2f;       // its gap from the row's top edge
 
     static readonly Color INK = new Color(0.06f, 0.05f, 0.08f, 1f);
     static readonly Color PAPER = new Color(1f, 1f, 1f, 0.2f); // mostly see through
@@ -58,6 +65,82 @@ public class Scoreboard : MonoBehaviour
     RectTransform board;
     readonly List<Row> rows = new List<Row>();
     Transform portraits; // the ghost copies the portraits are taken of, far from the city
+    int leader = -1;     // the seat the board last saw leading
+
+    /// <summary>The seat the board last saw leading: -1 for none (tests)</summary>
+    internal int Leader => leader;
+
+    /// <summary>
+    /// What one row's money column shows over time: the last total seen, the "+$" of a recent rise (rises while it is up
+    /// add to it) and the number counting up to the new total. Plain numbers, so it is tested directly. A fall, a reset
+    /// or the first total shows no gain
+    /// </summary>
+    internal struct MoneyShow
+    {
+        /// <summary>The last total seen: -1 before any</summary>
+        public int Total;
+        /// <summary>What the number counts up from</summary>
+        public int From;
+        /// <summary>The "+$" showing: 0 for none</summary>
+        public int Gain;
+        /// <summary>When the last gain landed</summary>
+        public float GainedAt;
+
+        /// <summary>
+        /// A new total at a time: a rise adds to the gain (or starts one, if the last has faded), counts up from what was
+        /// showing, and times from now; a fall or the first total clears the gain. With showGains false there is never one
+        /// </summary>
+        public void See(int total, float now, bool showGains)
+        {
+            if (total == Total)
+                return;
+            if (Total >= 0 && total > Total && showGains)
+            {
+                int shown = Shown(now);
+                bool showing = Gain > 0 && GainFeedbackRules.PopAlpha(now - GainedAt) > 0f;
+                Gain = (showing ? Gain : 0) + (total - Total);
+                From = shown;
+                GainedAt = now;
+            }
+            else
+            {
+                Gain = 0;
+                From = total;
+            }
+            Total = total;
+        }
+
+        /// <summary>The number to show at a time: counting up to the total while a gain is showing, else the total</summary>
+        public int Shown(float now)
+        {
+            return Gain > 0 ? GainFeedbackRules.CountUp(From, Total, now - GainedAt) : Total;
+        }
+
+        /// <summary>The "+$" text at a time: the gain while it is up (it fades out), else nothing</summary>
+        public string GainText(float now)
+        {
+            return Gain > 0 && GainFeedbackRules.PopAlpha(now - GainedAt) > 0f ? "+$" + Gain : "";
+        }
+    }
+
+    /// <summary>
+    /// Each frame's ranking: announces a change of first place (ScoreFeedback.AnnounceLead). Not the first leader of a
+    /// match, and nothing in a mode that doesn't call leads, which also starts it over
+    /// </summary>
+    /// <param name="ranking">Seats, best first</param>
+    /// <param name="points">What a seat has, in the unit the ranking is in</param>
+    internal void WatchLead(IReadOnlyList<int> ranking, System.Func<int, int> points, GameMode mode)
+    {
+        if (!GainFeedbackRules.LeadCalled(mode))
+        {
+            leader = -1;
+            return;
+        }
+        int now = GainFeedbackRules.NewLeader(leader, ranking, points);
+        if (GainFeedbackRules.LeadChanged(leader, now))
+            ScoreFeedback.AnnounceLead(now, leader);
+        leader = now;
+    }
 
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
     static void Create()
@@ -212,6 +295,7 @@ public class Scoreboard : MonoBehaviour
         GameState state = game != null ? game.MainState : GameState.Default;
         if (EndsMatch(state) || players == null)
         {
+            leader = -1; // a rematch starts with nobody leading
             if (rows.Count > 0)
                 Clear();
             canvas.enabled = false;
@@ -236,7 +320,9 @@ public class Scoreboard : MonoBehaviour
         float[] tops = RowTops(ranked.Count);
         float step = 1f - Mathf.Exp(-SLIDE_SPEED * Time.unscaledDeltaTime);
         board.localScale = Vector3.one * (BOARD_SCALE * TextSize.Scale);
-        int flame = Mathf.FloorToInt(Time.unscaledTime * FLAME_FPS);
+        float clock = Time.unscaledTime; // the slide's and the flame's clock: the "+$" and count-up use it too
+        int flame = Mathf.FloorToInt(clock * FLAME_FPS);
+        WatchLead(ranked, MoneyIn, HouseRules.Playing.Mode);
 
         foreach (Row row in rows)
         {
@@ -244,7 +330,7 @@ public class Scoreboard : MonoBehaviour
             ulong id = ids[row.Seat];
             bool steam = FirstWithId(row.Seat, id, ids);
             row.Show(NameIn(row.Seat, players.Roster, steam), MoneyIn(row.Seat), OrderSync.HandlerIn(row.Seat),
-                steam ? SteamAvatars.Get(id) : null, flame);
+                steam ? SteamAvatars.Get(id) : null, flame, clock);
             row.MoveTowards(tops[rank], rank == 0 ? FIRST_SCALE : 1f, step);
         }
     }
@@ -308,6 +394,18 @@ public class Scoreboard : MonoBehaviour
         PlayerInstantiate players = PlayerInstantiate.Instance;
         if (players == null)
             return PlayerNames.Fallback(seat);
+        return NameIn(seat, players.Roster, PictureIdOf(seat) != 0);
+    }
+
+    /// <summary>
+    /// The Steam ID whose picture a seated player shows, as the board shows it (the results' cards too): 0 for a bot, a
+    /// player without Steam, or one sharing another seat's account (they show their ghost)
+    /// </summary>
+    internal static ulong PictureIdOf(int seat)
+    {
+        PlayerInstantiate players = PlayerInstantiate.Instance;
+        if (players == null)
+            return 0;
         Dictionary<int, ulong> ids = new Dictionary<int, ulong>();
         for (int other = 0; other < Constants.MAX_PLAYERS; other++)
         {
@@ -316,7 +414,7 @@ public class Scoreboard : MonoBehaviour
                 ids[other] = SteamIdIn(other, players.Roster);
         }
         ulong id = ids.TryGetValue(seat, out ulong found) ? found : 0;
-        return NameIn(seat, players.Roster, FirstWithId(seat, id, ids));
+        return FirstWithId(seat, id, ids) ? id : 0;
     }
 
     // Their name: online, the name they share (a bot's fits its personality: BotNames); offline, the Steam name on this
@@ -388,13 +486,19 @@ public class Scoreboard : MonoBehaviour
         readonly Image[] flames = new Image[2];
         readonly GameObject seatBadge;               // colourblind mode: the seat's shape and number on the picture
         readonly GameObject[] stolenBadges = new GameObject[2]; // ...and a "!" on a stolen package
+        readonly TMP_Text[] stamps = new TMP_Text[2];            // a stolen package's "×2" (StealFeedbackRules.StampText)
+        readonly string[] shownStamps = { "", "" };
         readonly GhostPortrait ghost;
         readonly CanvasGroup fade;
         readonly Image pictureFrame;
         readonly GameObject outCross;
         readonly GameObject crown;
+        readonly TMP_Text gainText;   // the "+$" at the top of the money column, over the number
+        MoneyShow moneyShow = new MoneyShow { Total = -1 };
         string shownName;
         int shownMoney = -1;
+        string shownGain = "";
+        float shownGainAlpha = 1f;
         GameMode shownMode;
 
         public bool CrownShown => crown.activeSelf;
@@ -448,6 +552,15 @@ public class Scoreboard : MonoBehaviour
             nameText = Label(rect, "Name", x, NAME_WIDTH, 28f, FontStyles.Bold);
             x += NAME_WIDTH;
             moneyText = Label(rect, "Money", x, MONEY_WIDTH, 26f, FontStyles.Normal);
+            // The "+$" of a recent gain: small, in the top of the money column, over the number, so the row doesn't grow
+            gainText = Label(rect, "Money Gain", x, MONEY_WIDTH, GAIN_SIZE, FontStyles.Bold);
+            gainText.rectTransform.sizeDelta = new Vector2(MONEY_WIDTH - PAD, GAIN_HEIGHT);
+            gainText.rectTransform.anchoredPosition = new Vector2(x, ROW_HEIGHT / 2f - GAIN_HEIGHT / 2f - GAIN_TOP);
+            gainText.enableWordWrapping = false;
+            gainText.color = GameCard.GOLD;
+            gainText.outlineWidth = 0.3f;
+            gainText.outlineColor = INK;
+            gainText.text = "";
             x += MONEY_WIDTH;
 
             for (int i = 0; i < 2; i++)
@@ -470,11 +583,20 @@ public class Scoreboard : MonoBehaviour
                 icons[i].enabled = false;
                 stolenBadges[i] = Badge(rect, "Stolen Badge " + (i + 1), Colourblind.AlarmBadge(), "!", STOLEN_BADGE,
                     new Vector2(x + PACKAGE - STOLEN_BADGE * 0.5f, y + STOLEN_BADGE * 0.3f), 0f);
+                // What a stolen package is worth against its price, on its bottom right corner
+                stamps[i] = Label(rect, "Worth Stamp " + (i + 1), x + PACKAGE - STAMP_WIDTH * 0.7f, STAMP_WIDTH + PAD, STAMP_SIZE, FontStyles.Bold);
+                stamps[i].rectTransform.anchoredPosition += new Vector2(0f, -PACKAGE * 0.3f);
+                stamps[i].alignment = TextAlignmentOptions.Midline;
+                stamps[i].color = Color.white;
+                stamps[i].outlineWidth = 0.3f;
+                stamps[i].outlineColor = INK;
+                stamps[i].text = "";
                 x += PACKAGE_SPACING;
             }
         }
 
-        public void Show(string name, int money, OrderHandler handler, Texture steamPicture, int flameFrame)
+        /// <summary>One frame of the row: its texts, picture and packages. The clock times the "+$" and the count-up</summary>
+        public void Show(string name, int money, OrderHandler handler, Texture steamPicture, int flameFrame, float now)
         {
             if (name != shownName)
             {
@@ -483,12 +605,15 @@ public class Scoreboard : MonoBehaviour
             }
             // A row can come up a moment before the match's rules do: the mode counts as well as the money
             GameMode mode = HouseRules.Playing.Mode;
-            if (money != shownMoney || mode != shownMode)
+            moneyShow.See(money, now, GainFeedbackRules.BoardShowsGains(mode));
+            int moneyNow = moneyShow.Shown(now);
+            if (moneyNow != shownMoney || mode != shownMode)
             {
-                shownMoney = money;
+                shownMoney = moneyNow;
                 shownMode = mode;
-                moneyText.text = ScoreText(mode, money);
+                moneyText.text = ScoreText(mode, moneyNow);
             }
+            ShowGain(moneyShow.GainText(now), GainFeedbackRules.PopAlpha(now - moneyShow.GainedAt));
             ShowModeState(ModeMatch.Current);
 
             if (seatBadge.activeSelf != Colourblind.On)
@@ -519,6 +644,21 @@ public class Scoreboard : MonoBehaviour
                 ShowHeld(ModeIcons.Crown(), null);
             else if (match != null && match.PotatoSeat == Seat)
                 ShowHeld(CursedIcon(), PurpleFlame.PinkFrames[flameFrame % PurpleFlame.PinkFrames.Length]);
+        }
+
+        /// <summary>The "+$" over the number: its text and how solid it is, each written only when it changes</summary>
+        void ShowGain(string text, float alpha)
+        {
+            if (text != shownGain)
+            {
+                shownGain = text;
+                gainText.text = text;
+            }
+            if (text.Length > 0 && !Mathf.Approximately(alpha, shownGainAlpha))
+            {
+                shownGainAlpha = alpha;
+                gainText.alpha = alpha;
+            }
         }
 
         // The large package's icon, from any order in the scene
@@ -581,6 +721,12 @@ public class Scoreboard : MonoBehaviour
             flames[slot].enabled = burning;
             if (stolenBadges[slot].activeSelf != (burning && Colourblind.On))
                 stolenBadges[slot].SetActive(burning && Colourblind.On);
+            string stamp = order != null ? StealFeedbackRules.StampText(order.Value, order.IsLode, order.Steals) : "";
+            if (stamp != shownStamps[slot])
+            {
+                shownStamps[slot] = stamp;
+                stamps[slot].text = stamp;
+            }
             if (burning)
             {
                 Sprite[] frames = PurpleFlame.Frames;
