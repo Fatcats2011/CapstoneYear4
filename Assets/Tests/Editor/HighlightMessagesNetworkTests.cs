@@ -4,6 +4,7 @@ using NUnit.Framework;
 using UnityEditor.SceneManagement;
 using UnityEngine;
 using UnityEngine.TestTools;
+using static DoA.Tests.TestHelpers;
 
 namespace DoA.Tests
 {
@@ -38,23 +39,6 @@ namespace DoA.Tests
 
             HighlightSync.Reset();
             GameAuthority.Role = NetworkRole.Offline;
-        }
-
-        static bool Sees(OnlineSession session, int players)
-        {
-            return session.Match != null && session.Players.Count == players;
-        }
-
-        static void NewEmptyScene()
-        {
-            EditorSceneManager.playModeStartScene = null;
-            EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
-        }
-
-        static IEnumerator Wait(float seconds)
-        {
-            for (float until = Time.realtimeSinceStartup + seconds; Time.realtimeSinceStartup < until;)
-                yield return null;
         }
 
         static IEnumerator BothLeave(OnlineSession host, OnlineSession client)

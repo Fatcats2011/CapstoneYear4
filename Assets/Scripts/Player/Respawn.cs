@@ -32,8 +32,6 @@ public class Respawn : MonoBehaviour
     [Tooltip("Trailtime of the wisp trail renderer component.")]
     [SerializeField] private float wispTrailTime = 1f;
 
-    [Tooltip("Time it takes for the player to grow back to full size")]
-    [SerializeField] private float growTime = 0.1f;
 
     [Tooltip("How far below the player death position the wisp spawns.")]
     [SerializeField] private float wispSpawnOffset = 5f;
@@ -167,6 +165,9 @@ public class Respawn : MonoBehaviour
             rsp.InUse = true;
             orderHandler.DropEverything(rsp.Order1Spawn, rsp.Order2Spawn, false);
         }
+
+        // The callout counts down from here: the wisp rises, then the lift, Duration in all
+        RespawnFeedback.AnnounceRising(OrderSync.SeatOf(this), Duration);
 
         // init the wisp
         Vector3 wispStart = deathWisp.transform.position;
@@ -353,6 +354,7 @@ public class Respawn : MonoBehaviour
         if (respawnCoroutine == null)
         {
             respawnCoroutine = RespawnPlayer();
+            RespawnFeedback.AnnounceFell(OrderSync.SeatOf(this)); // the callout: fell in the river
             // A new respawn: a fall, for the awards. Online a client's goes to the host when it asks where to rise
             if (GameAuthority.IsAuthority)
                 FeatSync.Sink(OrderSync.SeatOf(this));
@@ -369,6 +371,9 @@ public class Respawn : MonoBehaviour
 
     private void StopRespawnCoroutine()
     {
+        // Also called by game events when no respawn runs: those announce nothing
+        bool wasRespawning = respawnCoroutine != null;
+
         if (respawnCoroutine != null)
         {
             StopCoroutine(respawnCoroutine);
@@ -398,5 +403,8 @@ public class Respawn : MonoBehaviour
         deathWisp.enabled = false;
         deathWisp.transform.localScale = ogWispScale;
         modelParent.transform.localScale = ogPlayerScale;
+
+        if (wasRespawning)
+            RespawnFeedback.AnnounceBack(OrderSync.SeatOf(this));
     }
 }

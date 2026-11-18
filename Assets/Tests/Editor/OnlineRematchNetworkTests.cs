@@ -5,6 +5,7 @@ using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
 using UnityEngine.TestTools;
+using static DoA.Tests.TestHelpers;
 
 namespace DoA.Tests
 {
@@ -96,30 +97,9 @@ namespace DoA.Tests
             clockAhead = 0;
         }
 
-        static GameState State()
-        {
-            return GameManager.Instance == null ? GameState.Default : GameManager.Instance.MainState;
-        }
-
-        static string ActiveScene()
-        {
-            return UnityEngine.SceneManagement.SceneManager.GetActiveScene().name;
-        }
-
-        static PlayerSlot Slot(int index)
-        {
-            return PlayerInstantiate.Instance.Roster[index];
-        }
-
         static bool CutsceneOn()
         {
             return CutsceneManager.Instance != null && CutsceneManager.Instance.cutsceneCamera.enabled;
-        }
-
-        static IEnumerator Wait(float seconds)
-        {
-            for (float until = Time.realtimeSinceStartup + seconds; Time.realtimeSinceStartup < until;)
-                yield return null;
         }
 
         static IEnumerator ToTheMenuWithAPlayer()

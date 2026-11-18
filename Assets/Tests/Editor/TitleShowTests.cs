@@ -7,6 +7,7 @@ using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
 using UnityEngine.TestTools;
+using static DoA.Tests.TestHelpers;
 
 namespace DoA.Tests
 {
@@ -28,11 +29,6 @@ namespace DoA.Tests
 
             EditorSceneManager.playModeStartScene = null;
             TestPlayers.RemoveAll();
-        }
-
-        static bool AtTitleScreen()
-        {
-            return GameManager.Instance != null && GameManager.Instance.MainState == GameState.Menu;
         }
 
         /// <summary>Waits this long in the game's time (an EditMode test may only yield null)</summary>

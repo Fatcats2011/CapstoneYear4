@@ -42,10 +42,10 @@ Players miss what just happened to them and why the scores moved. The clearest e
 | A | Steals and bumps: **built 2026-11-14** (`2026-11-13-steal-feedback-design.md`, plan `2026-11-13-steal-feedback.md`; playtest in `EDITOR-TODO.md` 16h) | highest | medium |
 | B | Score gains with reasons: **built 2026-11-14** (`2026-11-14-score-gain-feedback-design.md`, plan `2026-11-14-score-gain-feedback.md`; playtest in `EDITOR-TODO.md` 16i) | high | small–medium |
 | C | Mode goals and event calls: **built 2026-11-14** (`2026-11-14-mode-feedback-design.md`, plan `2026-11-14-mode-feedback.md`; playtest in `EDITOR-TODO.md` 16j) | high | medium |
-| D | Orders and where to go | medium | medium |
+| D | Orders and where to go: **built 2026-11-14** (`2026-11-14-orders-feedback-design.md`, plan `2026-11-14-orders-feedback.md`; playtest in `EDITOR-TODO.md` 16k). Tier beacons and the drop-off beacon already existed; built: rival warning, beacon prices, drop-off marks | medium | small |
 | E | Event sounds | medium, cheap | small |
-| F | Driving and respawn | low–medium | small |
-| G | Results breakdown and first-time hints | medium | medium |
+| F | Driving and respawn: **built 2026-11-16** (`2026-11-16-driving-feedback-design.md`, plan `2026-11-16-driving-feedback.md`; playtest in `EDITOR-TODO.md` 16m). The respawn takes about 2 seconds, so its countdown is built but shows no numbers | low–medium | small |
+| G | Results breakdown and first-time hints: **built 2026-11-14** (`2026-11-14-results-and-hints-design.md`, plan `2026-11-14-results-and-hints.md`; playtest in `EDITOR-TODO.md` 16l) | medium | medium |
 
 ## Build order (my call)
 

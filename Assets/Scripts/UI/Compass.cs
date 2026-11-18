@@ -120,6 +120,7 @@ public class Compass : MonoBehaviour
         CompassIconUI compassIconUI = newMarker.GetComponent<CompassIconUI>();
 
         compassIconUI.SetCompassIconSprite(marker.icon);
+        compassIconUI.SetPrice(marker.price);
         compassIconUI.objectReference = marker;
 
         CompassInformationInstance currentCompassIconInstance = new CompassInformationInstance(compassIconUI, marker);

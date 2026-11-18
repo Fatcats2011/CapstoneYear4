@@ -9,7 +9,7 @@ namespace DoA.Tests
         {
             nameof(GameManager.OnSwapMenu), nameof(GameManager.OnSwapOptions), nameof(GameManager.OnSwapCredits),
             nameof(GameManager.OnSwapPlayerSelect), nameof(GameManager.OnSwapLoading), nameof(GameManager.OnSwapStartingCutscene),
-            nameof(GameManager.OnSwapTutorial), nameof(GameManager.OnSwapBegin), nameof(GameManager.OnSwapMainLoop),
+            nameof(GameManager.OnSwapTutorial), nameof(GameManager.OnSwapBegin),
             nameof(GameManager.OnSwapGoldenCutscene), nameof(GameManager.OnSwapFinalPackage), nameof(GameManager.OnSwapResults),
             nameof(GameManager.OnSwapAnything),
         };

@@ -8,6 +8,7 @@ using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.LowLevel;
 using UnityEngine.TestTools;
+using static DoA.Tests.TestHelpers;
 
 namespace DoA.Tests
 {
@@ -346,16 +347,6 @@ namespace DoA.Tests
                 + (log.Problems.Count > 0 ? "\n\nErrors so far:\n\n" + string.Join("\n\n", log.Problems) : ""));
         }
 
-        static GameState State()
-        {
-            return GameManager.Instance == null ? GameState.Default : GameManager.Instance.MainState;
-        }
-
-        static string ActiveScene()
-        {
-            return UnityEngine.SceneManagement.SceneManager.GetActiveScene().name;
-        }
-
         static int Players()
         {
             return PlayerInstantiate.Instance == null ? 0 : PlayerInstantiate.Instance.PlayerCount;
@@ -364,15 +355,6 @@ namespace DoA.Tests
         static BallDriving ScooterOf(int slot)
         {
             return PlayerInstantiate.Instance.Roster[slot].Player.GetComponentInChildren<BallDriving>();
-        }
-
-        /// <summary>
-        /// Queues a press and release; the next input update sees a full button press
-        /// </summary>
-        static void Press(Gamepad pad, GamepadButton button)
-        {
-            InputSystem.QueueStateEvent(pad, new GamepadState().WithButton(button));
-            InputSystem.QueueStateEvent(pad, new GamepadState());
         }
 
         static void PressOnAll(IEnumerable<Gamepad> pads, GamepadButton button)

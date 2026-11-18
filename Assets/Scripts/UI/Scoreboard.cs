@@ -21,17 +21,17 @@ public class Scoreboard : MonoBehaviour
     internal const int SORTING_ORDER = 50;
 
     // The whole board drawn smaller than the sizes below (and bigger with the text size setting)
-    const float BOARD_SCALE = 0.7f;
+    internal const float BOARD_SCALE = 0.7f;
 
     // Sizes in the 1920 × 1080 reference
     internal const float ROW_HEIGHT = 64f;
     internal const float ROW_GAP = 8f;
     internal const float FIRST_SCALE = 1.3f;
-    const float LEFT = 16f;
+    internal const float LEFT = 16f;
     const float BORDER = 4f;
-    const float PAD = 6f;
+    internal const float PAD = 6f;
     const float NAME_WIDTH = 150f;
-    const float MONEY_WIDTH = 84f;
+    internal const float MONEY_WIDTH = 84f;
     internal const float PACKAGE = 52f;
     // Apart enough that two burning packages' flames don't touch: PurpleFlame.SIDE
     internal const float PACKAGE_SPACING = PACKAGE * PurpleFlame.SIDE + 2f;
@@ -58,14 +58,28 @@ public class Scoreboard : MonoBehaviour
     /// <summary>Each row's width: picture, name, money, two packages, and the slanted end</summary>
     internal const float ROW_WIDTH = ROW_HEIGHT + PAD + NAME_WIDTH + MONEY_WIDTH + PACKAGE_SPACING + PACKAGE + 2 * PAD + TIP;
 
+    /// <summary>A compact row's width: picture, money and two packages, with no name and no slanted tip</summary>
+    internal const float COMPACT_ROW_WIDTH = ROW_HEIGHT + PAD + MONEY_WIDTH + PACKAGE_SPACING + PACKAGE + 2 * PAD;
+
+    /// <summary>How far apart the cells of a strip or a grid sit</summary>
+    internal const float CELL_GAP = ROW_GAP;
+
+    /// <summary>The bottom view's compass, across a 1920-wide screen, which a stacked strip leaves clear</summary>
+    internal const float COMPASS_LEFT = 715f;
+    internal const float COMPASS_RIGHT = 1205f;
+    /// <summary>The space a strip keeps from the compass each side</summary>
+    internal const float STRIP_MARGIN = 16f;
+
     static Scoreboard instance;
     static Sprite banner;
+    static Sprite compactBanner;
 
     Canvas canvas;
     RectTransform board;
     readonly List<Row> rows = new List<Row>();
     Transform portraits; // the ghost copies the portraits are taken of, far from the city
     int leader = -1;     // the seat the board last saw leading
+    BoardLayout shownLayout = LayoutFor(1, SplitLayout.Boxed); // the layout the rows were built for
 
     /// <summary>The seat the board last saw leading: -1 for none (tests)</summary>
     internal int Leader => leader;
@@ -165,10 +179,8 @@ public class Scoreboard : MonoBehaviour
 
         board = new GameObject("Board", typeof(RectTransform)).GetComponent<RectTransform>();
         board.SetParent(transform, false);
-        board.anchorMin = board.anchorMax = new Vector2(0f, 0.5f);
         board.pivot = new Vector2(0f, 0.5f);
-        board.anchoredPosition = new Vector2(LEFT, 0f);
-        board.sizeDelta = Vector2.zero;
+        board.sizeDelta = Vector2.zero; // its anchor and place follow the layout (LateUpdate)
 
         // Not under the canvas: its scale follows the screen's size, and a copy built under it came out that much bigger
         // or smaller than its camera's framing (from the second match on, once the canvas had been drawn)
@@ -214,6 +226,145 @@ public class Scoreboard : MonoBehaviour
         return ranked;
     }
 
+    /// <summary>How the rows are arranged: one above the next, side by side, or two by two</summary>
+    internal enum BoardShape { Column, Strip, Grid }
+
+    /// <summary>
+    /// Where the board sits and what it looks like. Anchor is a point on the screen (0 to 1 each way). LeftEdge means
+    /// the board hangs off the screen's left edge, as with one local player; otherwise it is centred on Anchor
+    /// </summary>
+    internal struct BoardLayout : System.IEquatable<BoardLayout>
+    {
+        public Vector2 Anchor;
+        public bool LeftEdge;
+        public BoardShape Shape;
+        public bool Compact;
+
+        public bool Equals(BoardLayout other)
+        {
+            return Anchor == other.Anchor && LeftEdge == other.LeftEdge && Shape == other.Shape && Compact == other.Compact;
+        }
+
+        public override bool Equals(object obj)
+        {
+            return obj is BoardLayout other && Equals(other);
+        }
+
+        public override int GetHashCode()
+        {
+            return Anchor.GetHashCode() ^ (LeftEdge ? 1 : 0) ^ ((int)Shape << 1) ^ (Compact ? 8 : 0);
+        }
+    }
+
+    /// <summary>
+    /// The board's layout for this many local players: the one-player board for none or one, and for two, whichever
+    /// way the screen is split. Three and four always get quarters
+    /// </summary>
+    internal static BoardLayout LayoutFor(int localPlayers, SplitLayout twoPlayers)
+    {
+        switch (localPlayers)
+        {
+            case 2:
+                switch (twoPlayers)
+                {
+                    case SplitLayout.SideBySide:
+                        return new BoardLayout { Anchor = new Vector2(0.5f, 0.5f), LeftEdge = false, Shape = BoardShape.Column, Compact = true };
+                    case SplitLayout.Stacked:
+                        return new BoardLayout { Anchor = new Vector2(0.5f, 0.5f), LeftEdge = false, Shape = BoardShape.Strip, Compact = true };
+                    default:
+                        return new BoardLayout { Anchor = new Vector2(0.125f, 0.5f), LeftEdge = false, Shape = BoardShape.Column, Compact = false };
+                }
+            case 3:
+                return new BoardLayout { Anchor = new Vector2(0.125f, 0.25f), LeftEdge = false, Shape = BoardShape.Column, Compact = false };
+            case 4:
+                return new BoardLayout { Anchor = new Vector2(0.5f, 0.5f), LeftEdge = false, Shape = BoardShape.Grid, Compact = true };
+            default:
+                return new BoardLayout { Anchor = new Vector2(0f, 0.5f), LeftEdge = true, Shape = BoardShape.Column, Compact = false };
+        }
+    }
+
+    /// <summary>
+    /// Each rank's row top-left, in board space (up is +); first place is FIRST_SCALE bigger. A column is stacked as
+    /// RowTops says, a strip runs left to right round a stripGap-wide gap in the board's middle (StripGap), and a grid
+    /// gives each rank a quarter round the middle, first place top-left
+    /// </summary>
+    internal static Vector2[] CellSpots(BoardLayout layout, int count, float stripGap = 0f)
+    {
+        Vector2[] spots = new Vector2[count];
+        if (count == 0)
+            return spots;
+        float width = layout.Compact ? COMPACT_ROW_WIDTH : ROW_WIDTH;
+        float half = CELL_GAP / 2f;
+        if (layout.Shape == BoardShape.Column)
+        {
+            float[] tops = RowTops(count);
+            for (int rank = 0; rank < count; rank++)
+            {
+                float scale = rank == 0 ? FIRST_SCALE : 1f;
+                spots[rank] = new Vector2(layout.LeftEdge ? 0f : -width * scale / 2f, tops[rank]);
+            }
+        }
+        else if (layout.Shape == BoardShape.Strip)
+        {
+            // The first half of the ranks left of the gap, the rest right of it. With an even count the narrower half
+            // moves out by the difference, so the strip is as wide each side of the middle; an odd count keeps the gap
+            // tight, with its extra rank on the left
+            int left = (count + 1) / 2;
+            float leftWidth = width * FIRST_SCALE + (left - 1) * (width + CELL_GAP);
+            float rightWidth = count > left ? (count - left) * (width + CELL_GAP) - CELL_GAP : 0f;
+            float leftEnd = -stripGap / 2f, rightStart = stripGap / 2f;
+            if (count % 2 == 0)
+            {
+                leftEnd -= Mathf.Max(0f, rightWidth - leftWidth);
+                rightStart += Mathf.Max(0f, leftWidth - rightWidth);
+            }
+            float x = leftEnd - leftWidth;
+            for (int rank = 0; rank < count; rank++)
+            {
+                if (rank == left)
+                    x = rightStart;
+                float scale = rank == 0 ? FIRST_SCALE : 1f;
+                spots[rank] = new Vector2(x, ROW_HEIGHT * scale / 2f);
+                x += width * scale + CELL_GAP;
+            }
+        }
+        else
+        {
+            for (int rank = 0; rank < count; rank++)
+            {
+                float scale = rank == 0 ? FIRST_SCALE : 1f;
+                float x = rank % 2 == 1 ? half : -half - width * scale;
+                float y = rank / 2 == 1 ? -half : half + ROW_HEIGHT * scale;
+                spots[rank] = new Vector2(x, y);
+            }
+        }
+        return spots;
+    }
+
+    /// <summary>
+    /// The board's scale for a layout, text size and canvas width (reference units). The one-player board grows with
+    /// the text size. A board in a quarter's empty bar grows with it only as far as first place's full row still fits
+    /// the bar (a quarter of the canvas, less LEFT each side). A board in the middle of the screen never grows past its
+    /// normal size: bigger, it would reach the views' compasses, horns and labels
+    /// </summary>
+    internal static float BoardScaleFor(BoardLayout layout, float textScale, float canvasWidth)
+    {
+        if (layout.LeftEdge)
+            return BOARD_SCALE * textScale;
+        if (layout.Compact)
+            return BOARD_SCALE * Mathf.Min(textScale, 1f);
+        return Mathf.Min(BOARD_SCALE * textScale, (0.25f * canvasWidth - 2f * LEFT) / (ROW_WIDTH * FIRST_SCALE));
+    }
+
+    /// <summary>
+    /// The gap a strip leaves in its middle, in board space at a board scale: wide enough that the bottom view's
+    /// compass (COMPASS_LEFT to COMPASS_RIGHT across a 1920 screen) and STRIP_MARGIN each side of it stay clear
+    /// </summary>
+    internal static float StripGap(float boardScale)
+    {
+        return (COMPASS_RIGHT - COMPASS_LEFT + 2f * STRIP_MARGIN) / boardScale;
+    }
+
     /// <summary>
     /// Each rank's top edge, from the board's middle (up is +): first place is FIRST_SCALE tall, the rest ROW_HEIGHT,
     /// ROW_GAP apart, the whole stack centred
@@ -250,15 +401,39 @@ public class Scoreboard : MonoBehaviour
     }
 
     /// <summary>
-    /// The row's shape at a point (reference pixels, from its top left, down is +y): white, edged in black, tapering
-    /// from full height at the picture to TAPER shorter at the right, where it ends in a slanted cut
+    /// Whether the board's rows must be built again: the layout they were built for is not the one wanted now (a local
+    /// player joined or left, or the two-player split changed)
     /// </summary>
+    internal static bool Relays(BoardLayout shown, BoardLayout now)
+    {
+        return !shown.Equals(now);
+    }
+
+    /// <summary>The full row's shape at a point (BannerAt with compact false)</summary>
     internal static Color BannerAt(float x, float y)
     {
-        float half = ROW_HEIGHT / 2f * (1f - TAPER * Mathf.Clamp01(x / ROW_WIDTH));
-        float top = ROW_HEIGHT / 2f - half;
-        float right = ROW_WIDTH - TIP * Mathf.Clamp01((y - top) / (2f * half));
-        float inside = Mathf.Min(half - Mathf.Abs(y - ROW_HEIGHT / 2f), Mathf.Min(x, right - x));
+        return BannerAt(x, y, false);
+    }
+
+    /// <summary>
+    /// The row's shape at a point (reference pixels, from its top left, down is +y): white, edged in black. The full
+    /// row tapers from full height at the picture to TAPER shorter at the right, where it ends in a slanted cut; the
+    /// compact row is a plain box COMPACT_ROW_WIDTH wide
+    /// </summary>
+    internal static Color BannerAt(float x, float y, bool compact)
+    {
+        float inside;
+        if (compact)
+        {
+            inside = Mathf.Min(Mathf.Min(y, ROW_HEIGHT - y), Mathf.Min(x, COMPACT_ROW_WIDTH - x));
+        }
+        else
+        {
+            float half = ROW_HEIGHT / 2f * (1f - TAPER * Mathf.Clamp01(x / ROW_WIDTH));
+            float top = ROW_HEIGHT / 2f - half;
+            float right = ROW_WIDTH - TIP * Mathf.Clamp01((y - top) / (2f * half));
+            inside = Mathf.Min(half - Mathf.Abs(y - ROW_HEIGHT / 2f), Mathf.Min(x, right - x));
+        }
         float alpha = Mathf.Clamp01(inside * BANNER_DETAIL + 0.5f);
         if (alpha <= 0f)
             return Color.clear;
@@ -267,25 +442,34 @@ public class Scoreboard : MonoBehaviour
         return colour;
     }
 
-    // The row's shape, drawn the first time it's needed
-    static Sprite Banner()
+    // The row's shape, full or compact, each drawn the first time it's needed
+    static Sprite Banner(bool compact)
     {
-        if (banner == null)
+        Sprite cached = compact ? compactBanner : banner;
+        if (cached == null)
         {
-            int width = Mathf.CeilToInt(ROW_WIDTH * BANNER_DETAIL);
+            int width = Mathf.CeilToInt((compact ? COMPACT_ROW_WIDTH : ROW_WIDTH) * BANNER_DETAIL);
             int height = Mathf.CeilToInt(ROW_HEIGHT * BANNER_DETAIL);
             Color[] pixels = new Color[width * height];
             for (int py = 0; py < height; py++)
             {
                 for (int px = 0; px < width; px++)
-                    pixels[py * width + px] = BannerAt((px + 0.5f) / BANNER_DETAIL, ROW_HEIGHT - (py + 0.5f) / BANNER_DETAIL);
+                    pixels[py * width + px] = BannerAt((px + 0.5f) / BANNER_DETAIL, ROW_HEIGHT - (py + 0.5f) / BANNER_DETAIL, compact);
             }
-            Texture2D texture = new Texture2D(width, height, TextureFormat.RGBA32, false) { name = "Scoreboard Row", wrapMode = TextureWrapMode.Clamp };
+            Texture2D texture = new Texture2D(width, height, TextureFormat.RGBA32, false)
+            {
+                name = compact ? "Scoreboard Compact Row" : "Scoreboard Row",
+                wrapMode = TextureWrapMode.Clamp
+            };
             texture.SetPixels(pixels);
             texture.Apply();
-            banner = Sprite.Create(texture, new Rect(0, 0, width, height), new Vector2(0f, 1f));
+            cached = Sprite.Create(texture, new Rect(0, 0, width, height), new Vector2(0f, 1f));
+            if (compact)
+                compactBanner = cached;
+            else
+                banner = cached;
         }
-        return banner;
+        return cached;
     }
 
     void LateUpdate()
@@ -302,9 +486,22 @@ public class Scoreboard : MonoBehaviour
             return;
         }
 
+        // Where the board sits and how its rows are laid out follow the local players' split of the screen
+        BoardLayout layout = LayoutFor(players.Roster.LocalCount, SplitScreenLayout.TwoPlayers);
+        if (Relays(shownLayout, layout))
+        {
+            Clear();
+            shownLayout = layout;
+        }
+        // Every frame, not just on a relayout: Awake doesn't place the board and Relays never fires for one player
+        board.anchorMin = board.anchorMax = layout.Anchor;
+        board.anchoredPosition = layout.LeftEdge ? new Vector2(LEFT, 0f) : Vector2.zero;
+        float canvasWidth = ((RectTransform)transform).rect.width; // reference units; 0 until the canvas is first laid out
+        float boardScale = BoardScaleFor(layout, TextSize.Scale, canvasWidth > 0f ? canvasWidth : 1920f);
+
         bool showing = ShowsIn(state);
         if (showing)
-            KeepRowsFor(players.Roster);
+            KeepRowsFor(players.Roster, layout, StripGap(boardScale));
         canvas.enabled = showing && rows.Count > 0;
         if (!canvas.enabled)
             return;
@@ -317,9 +514,9 @@ public class Scoreboard : MonoBehaviour
         foreach (Row row in rows)
             seats.Add(row.Seat);
         List<int> ranked = Ranking(seats, MoneyIn);
-        float[] tops = RowTops(ranked.Count);
+        Vector2[] spots = CellSpots(layout, ranked.Count, StripGap(boardScale));
         float step = 1f - Mathf.Exp(-SLIDE_SPEED * Time.unscaledDeltaTime);
-        board.localScale = Vector3.one * (BOARD_SCALE * TextSize.Scale);
+        board.localScale = Vector3.one * boardScale;
         float clock = Time.unscaledTime; // the slide's and the flame's clock: the "+$" and count-up use it too
         int flame = Mathf.FloorToInt(clock * FLAME_FPS);
         WatchLead(ranked, MoneyIn, HouseRules.Playing.Mode);
@@ -331,7 +528,7 @@ public class Scoreboard : MonoBehaviour
             bool steam = FirstWithId(row.Seat, id, ids);
             row.Show(NameIn(row.Seat, players.Roster, steam), MoneyIn(row.Seat), OrderSync.HandlerIn(row.Seat),
                 steam ? SteamAvatars.Get(id) : null, flame, clock);
-            row.MoveTowards(tops[rank], rank == 0 ? FIRST_SCALE : 1f, step);
+            row.MoveTowards(spots[rank], rank == 0 ? FIRST_SCALE : 1f, step);
         }
     }
 
@@ -437,8 +634,9 @@ public class Scoreboard : MonoBehaviour
         return PlayerNames.Fallback(seat);
     }
 
-    // A row for each seated player (rebuilt when a seat's player changes); a row whose player has gone goes too
-    void KeepRowsFor(PlayerRoster roster)
+    // A row for each seated player in the layout's form (rebuilt when a seat's player changes); a row whose player has
+    // gone goes too
+    void KeepRowsFor(PlayerRoster roster, BoardLayout layout, float stripGap)
     {
         for (int i = rows.Count - 1; i >= 0; i--)
         {
@@ -454,8 +652,9 @@ public class Scoreboard : MonoBehaviour
             PlayerSlot slot = roster[seat];
             if (slot == null || slot.Player == null || rows.Exists(r => r.Seat == seat))
                 continue;
-            float[] tops = RowTops(rows.Count + 1);
-            rows.Add(new Row(board, seat, slot.Player, GhostPortrait.Of(HighlightReel.Avatar(slot), seat, portraits), tops[tops.Length - 1]));
+            Vector2[] spots = CellSpots(layout, rows.Count + 1, stripGap);
+            rows.Add(new Row(board, seat, slot.Player, GhostPortrait.Of(HighlightReel.Avatar(slot), seat, portraits),
+                spots[spots.Length - 1], layout.Compact));
         }
     }
 
@@ -480,7 +679,7 @@ public class Scoreboard : MonoBehaviour
         public readonly GameObject Player;
         readonly RectTransform rect;
         readonly RawImage picture;
-        readonly TMP_Text nameText;
+        readonly TMP_Text nameText;   // null on a compact row, which shows no name
         readonly TMP_Text moneyText;
         readonly Image[] icons = new Image[2];
         readonly Image[] flames = new Image[2];
@@ -503,20 +702,23 @@ public class Scoreboard : MonoBehaviour
 
         public bool CrownShown => crown.activeSelf;
 
-        public Row(RectTransform board, int seat, GameObject player, GhostPortrait ghost, float top)
+        /// <summary>
+        /// A row for a seat, its top left at a spot on the board. A compact row has no name: its money follows the picture
+        /// </summary>
+        public Row(RectTransform board, int seat, GameObject player, GhostPortrait ghost, Vector2 spot, bool compact)
         {
             Seat = seat;
             Player = player;
             this.ghost = ghost;
 
             float x = 0f;
-            rect = Box(board, "Row " + (seat + 1), new Vector2(ROW_WIDTH, ROW_HEIGHT), Color.white);
-            rect.GetComponent<Image>().sprite = Banner();
+            rect = Box(board, "Row " + (seat + 1), new Vector2(compact ? COMPACT_ROW_WIDTH : ROW_WIDTH, ROW_HEIGHT), Color.white);
+            rect.GetComponent<Image>().sprite = Banner(compact);
             fade = rect.gameObject.AddComponent<CanvasGroup>();
             fade.interactable = fade.blocksRaycasts = false;
             rect.anchorMin = rect.anchorMax = new Vector2(0f, 0.5f);
             rect.pivot = new Vector2(0f, 1f);
-            rect.anchoredPosition = new Vector2(0f, top);
+            rect.anchoredPosition = spot;
 
             // The picture, in a thick black frame filling the row's height
             RectTransform frame = Box(rect, "Picture Frame", new Vector2(ROW_HEIGHT, ROW_HEIGHT), INK);
@@ -549,8 +751,11 @@ public class Scoreboard : MonoBehaviour
             crown.SetActive(false);
             x += ROW_HEIGHT + PAD;
 
-            nameText = Label(rect, "Name", x, NAME_WIDTH, 28f, FontStyles.Bold);
-            x += NAME_WIDTH;
+            if (!compact)
+            {
+                nameText = Label(rect, "Name", x, NAME_WIDTH, 28f, FontStyles.Bold);
+                x += NAME_WIDTH;
+            }
             moneyText = Label(rect, "Money", x, MONEY_WIDTH, 26f, FontStyles.Normal);
             // The "+$" of a recent gain: small, in the top of the money column, over the number, so the row doesn't grow
             gainText = Label(rect, "Money Gain", x, MONEY_WIDTH, GAIN_SIZE, FontStyles.Bold);
@@ -598,7 +803,7 @@ public class Scoreboard : MonoBehaviour
         /// <summary>One frame of the row: its texts, picture and packages. The clock times the "+$" and the count-up</summary>
         public void Show(string name, int money, OrderHandler handler, Texture steamPicture, int flameFrame, float now)
         {
-            if (name != shownName)
+            if (nameText != null && name != shownName)
             {
                 shownName = name;
                 nameText.text = name;
@@ -692,11 +897,14 @@ public class Scoreboard : MonoBehaviour
             FontStyles style = infection && !infected ? FontStyles.Normal : FontStyles.Bold;
             if (eliminated)
                 style |= FontStyles.Strikethrough;
-            if (nameText.fontStyle != style)
-                nameText.fontStyle = style;
-            Color nameColour = infected ? ModeIcons.RED : INK;
-            if (nameText.color != nameColour)
-                nameText.color = nameColour;
+            if (nameText != null)
+            {
+                if (nameText.fontStyle != style)
+                    nameText.fontStyle = style;
+                Color nameColour = infected ? ModeIcons.RED : INK;
+                if (nameText.color != nameColour)
+                    nameText.color = nameColour;
+            }
             Color frameColour = infected ? ModeIcons.RED : INK;
             if (pictureFrame.color != frameColour)
                 pictureFrame.color = frameColour;
@@ -734,10 +942,10 @@ public class Scoreboard : MonoBehaviour
             }
         }
 
-        public void MoveTowards(float top, float scale, float step)
+        /// <summary>A step of the row's slide and grow towards its spot (its top left) and size</summary>
+        public void MoveTowards(Vector2 spot, float scale, float step)
         {
-            Vector2 at = rect.anchoredPosition;
-            rect.anchoredPosition = new Vector2(at.x, Mathf.Lerp(at.y, top, step));
+            rect.anchoredPosition = Vector2.Lerp(rect.anchoredPosition, spot, step);
             float size = Mathf.Lerp(rect.localScale.x, scale, step);
             rect.localScale = new Vector3(size, size, 1f);
         }

@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -52,6 +53,7 @@ public class ResultsAwardsView : MonoBehaviour
     const float GONE = 0.5f;    // the card of a player who left the vote
 
     Card[] cards;
+    readonly List<MoneySource> shown = new List<MoneySource>();
     TMP_Text[] scores;
     TMP_Text title;     // the scene's big title, moved to the top (null without one)
     int[] following;    // the seats Follow shows, while it listens
@@ -70,6 +72,10 @@ public class ResultsAwardsView : MonoBehaviour
         public GameObject VoteTag;
         public Image VoteBack;
         public GameObject AwardBlock;
+        public RectTransform AwardRect;
+        public TMP_Text[] Labels, Amounts;   // the breakdown's halves, in reading order (made once, reused)
+        public string Breakdown = "";        // the breakdown as text, "" with nothing to show
+        public float Extra;                  // how much taller than HEIGHT the breakdown makes the card
         public Vector2 Home;      // where it rests, in the cards' space
         public float Delay;       // seconds after the first card before it slides in
         public bool Named;        // whether ShowPlayer has filled its header
@@ -171,11 +177,28 @@ public class ResultsAwardsView : MonoBehaviour
 
         At(Box(card.Rect, "Rule", null, RULE, false).rectTransform, PAD, -PAD - HEADER - 2f, WIDTH - 2f * PAD, 2f);
 
+        // The breakdown: up to four sources, two to a row, under the rule (label left, amount right in each half)
+        float half = (WIDTH - 2f * PAD) / 2f;
+        card.Labels = new TMP_Text[MoneyRules.SOURCES];
+        card.Amounts = new TMP_Text[MoneyRules.SOURCES];
+        for (int i = 0; i < MoneyRules.SOURCES; i++)
+        {
+            float x = PAD + (i % 2) * half + (i % 2 == 0 ? 0f : 6f);
+            float y = BreakdownTop(i / 2);
+            card.Labels[i] = Text(card.Rect, "Source " + i, font, BreakdownRules.TEXT, MONEY, TextAlignmentOptions.MidlineLeft);
+            At(card.Labels[i].rectTransform, x, y, half - 6f, BreakdownRules.ROW);
+            card.Amounts[i] = Text(card.Rect, "Amount " + i, font, BreakdownRules.TEXT, MONEY, TextAlignmentOptions.MidlineRight);
+            At(card.Amounts[i].rectTransform, x, y, half - 6f, BreakdownRules.ROW);
+            card.Labels[i].gameObject.SetActive(false);
+            card.Amounts[i].gameObject.SetActive(false);
+        }
+
         // The award
         card.AwardBlock = new GameObject("Award", typeof(RectTransform));
         RectTransform award = (RectTransform)card.AwardBlock.transform;
         award.SetParent(card.Rect, false);
-        At(award, PAD, -PAD - HEADER - 8f, WIDTH - 2f * PAD, AWARD);
+        card.AwardRect = award;
+        At(award, PAD, AwardTop(0f), WIDTH - 2f * PAD, AWARD);
         card.Award = Text(award, "Name", font, 50f, GOLD, TextAlignmentOptions.Bottom);
         At(card.Award.rectTransform, 0f, -6f, WIDTH - 2f * PAD, 66f);
         card.Line = Text(award, "Line", font, 30f, Color.white, TextAlignmentOptions.Top);
@@ -198,6 +221,10 @@ public class ResultsAwardsView : MonoBehaviour
         return card;
     }
 
+    // From the card's top: a breakdown row's top, and the award block's (under the breakdown's rows)
+    static float BreakdownTop(int row) { return -PAD - HEADER - 5f - row * BreakdownRules.ROW; }
+    static float AwardTop(float extra) { return -PAD - HEADER - 8f - extra; }
+
     /// <summary>The card of a score (finishing order); tests</summary>
     internal GameObject CardOf(int score) { return cards[score]?.Root; }
     internal string PlayerName(int score) { return cards[score].Player.text; }
@@ -208,6 +235,8 @@ public class ResultsAwardsView : MonoBehaviour
     internal string AwardLine(int score) { return cards[score].Line.text; }
     internal bool AwardShown(int score) { return cards[score].AwardBlock.activeSelf; }
     internal string VoteText(int score) { return cards[score].VoteTag.activeSelf ? cards[score].Vote.text : ""; }
+    internal string BreakdownText(int score) { return cards[score].Breakdown; }
+    internal float CardHeight(int score) { return cards[score].Rect.sizeDelta.y; }
     internal TMP_Text Title => title;
 
     /// <summary>
@@ -262,7 +291,35 @@ public class ResultsAwardsView : MonoBehaviour
             card.AwardBlock.SetActive(award != Award.None);
             card.Award.text = AwardRules.Name(award);
             card.Line.text = AwardRules.Line(award, board.CountOf(seat));
+            ShowBreakdown(card, board, seat);
         }
+    }
+
+    // The sources that paid, two to a row under the rule; the card grows by the rows (upward: its pivot is its bottom
+    // edge) and the award keeps its place against the bottom. Set from scratch each time, so a second Show never stacks
+    void ShowBreakdown(Card card, AwardBoard board, int seat)
+    {
+        BreakdownRules.Shown(board, seat, shown);
+        card.Extra = BreakdownRules.ExtraHeight(shown.Count);
+        card.Rect.sizeDelta = new Vector2(WIDTH, HEIGHT + card.Extra);
+        card.AwardRect.anchoredPosition = new Vector2(PAD, AwardTop(card.Extra));
+        System.Text.StringBuilder text = new System.Text.StringBuilder();
+        for (int i = 0; i < MoneyRules.SOURCES; i++)
+        {
+            bool used = i < shown.Count;
+            card.Labels[i].gameObject.SetActive(used);
+            card.Amounts[i].gameObject.SetActive(used);
+            if (!used)
+                continue;
+            string label = Loc.Get(BreakdownRules.Key(shown[i]));
+            string amount = "$" + board.MoneyOf(seat, shown[i]);
+            card.Labels[i].text = label;
+            card.Amounts[i].text = amount;
+            if (i > 0)
+                text.Append(i % 2 == 0 ? "\n" : " | ");
+            text.Append(label).Append(' ').Append(amount);
+        }
+        card.Breakdown = text.ToString();
     }
 
     // Each card's picture, as its source has it now

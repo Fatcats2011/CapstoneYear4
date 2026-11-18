@@ -7,6 +7,7 @@ using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.LowLevel;
 using UnityEngine.TestTools;
+using static DoA.Tests.TestHelpers;
 
 namespace DoA.Tests
 {
@@ -26,17 +27,6 @@ namespace DoA.Tests
 
             EditorSceneManager.playModeStartScene = null;
             TestPlayers.RemoveAll();
-        }
-
-        static bool AtTitleScreen()
-        {
-            return GameManager.Instance != null && GameManager.Instance.MainState == GameState.Menu;
-        }
-
-        static IEnumerator WaitSeconds(float seconds)
-        {
-            for (float until = Time.realtimeSinceStartup + seconds; Time.realtimeSinceStartup < until;)
-                yield return null;
         }
 
         static bool IsGamepadNorth(InputBinding binding)

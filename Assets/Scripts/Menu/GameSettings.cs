@@ -7,6 +7,9 @@ using UnityEngine;
 /// </summary>
 public class GameSettings
 {
+    /// <summary>The file the settings are saved in, in Application.persistentDataPath</summary>
+    public const string FILE_NAME = "settings.cfg";
+
     public const int MAX_VOLUME_POSITION = 11;
 
     public int bgmPosition;
@@ -73,6 +76,9 @@ public class GameSettings
     /// <summary>The language picked on Options → LANGUAGE (a locale code); "" until picked: Steam's then (LanguageRules)</summary>
     public string language = "";
 
+    /// <summary>The first-time hints this machine has shown, one bit each (Hints, HintRules)</summary>
+    public int hintsSeen = 0;
+
     public GameSettings(int bgmPosition, int sfxPosition, int fullscreenPosition, int qualityLevel = GraphicsQuality.HIGH)
     {
         this.bgmPosition = bgmPosition;
@@ -92,7 +98,23 @@ public class GameSettings
             + $"rumble={rumble}\ncolourblind={colourblind}\ntextsize={textSize}\n"
             + $"length={matchLength}\nsteals={steals}\ngolden={goldenOrder}\nbots={bots}\n"
             + $"mode={mode}\nwaves={waves}\nspeed={speed}\nlowgravity={lowGravity}\nround={roundMinutes}\n"
-            + $"language={language}\n";
+            + $"language={language}\n" + $"hints={hintsSeen}\n";
+    }
+
+    ///<summary>
+    /// The saved text with its hints line set to the mask and every other line kept as it is (a match can save hints when
+    /// no menu is alive to write the whole file)
+    ///</summary>
+    public static string WithHints(string text, int mask)
+    {
+        System.Text.StringBuilder result = new System.Text.StringBuilder();
+        foreach (string line in (text ?? "").Split('\n'))
+        {
+            string kept = line.TrimEnd('\r');
+            if (kept.Length > 0 && kept.Split('=')[0].Trim() != "hints")
+                result.Append(kept).Append('\n');
+        }
+        return result.Append("hints=").Append(mask.ToString(CultureInfo.InvariantCulture)).Append('\n').ToString();
     }
 
     ///<summary>
@@ -134,6 +156,7 @@ public class GameSettings
         copy.lowGravity = lowGravity;
         copy.roundMinutes = roundMinutes;
         copy.language = language;
+        copy.hintsSeen = hintsSeen;
         return copy;
     }
 
@@ -248,6 +271,9 @@ public class GameSettings
                     break;
                 case "round":
                     settings.roundMinutes = HouseRules.Nearest(HouseRules.RoundChoices, value);
+                    break;
+                case "hints":
+                    settings.hintsSeen = Mathf.Max(value, 0);
                     break;
             }
         }

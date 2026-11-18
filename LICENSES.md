@@ -47,6 +47,7 @@ Inventory for the Steam release (2026-09-22). "Used" = referenced by a build sce
   - `thud.ogg` (a bump that takes nothing): `impactSoft_medium_001.ogg` from Impact Sounds 1.0, https://kenney.nl/assets/impact-sounds
   - `cursed.ogg` (the cursed package lands on a player, Hot Potato): `error_006.ogg` from Interface Sounds 1.0, https://kenney.nl/assets/interface-sounds
   - `warning.ogg` (30 seconds left, Kings Crown and Infection): `impactBell_heavy_002.ogg` from Impact Sounds 1.0, https://kenney.nl/assets/impact-sounds
+  - `pad.ogg` (a scooter crosses a boost pad; picked by the user 2026-11-16): `maximize_006.ogg` from Interface Sounds 1.0, https://kenney.nl/assets/interface-sounds
   - Loaded by name (`FeedbackSounds`), not through an Audio Object. A `steal` file placed here would replace the Steal whoosh above, which still plays.
 
 ## Art, models, textures

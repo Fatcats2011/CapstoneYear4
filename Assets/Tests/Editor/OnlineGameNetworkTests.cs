@@ -7,6 +7,7 @@ using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.LowLevel;
 using UnityEngine.TestTools;
+using static DoA.Tests.TestHelpers;
 
 namespace DoA.Tests
 {
@@ -50,35 +51,9 @@ namespace DoA.Tests
             SceneFlow.Current = null;
         }
 
-        static bool AtTitleScreen()
-        {
-            return GameManager.Instance != null && GameManager.Instance.MainState == GameState.Menu;
-        }
-
-        static PlayerSlot Slot(int index)
-        {
-            return PlayerInstantiate.Instance.Roster[index];
-        }
-
-        static OnlinePlayer PlayerInSeat(OnlineSession session, int seat)
-        {
-            foreach (OnlinePlayer player in session.Players)
-            {
-                if (player.Seat == seat)
-                    return player;
-            }
-            return null;
-        }
-
         static void PressA(Gamepad pad)
         {
             Press(pad, GamepadButton.South);
-        }
-
-        static void Press(Gamepad pad, GamepadButton button)
-        {
-            InputSystem.QueueStateEvent(pad, new GamepadState().WithButton(button));
-            InputSystem.QueueStateEvent(pad, new GamepadState());
         }
 
         // The colour a local player picked in player select
@@ -433,12 +408,6 @@ namespace DoA.Tests
             while (sessionHost.PlayersIn > 1 && Time.realtimeSinceStartup < deadline)
                 yield return null;
             sessionHost.Leave();
-        }
-
-        static IEnumerator WaitSeconds(float seconds)
-        {
-            for (float until = Time.realtimeSinceStartup + seconds; Time.realtimeSinceStartup < until;)
-                yield return null;
         }
 
         // Ready up again with the controller (menus ignore buttons for a moment, so keep pressing) until the countdown runs

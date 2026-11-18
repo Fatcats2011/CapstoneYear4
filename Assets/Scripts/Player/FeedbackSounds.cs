@@ -3,7 +3,7 @@ using UnityEngine;
 
 /// <summary>
 /// The sounds that tell a player what just happened to them: a steal, being robbed, a bump that took nothing, the cursed
-/// package landing on them, 30 seconds left. Their clips
+/// package landing on them, 30 seconds left, crossing a boost pad. Their clips
 /// load by name from Resources/Audio/Feedback, so no scene or prefab holds them (each file's source and licence is in
 /// LICENSES.md). A sound whose file isn't there is no sound: the game plays without it. The steal has no file, so it
 /// keeps the game's own whoosh (the user's call, 2026-11-14); a "steal" file dropped in the folder would replace it.
@@ -22,6 +22,8 @@ public static class FeedbackSounds
     public const string CURSED = "cursed";
     /// <summary>A timed round has 30 seconds left: every player hears it</summary>
     public const string WARNING = "warning";
+    /// <summary>A scooter crosses a boost pad: only the player driving it hears it</summary>
+    public const string PAD = "pad";
 
     // The files peak at about -1 dB. The music plays at 0.1 to 0.3 and the pickup at 0.6 of a much quieter file, so
     // these are turned down to be heard over the music without standing over everything else. The thud is nearly all
@@ -31,6 +33,8 @@ public static class FeedbackSounds
     const float THUD_VOLUME = 0.6f;
     const float CURSED_VOLUME = 0.5f;
     const float WARNING_VOLUME = 0.6f;
+    // Pads come often, so the pad's sweep sits under the other feedback sounds
+    const float PAD_VOLUME = 0.35f;
 
     /// <summary>How loud a sound plays, 0 to 1</summary>
     public static float Volume(string name)
@@ -40,6 +44,7 @@ public static class FeedbackSounds
             case THUD: return THUD_VOLUME;
             case CURSED: return CURSED_VOLUME;
             case WARNING: return WARNING_VOLUME;
+            case PAD: return PAD_VOLUME;
             default: return ROBBED_VOLUME;
         }
     }

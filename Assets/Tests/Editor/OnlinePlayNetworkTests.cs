@@ -8,6 +8,7 @@ using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.LowLevel;
 using UnityEngine.TestTools;
+using static DoA.Tests.TestHelpers;
 
 namespace DoA.Tests
 {
@@ -52,11 +53,6 @@ namespace DoA.Tests
             SceneFlow.Current = null;
         }
 
-        static GameState State()
-        {
-            return GameManager.Instance == null ? GameState.Default : GameManager.Instance.MainState;
-        }
-
         static bool AtTitleScreen()
         {
             return State() == GameState.Menu;
@@ -71,23 +67,6 @@ namespace DoA.Tests
         {
             PlayerSlot player = PlayerInstantiate.Instance.Roster[slot];
             return player != null && player.IsLocal;
-        }
-
-        static PlayerSlot Slot(int index)
-        {
-            return PlayerInstantiate.Instance.Roster[index];
-        }
-
-        static void Press(Gamepad pad, GamepadButton button)
-        {
-            InputSystem.QueueStateEvent(pad, new GamepadState().WithButton(button));
-            InputSystem.QueueStateEvent(pad, new GamepadState());
-        }
-
-        static IEnumerator WaitSeconds(float seconds)
-        {
-            for (float until = Time.realtimeSinceStartup + seconds; Time.realtimeSinceStartup < until;)
-                yield return null;
         }
 
         static IEnumerator WaitForOnlinePlay()

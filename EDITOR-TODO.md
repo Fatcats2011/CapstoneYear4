@@ -160,6 +160,17 @@ The room scene and the board are set up (`DispatchRoom`, `RoomClock`, the board 
 - Community → Rich Presence: upload `docs/steam/rich-presence-english.vdf`.
 - Store page and tags: `docs/steam/store-page-draft.md`. Steam Deck: `docs/steam/steam-deck.md`.
 
+## 15b. Steamworks "Your Game Build" checklist (checked 2026-11-17)
+
+Done on the dashboard: Developer Comp and Beta Testing packages now hold the Mac and Linux depots (match the store package); "no redistributables needed" ticked (the build imports no VC++ runtime); Auto-Cloud syncs `settings.cfg` and `bindings.cfg`, and the Linux path is fixed to `unity3d/`.
+
+Published 2026-11-17 (with the 16 Nov OS list and icons): every DEPOTS item is ticked. Left:
+
+- **Files Saved to Steam Cloud (5 minutes):** launch the game from Steam, change one option, quit. The cloud icon on the game's library page should say it's synced.
+- **Pricing (needs your decision):** store package 1915201 → Propose Pricing. Valve reviews it; "Published Pricing" ticks once approved.
+- **Gameplay trailer on the store:** cut it from `../TrailerFootage` (`tools/trailer`), upload under Edit Store Page → Trailers.
+- **Submit the build for review (3–5 business days):** the three ticks ("tested on a different PC", "review team can access all content", "all store-page features are in") are honest only after the playtests in 16–16m and a fresh build on `default`.
+
 ## 16. Highlight reel: playtest (30 minutes)
 
 - Watch a full local round to time up: the reel plays, skips with everyone holding A, and the golden round (or results, if it's off) loads after.
@@ -303,6 +314,75 @@ Play Kings Crown, Infection and Hot Potato with 4 players (bots are fine) in spl
 - **Sounds:** the cursed-package and 30-second sounds can be heard over the music without drowning it. Tell Claude "louder" or "quieter" for either.
 - **Online:** both machines show the same tags and lines for the same event.
 
+## 16k. Orders and where to go: playtest (20 minutes)
+
+Play Standard with 4 players (bots are fine) in split screen, then in two editors online.
+
+- **Rival warning** (a small red chevron at the edge of your own view, only while you carry an order):
+  - A rival within about 30 m who could steal: a dim chevron on their side (left, right, or bottom middle for behind). A rival you can see in front: no mark.
+  - A rival boosting at you: the chevron pulses bright and your pad shakes once.
+  - A rival holding two orders, or steals switched off in the rules: no mark.
+  - Is the side right? Does it show too often in a crowd, or too late to react? Tell Claude "further", "nearer", "smaller" and so on.
+  - Reduce motion on: the chevron doesn't pulse.
+- **Beacon prices:**
+  - Every pickup beacon shows a small gold price under its floating icon: `$55`, `$65`, `$80`. The golden order shows none; the Mother Lode (Gold Rush) shows `$250`.
+  - Steal an order and drop it: its price has doubled.
+  - Can you read it in a quarter-screen view, near and far?
+- **Drop-off marks:** carry two orders: each drop-off's compass mark shows its own package icon and price.
+- **Online:** both machines show the same prices; each player's warning is their own.
+
+## 16l. Results breakdown and first-time hints: playtest (20 minutes)
+
+- **Results cards** (play a full match with 4 players, bots are fine; then one online in two editors):
+  - Under each score: small lines such as `Deliveries $520`, `Steals $21`, two to a row. Only sources that paid show.
+  - Add them up: they equal the score on the card.
+  - Steal an order and deliver it: Steals gains the extra it paid, not only the $7.
+  - Kings Crown or Gold Rush: a `Mode` line appears. A golden round: a `Golden` line.
+  - The winner's card with all four lines: is it clear of the ghosts and the title? Tell Claude if it overlaps.
+  - Online: the client's cards show the same amounts as the host's.
+  - Can you read the lines at 16 px on your screen and on the Steam Deck?
+- **Hints** (delete the `hints=` line in `settings.cfg`, or set it to 0, to see them again):
+  - Bump a rival without boosting: `BOOST INTO RIVALS TO STEAL`, once.
+  - Get robbed: `BOOST TO BLOCK A THIEF`, after the robbed line, once.
+  - Steal an order: `STOLEN ORDERS PAY DOUBLE`, after the steal line, once.
+  - Pick up the golden order: `HOLD GOLD LONGER, EARN MORE`, once.
+  - Each stays about 4 seconds, never shows in the tutorial, and never comes back after a restart.
+  - Split screen: only the player it happened to sees it. Online: as a client, the bump hint still shows.
+  - Change the language: the longest hints still fit the line.
+
+## 16m. Boost pads and respawn line: playtest (10 minutes)
+
+- **Boost pads:**
+  - Cross one: the speed lines flash on for half a second, your pad shakes lightly once, and you hear a short rising sweep.
+  - Cross a row of pads, or sit on one: still one flash, one shake, one sound.
+  - Faster crossings sound slightly higher.
+  - Is the sound right for a boost pad? It is an interface-style sweep, not a whoosh. Too loud or too often? Tell Claude "quieter", "louder", or "find a whoosh" (that needs your OK for a new CC0 download).
+  - Reduce motion on: no speed lines. Rumble off: no shake.
+  - Split screen: only the player on the pad hears and feels it. Bots make no sound.
+- **Respawn:**
+  - Drive into the water: your line reads `FELL IN THE RIVER`, and it is gone by the time you drive again.
+  - No countdown shows: the respawn takes about 2 seconds, too short to count.
+  - Online as a client: the same line.
+
+## 16n. Split-screen scoreboard: playtest (10 minutes)
+
+- **1 player** (bots on, or online alone): the board is middle-left with names, as before.
+- **2 players, Boxed:** the board sits in the empty bar left of the two views, with names, and covers neither view.
+- **2 players, Side-by-side:** a compact column (picture, money, packages, no name) sits on the line between the views. It takes the same slice of both and doesn't block the road.
+- **2 players, Stacked:** a compact strip, ranked left to right, sits on the line between top and bottom.
+- **3 players:** the board fills the empty bottom-left corner, with names.
+- **4 players:** a 2 by 2 compact grid sits where the four views meet, first place top-left. Each view gets one cell.
+- In the centre layouts check nothing collides with the steal callout, the mode info box or reconnect prompts.
+- **Stacked:** the strip splits round a gap in the middle. The bottom player's compass stays fully visible.
+- **Text size 150%:**
+  - Boxed and 3 players: the board stays inside the black space and fully on screen.
+  - Centre boards (Side-by-side, Stacked, 4 players) don't grow.
+  - Side-by-side: the column stays clear of the mode info box.
+  - 4 players in Hot Potato: the grid stays clear of the spectating label.
+- **A pad joining mid-match:** the board changes layout at once, with no stray or doubled rows. Unplug it and the board changes back.
+- **Options > Display > Split-screen mid-match** (with 2 players): the board follows each choice at once.
+- Money, +$, packages and crowns still update in every layout.
+
 ## 16c. Accessibility: to build, then playtest
 
 For Steam's store-page accessibility section. None of these exist yet. Today Options → ACCESSIBILITY has only Reduce motion.
@@ -323,6 +403,7 @@ For Steam's store-page accessibility section. None of these exist yet. Today Opt
 - Frame rate: `docs/performance.md`.
 - Online safety: `docs/online-safety.md`.
 - How the keyboard and display settings work: `docs/controls.md`. Steam features: `docs/steam/in-game-features.md`.
+- What's left before launch: `docs/launch-checklist.md`.
 - What's next: `docs/superpowers/plans/2026-10-01-remaining-work-handoff.md`.
 - Bots path on the **Scooter** NavMesh (agent type Scooter; a NavMesh Surface for it in `Design Scene(Main)` and `FinalAreaScene`). After moving roads, walls or buildings, select that surface and **Bake** again, then save the scene. Its NavMesh Modifiers keep rocks, walls, buildings and the pedestrians' road blockers out; kickables are left out of the bake.
 

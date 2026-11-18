@@ -8,7 +8,6 @@ public class ResultsMovementController : MonoBehaviour
     [SerializeField] private Transform[] playerSpawns;
     [SerializeField] private GameObject enableThisForResults;
     [SerializeField] private GameObject disableThisForResults;
-    [SerializeField] private float timePerBoost = 1f;
 
     private void OnEnable()
     {

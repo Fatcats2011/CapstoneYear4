@@ -40,6 +40,22 @@ public class StealCallout : MonoBehaviour
     string leadWords;
     CalloutTone leadTone;
 
+    // A first-time hint waiting its turn (one: a hint heard while one waits is left for next time), and whether the line up
+    // is a hint, which stays HINT_SECONDS instead of CALLOUT_SECONDS
+    bool hintHeld;
+    HintKind hintKind;
+    bool hintUp;
+
+    // The respawn countdown: whether the line up is one of its lines (the fell line or a number), whether the player is
+    // rising (counting), the seconds left, and the number on screen now (0: none, or an event line replaced it)
+    bool respawnUp;
+    bool respawnCounting;
+    float respawnLeft;
+    int respawnNumber;
+
+    /// <summary>The countdown number on screen now: 0 when none is (no count, or another line is up)</summary>
+    internal int RespawnNumber { get { return respawnNumber; } }
+
     static float RealTime()
     {
         return Time.unscaledTime;
@@ -84,6 +100,10 @@ public class StealCallout : MonoBehaviour
         ScoreFeedback.LeadTaken += HearLead;
         ModeFeedback.Said += HearMode;
         ModeFeedback.Warned += HearWarning;
+        Hints.Offered += HearHint;
+        RespawnFeedback.Fell += HearFell;
+        RespawnFeedback.Rising += HearRising;
+        RespawnFeedback.Back += HearBack;
     }
 
     void OnDisable()
@@ -93,6 +113,10 @@ public class StealCallout : MonoBehaviour
         ScoreFeedback.LeadTaken -= HearLead;
         ModeFeedback.Said -= HearMode;
         ModeFeedback.Warned -= HearWarning;
+        Hints.Offered -= HearHint;
+        RespawnFeedback.Fell -= HearFell;
+        RespawnFeedback.Rising -= HearRising;
+        RespawnFeedback.Back -= HearBack;
     }
 
     void OnDestroy()
@@ -141,6 +165,9 @@ public class StealCallout : MonoBehaviour
         line.color = tone == CalloutTone.Thief ? GameCard.GOLD : tone == CalloutTone.Victim ? ModeIcons.RED : Color.white;
         shownAt = Clock();
         gainUp = false;
+        hintUp = false;
+        respawnUp = false;
+        respawnNumber = 0;
     }
 
     /// <summary>
@@ -260,20 +287,150 @@ public class StealCallout : MonoBehaviour
             sounds.PlayFeedback(name);
     }
 
+    /// <summary>
+    /// A first-time hint was offered to a seat: this player's, if it is their seat. It shows once no line is up or the
+    /// line up has had its moment, so it never cuts an event line; it stays HINT_SECONDS, and any newer line replaces it.
+    /// It is taken (marked seen and saved) only as it shows: one that waits and never gets its turn (the match ends) is
+    /// offered again another time. A hint heard while another waits is left unseen for next time
+    /// </summary>
+    internal void HearHint(int seat, HintKind kind)
+    {
+        if (player == null || seat < 0 || seat != OrderSync.SeatOf(player) || hintHeld)
+            return;
+        if (HintRules.Seen(Hints.Seen, kind))
+            return;
+
+        hintKind = kind;
+        if (LineIsFresh() || leadHeld)
+        {
+            hintHeld = true;
+            return;
+        }
+
+        ShowHint();
+    }
+
+    void ShowHint()
+    {
+        hintHeld = false;
+        // Another player on this machine may have been shown it while it waited
+        if (!Hints.Take(hintKind))
+            return;
+        Show(Loc.Get(HintRules.Key(hintKind)), CalloutTone.Plain);
+        hintUp = true;
+    }
+
+    /// <summary>This player went in the water: the fell line shows at once, in place of any line (the player just fell), and the count waits for the rise</summary>
+    internal void HearFell(int seat)
+    {
+        if (!IsMySeat(seat))
+            return;
+
+        respawnCounting = false;
+        Show(Loc.Get("respawn.fell"), CalloutTone.Plain);
+        respawnUp = true;
+    }
+
+    /// <summary>This player's respawn began its rise: the count starts, with this long until they drive again</summary>
+    internal void HearRising(int seat, float secondsLeft)
+    {
+        if (!IsMySeat(seat))
+            return;
+
+        // A wait too short to count (today's respawn) shows no numbers
+        respawnCounting = DrivingFeedbackRules.Counted(secondsLeft);
+        respawnLeft = secondsLeft;
+    }
+
+    /// <summary>
+    /// This player drives again, or their respawn was stopped: the count ends. A countdown line (or the fell line) still up
+    /// is cleared at once, so it doesn't linger while they drive; an event line is left to finish
+    /// </summary>
+    internal void HearBack(int seat)
+    {
+        if (!IsMySeat(seat))
+            return;
+
+        respawnCounting = false;
+        if (respawnUp)
+            ClearLine();
+    }
+
+    /// <summary>
+    /// Time passes on the game's clock (Update passes Time.deltaTime: zero while paused, so a pause holds the count). While
+    /// the player is rising it lowers the time left and, when no line is fresh and no lead line or hint waits, shows the
+    /// number of seconds left whenever it is not the one on screen. The count's own line never holds back the next number.
+    /// It never shows 0: when the time runs out the count ends
+    /// </summary>
+    internal void TickRespawn(float deltaTime)
+    {
+        if (!respawnCounting)
+            return;
+
+        respawnLeft -= deltaTime;
+        int number = DrivingFeedbackRules.Countdown(respawnLeft);
+        if (number <= 0)
+        {
+            respawnCounting = false;
+            return;
+        }
+
+        bool otherFresh = LineIsFresh() && !(respawnUp && respawnNumber > 0);
+        if (otherFresh || leadHeld || hintHeld || number == respawnNumber)
+            return;
+
+        Show(Loc.Get("respawn.back", number), CalloutTone.Plain);
+        respawnUp = true;
+        respawnNumber = number;
+    }
+
+    bool IsMySeat(int seat)
+    {
+        return player != null && seat >= 0 && seat == OrderSync.SeatOf(player);
+    }
+
+    /// <summary>The match ended: nothing waits and no count runs</summary>
+    internal void EndMatch()
+    {
+        leadHeld = false;
+        hintHeld = false;
+        respawnCounting = false;
+    }
+
+    // Takes the line down at once
+    void ClearLine()
+    {
+        shownAt = -1f;
+        gainUp = false;
+        hintUp = false;
+        respawnUp = false;
+        respawnNumber = 0;
+        if (line != null)
+        {
+            line.text = "";
+            line.alpha = 0f;
+        }
+    }
+
     /// <summary>Whether a line is up that has not yet had GAIN_HOLD: a gain's, a steal's or another lead's. None is cut short</summary>
     bool LineIsFresh()
     {
         return shownAt >= 0f && Clock() - shownAt < GainFeedbackRules.GAIN_HOLD;
     }
 
-    /// <summary>Puts up a lead line that was waiting, once no line is still fresh. Update calls it every frame</summary>
+    /// <summary>Puts up a line that was waiting, once no line is still fresh: the lead line first, then a hint. Update calls it every frame</summary>
     internal void Tick()
     {
-        if (!leadHeld || LineIsFresh())
+        if (LineIsFresh())
             return;
 
-        leadHeld = false;
-        Show(leadWords, leadTone);
+        if (leadHeld)
+        {
+            leadHeld = false;
+            Show(leadWords, leadTone);
+        }
+        else if (hintHeld)
+            ShowHint();
     }
 
     void Update()
@@ -284,17 +441,23 @@ public class StealCallout : MonoBehaviour
         GameManager game = GameManager.Instance;
         GameState state = game != null ? game.MainState : GameState.Default;
         if (Scoreboard.EndsMatch(state))
-            leadHeld = false;
+            EndMatch();
         Tick();
-        if (shownAt < 0f)
+        TickRespawn(Time.deltaTime);
+        Fade(state);
+    }
+
+    /// <summary>Fades the line up now and clears it when its time is over (a hint's is HINT_SECONDS, any other line's CALLOUT_SECONDS) or the match ended</summary>
+    internal void Fade(GameState state)
+    {
+        if (line == null || shownAt < 0f)
             return;
 
-        float alpha = StealFeedbackRules.CalloutAlpha(Clock() - shownAt);
+        float age = Clock() - shownAt;
+        float alpha = hintUp ? HintRules.Alpha(age) : StealFeedbackRules.CalloutAlpha(age);
         if (alpha <= 0f || Scoreboard.EndsMatch(state))
         {
-            shownAt = -1f;
-            gainUp = false;
-            line.text = "";
+            ClearLine();
             alpha = 0f;
         }
         // Paused, the menus have the screen

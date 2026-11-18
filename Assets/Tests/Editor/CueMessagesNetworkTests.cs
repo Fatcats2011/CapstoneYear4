@@ -4,6 +4,7 @@ using NUnit.Framework;
 using UnityEditor.SceneManagement;
 using UnityEngine;
 using UnityEngine.TestTools;
+using static DoA.Tests.TestHelpers;
 
 namespace DoA.Tests
 {
@@ -72,11 +73,6 @@ namespace DoA.Tests
                 yield return new ExitPlayMode();
 
             GameAuthority.Role = NetworkRole.Offline;
-        }
-
-        static bool Sees(OnlineSession session, int players)
-        {
-            return session.Match != null && session.Players.Count == players;
         }
 
         [UnityTest]

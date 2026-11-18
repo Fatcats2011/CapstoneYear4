@@ -5,6 +5,7 @@ using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
 using UnityEngine.TestTools;
+using static DoA.Tests.TestHelpers;
 
 namespace DoA.Tests
 {
@@ -71,85 +72,14 @@ namespace DoA.Tests
             BumpSync.Reset();
         }
 
-        static GameState State()
-        {
-            return GameManager.Instance == null ? GameState.Default : GameManager.Instance.MainState;
-        }
-
-        static PlayerSlot Slot(int index)
-        {
-            return PlayerInstantiate.Instance.Roster[index];
-        }
-
-        static BallDriving ScooterIn(int slot)
-        {
-            return Slot(slot).Player.GetComponentInChildren<BallDriving>(true);
-        }
-
         static Rigidbody BallBody(int seat)
         {
             return ScooterIn(seat).Sphere.GetComponent<Rigidbody>();
         }
 
-        // A player on this machine drives their ball there and stops
-        static void PutBallAt(int seat, Vector3 spot)
-        {
-            Rigidbody ball = Slot(seat).Player.GetComponentInChildren<Rigidbody>();
-            ball.velocity = Vector3.zero;
-            ball.position = spot;
-            ball.transform.position = spot;
-        }
-
-        // Where a player who finished the tutorial waits: a city respawn point far from every order's beacons
-        static Vector3 CitySpot()
-        {
-            Vector3 best = Vector3.zero;
-            float bestGap = -1f;
-            Order[] orders = Object.FindObjectsOfType<Order>(true);
-            foreach (RespawnPoint point in Object.FindObjectsOfType<RespawnPoint>())
-            {
-                float gap = float.MaxValue;
-                foreach (Order order in orders)
-                {
-                    if (order.PickupPoint != null)
-                        gap = Mathf.Min(gap, Vector3.Distance(point.transform.position, order.PickupPoint.position));
-                    if (order.DropoffPoint != null)
-                        gap = Mathf.Min(gap, Vector3.Distance(point.transform.position, order.DropoffPoint.position));
-                }
-                if (gap > bestGap)
-                {
-                    bestGap = gap;
-                    best = point.transform.position;
-                }
-            }
-            return best;
-        }
-
-        static OnlineScooter ScooterInSeat(OnlineSession session, int seat)
-        {
-            foreach (OnlineScooter scooter in session.Scooters)
-            {
-                if (scooter.Seat == seat)
-                    return scooter;
-            }
-            return null;
-        }
-
-        // The machine that owns a scooter moves it there, as its OnlineDriving would
-        static void ShareAt(OnlineScooter scooter, Vector3 spot)
-        {
-            scooter.Share(new ScooterPose { Ball = spot, Heading = 0, ModelPosition = spot, ModelRotation = Quaternion.identity }, default(DriveFlags));
-        }
-
         static float Flat(Vector3 v)
         {
             return new Vector3(v.x, 0f, v.z).magnitude;
-        }
-
-        static IEnumerator WaitSeconds(float seconds)
-        {
-            for (float until = Time.realtimeSinceStartup + seconds; Time.realtimeSinceStartup < until;)
-                yield return null;
         }
 
         [UnityTest]

@@ -3,6 +3,7 @@ using NUnit.Framework;
 using UnityEditor.SceneManagement;
 using UnityEngine;
 using UnityEngine.TestTools;
+using static DoA.Tests.TestHelpers;
 
 namespace DoA.Tests
 {
@@ -27,16 +28,6 @@ namespace DoA.Tests
                 yield return new ExitPlayMode();
 
             GameAuthority.Role = NetworkRole.Offline;
-        }
-
-        static OnlineScooter ScooterInSeat(OnlineSession session, int seat)
-        {
-            foreach (OnlineScooter scooter in session.Scooters)
-            {
-                if (scooter.Seat == seat)
-                    return scooter;
-            }
-            return null;
         }
 
         static bool BothSeeBothScooters(OnlineSession host, OnlineSession client)

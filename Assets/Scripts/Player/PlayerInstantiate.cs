@@ -42,8 +42,6 @@ public class PlayerInstantiate : SingletonMonobehaviour<PlayerInstantiate>
     [SerializeField] bool[] playerReadyUp = new bool[Constants.MAX_PLAYERS];
     public event Action OnReadiedUp;
     int readyUpCounter = 0;
-    [Tooltip("Set to true when all players are readied up")]
-    [SerializeField] bool isAllReadedUp = false;
     internal Coroutine readyUpCountdown;
 
     [Header("Loading Screen Ready Information")]
@@ -669,8 +667,6 @@ public class PlayerInstantiate : SingletonMonobehaviour<PlayerInstantiate>
     ///</summary>
     public void DisableReadiedUp()
     {
-        isAllReadedUp = false;
-
         for (int i = 0; i < Constants.MAX_PLAYERS; i++)
         {
             playerReadyUp[i] = false;
@@ -713,7 +709,6 @@ public class PlayerInstantiate : SingletonMonobehaviour<PlayerInstantiate>
         }
         yield return new WaitForSeconds(3f);
 
-        isAllReadedUp = true;
         OnReadiedUp?.Invoke();
         readyUpCountdown = null;
     }

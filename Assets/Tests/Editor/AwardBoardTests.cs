@@ -1,4 +1,6 @@
 using NUnit.Framework;
+using Unity.Collections;
+using Unity.Netcode;
 
 namespace DoA.Tests
 {
@@ -63,6 +65,94 @@ namespace DoA.Tests
             board.Count1 = AwardBoard.MAX_COUNT + 1;
 
             Assert.IsFalse(NetChecks.Sane(board));
+        }
+
+        [Test]
+        public void Money_PerSeatAndSource()
+        {
+            AwardBoard board = ABoard();
+
+            board.SetMoney(0, MoneySource.Deliveries, 520);
+            board.SetMoney(0, MoneySource.Mode, 3);
+            board.SetMoney(3, MoneySource.Golden, 80);
+
+            Assert.AreEqual(520, board.MoneyOf(0, MoneySource.Deliveries));
+            Assert.AreEqual(3, board.MoneyOf(0, MoneySource.Mode));
+            Assert.AreEqual(0, board.MoneyOf(0, MoneySource.Steals));
+            Assert.AreEqual(80, board.MoneyOf(3, MoneySource.Golden));
+            Assert.AreEqual(0, board.MoneyOf(1, MoneySource.Deliveries));
+            Assert.AreEqual(0, board.MoneyOf(7, MoneySource.Deliveries), "no such seat");
+        }
+
+        [Test]
+        public void Money_OverTheMost_IsClamped_NotWrapped()
+        {
+            AwardBoard board = ABoard();
+
+            board.SetMoney(1, MoneySource.Deliveries, 70000);
+            board.SetMoney(1, MoneySource.Steals, -4);
+
+            Assert.AreEqual(65535, board.MoneyOf(1, MoneySource.Deliveries));
+            Assert.AreEqual(0, board.MoneyOf(1, MoneySource.Steals));
+        }
+
+        [Test]
+        public void Money_SurvivesTheNetworkRoundTrip()
+        {
+            AwardBoard sent = ABoard();
+            for (int seat = 0; seat < 4; seat++)
+                for (int source = 0; source < MoneyRules.SOURCES; source++)
+                    sent.SetMoney(seat, (MoneySource)source, seat * 1000 + source * 7 + 1);
+
+            using (FastBufferWriter writer = new FastBufferWriter(256, Allocator.Temp))
+            {
+                writer.WriteNetworkSerializable(sent);
+                using (FastBufferReader reader = new FastBufferReader(writer, Allocator.Temp))
+                {
+                    reader.ReadNetworkSerializable(out AwardBoard received);
+                    Assert.AreEqual(sent, received);
+                    Assert.AreEqual(2000 + 14 + 1, received.MoneyOf(2, MoneySource.Golden));
+                    Assert.AreEqual(Award.Kleptoghost, received.AwardOf(1));
+                }
+            }
+        }
+
+        [Test]
+        public void Equals_NoticesMoney()
+        {
+            AwardBoard a = ABoard();
+            AwardBoard b = ABoard();
+            Assert.AreEqual(a, b);
+            Assert.AreEqual(a.GetHashCode(), b.GetHashCode());
+
+            b.SetMoney(2, MoneySource.Steals, 1);
+
+            Assert.AreNotEqual(a, b);
+        }
+
+        [Test]
+        public void From_WithATally_CopiesItsAmounts()
+        {
+            MoneyTally tally = new MoneyTally();
+            tally.Add(0, MoneySource.Deliveries, 120);
+            tally.Add(1, MoneySource.Steals, 7);
+            tally.Add(1, MoneySource.Golden, 70000);
+
+            AwardBoard board = AwardBoard.From(new MatchStats(), new[] { 0, 1 }, tally);
+
+            Assert.AreEqual(120, board.MoneyOf(0, MoneySource.Deliveries));
+            Assert.AreEqual(7, board.MoneyOf(1, MoneySource.Steals));
+            Assert.AreEqual(65535, board.MoneyOf(1, MoneySource.Golden));
+        }
+
+        [Test]
+        public void From_WithoutATally_HasNoMoney()
+        {
+            AwardBoard board = ABoard();
+
+            for (int seat = 0; seat < 4; seat++)
+                for (int source = 0; source < MoneyRules.SOURCES; source++)
+                    Assert.AreEqual(0, board.MoneyOf(seat, (MoneySource)source));
         }
 
         [Test]

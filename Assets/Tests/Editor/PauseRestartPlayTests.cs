@@ -5,6 +5,7 @@ using UnityEditor.SceneManagement;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.TestTools;
+using static DoA.Tests.TestHelpers;
 
 namespace DoA.Tests
 {
@@ -38,11 +39,6 @@ namespace DoA.Tests
             TestPlayers.RemoveAll();
             SceneFlow.Current = null;
             gameSceneLoads = 0;
-        }
-
-        static GameState State()
-        {
-            return GameManager.Instance == null ? GameState.Default : GameManager.Instance.MainState;
         }
 
         [UnityTest]

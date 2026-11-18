@@ -4,6 +4,7 @@ using NUnit.Framework;
 using UnityEditor.SceneManagement;
 using UnityEngine;
 using UnityEngine.TestTools;
+using static DoA.Tests.TestHelpers;
 
 namespace DoA.Tests
 {
@@ -59,12 +60,6 @@ namespace DoA.Tests
         {
             yield return null;
             yield return null;
-        }
-
-        static void NewEmptyScene()
-        {
-            EditorSceneManager.playModeStartScene = null;
-            EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
         }
 
         // A game manager, then a frame or two: SteamFeatures watches it from its next Update

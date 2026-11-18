@@ -30,5 +30,8 @@ public class BumpReporter : MonoBehaviour
 
         float speed = Mathf.Abs(Vector3.Dot(collision.relativeVelocity, collision.GetContact(0).normal));
         BumpSync.Report(OrderSync.SeatOf(player), OrderSync.SeatOf(other), speed);
+        // The host raises the bump itself (FeatSync), on its own machine: a client's player learns here that a bump
+        // without a boost takes nothing
+        Hints.Offer(HintKind.BoostToSteal, OrderSync.SeatOf(player));
     }
 }

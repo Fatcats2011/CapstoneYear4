@@ -32,6 +32,11 @@ public class MatchAwards : MonoBehaviour
     readonly bool[] hasLastPlace = new bool[Constants.MAX_PLAYERS];
 
     readonly MatchStats stats = new MatchStats();
+    readonly MoneyTally money = new MoneyTally();
+
+    /// <summary>Where this match's money came from, per seat (for the results cards); tests read it</summary>
+    internal MoneyTally Money { get { return money; } }
+
     GameManager watched; // the game manager whose states this follows
     bool listening;
 
@@ -79,6 +84,7 @@ public class MatchAwards : MonoBehaviour
         FeatSync.Sank += OnSank;
         FeatSync.Bumped += OnBumped;
         FeatSync.Struck += OnStruck;
+        MoneySync.Earned += OnEarned;
     }
 
     /// <summary>Stops counting</summary>
@@ -91,6 +97,7 @@ public class MatchAwards : MonoBehaviour
         FeatSync.Sank -= OnSank;
         FeatSync.Bumped -= OnBumped;
         FeatSync.Struck -= OnStruck;
+        MoneySync.Earned -= OnEarned;
     }
 
     void Update()
@@ -162,13 +169,14 @@ public class MatchAwards : MonoBehaviour
     internal void Results(IEnumerable<int> seats)
     {
         if (GameAuthority.IsAuthority)
-            AwardSync.Decide(AwardBoard.From(stats, seats));
+            AwardSync.Decide(AwardBoard.From(stats, seats, money));
     }
 
     /// <summary>A new match: nothing counted, no awards</summary>
     internal void NewMatch()
     {
         stats.NewMatch();
+        money.NewMatch();
         ForgetPlaces();
         AwardSync.Clear();
     }
@@ -199,6 +207,13 @@ public class MatchAwards : MonoBehaviour
     {
         if (GameAuthority.IsAuthority)
             stats.Delivered(seat, value, MainState);
+    }
+
+    // Unlike MatchStats, the tutorial's money counts: it carries into the match as score
+    void OnEarned(int seat, MoneySource source, int amount)
+    {
+        if (GameAuthority.IsAuthority)
+            money.Add(seat, source, amount);
     }
 
     void OnStole(int seat, bool golden)

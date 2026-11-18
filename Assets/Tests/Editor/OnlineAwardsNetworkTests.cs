@@ -4,6 +4,7 @@ using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
 using UnityEngine.TestTools;
+using static DoA.Tests.TestHelpers;
 
 namespace DoA.Tests
 {
@@ -49,17 +50,6 @@ namespace DoA.Tests
             GameAuthority.Role = NetworkRole.Offline;
             SceneFlow.Current = null;
             AwardSync.Reset();
-        }
-
-        static GameState State()
-        {
-            return GameManager.Instance == null ? GameState.Default : GameManager.Instance.MainState;
-        }
-
-        static IEnumerator Wait(float seconds)
-        {
-            for (float until = Time.realtimeSinceStartup + seconds; Time.realtimeSinceStartup < until;)
-                yield return null;
         }
 
         [UnityTest]

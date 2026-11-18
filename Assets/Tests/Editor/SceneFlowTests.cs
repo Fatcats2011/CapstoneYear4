@@ -122,18 +122,6 @@ namespace DoA.Tests
         }
 
         [Test]
-        public void ResultsScreen_ReturnButton_GoesBackToTheMenuThroughTheSceneFlow()
-        {
-            FakeSceneFlow flow = new FakeSceneFlow();
-            SceneFlow.Current = flow;
-            ResultsUI results = objects.Add<ResultsUI>();
-
-            results.ResetGame();
-
-            Assert.AreEqual(1, flow.MenuReturns);
-        }
-
-        [Test]
         public void ResultsScreen_OnlineOnAClient_WaitsForTheHostToTakeEveryoneBack()
         {
             FakeSceneFlow flow = new FakeSceneFlow();

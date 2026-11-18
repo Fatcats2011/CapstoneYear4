@@ -12,6 +12,7 @@ using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.LowLevel;
 using UnityEngine.TestTools;
+using static DoA.Tests.TestHelpers;
 
 namespace DoA.Tests
 {
@@ -108,17 +109,6 @@ namespace DoA.Tests
             report.AppendLine("-- [" + step + "] frame " + Time.frameCount + ": " + ms.ToString("0") + " ms since the last");
             for (int i = 0; i < top.Count && i < 40; i++)
                 report.AppendLine("   " + top[i].ms.ToString("0") + " ms  " + top[i].name);
-        }
-
-        static GameState State()
-        {
-            return GameManager.Instance == null ? GameState.Default : GameManager.Instance.MainState;
-        }
-
-        static void Press(Gamepad pad, GamepadButton button)
-        {
-            InputSystem.QueueStateEvent(pad, new GamepadState().WithButton(button));
-            InputSystem.QueueStateEvent(pad, new GamepadState());
         }
 
         [UnityTest]

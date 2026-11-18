@@ -5,6 +5,7 @@ using UnityEditor.SceneManagement;
 using UnityEngine;
 using UnityEngine.Rendering.Universal;
 using UnityEngine.TestTools;
+using static DoA.Tests.TestHelpers;
 
 namespace DoA.Tests
 {
@@ -24,11 +25,6 @@ namespace DoA.Tests
 
             EditorSceneManager.playModeStartScene = null;
             TestPlayers.RemoveAll();
-        }
-
-        static bool AtTitleScreen()
-        {
-            return GameManager.Instance != null && GameManager.Instance.MainState == GameState.Menu;
         }
 
         static bool CountingDown(PlayerInstantiate players)

@@ -18,7 +18,6 @@ public class InputManager : MonoBehaviour, IDriveInput
     public bool NorthFaceValue { get { return northFaceValue; } }
 
     // East Face Press
-    public event Action<bool> EastFaceEvent;
     private bool eastFaceValue; //a bool representing the pushed state of the west face button (true for pushed, false for loose)
     public bool EastFaceValue { get { return eastFaceValue; } }
 

@@ -4,6 +4,7 @@ using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
 using UnityEngine.TestTools;
+using static DoA.Tests.TestHelpers;
 
 namespace DoA.Tests
 {
@@ -34,31 +35,6 @@ namespace DoA.Tests
             TestPlayers.RemoveAll();
             GameAuthority.Role = NetworkRole.Offline;
             SceneFlow.Current = null;
-        }
-
-        static bool AtTitleScreen()
-        {
-            return GameManager.Instance != null && GameManager.Instance.MainState == GameState.Menu;
-        }
-
-        static PlayerSlot Slot(int index)
-        {
-            return PlayerInstantiate.Instance.Roster[index];
-        }
-
-        static BallDriving ScooterIn(int slot)
-        {
-            return Slot(slot).Player.GetComponentInChildren<BallDriving>(true);
-        }
-
-        static OnlineScooter ScooterInSeat(OnlineSession session, int seat)
-        {
-            foreach (OnlineScooter scooter in session.Scooters)
-            {
-                if (scooter.Seat == seat)
-                    return scooter;
-            }
-            return null;
         }
 
         [UnityTest]

@@ -23,6 +23,139 @@ namespace DoA.Tests
         }
 
         [Test]
+        public void LayoutFor_EachLocalCountAndSplit()
+        {
+            var one = Scoreboard.LayoutFor(1, SplitLayout.Boxed);
+            Assert.IsTrue(one.LeftEdge); Assert.AreEqual(Scoreboard.BoardShape.Column, one.Shape); Assert.IsFalse(one.Compact);
+            Assert.AreEqual(one, Scoreboard.LayoutFor(0, SplitLayout.Stacked), "nobody local: the one-player board");
+
+            var side = Scoreboard.LayoutFor(2, SplitLayout.SideBySide);
+            Assert.AreEqual(new Vector2(0.5f, 0.5f), side.Anchor); Assert.AreEqual(Scoreboard.BoardShape.Column, side.Shape); Assert.IsTrue(side.Compact);
+
+            var stacked = Scoreboard.LayoutFor(2, SplitLayout.Stacked);
+            Assert.AreEqual(new Vector2(0.5f, 0.5f), stacked.Anchor); Assert.AreEqual(Scoreboard.BoardShape.Strip, stacked.Shape); Assert.IsTrue(stacked.Compact);
+
+            var boxed = Scoreboard.LayoutFor(2, SplitLayout.Boxed);
+            Assert.AreEqual(new Vector2(0.125f, 0.5f), boxed.Anchor); Assert.IsFalse(boxed.LeftEdge); Assert.IsFalse(boxed.Compact);
+
+            var three = Scoreboard.LayoutFor(3, SplitLayout.SideBySide);
+            Assert.AreEqual(new Vector2(0.125f, 0.25f), three.Anchor); Assert.AreEqual(Scoreboard.BoardShape.Column, three.Shape); Assert.IsFalse(three.Compact);
+
+            var four = Scoreboard.LayoutFor(4, SplitLayout.Stacked);
+            Assert.AreEqual(new Vector2(0.5f, 0.5f), four.Anchor); Assert.AreEqual(Scoreboard.BoardShape.Grid, four.Shape); Assert.IsTrue(four.Compact);
+        }
+
+        [Test]
+        public void CellSpots_OneLocal_MatchTodaysColumn()
+        {
+            Vector2[] spots = Scoreboard.CellSpots(Scoreboard.LayoutFor(1, SplitLayout.Boxed), 4);
+            float[] tops = Scoreboard.RowTops(4);
+            for (int i = 0; i < 4; i++) { Assert.AreEqual(0f, spots[i].x, 0.001f); Assert.AreEqual(tops[i], spots[i].y, 0.001f); }
+        }
+
+        [Test]
+        public void CellSpots_CentredColumn_StraddlesTheSeam()
+        {
+            Vector2[] spots = Scoreboard.CellSpots(Scoreboard.LayoutFor(2, SplitLayout.SideBySide), 3);
+            Assert.AreEqual(-Scoreboard.COMPACT_ROW_WIDTH * Scoreboard.FIRST_SCALE / 2f, spots[0].x, 0.001f);
+            Assert.AreEqual(-Scoreboard.COMPACT_ROW_WIDTH / 2f, spots[1].x, 0.001f);
+            Assert.AreEqual(-Scoreboard.COMPACT_ROW_WIDTH / 2f, spots[2].x, 0.001f);
+        }
+
+        [Test]
+        public void CellSpots_Strip_SplitRoundAGap_CentredLeftToRight([Values(2, 4)] int count)
+        {
+            float gap = 300f;
+            Vector2[] spots = Scoreboard.CellSpots(Scoreboard.LayoutFor(2, SplitLayout.Stacked), count, gap);
+            float w = Scoreboard.COMPACT_ROW_WIDTH;
+            int left = (count + 1) / 2;
+            float right = spots[count - 1].x + w;
+            Assert.AreEqual(0f, spots[0].x + right, 0.001f, "as much left of the seam's middle as right");
+            Assert.LessOrEqual(spots[left - 1].x + w * (left == 1 ? Scoreboard.FIRST_SCALE : 1f), -gap / 2f + 0.001f, "the left half ends before the gap");
+            Assert.GreaterOrEqual(spots[left].x, gap / 2f - 0.001f, "the right half starts after it");
+            if (left > 1)
+                Assert.AreEqual(spots[0].x + w * Scoreboard.FIRST_SCALE + Scoreboard.CELL_GAP, spots[1].x, 0.001f);
+            for (int rank = 1; rank < count; rank++)
+                Assert.Greater(spots[rank].x, spots[rank - 1].x, "ranked left to right");
+            Assert.AreEqual(Scoreboard.ROW_HEIGHT * Scoreboard.FIRST_SCALE / 2f, spots[0].y, 0.001f, "centred on the seam");
+            Assert.AreEqual(Scoreboard.ROW_HEIGHT / 2f, spots[1].y, 0.001f);
+        }
+
+        [Test]
+        public void CellSpots_Strip_ClearsTheBottomPlayersCompass([Values(2, 3, 4)] int count)
+        {
+            Scoreboard.BoardLayout stacked = Scoreboard.LayoutFor(2, SplitLayout.Stacked);
+            foreach (float text in new[] { 1f, 1.25f, 1.5f })
+            {
+                float scale = Scoreboard.BoardScaleFor(stacked, text, 1920f);
+                Vector2[] spots = Scoreboard.CellSpots(stacked, count, Scoreboard.StripGap(scale));
+                for (int rank = 0; rank < count; rank++)
+                {
+                    float from = spots[rank].x * scale + 960f;
+                    float to = from + Scoreboard.COMPACT_ROW_WIDTH * (rank == 0 ? Scoreboard.FIRST_SCALE : 1f) * scale;
+                    Assert.IsTrue(to < 715f || from > 1205f, "rank " + rank + " of " + count + " spans " + from + " to " + to + ", over the compass (715 to 1205)");
+                    Assert.GreaterOrEqual(from, 0f, "on the screen");
+                    Assert.LessOrEqual(to, 1920f, "on the screen");
+                    if (rank > 0)
+                        Assert.Greater(spots[rank].x, spots[rank - 1].x, "ranked left to right");
+                }
+            }
+        }
+
+        [Test]
+        public void BoardScaleFor_OnePlayer_GrowsWithTextSize()
+        {
+            Scoreboard.BoardLayout one = Scoreboard.LayoutFor(1, SplitLayout.Boxed);
+            Assert.AreEqual(Scoreboard.BOARD_SCALE, Scoreboard.BoardScaleFor(one, 1f, 1920f), 0.0001f);
+            Assert.AreEqual(Scoreboard.BOARD_SCALE * 1.5f, Scoreboard.BoardScaleFor(one, 1.5f, 1920f), 0.0001f);
+        }
+
+        [Test]
+        public void BoardScaleFor_CentreLayouts_NeverGrow([Values(1f, 1.25f, 1.5f)] float text)
+        {
+            foreach (Scoreboard.BoardLayout centre in new[] { Scoreboard.LayoutFor(2, SplitLayout.SideBySide),
+                Scoreboard.LayoutFor(2, SplitLayout.Stacked), Scoreboard.LayoutFor(4, SplitLayout.Boxed) })
+                Assert.AreEqual(Scoreboard.BOARD_SCALE, Scoreboard.BoardScaleFor(centre, text, 1920f), 0.0001f, centre.Shape.ToString());
+        }
+
+        [Test]
+        public void BoardScaleFor_BarLayouts_FirstPlaceFitsTheBar([Values(1920f, 1728f)] float canvasWidth, [Values(1f, 1.25f, 1.5f)] float text)
+        {
+            foreach (Scoreboard.BoardLayout bar in new[] { Scoreboard.LayoutFor(2, SplitLayout.Boxed), Scoreboard.LayoutFor(3, SplitLayout.Boxed) })
+            {
+                float scale = Scoreboard.BoardScaleFor(bar, text, canvasWidth);
+                Assert.LessOrEqual(Scoreboard.ROW_WIDTH * Scoreboard.FIRST_SCALE * scale, 0.25f * canvasWidth - 2f * Scoreboard.LEFT + 0.001f);
+                Assert.LessOrEqual(scale, Scoreboard.BOARD_SCALE * text + 0.0001f, "never bigger than the text size asks");
+            }
+        }
+
+        [Test]
+        public void BoardScaleFor_BarLayouts_NormalSizeWhenItFits()
+        {
+            Assert.AreEqual(Scoreboard.BOARD_SCALE, Scoreboard.BoardScaleFor(Scoreboard.LayoutFor(2, SplitLayout.Boxed), 1f, 1920f), 0.0001f);
+            Assert.AreEqual(Scoreboard.BOARD_SCALE, Scoreboard.BoardScaleFor(Scoreboard.LayoutFor(3, SplitLayout.Boxed), 1f, 1920f), 0.0001f);
+            Assert.Less(Scoreboard.BoardScaleFor(Scoreboard.LayoutFor(2, SplitLayout.Boxed), 1.5f, 1920f), Scoreboard.BOARD_SCALE * 1.5f,
+                "at 150% first place would leave the bar: held to its width");
+        }
+
+        [Test]
+        public void CellSpots_Grid_OneCellPerQuarter([Values(3, 4)] int count)
+        {
+            Vector2[] spots = Scoreboard.CellSpots(Scoreboard.LayoutFor(4, SplitLayout.Boxed), count);
+            float g = Scoreboard.CELL_GAP / 2f, w = Scoreboard.COMPACT_ROW_WIDTH, h = Scoreboard.ROW_HEIGHT, s = Scoreboard.FIRST_SCALE;
+            AssertSpot(new Vector2(-g - w * s, g + h * s), spots[0]); // first place, top-left
+            AssertSpot(new Vector2(g, g + h), spots[1]);
+            AssertSpot(new Vector2(-g - w, -g), spots[2]);
+            if (count == 4) AssertSpot(new Vector2(g, -g), spots[3]);
+        }
+
+        static void AssertSpot(Vector2 expected, Vector2 actual)
+        {
+            Assert.AreEqual(expected.x, actual.x, 0.001f);
+            Assert.AreEqual(expected.y, actual.y, 0.001f);
+        }
+
+        [Test]
         public void RowTops_FirstPlaceIsBigger_TheStackCentred()
         {
             float[] tops = Scoreboard.RowTops(4);
@@ -100,6 +233,25 @@ namespace DoA.Tests
             Assert.Greater(Scoreboard.BannerAt(10f, nearTop).a, 0.9f, "full height at the picture");
             Assert.AreEqual(0f, Scoreboard.BannerAt(Scoreboard.ROW_WIDTH - 40f, nearTop).a, 0.001f, "shorter at the right");
             Assert.AreEqual(0f, Scoreboard.BannerAt(Scoreboard.ROW_WIDTH - 2f, middle + 6f).a, 0.001f, "the right end's cut slants");
+        }
+
+        [Test]
+        public void BannerAt_Compact_IsASquareEndedBox()
+        {
+            float w = Scoreboard.COMPACT_ROW_WIDTH, h = Scoreboard.ROW_HEIGHT;
+            Assert.Greater(Scoreboard.BannerAt(w - 1f, h - 1f, true).a, 0.5f, "bottom-right corner filled: no slanted tip");
+            Assert.Greater(Scoreboard.BannerAt(w - 1f, 1f, true).a, 0.5f, "top-right corner filled: no taper");
+            Assert.AreEqual(0f, Scoreboard.BannerAt(w + 2f, h / 2f, true).a, 0.001f);
+            Assert.AreEqual(Scoreboard.BannerAt(10f, 10f), Scoreboard.BannerAt(10f, 10f, false), "full form unchanged");
+        }
+
+        [Test]
+        public void Relays_WhenCountOrSplitChanges()
+        {
+            var one = Scoreboard.LayoutFor(1, SplitLayout.Boxed);
+            Assert.IsFalse(Scoreboard.Relays(one, Scoreboard.LayoutFor(1, SplitLayout.Stacked)), "split doesn't matter for one");
+            Assert.IsTrue(Scoreboard.Relays(one, Scoreboard.LayoutFor(2, SplitLayout.Boxed)), "a pad joins");
+            Assert.IsTrue(Scoreboard.Relays(Scoreboard.LayoutFor(2, SplitLayout.Boxed), Scoreboard.LayoutFor(2, SplitLayout.Stacked)), "option changed");
         }
 
         [Test]

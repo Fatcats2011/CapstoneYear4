@@ -79,6 +79,7 @@ public class OrderHandler : MonoBehaviour
         {
             StealCallout.AddTo(this, numberHandler);
             GoalTag.AddTo(this, numberHandler);
+            RivalWarning.AddTo(this, numberHandler);
         }
 
         SetDrivingIndicators();
@@ -178,6 +179,7 @@ public class OrderHandler : MonoBehaviour
             if (GameAuthority.IsAuthority)
             {
                 score += order1.Worth;
+                EarnDelivery(order1);
                 FeatSync.Deliver(OrderSync.SeatOf(this), rightOrder.Value);
             }
             AnnounceDelivery(order1);
@@ -193,6 +195,7 @@ public class OrderHandler : MonoBehaviour
             if (GameAuthority.IsAuthority)
             {
                 score += order2.Worth;
+                EarnDelivery(order2);
                 FeatSync.Deliver(OrderSync.SeatOf(this), rightOrder.Value);
             }
             AnnounceDelivery(order2);
@@ -212,6 +215,19 @@ public class OrderHandler : MonoBehaviour
 
         if (tutHandler != null && tutHandler.HasLearnt)
             ball.SetBoostModifier(hasOrder);
+    }
+
+    /// <summary>
+    /// Tells the results cards' breakdown where a delivery's pay (the order's Worth, as just added to the score) came from
+    /// (MoneyRules.SplitDelivery). Authority only, like the score
+    /// </summary>
+    private void EarnDelivery(Order order)
+    {
+        int seat = OrderSync.SeatOf(this);
+        MoneyRules.SplitDelivery(order.Value, order.IsLode, order.Worth, out int deliveries, out int steals, out int golden);
+        MoneySync.Earn(seat, MoneySource.Deliveries, deliveries);
+        MoneySync.Earn(seat, MoneySource.Steals, steals);
+        MoneySync.Earn(seat, MoneySource.Golden, golden);
     }
 
     /// <summary>
@@ -247,7 +263,9 @@ public class OrderHandler : MonoBehaviour
         if (!GameAuthority.IsAuthority)
             return;
 
-        score += finalOrderValue - (int)Constants.OrderValue.Golden;
+        int bonus = finalOrderValue - (int)Constants.OrderValue.Golden;
+        score += bonus;
+        MoneySync.Earn(OrderSync.SeatOf(this), MoneySource.Golden, bonus);
     }
 
     /// <summary>
@@ -490,6 +508,7 @@ public class OrderHandler : MonoBehaviour
     {
         int paid = StealValueRules.Pay(stolen.PaidThieves, thiefSeat) * GoldRushRules.StealCounts();
         score += paid;
+        MoneySync.Earn(OrderSync.SeatOf(this), MoneySource.Steals, paid);
         return paid;
     }
 
@@ -497,6 +516,7 @@ public class OrderHandler : MonoBehaviour
     internal void AddModePoints(int points)
     {
         score += points;
+        MoneySync.Earn(OrderSync.SeatOf(this), MoneySource.Mode, points);
         ShowScore();
     }
 

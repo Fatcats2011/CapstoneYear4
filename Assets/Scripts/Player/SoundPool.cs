@@ -10,7 +10,6 @@ public class SoundPool : MonoBehaviour
     private AudioSource drivingSource;
     private AudioSource engineSource;
     private AudioSource brakeSource;
-    private AudioSource driftSource;
     private AudioSource boostSource;
     private AudioSource miniBoostSource;
     private AudioSource driftSparkSource;
@@ -137,23 +136,6 @@ public class SoundPool : MonoBehaviour
         engineSource.loop = true;
         SoundManager.Instance.PlayIdleSound(engineSource);
     }
-    public void PlayDriftSound()
-    {
-        return; // TODO: fix this or don't play a drift
-        if(driftSource != null) { return; }
-        driftSource = GetAvailableSource();
-        SoundManager.Instance.SwitchSource(ref driftSource, "Player");
-        driftSource.loop = true;
-        SoundManager.Instance.PlaySFX("drift", driftSource);
-
-    }
-    public void StopDriftSound()
-    {
-        return; // yeah we're not playing a drift sound
-        if(driftSource == null) { return; }
-        ResetSource(driftSource);
-        driftSource = null;
-    }
     public void PlayBrakeSound()
     {
         if(brakeSource == null) { brakeSource = GetAvailableSource(); }
@@ -275,22 +257,23 @@ public class SoundPool : MonoBehaviour
 
     /// <summary>
     /// A sound only this player hears, for what just happened to them (FeedbackSounds: robbed, a bump that took nothing).
-    /// A sound the game has no file for plays nothing
+    /// A sound the game has no file for plays nothing. The pitch is 1 unless a sound asks for more (the boost pad's)
     /// </summary>
-    public void PlayFeedback(string name)
+    public void PlayFeedback(string name, float pitch = 1f)
     {
         AudioClip clip = FeedbackSounds.Clip(name);
         if (clip == null || !shouldPlay)
             return;
 
-        PlayClip(GetAvailableSource(), clip, FeedbackSounds.Volume(name));
+        PlayClip(GetAvailableSource(), clip, FeedbackSounds.Volume(name), pitch);
     }
 
-    // A one-shot of a clip the sound manager doesn't hold, on a pooled source
-    private void PlayClip(AudioSource source, AudioClip clip, float volume)
+    // A one-shot of a clip the sound manager doesn't hold, on a pooled source (ResetSource puts the pitch back to 1)
+    private void PlayClip(AudioSource source, AudioClip clip, float volume, float pitch = 1f)
     {
         source.clip = clip;
         source.volume = volume;
+        source.pitch = pitch;
         source.gameObject.SetActive(true);
         source.Play();
         StartCoroutine(KillSource(source));

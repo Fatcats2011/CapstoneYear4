@@ -8,7 +8,7 @@ using UnityEngine.InputSystem;
 
 public class OptionsMenu : SingletonMonobehaviour<OptionsMenu>, IMouseMenu
 {
-    const string SETTINGS_FILE_NAME = "settings.cfg";
+    const string SETTINGS_FILE_NAME = GameSettings.FILE_NAME;
 
     [Header("Options Numbers")]
     [SerializeField] float[] volumeValues;
@@ -683,6 +683,8 @@ public class OptionsMenu : SingletonMonobehaviour<OptionsMenu>, IMouseMenu
         // Keeps the display keys this menu has no rows for yet (DisplaySettings)
         current = (current ?? new GameSettings(bgmPosition, sfxPosition, fullscreenPosition, qualityPosition))
             .WithMenuPositions(bgmPosition, sfxPosition, fullscreenPosition, qualityPosition);
+        // Hints are earned in a match and saved by Hints itself: never write back an older mask
+        current.hintsSeen = Hints.Seen;
 
         try
         {
@@ -738,6 +740,7 @@ public class OptionsMenu : SingletonMonobehaviour<OptionsMenu>, IMouseMenu
         TextSize.Set(settings.textSize);
         Units.Imperial = settings.units == 1;
         HouseRules.LoadSaved(settings);
+        Hints.Seen = settings.hintsSeen;
 
         // The language: the one picked here before, else Steam's, else the PC's, else English (LanguageRules)
         Loc.SetLanguage(LanguageRules.Pick(settings.language, SteamNames.Language(), Application.systemLanguage));

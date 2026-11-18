@@ -5,6 +5,7 @@ using UnityEditor.SceneManagement;
 using UnityEngine;
 using UnityEngine.TestTools;
 using UnityEngine.VFX;
+using static DoA.Tests.TestHelpers;
 
 namespace DoA.Tests
 {
@@ -41,11 +42,6 @@ namespace DoA.Tests
                 yield return new ExitPlayMode();
 
             EditorSceneManager.playModeStartScene = null;
-        }
-
-        static bool AtTitleScreen()
-        {
-            return GameManager.Instance != null && GameManager.Instance.MainState == GameState.Menu;
         }
 
         static bool SparkOn(Transform sparks, int child)

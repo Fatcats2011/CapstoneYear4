@@ -8,6 +8,8 @@ using UnityEngine.UIElements;
 public class CompassMarker : MonoBehaviour
 {
     public Sprite icon;
+    /// <summary>The small price over the mark's distance ("" for none)</summary>
+    public string price = "";
     PlayerInstantiate playerInstantiate;
 
     public void Start()

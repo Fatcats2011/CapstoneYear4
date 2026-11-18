@@ -4,6 +4,7 @@ using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
 using UnityEngine.TestTools;
+using static DoA.Tests.TestHelpers;
 
 namespace DoA.Tests
 {
@@ -27,16 +28,6 @@ namespace DoA.Tests
             TestPlayers.RemoveAll();
             GameAuthority.Role = NetworkRole.Offline;
             Time.timeScale = 1f;
-        }
-
-        static GameState State()
-        {
-            return GameManager.Instance == null ? GameState.Default : GameManager.Instance.MainState;
-        }
-
-        static PlayerSlot Slot(int index)
-        {
-            return PlayerInstantiate.Instance.Roster[index];
         }
 
         // A player's menus

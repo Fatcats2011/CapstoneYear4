@@ -107,6 +107,111 @@ namespace DoA.Tests
             Assert.IsTrue(view.AwardShown(0));
         }
 
+        // Seat 0's money from the given sources
+        static AwardBoard MoneyBoard(int deliveries, int steals, int golden, int mode)
+        {
+            AwardBoard board = Board();
+            board.SetMoney(0, MoneySource.Deliveries, deliveries);
+            board.SetMoney(0, MoneySource.Steals, steals);
+            board.SetMoney(0, MoneySource.Golden, golden);
+            board.SetMoney(0, MoneySource.Mode, mode);
+            return board;
+        }
+
+        [Test]
+        public void Breakdown_NoMoney_LeavesTheCardAsItWas()
+        {
+            TMP_Text[] scores = Scores(1, out RectTransform box);
+            ResultsAwardsView view = ResultsAwardsView.Build(box, scores);
+
+            view.Show(Board(), new[] { 0 });
+
+            Assert.AreEqual(ResultsAwardsView.HEIGHT, view.CardHeight(0));
+            Assert.AreEqual("", view.BreakdownText(0));
+        }
+
+        [Test]
+        public void Breakdown_TwoSources_IsOneRow()
+        {
+            TMP_Text[] scores = Scores(1, out RectTransform box);
+            ResultsAwardsView view = ResultsAwardsView.Build(box, scores);
+
+            view.Show(MoneyBoard(520, 21, 0, 0), new[] { 0 });
+
+            Assert.AreEqual(ResultsAwardsView.HEIGHT + 22f, view.CardHeight(0));
+            Assert.AreEqual("Deliveries $520 | Steals $21", view.BreakdownText(0));
+        }
+
+        [Test]
+        public void Breakdown_FourSources_AreTwoRows()
+        {
+            TMP_Text[] scores = Scores(1, out RectTransform box);
+            ResultsAwardsView view = ResultsAwardsView.Build(box, scores);
+
+            view.Show(MoneyBoard(520, 21, 80, 30), new[] { 0 });
+
+            Assert.AreEqual(ResultsAwardsView.HEIGHT + 44f, view.CardHeight(0));
+            Assert.AreEqual("Deliveries $520 | Steals $21\nGolden $80 | Mode $30", view.BreakdownText(0));
+        }
+
+        [Test]
+        public void Breakdown_ThreeSources_ThePairIsLeftAlone()
+        {
+            TMP_Text[] scores = Scores(1, out RectTransform box);
+            ResultsAwardsView view = ResultsAwardsView.Build(box, scores);
+
+            view.Show(MoneyBoard(520, 0, 80, 30), new[] { 0 });
+
+            Assert.AreEqual("Deliveries $520 | Golden $80\nMode $30", view.BreakdownText(0));
+        }
+
+        [Test]
+        public void Breakdown_ShownAgain_DoesNotStackGrowth_AndShrinksBack()
+        {
+            TMP_Text[] scores = Scores(1, out RectTransform box);
+            ResultsAwardsView view = ResultsAwardsView.Build(box, scores);
+            RectTransform award = (RectTransform)view.CardOf(0).transform.Find("Award");
+            float restingAward = award.anchoredPosition.y;
+
+            view.Show(MoneyBoard(520, 21, 0, 0), new[] { 0 });
+            view.Show(MoneyBoard(520, 21, 0, 0), new[] { 0 });
+
+            Assert.AreEqual(ResultsAwardsView.HEIGHT + 22f, view.CardHeight(0));
+            Assert.AreEqual(restingAward - 22f, award.anchoredPosition.y, 1e-3f, "the award moves down by the rows, once");
+
+            view.Show(Board(), new[] { 0 });
+
+            Assert.AreEqual(ResultsAwardsView.HEIGHT, view.CardHeight(0));
+            Assert.AreEqual(restingAward, award.anchoredPosition.y, 1e-3f);
+            Assert.AreEqual("", view.BreakdownText(0));
+        }
+
+        [Test]
+        public void Breakdown_TheCardsBottomStaysOnTheScreensBottom()
+        {
+            TMP_Text[] scores = Scores(1, out RectTransform box);
+            ResultsAwardsView view = ResultsAwardsView.Build(box, scores);
+            view.Show(MoneyBoard(520, 21, 80, 30), new[] { 0 });
+
+            view.Settle();
+
+            RectTransform card = (RectTransform)view.CardOf(0).transform;
+            Assert.AreEqual(-540f + 20f, ResultsAwardsView.CanvasPoint(card, Vector2.zero, (RectTransform)box.parent).y, 1f);
+        }
+
+        [Test]
+        public void Breakdown_AwardsArrivingLater_FillItToo()
+        {
+            TMP_Text[] scores = Scores(1, out RectTransform box);
+            ResultsAwardsView view = ResultsAwardsView.Build(box, scores);
+            view.Follow(new[] { 0 });
+
+            AwardSync.Arrive(MoneyBoard(520, 21, 0, 0));
+
+            Assert.AreEqual(ResultsAwardsView.HEIGHT + 22f, view.CardHeight(0));
+            Assert.AreEqual("Deliveries $520 | Steals $21", view.BreakdownText(0));
+        }
+
         [Test]
         public void Hide_HidesEveryCard()
         {

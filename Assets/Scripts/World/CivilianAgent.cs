@@ -31,8 +31,7 @@ public class CivilianAgent : MonoBehaviour
 
     private int currentIntendedPoint = 0;
 
-    private float slowUpdateTickSpeed = 0.1f; //How frequently, in seconds, SlowUpdate runs
-    private static readonly WaitForSeconds SlowUpdateWait = new WaitForSeconds(0.1f); // matches slowUpdateTickSpeed
+    private static readonly WaitForSeconds SlowUpdateWait = new WaitForSeconds(0.1f); // how often SlowUpdate runs
     private IEnumerator slowUpdateCoroutine;
 
     private IEnumerator deathCoroutine;

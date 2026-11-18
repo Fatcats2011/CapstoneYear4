@@ -5,6 +5,7 @@ using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
 using UnityEngine.TestTools;
+using static DoA.Tests.TestHelpers;
 
 namespace DoA.Tests
 {
@@ -82,21 +83,6 @@ namespace DoA.Tests
             TestPlayers.RemoveAll();
             GameAuthority.Role = NetworkRole.Offline;
             SceneFlow.Current = null;
-        }
-
-        static OnlinePlayer PlayerInSeat(OnlineSession session, int seat)
-        {
-            foreach (OnlinePlayer player in session.Players)
-            {
-                if (player.Seat == seat)
-                    return player;
-            }
-            return null;
-        }
-
-        static bool Sees(OnlineSession session, int players)
-        {
-            return session.Match != null && session.Players.Count == players;
         }
 
         [UnityTest]
@@ -364,20 +350,9 @@ namespace DoA.Tests
             Assert.IsEmpty(log.Problems, "Errors while machines left:\n\n" + string.Join("\n\n", log.Problems));
         }
 
-        static GameState State()
-        {
-            return GameManager.Instance == null ? GameState.Default : GameManager.Instance.MainState;
-        }
-
         static bool CountingDown()
         {
             return PlayerInstantiate.Instance.readyUpCountdown != null;
-        }
-
-        static IEnumerator WaitSeconds(float seconds)
-        {
-            for (float until = Time.realtimeSinceStartup + seconds; Time.realtimeSinceStartup < until;)
-                yield return null;
         }
 
         // One player here hosts on Dispatch through Online Play (a fake Steam), open to anyone with fill

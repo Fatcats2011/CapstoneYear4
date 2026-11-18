@@ -30,6 +30,7 @@ namespace DoA.Tests
             objects.DestroyAll();
             GameAuthority.Role = NetworkRole.Offline;
             AwardSync.Reset();
+            MoneySync.Reset();
         }
 
         static bool HoldsGolden(int seat) { return holdingGold.Contains(seat); }
@@ -104,6 +105,57 @@ namespace DoA.Tests
             Assert.IsFalse(AwardSync.HasLast);
             awards.Results(new[] { 0 });
             Assert.AreEqual(Award.Tourist, AwardSync.Last.AwardOf(0));
+        }
+
+        [Test]
+        public void Earn_ReachesTheMoneyTally()
+        {
+            MoneySync.Earn(1, MoneySource.Steals, 7);
+            MoneySync.Earn(1, MoneySource.Deliveries, 55);
+
+            Assert.AreEqual(7, awards.Money.Of(1, MoneySource.Steals));
+            Assert.AreEqual(62, awards.Money.Total(1));
+        }
+
+        [Test]
+        public void Earn_IsCarriedInTheAwards()
+        {
+            MoneySync.Earn(0, MoneySource.Golden, 80);
+
+            awards.Results(new[] { 0 });
+
+            Assert.AreEqual(80, AwardSync.Last.MoneyOf(0, MoneySource.Golden));
+        }
+
+        [Test]
+        public void Earn_OnAClient_CountsNothing()
+        {
+            GameAuthority.Role = NetworkRole.Client;
+
+            MoneySync.Earn(0, MoneySource.Deliveries, 55);
+
+            Assert.AreEqual(0, awards.Money.Total(0));
+        }
+
+        [Test]
+        public void Earn_AfterEnd_CountsNothing()
+        {
+            awards.End();
+
+            MoneySync.Earn(0, MoneySource.Deliveries, 55);
+            awards.Begin();
+
+            Assert.AreEqual(0, awards.Money.Total(0));
+        }
+
+        [Test]
+        public void ANewMatch_ClearsTheMoney()
+        {
+            MoneySync.Earn(0, MoneySource.Mode, 9);
+
+            awards.NewMatch();
+
+            Assert.AreEqual(0, awards.Money.Total(0));
         }
 
         [Test]

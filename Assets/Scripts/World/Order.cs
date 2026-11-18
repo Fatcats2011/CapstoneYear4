@@ -70,8 +70,16 @@ public class Order : MonoBehaviour
     // The golden order keeps its size: it doesn't double
     private void ApplyStealLook()
     {
+        // An order destroyed with its scene can still be reset by a throw that was in flight: it has no look to change
+        if (this == null)
+            return;
+
         // ...and wears a "×2" stamp that doubles with each steal (WorthStamp)
         WorthStamp.Refresh(this, orderMeshObject != null ? orderMeshObject.transform : null);
+
+        // ...and its beacon's price follows what it is worth now (before the early return: the golden order's reads nothing)
+        if (beconIndicator != null)
+            PriceTag.Refresh(this, beconIndicator);
 
         if (orderMeshObject == null || value == Constants.OrderValue.Golden)
             return;
@@ -92,10 +100,6 @@ public class Order : MonoBehaviour
     public bool IsActive { get { return isActive; } set { isActive = value; } }
     private bool stealActive = false;
     public bool StealActive { get { return stealActive; } set { stealActive = value; } }
-
-    [Header("Positional Information")]
-    [Tooltip("How far above the ground the order is by default.")]
-    [SerializeField] private float orderHeight = 4.43f;
 
     [Header("Mesh Information")]
     [Tooltip("Actual mesh of the order for rotation and swapping models.")]
@@ -124,8 +128,6 @@ public class Order : MonoBehaviour
     [SerializeField] private float pickupCooldown = 3;
     private bool canPickup = true; // if a player can pickup this order
     public bool CanPickup { get { return canPickup; } }
-    [Tooltip("Default height of the order")]
-    [SerializeField] private float height = 4.43f;
 
     [Tooltip("Reference to the beacon on this prefab")]
     [SerializeField] internal OrderBeacon beacon;
@@ -267,6 +269,7 @@ public class Order : MonoBehaviour
         compassMarker.icon = possiblePackageTypes[packageType];
         compassMarker.InitalizeCompassUIOnAllPlayers();
         beconIndicator.InitalizeBeconIndicator(Look);
+        PriceTag.Refresh(this, beconIndicator);
 
         // glow up gurl
         glow.SetVector4("GlowColour", glowColors[packageType]);
@@ -296,6 +299,7 @@ public class Order : MonoBehaviour
         if (value == Constants.OrderValue.Golden)
         {
             playerHolding.HasGoldenOrder = true;
+            Hints.Offer(HintKind.HoldGold, OrderSync.SeatOf(playerHolding));
         }
         playerDropped = null;
         beacon.SetDropoff(dropoff);
@@ -408,6 +412,7 @@ public class Order : MonoBehaviour
 
 
         beconIndicator.InitalizeBeconIndicator(Look);
+        PriceTag.Refresh(this, beconIndicator);
     }
 
     /// <summary>

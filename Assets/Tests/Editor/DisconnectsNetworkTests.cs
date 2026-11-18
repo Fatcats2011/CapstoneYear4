@@ -7,6 +7,7 @@ using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
 using UnityEngine.TestTools;
+using static DoA.Tests.TestHelpers;
 
 namespace DoA.Tests
 {
@@ -163,21 +164,6 @@ namespace DoA.Tests
             StealSync.Reset();
         }
 
-        static GameState State()
-        {
-            return GameManager.Instance == null ? GameState.Default : GameManager.Instance.MainState;
-        }
-
-        static string ActiveScene()
-        {
-            return UnityEngine.SceneManagement.SceneManager.GetActiveScene().name;
-        }
-
-        static PlayerSlot Slot(int index)
-        {
-            return PlayerInstantiate.Instance.Roster[index];
-        }
-
         // Whether this machine shows a cutscene
         static bool CutsceneOn()
         {
@@ -193,12 +179,6 @@ namespace DoA.Tests
         static void GoSilent(OnlineSession session)
         {
             session.Direct.enabled = false;
-        }
-
-        static IEnumerator WaitSeconds(float seconds)
-        {
-            for (float until = Time.realtimeSinceStartup + seconds; Time.realtimeSinceStartup < until;)
-                yield return null;
         }
 
         // The title screen is up, with one player here

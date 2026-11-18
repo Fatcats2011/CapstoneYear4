@@ -71,5 +71,88 @@ public class CompassIconUI : MonoBehaviour
 
     int shownDistance = int.MinValue; // the distance the texts show
 
+    internal const float PRICE_SIZE = 18f;
+    TMP_Text[] priceLines;
+    string shownPrice = "";
+
+    /// <summary>The price the icon shows now: "" when hidden</summary>
+    internal string ShownPrice { get { return shownPrice; } }
+
+    ///<summary>
+    /// A small gold price just above the main icon and both child icons. "" hides it. Made the first time it has
+    /// something to say
+    ///</summary>
+    public void SetPrice(string price)
+    {
+        price = price ?? "";
+        if (priceLines == null)
+        {
+            if (price == "")
+                return;
+            priceLines = MakePriceLines();
+        }
+
+        shownPrice = price;
+        foreach (TMP_Text line in priceLines)
+        {
+            line.text = price;
+            line.gameObject.SetActive(price != "");
+        }
+    }
+
+    // The icons whose price lines are made, in the lines' order
+    readonly System.Collections.Generic.List<Image> pricedIcons = new System.Collections.Generic.List<Image>();
+
+    void LateUpdate()
+    {
+        FollowFade();
+    }
+
+    /// <summary>
+    /// The fade animations change each icon's own alpha (and its distance text's), not its children's: each price
+    /// takes its icon's alpha, so it goes when the mark fades close up
+    /// </summary>
+    internal void FollowFade()
+    {
+        if (priceLines == null)
+            return;
+        for (int i = 0; i < pricedIcons.Count && i < priceLines.Length; i++)
+        {
+            if (pricedIcons[i] != null && priceLines[i] != null)
+                priceLines[i].alpha = pricedIcons[i].color.a;
+        }
+    }
+
+    TMP_Text[] MakePriceLines()
+    {
+        Image[] icons = { mainIcon, leftChildIcon, rightChildIcon };
+        System.Collections.Generic.List<TMP_Text> lines = new System.Collections.Generic.List<TMP_Text>();
+        foreach (Image icon in icons)
+        {
+            if (icon != null)
+            {
+                lines.Add(MakePriceLine(icon.transform));
+                pricedIcons.Add(icon);
+            }
+        }
+        // A bare icon (no images) keeps its one line on itself
+        if (lines.Count == 0)
+            lines.Add(MakePriceLine(transform));
+        return lines.ToArray();
+    }
+
+    static TMP_Text MakePriceLine(Transform parent)
+    {
+        TMP_Text line = GameCard.Words(parent, "Price", PRICE_SIZE, GameCard.GOLD);
+        line.richText = false;
+        // Sits on the top edge of its icon
+        RectTransform rect = line.rectTransform;
+        rect.anchorMin = rect.anchorMax = new Vector2(0.5f, 1f);
+        rect.pivot = new Vector2(0.5f, 0f);
+        rect.anchoredPosition = Vector2.zero;
+        rect.sizeDelta = new Vector2(120f, PRICE_SIZE + 6f);
+        return line;
+    }
+
 
 }

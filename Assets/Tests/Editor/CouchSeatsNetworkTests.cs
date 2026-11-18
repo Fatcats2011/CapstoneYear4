@@ -4,6 +4,7 @@ using NUnit.Framework;
 using UnityEditor.SceneManagement;
 using UnityEngine;
 using UnityEngine.TestTools;
+using static DoA.Tests.TestHelpers;
 
 namespace DoA.Tests
 {
@@ -60,16 +61,6 @@ namespace DoA.Tests
         {
             EditorSceneManager.playModeStartScene = null;
             EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
-        }
-
-        static OnlinePlayer PlayerInSeat(OnlineSession session, int seat)
-        {
-            foreach (OnlinePlayer player in session.Players)
-            {
-                if (player.Seat == seat)
-                    return player;
-            }
-            return null;
         }
 
         static bool ScooterInSeat(OnlineSession session, int seat)

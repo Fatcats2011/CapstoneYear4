@@ -158,6 +158,7 @@ The file:
 | `rumble` | 0, 1 | 1 | 0: pads never shake |
 | `colourblind` | 0, 1 | 0 | 1: Colourblind mode |
 | `textsize` | 0–2 | 0 | All text: 0 100%, 1 125%, 2 150% |
+| `hints` | 0–15 | 0 | Which first-time hints this machine has shown (one bit each). 0 shows them all again |
 | `mode` | 0–4 | 0 | Match rules: 0 Standard, 1 Gold Rush, 2 Kings Crown, 3 Infection, 4 Hot Potato |
 | `length` | 0–2 | 1 | Match rules: wave length, 0 short, 1 normal, 2 long |
 | `waves` | 1–6 | 3 | Match rules: how many waves |

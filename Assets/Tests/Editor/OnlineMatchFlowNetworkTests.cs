@@ -5,6 +5,7 @@ using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
 using UnityEngine.TestTools;
+using static DoA.Tests.TestHelpers;
 
 namespace DoA.Tests
 {
@@ -56,26 +57,6 @@ namespace DoA.Tests
             TutorialSync.Reset();
             RespawnSync.Reset();
             CueSync.Reset();
-        }
-
-        static GameState State()
-        {
-            return GameManager.Instance == null ? GameState.Default : GameManager.Instance.MainState;
-        }
-
-        static string ActiveScene()
-        {
-            return UnityEngine.SceneManagement.SceneManager.GetActiveScene().name;
-        }
-
-        static PlayerSlot Slot(int index)
-        {
-            return PlayerInstantiate.Instance.Roster[index];
-        }
-
-        static BallDriving ScooterIn(int slot)
-        {
-            return Slot(slot).Player.GetComponentInChildren<BallDriving>(true);
         }
 
         // Whether this machine shows a cutscene

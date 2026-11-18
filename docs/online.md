@@ -343,6 +343,8 @@ Playing with strangers is opt-in: a lobby is created friends only, exactly as be
 - Each player gets an award card over their score at the results (`docs/superpowers/specs/2026-10-24-awards-design.md`). The host counts what the game raises (`FeatSync`: deliveries, steals, robberies, falls) and who holds the golden order in the golden round (`MatchAwards`, `MatchStats`), and picks the awards as the results start (`AwardRules`).
 - A client's player's fall reaches the host when they ask where to rise (`OnlineRespawns`), so it counts there. A client counts nothing itself.
 - The host sends the picked awards once (`AwardBoard`, `OnlineAwards` → `OnlineMatch.ShareAwards`); clients keep the last ones (`AwardSync.Last`) for their results screen.
+- The same message carries where each seat's money came from (`MoneyTally` on the host, counted from `MoneySync`: deliveries, steals, golden, mode; four amounts a seat, each up to 65,535), which the results cards list. A client counts nothing.
+- First-time hints (`Hints`) are each machine's own: nothing is sent. A client's bump hint comes from its own `BumpReporter`, since the host raises `FeatSync.Bumped` only on its own machine.
 - `OnlineAwardsNetworkTests` (port 7833): the host's awards reach the other machine as picked.
 
 ### Highlight reel

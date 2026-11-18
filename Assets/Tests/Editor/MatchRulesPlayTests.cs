@@ -5,6 +5,7 @@ using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
 using UnityEngine.TestTools;
+using static DoA.Tests.TestHelpers;
 
 namespace DoA.Tests
 {
@@ -36,11 +37,6 @@ namespace DoA.Tests
             SceneFlow.Current = null;
             HouseRules.Current = HouseRules.Playing = HouseRules.Normal;
             seen.Clear();
-        }
-
-        static GameState State()
-        {
-            return GameManager.Instance == null ? GameState.Default : GameManager.Instance.MainState;
         }
 
         [UnityTest]

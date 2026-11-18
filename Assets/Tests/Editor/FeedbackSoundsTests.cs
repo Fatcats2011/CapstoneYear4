@@ -31,6 +31,7 @@ namespace DoA.Tests
         [TestCase(FeedbackSounds.THUD)]
         [TestCase(FeedbackSounds.CURSED)]
         [TestCase(FeedbackSounds.WARNING)]
+        [TestCase(FeedbackSounds.PAD)]
         public void TheSounds_AreInTheGame_AndShort(string name)
         {
             AudioClip clip = FeedbackSounds.Clip(name);
@@ -61,6 +62,13 @@ namespace DoA.Tests
             Assert.AreEqual("warning", FeedbackSounds.WARNING);
             Assert.AreEqual(0.5f, FeedbackSounds.Volume(FeedbackSounds.CURSED));
             Assert.AreEqual(0.6f, FeedbackSounds.Volume(FeedbackSounds.WARNING));
+        }
+
+        [Test]
+        public void ThePadSound_HasItsNameAndASoftVolume()
+        {
+            Assert.AreEqual("pad", FeedbackSounds.PAD);
+            Assert.AreEqual(0.35f, FeedbackSounds.Volume(FeedbackSounds.PAD));
         }
     }
 }

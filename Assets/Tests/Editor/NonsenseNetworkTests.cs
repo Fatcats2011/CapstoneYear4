@@ -5,6 +5,7 @@ using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
 using UnityEngine.TestTools;
+using static DoA.Tests.TestHelpers;
 
 namespace DoA.Tests
 {
@@ -45,11 +46,6 @@ namespace DoA.Tests
             TestPlayers.RemoveAll();
             GameAuthority.Role = NetworkRole.Offline;
             SceneFlow.Current = null;
-        }
-
-        static bool Sees(OnlineSession session, int players)
-        {
-            return session.Match != null && session.Players.Count == players;
         }
 
         static void Listen(OnlineMatch match, HeardRecorder heard)
@@ -112,16 +108,6 @@ namespace DoA.Tests
             yield return null;
             log.Dispose();
             Assert.IsEmpty(log.Problems, "Errors:\n\n" + string.Join("\n\n", log.Problems));
-        }
-
-        static OnlinePlayer PlayerInSeat(OnlineSession session, int seat)
-        {
-            foreach (OnlinePlayer player in session.Players)
-            {
-                if (player.Seat == seat)
-                    return player;
-            }
-            return null;
         }
 
         [UnityTest]

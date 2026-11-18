@@ -21,6 +21,11 @@ public class BeconIndicator : MonoBehaviour
     [SerializeField] float distanceScale = 15f;
     [SerializeField] Vector2 sizeValues;
 
+    /// <summary>Each split-screen view's icon object (PriceTag hangs a label under each)</summary>
+    internal GameObject[] Icons { get { return beconRotationObjects; } }
+    /// <summary>Each view's icon sprite: its alpha fades the icon close up, and the price with it</summary>
+    internal SpriteRenderer[] IconSprites { get { return rotationSprites; } }
+
     // Start is called before the first frame update
     void Start()
     {

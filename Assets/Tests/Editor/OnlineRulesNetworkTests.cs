@@ -4,6 +4,7 @@ using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
 using UnityEngine.TestTools;
+using static DoA.Tests.TestHelpers;
 
 namespace DoA.Tests
 {
@@ -32,17 +33,6 @@ namespace DoA.Tests
             SceneFlow.Current = null;
             HouseRules.Current = HouseRules.Playing = HouseRules.Normal;
             MatchPhysics.Reset();
-        }
-
-        static GameState State()
-        {
-            return GameManager.Instance == null ? GameState.Default : GameManager.Instance.MainState;
-        }
-
-        static IEnumerator Wait(float seconds)
-        {
-            for (float until = Time.realtimeSinceStartup + seconds; Time.realtimeSinceStartup < until;)
-                yield return null;
         }
 
         static HouseRules Mutated => new HouseRules(MatchLength.Long, true, false, true, GameMode.Standard, 5, 150, true);

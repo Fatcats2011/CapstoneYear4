@@ -6,6 +6,7 @@ using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
 using UnityEngine.TestTools;
+using static DoA.Tests.TestHelpers;
 
 namespace DoA.Tests
 {
@@ -29,11 +30,6 @@ namespace DoA.Tests
             TestPlayers.RemoveAll();
             SceneFlow.Current = null;
             HouseRules.Current = HouseRules.Playing = HouseRules.Normal;
-        }
-
-        static GameState State()
-        {
-            return GameManager.Instance == null ? GameState.Default : GameManager.Instance.MainState;
         }
 
         static IEnumerator Seconds(float seconds)

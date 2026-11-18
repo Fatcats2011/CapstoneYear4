@@ -11,8 +11,6 @@ using UnityEngine.UI;
 public class MenuGhostReveal : MonoBehaviour
 {
     [SerializeField] float timeToStart;
-    [Tooltip("Not used any more: the wipe takes revealTime, whatever the frame rate")]
-    [SerializeField] float speed;
     [SerializeField] Animator animator;
     [SerializeField] Image menuGhostRevealObject;
     [SerializeField] Material menuGhostRevealMaterialReference;

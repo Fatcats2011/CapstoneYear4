@@ -103,6 +103,10 @@ public class OrderBeacon : MonoBehaviour
 
         compassMarker.RemoveCompassUIFromAllPlayers();
 
+        // The mark shows this package's own icon and its price, so a carrier of two can tell the drop-offs apart
+        compassMarker.icon = order.Icon != null ? order.Icon : compassMarker.icon;
+        compassMarker.price = OrderFeedbackRules.PriceText(order.Value, order.IsLode, order.Worth);
+
         // Another machine's scooter has no compass here
         Compass compass = order.PlayerHolding.GetComponent<Compass>();
         if (compass != null)

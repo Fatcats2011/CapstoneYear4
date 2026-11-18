@@ -4,6 +4,7 @@ using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
 using UnityEngine.TestTools;
+using static DoA.Tests.TestHelpers;
 
 namespace DoA.Tests
 {
@@ -29,11 +30,6 @@ namespace DoA.Tests
             HouseRules.Current = HouseRules.Playing = HouseRules.Normal;
             ModeMatch.End();
             MatchPhysics.Reset();
-        }
-
-        static GameState State()
-        {
-            return GameManager.Instance == null ? GameState.Default : GameManager.Instance.MainState;
         }
 
         static HouseRules Rules(GameMode mode) => new HouseRules(MatchLength.Normal, true, true, true, mode, 3, 100, false, 2);

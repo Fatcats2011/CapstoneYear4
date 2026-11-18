@@ -4,6 +4,7 @@ using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
 using UnityEngine.TestTools;
+using static DoA.Tests.TestHelpers;
 
 namespace DoA.Tests
 {
@@ -47,11 +48,6 @@ namespace DoA.Tests
             if (!Physics.Linecast(from, to, out RaycastHit hit, ~0, QueryTriggerInteraction.Ignore))
                 return "";
             return " blocked " + hit.distance.ToString("0.0") + " m by " + hit.collider.name + " (" + LayerMask.LayerToName(hit.collider.gameObject.layer) + ", under " + (hit.collider.transform.parent != null ? hit.collider.transform.parent.name : "-") + ")";
-        }
-
-        static GameState State()
-        {
-            return GameManager.Instance == null ? GameState.Default : GameManager.Instance.MainState;
         }
 
         [UnityTest]

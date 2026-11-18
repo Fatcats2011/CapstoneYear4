@@ -37,7 +37,6 @@ public class GameManager : SingletonMonobehaviour<GameManager>
     public event Action OnSwapStartingCutscene;
     public event Action OnSwapTutorial;
     public event Action OnSwapBegin;
-    public event Action OnSwapMainLoop;
     public event Action OnSwapGoldenCutscene;
     public event Action OnSwapFinalPackage;
     public event Action OnSwapResults;
@@ -137,9 +136,6 @@ public class GameManager : SingletonMonobehaviour<GameManager>
                 break;
             case GameState.Begin:
                 Raise(OnSwapBegin);
-                break;
-            case GameState.MainLoop:
-                Raise(OnSwapMainLoop);
                 break;
             case GameState.FinalPackage:
                 Raise(OnSwapFinalPackage);

@@ -4,6 +4,7 @@ using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
 using UnityEngine.TestTools;
+using static DoA.Tests.TestHelpers;
 
 namespace DoA.Tests
 {
@@ -32,11 +33,6 @@ namespace DoA.Tests
             GameAuthority.Role = NetworkRole.Offline;
             SceneFlow.Current = null;
             HouseRules.Current = HouseRules.Normal;
-        }
-
-        static GameState State()
-        {
-            return GameManager.Instance == null ? GameState.Default : GameManager.Instance.MainState;
         }
 
         // Hosts alone in player select with the Bots rule as given, and starts the match

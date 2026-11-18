@@ -7,6 +7,7 @@ using UnityEditor.SceneManagement;
 using UnityEngine;
 using UnityEngine.TestTools;
 using UnityEngine.UI;
+using static DoA.Tests.TestHelpers;
 
 namespace DoA.Tests
 {
@@ -26,12 +27,6 @@ namespace DoA.Tests
                 yield return new ExitPlayMode();
             }
             AccentOverlay.StopListening();
-        }
-
-        static void NewEmptyScene()
-        {
-            EditorSceneManager.playModeStartScene = null;
-            EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
         }
 
         static RectTransform NewCanvas()

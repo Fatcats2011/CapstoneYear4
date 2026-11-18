@@ -5,6 +5,7 @@ using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
 using UnityEngine.TestTools;
+using static DoA.Tests.TestHelpers;
 
 namespace DoA.Tests
 {
@@ -152,26 +153,6 @@ namespace DoA.Tests
             RespawnSync.Reset();
         }
 
-        static GameState State()
-        {
-            return GameManager.Instance == null ? GameState.Default : GameManager.Instance.MainState;
-        }
-
-        static string ActiveScene()
-        {
-            return UnityEngine.SceneManagement.SceneManager.GetActiveScene().name;
-        }
-
-        static PlayerSlot Slot(int index)
-        {
-            return PlayerInstantiate.Instance.Roster[index];
-        }
-
-        static BallDriving ScooterIn(int slot)
-        {
-            return Slot(slot).Player.GetComponentInChildren<BallDriving>(true);
-        }
-
         // The orders of the scooter in a seat, here
         static OrderHandler Handler(int seat)
         {
@@ -194,64 +175,6 @@ namespace DoA.Tests
         static float Flat(Vector3 a, Vector3 b)
         {
             return Vector2.Distance(new Vector2(a.x, a.z), new Vector2(b.x, b.z));
-        }
-
-        // A player on this machine drives their ball there and stops
-        static void PutBallAt(int seat, Vector3 spot)
-        {
-            Rigidbody ball = Slot(seat).Player.GetComponentInChildren<Rigidbody>();
-            ball.velocity = Vector3.zero;
-            ball.position = spot;
-            ball.transform.position = spot;
-        }
-
-        // Where a player who finished the tutorial waits: a city respawn point far from every order's beacons
-        static Vector3 CitySpot()
-        {
-            Vector3 best = Vector3.zero;
-            float bestGap = -1f;
-            Order[] orders = Object.FindObjectsOfType<Order>(true);
-            foreach (RespawnPoint point in Object.FindObjectsOfType<RespawnPoint>())
-            {
-                float gap = float.MaxValue;
-                foreach (Order order in orders)
-                {
-                    if (order.PickupPoint != null)
-                        gap = Mathf.Min(gap, Vector3.Distance(point.transform.position, order.PickupPoint.position));
-                    if (order.DropoffPoint != null)
-                        gap = Mathf.Min(gap, Vector3.Distance(point.transform.position, order.DropoffPoint.position));
-                }
-                if (gap > bestGap)
-                {
-                    bestGap = gap;
-                    best = point.transform.position;
-                }
-            }
-            return best;
-        }
-
-        // A player on this machine finishes the tutorial and waits in the city, as a player who drove out of it does
-        // (the tutorial area goes a second into the first wave)
-        static void FinishTutorialInTheCity(int seat)
-        {
-            PutBallAt(seat, CitySpot());
-            Slot(seat).Player.GetComponentInChildren<TutorialHandler>().TeachHandler(TutorialType.Final);
-        }
-
-        static OnlineScooter ScooterInSeat(OnlineSession session, int seat)
-        {
-            foreach (OnlineScooter scooter in session.Scooters)
-            {
-                if (scooter.Seat == seat)
-                    return scooter;
-            }
-            return null;
-        }
-
-        // The machine that owns a scooter moves it there, as its OnlineDriving would
-        static void ShareAt(OnlineScooter scooter, Vector3 spot)
-        {
-            scooter.Share(new ScooterPose { Ball = spot, Heading = 0, ModelPosition = spot, ModelRotation = Quaternion.identity }, default(DriveFlags));
         }
 
         // The first order spawn heard that isn't one of these orders, or null

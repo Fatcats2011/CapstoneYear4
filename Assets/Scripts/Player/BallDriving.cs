@@ -181,18 +181,6 @@ public class BallDriving : MonoBehaviour
         AtAllTimes
     }
 
-    [Header("Debug")]
-    [SerializeField] private bool debugSpeedometerEnable = false;
-    [SerializeField] private TextMeshProUGUI debugSpeedText;
-    [SerializeField] private bool debugDriftStateEnable = false;
-    [SerializeField] private TextMeshProUGUI debugDriftStateText;
-    [SerializeField] private bool debugDriftCompleteEnable = false;
-    [SerializeField] private Image debugDriftComplete;
-    [SerializeField] private bool debugBoostabilityEnable = false;
-    [SerializeField] private Image debugBoostability;
-    [SerializeField] private bool debugCSVEnable = false;
-    [SerializeField] private TextMeshProUGUI debugCSV;
-
     private Gamepad pad;
     private Rumbler rumble;
 
@@ -248,7 +236,6 @@ public class BallDriving : MonoBehaviour
     private bool slowdownImmune = false;
     private float groundBoostAmount = 0;
 
-    private bool onMovingPlatform = false; //tells whether the player is on a moving platform
     private MovingPlatform currentMovingPlatform;
     private int movingPlatformIndex; //a local copy of the index that the current moving platform recognizes this scooter as
 
@@ -848,6 +835,14 @@ public class BallDriving : MonoBehaviour
             {
                 case "Speed":
                     groundBoostFlag = true;
+                    // One moment per crossing, for the player driving here: a CPU driver has no camera, and another
+                    // machine's scooter doesn't run this at all (RemoteAvatar turns BallDriving off)
+                    if (TouchPad(Time.time) && orbitalCamera != null)
+                    {
+                        PadJolt();
+                        if (soundPool != null)
+                            soundPool.PlayFeedback(FeedbackSounds.PAD, DrivingFeedbackRules.Pitch(currentVelocity));
+                    }
                     try
                     {
                         groundBoostAmount = hit.collider.gameObject.GetComponent<Booster>().SpeedBoostAmount;
@@ -865,7 +860,6 @@ public class BallDriving : MonoBehaviour
                 case "MovingPlatform":
                     if (currentMovingPlatform == null)
                     {
-                        onMovingPlatform = true;
                         currentMovingPlatform = hit.collider.gameObject.GetComponent<MovingPlatform>();
                         if ((movingPlatformIndex = currentMovingPlatform.AddToScooterList(this)) == -1)
                         {
@@ -879,7 +873,6 @@ public class BallDriving : MonoBehaviour
                 default:
                     if (currentMovingPlatform != null)
                     {
-                        onMovingPlatform = false;
                         currentMovingPlatform.RemoveFromScooterList(movingPlatformIndex);
                         currentMovingPlatform = null;
                     }
@@ -952,7 +945,6 @@ public class BallDriving : MonoBehaviour
     {
         if (!boosting && !reverseGear && grounded)
         {
-            soundPool.PlayDriftSound();
             callToDrift = false;
             drifting = true;
 
@@ -1007,7 +999,6 @@ public class BallDriving : MonoBehaviour
     /// <param name="dirty">Whether the drop is dirty</param>
     public void DriftDrop(bool dirty = true)
     {
-        soundPool.StopDriftSound();
         soundPool.StopDriftSpark();
 
         drifting = false;
@@ -1441,6 +1432,43 @@ public class BallDriving : MonoBehaviour
             orbitalCamera.Kick(Comfort.Kick(robbed ? ROBBED_KICK : STEAL_KICK));
     }
 
+    // The last time the scooter touched a boost pad, and when its latest crossing began (negative: never)
+    float lastPadTouch = -1f;
+    float padCrossedAt = -1f;
+
+    /// <summary>
+    /// The scooter touched a boost pad at this time. True when that began a new crossing (DrivingFeedbackRules), which
+    /// starts the speed line burst; false for every physics step after it while the scooter stays on pads
+    /// </summary>
+    internal bool TouchPad(float now)
+    {
+        bool crossing = DrivingFeedbackRules.NewCrossing(lastPadTouch, now);
+        lastPadTouch = now;
+        if (crossing)
+            padCrossedAt = now;
+        return crossing;
+    }
+
+    /// <summary>Whether a boost pad crossing began lately enough for the speed lines to be at boost strength</summary>
+    internal bool PadBursting(float now)
+    {
+        return DrivingFeedbackRules.Bursting(padCrossedAt, now);
+    }
+
+    /// <summary>The scooter crossed a boost pad: one short, light shake of the pad. Rumble off, or no rumbler: nothing</summary>
+    public void PadJolt()
+    {
+        if (rumble != null)
+            rumble.RumblePulse(pad, 0.2f, 0.4f, 0.15f);
+    }
+
+    /// <summary>A rival is boosting straight at this player (RivalWarning): a short, light shake of their pad. Nothing without a rumbler</summary>
+    public void WarnJolt()
+    {
+        if (rumble != null)
+            rumble.RumblePulse(pad, 0.3f, 0.5f, 0.15f);
+    }
+
     /// <summary>
     /// Changes speed line value based on speed and boosting state
     /// </summary>
@@ -1469,7 +1497,8 @@ public class BallDriving : MonoBehaviour
                 orbitalCamera.passInFOV = Comfort.TargetFov(true, clampedFOVValue, 60f);
             }
 
-            speedLineValue = clampedSpeedLineValue;
+            // Just over a boost pad the lines show at boost strength, though the view stays as the speed has it
+            speedLineValue = PadBursting(Time.time) ? 0.8f : clampedSpeedLineValue;
             SetSpeedLines(speedLineValue);
         }
     }
