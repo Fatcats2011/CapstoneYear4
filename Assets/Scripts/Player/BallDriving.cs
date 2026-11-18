@@ -251,6 +251,8 @@ public class BallDriving : MonoBehaviour
     private float boostTimerMaxTime = 0f;
     public float BoostTimerMaxTime => boostTimerMaxTime;
     private float boostRechargeTimeSet;
+    /// <summary>Whether the boost recharges slower than usual (carrying a package, or a longer tutorial recharge): the boost ring shows it</summary>
+    public bool RechargeSlowed { get; private set; }
 
     private float slipstreamPortion = 0.0f;
 
@@ -1601,6 +1603,7 @@ public class BallDriving : MonoBehaviour
     {
         float currentElapsedTimeRatio = boostElapsedTime / boostTimerMaxTime;
         boostRechargeTime = holdingPackage ? handsFullBoostRechargeTime : boostRechargeTimeSet;
+        RechargeSlowed = holdingPackage;
         SetBoostRatio(currentElapsedTimeRatio);
     }
 
@@ -1612,6 +1615,7 @@ public class BallDriving : MonoBehaviour
     {
         float currentElapsedTimeRatio = boostElapsedTime / boostTimerMaxTime;
         boostRechargeTime = mod;
+        RechargeSlowed = mod > boostRechargeTimeSet;
         SetBoostRatio(currentElapsedTimeRatio);
     }
 

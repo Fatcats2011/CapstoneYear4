@@ -685,6 +685,8 @@ public class OptionsMenu : SingletonMonobehaviour<OptionsMenu>, IMouseMenu
             .WithMenuPositions(bgmPosition, sfxPosition, fullscreenPosition, qualityPosition);
         // Hints are earned in a match and saved by Hints itself: never write back an older mask
         current.hintsSeen = Hints.Seen;
+        // The online match count is earned in a match and saved by BoostPrompts itself: never write back an older count
+        current.onlineMatches = BoostPrompts.OnlineMatches;
 
         try
         {
@@ -741,6 +743,7 @@ public class OptionsMenu : SingletonMonobehaviour<OptionsMenu>, IMouseMenu
         Units.Imperial = settings.units == 1;
         HouseRules.LoadSaved(settings);
         Hints.Seen = settings.hintsSeen;
+        BoostPrompts.OnlineMatches = settings.onlineMatches;
 
         // The language: the one picked here before, else Steam's, else the PC's, else English (LanguageRules)
         Loc.SetLanguage(LanguageRules.Pick(settings.language, SteamNames.Language(), Application.systemLanguage));

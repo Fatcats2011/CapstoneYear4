@@ -79,6 +79,9 @@ public class GameSettings
     /// <summary>The first-time hints this machine has shown, one bit each (Hints, HintRules)</summary>
     public int hintsSeen = 0;
 
+    /// <summary>How many online matches this machine has played to the results (BoostPrompts)</summary>
+    public int onlineMatches = 0;
+
     public GameSettings(int bgmPosition, int sfxPosition, int fullscreenPosition, int qualityLevel = GraphicsQuality.HIGH)
     {
         this.bgmPosition = bgmPosition;
@@ -98,23 +101,29 @@ public class GameSettings
             + $"rumble={rumble}\ncolourblind={colourblind}\ntextsize={textSize}\n"
             + $"length={matchLength}\nsteals={steals}\ngolden={goldenOrder}\nbots={bots}\n"
             + $"mode={mode}\nwaves={waves}\nspeed={speed}\nlowgravity={lowGravity}\nround={roundMinutes}\n"
-            + $"language={language}\n" + $"hints={hintsSeen}\n";
+            + $"language={language}\n" + $"hints={hintsSeen}\n" + $"onlineMatches={onlineMatches}\n";
     }
 
     ///<summary>
-    /// The saved text with its hints line set to the mask and every other line kept as it is (a match can save hints when
-    /// no menu is alive to write the whole file)
+    /// The saved text with one line set to the value and every other line kept as it is (a match can save when no menu is
+    /// alive to write the whole file)
     ///</summary>
-    public static string WithHints(string text, int mask)
+    public static string WithLine(string text, string key, int value)
     {
         System.Text.StringBuilder result = new System.Text.StringBuilder();
         foreach (string line in (text ?? "").Split('\n'))
         {
             string kept = line.TrimEnd('\r');
-            if (kept.Length > 0 && kept.Split('=')[0].Trim() != "hints")
+            if (kept.Length > 0 && kept.Split('=')[0].Trim() != key)
                 result.Append(kept).Append('\n');
         }
-        return result.Append("hints=").Append(mask.ToString(CultureInfo.InvariantCulture)).Append('\n').ToString();
+        return result.Append(key).Append('=').Append(value.ToString(CultureInfo.InvariantCulture)).Append('\n').ToString();
+    }
+
+    ///<summary>The saved text with its hints line set to the mask (WithLine)</summary>
+    public static string WithHints(string text, int mask)
+    {
+        return WithLine(text, "hints", mask);
     }
 
     ///<summary>
@@ -157,6 +166,7 @@ public class GameSettings
         copy.roundMinutes = roundMinutes;
         copy.language = language;
         copy.hintsSeen = hintsSeen;
+        copy.onlineMatches = onlineMatches;
         return copy;
     }
 
@@ -274,6 +284,9 @@ public class GameSettings
                     break;
                 case "hints":
                     settings.hintsSeen = Mathf.Max(value, 0);
+                    break;
+                case "onlineMatches":
+                    settings.onlineMatches = Mathf.Max(value, 0);
                     break;
             }
         }

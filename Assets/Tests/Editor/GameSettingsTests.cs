@@ -223,5 +223,38 @@ namespace DoA.Tests
             Assert.AreEqual(0, saved.backgroundMute);
             Assert.AreEqual(1, saved.units);
         }
+
+        [Test]
+        public void Parse_ReadsOnlineMatches()
+        {
+            Assert.AreEqual(7, GameSettings.Parse("onlineMatches=7\n", Defaults).onlineMatches);
+            GameSettings saved = new GameSettings(3, 9, 0);
+            saved.onlineMatches = 5;
+            Assert.AreEqual(5, GameSettings.Parse(saved.ToText(), Defaults).onlineMatches, "round trip");
+        }
+
+        [Test]
+        public void Parse_MissingOrBadOnlineMatches_IsZero()
+        {
+            Assert.AreEqual(0, GameSettings.Parse("bgm=3\n", Defaults).onlineMatches);
+            Assert.AreEqual(0, GameSettings.Parse("onlineMatches=-4\n", Defaults).onlineMatches);
+            Assert.AreEqual(0, GameSettings.Parse("onlineMatches=abc\n", Defaults).onlineMatches);
+        }
+
+        [Test]
+        public void WithLine_ReplacesOnlyItsKey()
+        {
+            string text = GameSettings.WithLine("bgm=3\nhints=1\nonlineMatches=2\nsfx=4\n", "onlineMatches", 9);
+            Assert.AreEqual("bgm=3\nhints=1\nsfx=4\nonlineMatches=9\n", text);
+        }
+
+        [Test]
+        public void Save_WritesOnlineMatches()
+        {
+            Assert.AreEqual("bgm=3\nonlineMatches=4\n", GameSettings.WithLine("bgm=3\n", "onlineMatches", 4));
+            GameSettings saved = new GameSettings(3, 9, 0);
+            saved.onlineMatches = 4;
+            StringAssert.Contains("onlineMatches=4\n", saved.ToText());
+        }
     }
 }

@@ -1,7 +1,7 @@
 using System;
 
-/// <summary>The four rules a player is told once, the first time they matter (Hints). The order is the bit each takes in the saved mask</summary>
-public enum HintKind : byte { BoostToSteal, BoostToBlock, StolenPaysDouble, HoldGold }
+/// <summary>The rules a player is told once, the first time they matter (Hints). The order is the bit each takes in the saved mask</summary>
+public enum HintKind : byte { BoostToSteal, BoostToBlock, StolenPaysDouble, HoldGold, BoostReady }
 
 /// <summary>
 /// First-time hints: one line each, in the player's own callout (StealCallout.HearHint), held a little longer than an event
@@ -24,6 +24,7 @@ public static class HintRules
             case HintKind.BoostToBlock: return "hint.boost_to_block";
             case HintKind.StolenPaysDouble: return "hint.stolen_double";
             case HintKind.HoldGold: return "hint.hold_gold";
+            case HintKind.BoostReady: return "hint.boost_ready";
             default: return "";
         }
     }

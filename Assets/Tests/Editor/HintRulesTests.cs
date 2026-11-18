@@ -4,7 +4,7 @@ namespace DoA.Tests
 {
     /// <summary>
     /// First-time hints (HintRules, Hints, HintWatcher): which hint is which, which states show them, the seen mask, what
-    /// is offered to whom, the saved line in settings.cfg, and the four lines in every language
+    /// is offered to whom, the saved line in settings.cfg, and the five lines in every language
     /// </summary>
     public class HintRulesTests
     {
@@ -52,6 +52,7 @@ namespace DoA.Tests
         [TestCase(HintKind.BoostToBlock, "hint.boost_to_block")]
         [TestCase(HintKind.StolenPaysDouble, "hint.stolen_double")]
         [TestCase(HintKind.HoldGold, "hint.hold_gold")]
+        [TestCase(HintKind.BoostReady, "hint.boost_ready")]
         public void EachHint_HasItsKey(HintKind kind, string key)
         {
             Assert.AreEqual(key, HintRules.Key(kind));
@@ -209,6 +210,7 @@ namespace DoA.Tests
         [TestCase("hint.boost_to_block")]
         [TestCase("hint.stolen_double")]
         [TestCase("hint.hold_gold")]
+        [TestCase("hint.boost_ready")]
         public void EveryHint_IsInEveryLanguage_InCapitals_AndFitsTheLine(string key)
         {
             StringsCsv csv = StringsCsv.Load();
@@ -230,6 +232,7 @@ namespace DoA.Tests
             Assert.AreEqual("BOOST TO BLOCK A THIEF", csv.Get("hint.boost_to_block", "en"));
             Assert.AreEqual("STOLEN ORDERS PAY DOUBLE", csv.Get("hint.stolen_double", "en"));
             Assert.AreEqual("HOLD GOLD LONGER, EARN MORE", csv.Get("hint.hold_gold", "en"));
+            Assert.AreEqual("RING FULL: BOOST!", csv.Get("hint.boost_ready", "en"));
         }
     }
 }

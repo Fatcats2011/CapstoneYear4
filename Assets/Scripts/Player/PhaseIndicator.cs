@@ -19,6 +19,8 @@ public class PhaseIndicator : MonoBehaviour
     [SerializeField] Gradient hornGlowGraident;
 
     [SerializeField] BallDriving control;
+    [Tooltip("The boost ring on the ground, drawn from the same gauge as the horns")]
+    [SerializeField] internal BoostRing ring;
   
     [Header("Material Info")]
     [SerializeField] Renderer ghostRenderer;
@@ -44,6 +46,8 @@ public class PhaseIndicator : MonoBehaviour
     private void Start()
     {
         soundPool = GetComponent<SoundPool>();
+        if (ring != null)
+            ring.SetColours(hornGlowGraident, readyColor); // the ring matches the horns
     }
 
     private void Update()
@@ -96,6 +100,10 @@ public class PhaseIndicator : MonoBehaviour
     public void SetHornColor(float passInCurrent, float passInMax)
     {
         float ratio = passInCurrent / passInMax;
+
+        // The ring every frame, not only when the gauge moves: it counts how long the boost has sat full
+        if (ring != null)
+            ring.Show(BoostRingRules.Fill(passInCurrent, passInMax), control.RechargeSlowed);
 
         // Nothing to redraw while the gauge hasn't moved
         if (!NeedsRedraw(ratio, lastRatio))

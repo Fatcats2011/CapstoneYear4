@@ -46,6 +46,9 @@ public class RemoteAvatar : MonoBehaviour
             respawn.enabled = false;
         foreach (PhaseIndicator horns in GetComponentsInChildren<PhaseIndicator>(true))
             horns.enabled = false;
+        // Their boost charge isn't known here (their horns flash through OnlineCues instead)
+        foreach (BoostRing ring in GetComponentsInChildren<BoostRing>(true))
+            ring.Hide();
         // Off before it's ever active, so it never listens to the game's states and starts an engine hum
         foreach (SoundPool sounds in GetComponentsInChildren<SoundPool>(true))
             sounds.enabled = false;

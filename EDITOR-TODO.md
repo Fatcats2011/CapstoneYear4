@@ -383,6 +383,29 @@ Play Standard with 4 players (bots are fine) in split screen, then in two editor
 - **Options > Display > Split-screen mid-match** (with 2 players): the board follows each choice at once.
 - Money, +$, packages and crowns still update in every layout.
 
+## 16o. Boost ring: setup and playtest (15 minutes)
+
+- **Setup:** run **DoA → Setup → Boost Ring** once. It adds the ring and prompt to `PlayerAvatar.prefab`. Running it twice is safe.
+- **Couch, 1 to 4 players:**
+  - Each scooter has a ring on the ground that fills as boost recharges, in the horn colours.
+  - When full it glows, pulses and flashes with the horns. The boost button shows in front of it.
+  - Each player sees only their own button. Everyone sees every ring.
+  - The button matches the pad: A on Xbox, Cross on PlayStation, Space on keyboard.
+  - Boost: the ring bursts outward, then fills from empty.
+  - Size, height and button position look right? They are tunable on the Boost Ring object.
+- **Carrying a package:** the ring fills dashed and slower. Full, it turns solid.
+- **Leave boost full for 15 seconds:** the boost hint shows once (not in the tutorial).
+- **With a bot:** its ring shows, with no button.
+- **Online, host and guest:** your own ring and button work. Other players' scooters have no ring.
+  - First 3 online matches: the button shows as soon as the ring is full. After that, only after about 3 seconds full.
+- **Tutorial:** the ring works, no hint.
+- **On a slope:** the ring tilts with the ground and doesn't sink in or flicker.
+- **Jumping:** the ring fades out in the air and back on landing.
+- **Phasing:** the ring still looks right.
+- **Lobby:** the ring shows under scooters there too. Keep it, or hide it outside matches?
+- **Mac and Linux builds:** the ring draws.
+- **Fresh player:** one match, no explanation. Then ask "what's the ring?"
+
 ## 16c. Accessibility: to build, then playtest
 
 For Steam's store-page accessibility section. None of these exist yet. Today Options → ACCESSIBILITY has only Reduce motion.
