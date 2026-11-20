@@ -6,14 +6,14 @@
 New players don't notice the horn glow. They can't tell when boost will be back, and they may not realise boost does anything. We need a charge readout they can't miss, that teaches itself and doesn't rely on them remembering the tutorial.
 
 ## Goals
-- A ring on the ground under each scooter that fills as boost recharges (3s, or 5s carrying a package).
+- A ring on the ground under each scooter that fills as boost recharges (3s, or 8s carrying a package: the player prefab sets 8s).
 - It explains itself: the same colours as the horns, the boost button showing when it's full, and a visible "spent" burst when used.
 - Small and quiet while charging, loudest when full (fits "added UI stays small").
 
 ## Non-goals
 - No HUD bar. The existing `hornSliderLeft/Right` sliders are left as they are.
 - No change to boost rules or timings.
-- Online: other machines' scooters get no ring. Their charge isn't synced, and their horns already flash through `CueKind.HornReady`.
+- Online: other machines' scooters get no ring. Their charge isn't synced, and their horns already flash through `CueKind.HornReady`. Online CPU bots get no ring either (nothing drives their gauge).
 
 ## Anti-goals
 - A ring that looks like a pickup zone, an area attack or a boost pad.
@@ -28,12 +28,13 @@ New players don't notice the horn glow. They can't tell when boost will be back,
 | Moment | Ring |
 |---|---|
 | Charging | Fills around the ring in the horn gradient, dim |
-| Carrying a package | Dashed/heavier look so the slower 5s fill reads as deliberate |
+| Carrying a package | Dashed/heavier look so the slower 8s fill reads as deliberate |
 | Full | Bright, gentle pulse, flashes with the horns; boost button prompt in front |
 | Used | Bursts outward behind the scooter, then refills from empty |
 
 - **Button prompt:** the device-correct icon (existing `ButtonGlyph`). Only the owning player's camera sees it (that player's world layer, 10–13).
 - **Prompt rule, local (couch, and solo with bots):** the prompt shows on every full ring, always. Couch players can't be told apart between sessions, so there's nothing to count.
+- **Solo with bots** is hosted online under the hood, but counts as local (user, 2026-11-17): the online rule applies only when another machine's player is in the match.
 - **Prompt rule, online:** per player. The prompt shows on every full ring for that player's first **3 online matches**. After that it appears only once the ring has sat full for a few seconds. One machine is one online player, so the count is saved in that player's `settings.cfg` next to `hints=`, and only online matches count.
 - **New one-time hint:** "ring full and unused for ~15s" is added to `HintKind`/`HintRules` with a strings.csv line. It's saved in the hints mask and not shown in the tutorial (same as the other hints).
 

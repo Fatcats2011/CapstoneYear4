@@ -12,7 +12,7 @@
 
 ## Global Constraints
 - Branch `steam-phase1a`. Never check out `main` in the real folder. Commit only when the user asks: the "Commit" steps below are stage-only until then.
-- No change to boost rules or timings (3s recharge, 5s carrying a package).
+- No change to boost rules or timings (3s recharge, 8s carrying a package — prefab value).
 - Prompt: local (not `GameAuthority.IsOnline`) shows on every full ring. Online shows on every full ring for the first **3** online matches, then only after the ring has been full for `PROMPT_DELAY` seconds.
 - Hint "ring full and unused" fires after **15s** full; it's one-time, saved in the hints mask, and not shown in the tutorial.
 - Only the owning player's camera sees their prompt (their `PlayerCameraResizer.playerWorldLayer`, 10–13). Bots get a ring but no prompt.

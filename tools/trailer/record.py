@@ -10,7 +10,8 @@ import time
 HERE = os.path.dirname(os.path.abspath(__file__))
 PROJECT = os.path.abspath(os.path.join(HERE, '..', '..'))
 GAME = os.path.abspath(os.path.join(PROJECT, '..', '_doa_capture', 'CapstoneYear4', 'TrailerBuild', 'DeadOnArrival.exe'))
-OUT = os.path.abspath(os.path.join(PROJECT, '..', 'TrailerFootage'))
+# DOA_TRAILER_OUT: another folder for the footage
+OUT = os.environ.get('DOA_TRAILER_OUT') or os.path.abspath(os.path.join(PROJECT, '..', 'TrailerFootage'))
 
 with open(os.path.join(HERE, 'takes.json')) as f:
     TAKES = json.load(f)

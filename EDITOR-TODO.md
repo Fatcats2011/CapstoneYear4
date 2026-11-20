@@ -395,7 +395,8 @@ Play Standard with 4 players (bots are fine) in split screen, then in two editor
   - Size, height and button position look right? They are tunable on the Boost Ring object.
 - **Carrying a package:** the ring fills dashed and slower. Full, it turns solid.
 - **Leave boost full for 15 seconds:** the boost hint shows once (not in the tutorial).
-- **With a bot:** its ring shows, with no button.
+- **With bots (host online, Bots on):** CPU drivers have no ring. Yours works as normal.
+  - Solo with bots plays like local: your button shows on every full ring, and the match doesn't count toward the 3 online ones.
 - **Online, host and guest:** your own ring and button work. Other players' scooters have no ring.
   - First 3 online matches: the button shows as soon as the ring is full. After that, only after about 3 seconds full.
 - **Tutorial:** the ring works, no hint.
@@ -405,6 +406,29 @@ Play Standard with 4 players (bots are fine) in split screen, then in two editor
 - **Lobby:** the ring shows under scooters there too. Keep it, or hide it outside matches?
 - **Mac and Linux builds:** the ring draws.
 - **Fresh player:** one match, no explanation. Then ask "what's the ring?"
+
+## 16p. Ghost emotes: playtest (20 minutes)
+
+Nothing to set up: the emotes are added when players join. Play a couch match with bots, then an online one.
+
+- **In a match, each fires and reads from the game camera:**
+  - Steal: the thief cackles, the victim shakes a fist.
+  - Delivery: a flourish. The golden order too.
+  - Boost: a hold-your-hat. Only about one boost in a few (20 s apart).
+  - Airtime: "Wheee" after a real jump off a ramp or bump. Not on a drop into the river.
+  - Hard bump: stars around the head.
+  - Golden order: a treasure hold on pickup, then every 15 s.
+  - A rival closing in behind while you carry: a jump scare. Further behind: a side eye.
+  - Not carrying, closing on a carrier: a scheming look.
+  - Standing still for 12 s: bored.
+- **Not spammy:** the same emote never twice running, and a big one (steal, bump) cuts a small one. Does a ghost ever feel like it is always doing something?
+- **Lobby:** a new player materialises; readying up warms up or cracks knuckles; a new hat or colour shows off; ready while someone isn't, after 5 s, impatient.
+- **Countdown:** every ghost revs at 3, 2, 1.
+- **Results:** the winner (victory or crown polish) and the last place (tantrum or fade away) emote every few seconds. The podium acts wait for them.
+- **Props:** the parcel is in the ghost's hands during the cackle, treasure hold and side eye, then back on the rack. The winner holds a crown. Does anything flicker or stay behind?
+- **Online:** other players' ghosts emote too (steal, delivery, boost, lobby, results). A hard hit shows stars on the victim's ghost on every machine, yours too.
+- **Decided (2026-11-20):** the d-pad emotes stay off in matches. They work in code but nothing is bound to them, by choice.
+- **Known:** Bored is mostly hidden behind the theft replay.
 
 ## 16c. Accessibility: to build, then playtest
 

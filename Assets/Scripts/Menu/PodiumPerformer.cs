@@ -6,7 +6,8 @@ using UnityEngine;
 /// its place, and every few seconds plays the next act of its mood's shuffled list. An act moves the model on top of
 /// how it stood (nothing else moves the model while the scooter is frozen: BallDriving turns its parents), so stopping
 /// puts it back exactly. Each machine picks its own acts: they're only for show. It stops by itself when the results
-/// end, however they end (the vote, a rematch's load, the lobby): StopAll, or the game leaving the Results state
+/// end, however they end (the vote, a rematch's load, the lobby): StopAll, or the game leaving the Results state.
+/// The winner and the last place also play ghost emotes between acts (PodiumEmotes): no act starts while one plays
 /// </summary>
 public class PodiumPerformer : MonoBehaviour
 {
@@ -27,6 +28,11 @@ public class PodiumPerformer : MonoBehaviour
     float actTime;
     float rest;      // seconds until the next act
     float toWinner;  // the winner's side as the act began, in degrees
+    PodiumEmotes emoting; // the winner's and the last place's emotes (null for the others)
+    GhostEmotes ghost;    // the ghost's emotes on its Animator (null when it has none)
+
+    /// <summary>Its emotes (null when its place has none, or the ghost has no emotes)</summary>
+    internal PodiumEmotes Emoting => emoting;
 
     /// <summary>The act playing now (null between acts)</summary>
     public PodiumAct Playing => act;
@@ -47,7 +53,12 @@ public class PodiumPerformer : MonoBehaviour
             performer.Stop();
         performer = model.gameObject.AddComponent<PodiumPerformer>();
         performer.animator = animator;
-        performer.acts = PodiumActs.For(PodiumActs.MoodOf(place, players));
+        PodiumMood mood = PodiumActs.MoodOf(place, players);
+        performer.acts = PodiumActs.For(mood);
+        // The ghost's own emotes (PlayerEmotes put them on its Animator); its own random, so the acts' stays as it was
+        performer.ghost = animator != null ? animator.GetComponent<GhostEmotes>() : null;
+        // The last finishing place emotes as last whenever 2+ play (the acts keep their own moods)
+        performer.emoting = PodiumEmotes.For(place, players, performer.ghost);
         performer.random = random ?? new System.Random();
         performer.order = new TitlePlaylist(performer.acts.Length, performer.random);
         performer.pose = PodiumActs.PoseOf(place);
@@ -87,10 +98,14 @@ public class PodiumPerformer : MonoBehaviour
     /// <summary>That much time goes by: the act moves on, or the wait for the next one does</summary>
     internal void Tick(float deltaTime)
     {
+        if (emoting != null)
+            emoting.Tick(deltaTime, act != null);
+
         if (act == null)
         {
             rest -= deltaTime;
-            if (rest <= 0f)
+            // While a ghost emote plays no act starts (one already going finishes)
+            if (rest <= 0f && !EmotePlaying)
                 Begin(acts[order.Next()]);
             return;
         }
@@ -103,6 +118,9 @@ public class PodiumPerformer : MonoBehaviour
         }
         Apply(act.At(actTime / act.Length, toWinner));
     }
+
+    /// <summary>Whether one of the ghost's emotes is playing</summary>
+    bool EmotePlaying => ghost != null && ghost.Playing != null;
 
     /// <summary>Starts an act now, whatever was playing (tests, and Tick)</summary>
     internal void Begin(PodiumAct next)
@@ -127,6 +145,9 @@ public class PodiumPerformer : MonoBehaviour
     /// <summary>Stops performing: the model stands as it did, and the performer goes. The pose is the results' to clear</summary>
     public void Stop()
     {
+        if (emoting != null)
+            emoting.Stop();
+        emoting = null;
         act = null;
         Apply(PodiumPose.Still);
         performing.Remove(this);

@@ -12,7 +12,8 @@ namespace DoA.Tests
     {
         static IEnumerable<ScooterCue> EveryKind()
         {
-            foreach (CueKind kind in new[] { CueKind.Boost, CueKind.DriftBoost, CueKind.HornReady, CueKind.Phase, CueKind.PhaseEnd, CueKind.Death })
+            foreach (CueKind kind in new[] { CueKind.Boost, CueKind.DriftBoost, CueKind.HornReady, CueKind.Phase, CueKind.PhaseEnd, CueKind.Death,
+                CueKind.Emote0, CueKind.Emote1, CueKind.Emote2, CueKind.Emote3, CueKind.Dizzy })
                 yield return ScooterCue.Of(kind);
             yield return ScooterCue.Rise(17);
         }

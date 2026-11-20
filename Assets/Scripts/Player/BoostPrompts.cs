@@ -4,7 +4,7 @@ using UnityEngine;
 
 /// <summary>
 /// How many online matches this machine has played to the results, saved in settings.cfg: the boost ring's button prompt
-/// shows at once for the first BoostRingRules.PROMPT_MATCHES of them. Offline matches are not counted.
+/// shows at once for the first BoostRingRules.PROMPT_MATCHES of them. Offline matches, and solo ones with CPU drivers, are not counted.
 /// BoostPromptWatcher counts a match when the results come
 /// </summary>
 public static class BoostPrompts
@@ -35,6 +35,16 @@ public static class BoostPrompts
             return;
         onlineMatches++;
         Changed?.Invoke(onlineMatches);
+    }
+
+    /// <summary>
+    /// Whether this match follows the online prompt rule and counts: online with another machine's player in it. Solo
+    /// with CPU drivers is hosted online but plays like local (BoostRingRules.WithPeopleOnline)
+    /// </summary>
+    public static bool WithPeopleOnline()
+    {
+        PlayerInstantiate players = PlayerInstantiate.Instance;
+        return BoostRingRules.WithPeopleOnline(GameAuthority.IsOnline, players != null ? players.Roster.Players : null);
     }
 
     /// <summary>Writes the count into settings.cfg, leaving every other line as it is (as Hints.Save does)</summary>
@@ -102,6 +112,6 @@ public class BoostPromptWatcher : MonoBehaviour
 
     void OnResults()
     {
-        BoostPrompts.OnResults(GameAuthority.IsOnline);
+        BoostPrompts.OnResults(BoostPrompts.WithPeopleOnline());
     }
 }

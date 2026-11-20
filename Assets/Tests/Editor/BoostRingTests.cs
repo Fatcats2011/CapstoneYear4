@@ -17,6 +17,7 @@ namespace DoA.Tests
         readonly TestObjects objects = new TestObjects();
         readonly List<Material> materials = new List<Material>();
         int savedSeen;
+        GameState state;
 
         [SetUp]
         public void SetUp()
@@ -24,12 +25,15 @@ namespace DoA.Tests
             PlayerInstantiate.instance = objects.Add<PlayerInstantiate>();
             savedSeen = Hints.Seen;
             Hints.Seen = 0;
+            state = GameState.Begin;
+            Hints.State = () => state; // a match, whatever game manager another test left behind
         }
 
         [TearDown]
         public void TearDown()
         {
             Hints.Seen = savedSeen;
+            Hints.State = null;
             PlayerInstantiate.instance = null;
             objects.DestroyAll();
             foreach (Material material in materials)
@@ -158,9 +162,57 @@ namespace DoA.Tests
         }
 
         [Test]
-        public void Prompt_ShownWhenFull_ForAPlayer()
+        public void EnteringAMatch_RestartsTimeFull_SoTheHintWaitsAgain()
         {
             BoostRing ring = NewRing(out _);
+            List<HintKind> offers = new List<HintKind>();
+            System.Action<int, HintKind> hear = (seat, kind) => offers.Add(kind);
+            Hints.Offered += hear;
+            try
+            {
+                state = GameState.Results; // full and unused on the results screen
+                for (int second = 0; second < 20; second++)
+                    ring.Show(1f, false);
+                Assert.IsEmpty(offers, "no hint outside a match");
+                Assert.AreEqual(20f, ring.TimeFull, 0.0001f);
+
+                state = GameState.Begin; // the rematch
+                ring.Show(1f, false);
+                Assert.AreEqual(1f, ring.TimeFull, 0.0001f, "counting again from the match's start");
+                for (int second = 0; second < 13; second++)
+                    ring.Show(1f, false);
+                Assert.IsEmpty(offers, "14 s into the match: not yet");
+                ring.Show(1f, false);
+                Assert.AreEqual(new[] { HintKind.BoostReady }, offers, "15 s in");
+            }
+            finally
+            {
+                Hints.Offered -= hear;
+            }
+        }
+
+        [Test]
+        public void PausingAMatch_KeepsTimeFull()
+        {
+            BoostRing ring = NewRing(out _);
+            for (int second = 0; second < 5; second++)
+                ring.Show(1f, false);
+
+            state = GameState.Paused;
+            ring.Show(1f, false);
+            state = GameState.GoldenCutscene;
+            ring.Show(1f, false);
+            state = GameState.MainLoop;
+            ring.Show(1f, false);
+
+            Assert.AreEqual(8f, ring.TimeFull, 0.0001f);
+        }
+
+        [Test]
+        public void Prompt_ShownWhenFull_ForAPlayer()
+        {
+            BoostRing ring = NewRing(out GameObject player);
+            player.AddComponent<PlayerCameraResizer>().playerWorldLayer = 10;
 
             ring.Show(0.5f, false);
             Assert.IsFalse(ring.prompt.activeSelf, "charging");
@@ -174,13 +226,27 @@ namespace DoA.Tests
         [Test]
         public void Prompt_HiddenForBot()
         {
-            BoostRing ring = NewRing(out _);
+            BoostRing ring = NewRing(out GameObject player);
+            player.AddComponent<PlayerCameraResizer>().playerWorldLayer = 10;
             ring.control.gameObject.AddComponent<BotDriver>();
 
             for (int second = 0; second < 5; second++)
                 ring.Show(1f, false);
 
             Assert.IsFalse(ring.prompt.activeSelf);
+        }
+
+        [Test]
+        public void Prompt_HiddenWithoutAView_RingStillShows()
+        {
+            BoostRing ring = NewRing(out _);
+
+            for (int second = 0; second < 5; second++)
+                ring.Show(1f, false);
+
+            Assert.IsFalse(ring.prompt.activeSelf, "no player's camera to keep it to: every camera would see it");
+            Assert.IsTrue(ring.ring.enabled, "the ring still shows");
+            Assert.AreEqual(1f, Shown(ring, "_Fill"), 0.0001f);
         }
 
         [Test]

@@ -13,5 +13,9 @@
   "11_hotpotato_fullscreen": { "seats": 1, "mode": "HotPotato", "seconds": 240 },
   "12_hotpotato_4player_split": { "seats": 4, "mode": "HotPotato", "seconds": 240, "width": 1920, "height": 1080 },
   "13_mutator_low_gravity": { "seats": 1, "mode": "Standard", "lowgravity": 1, "length": "Short", "golden": 0, "seconds": 180 },
-  "14_mutator_speed_200": { "seats": 1, "mode": "Standard", "speed": 200, "length": "Short", "golden": 0, "seconds": 180 }
+  "14_mutator_speed_200": { "seats": 1, "mode": "Standard", "speed": 200, "length": "Short", "golden": 0, "seconds": 180 },
+  "20_emotes_fullscreen": { "seats": 1, "mode": "Standard", "seconds": 540 },
+  "21_emotes_4player_menus": { "menus": 1, "seats": 4, "mode": "Standard", "seconds": 620 },
+  "22_emotes_fullscreen_tuned": { "seats": 1, "mode": "Standard", "seconds": 540 },
+  "23_emotes_fullscreen_launch": { "seats": 1, "mode": "Standard", "seconds": 540 }
 }

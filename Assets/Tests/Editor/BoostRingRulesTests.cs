@@ -102,5 +102,17 @@ namespace DoA.Tests
             Assert.AreEqual(1f, BoostRingRules.BurstScale(0f), 0.0001f);
             Assert.AreEqual(1.6f, BoostRingRules.BurstScale(BoostRingRules.BURST_SECONDS), 0.0001f);
         }
+
+        [Test]
+        public void WithPeopleOnline_OnlyWhenAnotherMachinesHumanPlays()
+        {
+            PlayerSlot bot = new PlayerSlot(1, null, null, 0, isBot: true);
+            PlayerSlot remote = new PlayerSlot(2, null, null, 5);
+
+            Assert.IsFalse(BoostRingRules.WithPeopleOnline(false, new[] { bot, remote }), "offline is local");
+            Assert.IsFalse(BoostRingRules.WithPeopleOnline(true, new[] { bot }), "solo with CPU drivers plays like local");
+            Assert.IsFalse(BoostRingRules.WithPeopleOnline(true, null), "no roster");
+            Assert.IsTrue(BoostRingRules.WithPeopleOnline(true, new[] { bot, remote }), "another machine's player");
+        }
     }
 }

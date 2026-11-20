@@ -754,6 +754,9 @@ public class OnlineGame : MonoBehaviour
             // The horn gauge's sliders live in a view, which a CPU driver has none of
             foreach (PhaseIndicator horns in avatar.GetComponentsInChildren<PhaseIndicator>(true))
                 horns.enabled = false;
+            // Nothing drives its boost ring then (the horns do): an online CPU driver has none
+            foreach (BoostRing ring in avatar.GetComponentsInChildren<BoostRing>(true))
+                ring.Hide();
             BallDriving driving = avatar.GetComponentInChildren<BallDriving>(true);
             BotDriver bot = driving.gameObject.AddComponent<BotDriver>();
             bot.OnlyInRound = true;
@@ -851,8 +854,11 @@ public class OnlineGame : MonoBehaviour
             OnlinePlayer player = pair.Key;
             RemotePlayer shown = pair.Value;
 
+            // A change after the first look shows off the ghost's new colour or hat (PlayerEmotes, cosmetic)
+            bool restyled = false;
             if (player.Colour != shown.Colour)
             {
+                restyled |= PlayerEmoteRules.NewLook(shown.Colour, player.Colour);
                 shown.Colour = player.Colour;
                 PlayerColorInformationSO colour = Pick(choices.Colours, player.Colour);
                 if (colour != null)
@@ -861,10 +867,17 @@ public class OnlineGame : MonoBehaviour
 
             if (player.Hat != shown.Hat)
             {
+                restyled |= PlayerEmoteRules.NewLook(shown.Hat, player.Hat);
                 shown.Hat = player.Hat;
                 PlayerHatInformationSO hat = Pick(choices.Hats, player.Hat);
                 if (hat != null)
                     shown.Avatar.ShowHat(hat);
+            }
+            if (restyled)
+            {
+                PlayerEmotes emotes = PlayerEmotes.Of(shown.Avatar != null ? shown.Avatar.gameObject : null);
+                if (emotes != null)
+                    emotes.Restyled();
             }
 
             // A player made ready for the automatic start stays ready while it's set, whatever their machine sent before it

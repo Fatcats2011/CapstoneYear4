@@ -22,6 +22,11 @@ Up to 4 players, one controller each (Xbox, PlayStation and Switch Pro controlle
 | Results: vote for a rematch | A (cross) |
 | Results: take your vote back, or back to the lobby | B (circle) |
 
+## D-pad emotes (left off in matches by choice)
+
+- `EmoteHandler` turns a d-pad press into a speech-bubble sticker, its sound, and an emote on the player's ghost: **up** BigWave (the top-hatted bear), **right** Taunt (NUH UH), **down** Cackle (the big laugh), **left** Raspberry (Whaaat?!). Online every other machine plays the ghost's emote and the sound too (`docs/online.md`, Phase 3H).
+- **Not wired in the game:** only the `NewDrive Test` scene's player has an `EmoteHandler` and the d-pad hooked to it. `Player - Cinemachine.prefab` has neither, so in a real match the d-pad doesn't emote (it can hold a rebound control instead). Bots never emote with the d-pad.
+
 ## Languages
 
 - The game speaks 16 languages: English, French, German, Italian, Dutch, Spanish (Spain and Latin America), Portuguese (Portugal and Brazil), Polish, Turkish, Czech, Romanian, Hungarian, Swedish and Danish.
@@ -158,7 +163,8 @@ The file:
 | `rumble` | 0, 1 | 1 | 0: pads never shake |
 | `colourblind` | 0, 1 | 0 | 1: Colourblind mode |
 | `textsize` | 0–2 | 0 | All text: 0 100%, 1 125%, 2 150% |
-| `hints` | 0–15 | 0 | Which first-time hints this machine has shown (one bit each). 0 shows them all again |
+| `hints` | 0–31 | 0 | Which first-time hints this machine has shown (one bit each). 0 shows them all again |
+| `onlineMatches` | 0 and up | 0 | Online matches played to the results. Under 3, the boost button shows on every full boost ring online |
 | `mode` | 0–4 | 0 | Match rules: 0 Standard, 1 Gold Rush, 2 Kings Crown, 3 Infection, 4 Hot Potato |
 | `length` | 0–2 | 1 | Match rules: wave length, 0 short, 1 normal, 2 long |
 | `waves` | 1–6 | 3 | Match rules: how many waves |

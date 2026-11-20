@@ -300,10 +300,24 @@ public class SoundPool : MonoBehaviour
 
     /// <summary>
     /// Another machine's scooter (online; this pool is off there): plays one of its owner's one-shots here, quieter the
-    /// farther it is from this machine's player (RemoteSound). A phase's end stops the phasing sound it still plays
+    /// farther it is from this machine's player (RemoteSound). A phase's end stops the phasing sound it still plays; a
+    /// d-pad emote plays its emote sound (PlayEmote's)
     /// </summary>
     public void PlayRemote(CueKind kind)
     {
+        int pad = ScooterCue.EmoteIndex(kind);
+        if (pad >= 0)
+        {
+            float heard = RemoteSound.VolumeAt(transform.position);
+            if (heard <= 0f)
+                return;
+            AudioSource emote = GetAvailableSource();
+            SoundManager.Instance.PlayEmoteSound(emote, pad);
+            emote.volume *= heard;
+            StartCoroutine(KillSource(emote));
+            return;
+        }
+
         if (kind == CueKind.PhaseEnd)
         {
             // the source may have ended its sound, and been taken for another, since

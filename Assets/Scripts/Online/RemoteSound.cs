@@ -22,8 +22,9 @@ public static class RemoteSound
     }
 
     /// <summary>
-    /// The sound (a SoundManager key) a one-shot plays: its owner's. None for a phase's end (it stops the phasing sound)
-    /// or a rise (a gravestone)
+    /// The sound (a SoundManager key) a one-shot plays: its owner's. None for a phase's end (it stops the phasing sound),
+    /// a rise (a gravestone), Dizzy (the ghost's emote only), or a d-pad emote (SoundManager's emote sounds go by index:
+    /// SoundPool.PlayRemote)
     /// </summary>
     public static string KeyFor(CueKind kind)
     {

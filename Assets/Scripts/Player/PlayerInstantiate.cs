@@ -327,6 +327,10 @@ public class PlayerInstantiate : SingletonMonobehaviour<PlayerInstantiate>
         playerInput.gameObject.transform.parent = playerHolder.transform;
         // assign a company to each player
         playerInput.gameObject.GetComponentInChildren<OrderHandler>().CompanyInfo = slot.Company;
+        // Its ghost emotes in the match, from what this machine sees (cosmetic). It Materialises as it joins
+        PlayerEmotes joined = PlayerEmotes.Attach(playerInput.gameObject);
+        if (joined != null)
+            joined.Joined();
 
         // Pauses the match if this player's controller disconnects, and clears the reconnect message when it comes back
         playerInput.deviceLostEvent.AddListener(OnPlayerControllerLost);
@@ -540,8 +544,14 @@ public class PlayerInstantiate : SingletonMonobehaviour<PlayerInstantiate>
         avatar.GetComponentInChildren<OrderHandler>(true).CompanyInfo = slot.Company;
         ScooterLook.ShowCompany(avatar, slot.Company);
         PlaceOnPodium(slot);
+        // Its ghost emotes, as for a local player: every machine shows every ghost's (cosmetic). It Materialises as it joins
+        PlayerEmotes joined = PlayerEmotes.Attach(avatar);
+        if (joined != null)
+            joined.Joined();
 
         // Like a local player joining: their seat isn't ready, which stops the countdown. One made ready already keeps it
+        // (set first, so sitting down ready isn't readying up: no ready emote on top of the Materialise)
+        playerReadyUp[seat] = ready;
         SetRemoteReady(seat, ready);
         PlayerSelectCanvas.Instance.TogglePressButtonTexts(seat, false);
         return slot;
@@ -566,6 +576,8 @@ public class PlayerInstantiate : SingletonMonobehaviour<PlayerInstantiate>
         avatar.GetComponentInChildren<OrderHandler>(true).CompanyInfo = slot.Company;
         ScooterLook.ShowCompany(avatar, slot.Company);
         PlaceOnPodium(slot);
+        // Its ghost emotes, as for any player (cosmetic)
+        PlayerEmotes.Attach(avatar);
         return slot;
     }
 
@@ -610,7 +622,11 @@ public class PlayerInstantiate : SingletonMonobehaviour<PlayerInstantiate>
     ///</summary>
     public void SetRemoteReady(int slot, bool ready)
     {
+        bool readied = ready && !playerReadyUp[slot];
         playerReadyUp[slot] = ready;
+        // Their ghost warms up as they ready up, here as on their machine (cosmetic)
+        if (readied)
+            EmoteReadied(slot);
         if (ready)
             CheckReadyUpCount();
         else
@@ -622,9 +638,22 @@ public class PlayerInstantiate : SingletonMonobehaviour<PlayerInstantiate>
     ///</summary>
     public void ReadyUp(int playerIndexToReadyUp)
     {
+        bool readied = !playerReadyUp[playerIndexToReadyUp];
         playerReadyUp[playerIndexToReadyUp] = true;
+        // Their ghost warms up as they ready up (cosmetic; pressing A again isn't readying up again)
+        if (readied)
+            EmoteReadied(playerIndexToReadyUp);
         roster[playerIndexToReadyUp].Input.GetComponent<PlayerUIHandler>().customizationSelector.SetDisableOptionsCustomization(true);
         CheckReadyUpCount();
+    }
+
+    // A seat's ghost readied up: WarmUp or KnuckleCrack (PlayerEmotes)
+    void EmoteReadied(int slot)
+    {
+        PlayerSlot seated = roster[slot];
+        PlayerEmotes emotes = seated != null ? PlayerEmotes.Of(seated.Player) : null;
+        if (emotes != null)
+            emotes.Readied();
     }
 
     ///<summary>
@@ -917,6 +946,8 @@ public class PlayerInstantiate : SingletonMonobehaviour<PlayerInstantiate>
 
         cutsceneManager.BeginCountdownAnimation();
         DrivingFrom = Time.time + DRIVE_COUNTDOWN;
+        // Every ghost revs up for it, twice (cosmetic, on every machine)
+        PlayerEmotes.Countdown();
 
         yield return new WaitForSeconds(DRIVE_COUNTDOWN);
 

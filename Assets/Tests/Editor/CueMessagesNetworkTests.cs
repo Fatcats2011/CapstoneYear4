@@ -166,6 +166,59 @@ namespace DoA.Tests
         }
 
         [UnityTest]
+        public IEnumerator EmotesAndDizzy_ReachEveryClient_AKindTheGameDoesntKnowIsDropped()
+        {
+            EditorSceneManager.playModeStartScene = null;
+            EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
+            yield return new EnterPlayMode();
+
+            OnlineSession host = OnlineSession.Create("1.0.0");
+            host.HostDirect(THIS_COMPUTER, PORT);
+            OnlineSession client = OnlineSession.Create("1.0.0");
+            client.JoinDirect(THIS_COMPUTER, PORT);
+            float deadline = Time.realtimeSinceStartup + WAIT;
+            while (!(Sees(client, 2) && Sees(host, 2)) && Time.realtimeSinceStartup < deadline)
+                yield return null;
+            CueRecorder heard = new CueRecorder();
+            client.Match.CueReceived += heard.Heard;
+            CueReportRecorder reported = new CueReportRecorder();
+            host.Match.CueReported += reported.Heard;
+
+            // A newer game's kind (here 200) between known ones: the client drops it where it arrives
+            host.Match.SendCue(1, ScooterCue.Emote(0));
+            host.Match.SendCue(0, ScooterCue.Of((CueKind)200));
+            host.Match.SendCue(1, ScooterCue.Of(CueKind.Dizzy));
+            host.Match.SendCue(0, ScooterCue.Emote(3));
+            deadline = Time.realtimeSinceStartup + WAIT;
+            while (heard.Cues.Count < 3 && Time.realtimeSinceStartup < deadline)
+                yield return null;
+            for (float until = Time.realtimeSinceStartup + 0.5f; Time.realtimeSinceStartup < until;)
+                yield return null;
+
+            CollectionAssert.AreEqual(new[] { ScooterCue.Emote(0), ScooterCue.Of(CueKind.Dizzy), ScooterCue.Emote(3) }, heard.Cues);
+            CollectionAssert.AreEqual(new[] { 1, 1, 0 }, heard.Seats);
+
+            // A client's emote reaches the host with who sent it (OnlineCues judges it there)
+            client.Match.ReportCue(1, ScooterCue.Emote(2));
+            deadline = Time.realtimeSinceStartup + WAIT;
+            while (reported.Cues.Count < 1 && Time.realtimeSinceStartup < deadline)
+                yield return null;
+            Assert.AreEqual(client.Network.LocalClientId, reported.Machine);
+            Assert.AreEqual(ScooterCue.Emote(2), reported.Cues[0]);
+
+            LogCollector log = new LogCollector();
+            log.MachinesLeave(); // Windows may report a leaving machine's closed port: see LogCollector.CLOSED_PORT
+            client.Leave();
+            deadline = Time.realtimeSinceStartup + WAIT;
+            while (host.PlayersIn > 1 && Time.realtimeSinceStartup < deadline)
+                yield return null;
+            host.Leave();
+            yield return null;
+            log.Dispose();
+            Assert.IsEmpty(log.Problems, "Errors while machines left:\n\n" + string.Join("\n\n", log.Problems));
+        }
+
+        [UnityTest]
         public IEnumerator TheHostsClock_ReachesEveryClient_InOrder()
         {
             EditorSceneManager.playModeStartScene = null;

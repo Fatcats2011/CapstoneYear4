@@ -4,9 +4,13 @@ using UnityEngine;
 /// The session's one-shots on this machine (online): what a scooter does in a moment (ScooterCue).
 /// - This machine's player made one (CueSync): the host sends it to every client (OnlineMatch.SendCue), and a client
 ///   reports it to the host (ReportCue).
-/// - Host: takes a client's report only for that client's own seat, shows it here and sends it to every client.
+/// - Host: takes a client's report only for that client's own seat and of a kind the game knows (not one only the host
+///   sends), shows it here and sends it to every client.
+/// - Host: a player bumped hard (FeatSync.Bumped, PlayerEmoteRules.HardBump) goes to every client as Dizzy for their seat.
+///   The host's own ghosts heard the bump already (PlayerEmotes.HearBump).
 /// - Every machine shows another machine's player's one-shots on their scooter (Show): its sound, quieter the farther it
-///   is from this machine's player (RemoteSound), a full horn's flash, and a rise's gravestone and sparkle at its point.
+///   is from this machine's player (RemoteSound), a full horn's flash, a rise's gravestone and sparkle at its point, and
+///   a d-pad emote on their ghost (PlayerEmotes.ShowPad). Dizzy plays on any player's ghost here, this machine's too.
 ///   A one-shot is about the moment it happens, so it doesn't wait with the host's states (HostQueue).
 /// - The host's match clock rings on every client (ClockCue): a new wave's bells, and time up, when each client's player
 ///   stops too (OrderManager.FollowHostClockCue).
@@ -25,6 +29,7 @@ public class OnlineCues : MonoBehaviour
         session = onlineSession;
         CueSync.Played += OnPlayed;
         CueSync.Rang += OnRang;
+        FeatSync.Bumped += OnBumped;
         session.MatchSpawned += OnMatchSpawned;
         if (session.Match != null)
             OnMatchSpawned(session.Match);
@@ -35,6 +40,7 @@ public class OnlineCues : MonoBehaviour
     {
         CueSync.Played -= OnPlayed;
         CueSync.Rang -= OnRang;
+        FeatSync.Bumped -= OnBumped;
         if (session != null)
             session.MatchSpawned -= OnMatchSpawned;
         StopListening();
@@ -91,11 +97,22 @@ public class OnlineCues : MonoBehaviour
             match.ReportCue(seat, cue);
     }
 
-    // Host: a client's player made a one-shot. Only their own machine can say so. It shows here, then goes to every client
+    // Host: a bump it judged (OnlineBumps). A hard one makes its victim see stars on every client too
+    void OnBumped(int bumper, int victim, float strength)
+    {
+        OnlineMatch match = session != null ? session.Match : null;
+        if (match == null || !match.IsServer || victim < 0 || !PlayerEmoteRules.HardBump(strength))
+            return;
+
+        match.SendCue(victim, ScooterCue.Of(CueKind.Dizzy));
+    }
+
+    // Host: a client's player made a one-shot. Only their own machine can say so, and only of a kind the game knows that
+    // a client may send (another machine's game could send any number). It shows here, then goes to every client
     void OnReported(ulong machine, int seat, ScooterCue cue)
     {
         OnlineMatch match = session.Match;
-        if (match == null || !session.Owns(machine, seat))
+        if (match == null || !session.Owns(machine, seat) || !NetChecks.Defined(cue.Kind) || ScooterCue.HostOnly(cue.Kind))
             return;
 
         Show(seat, cue);
@@ -104,13 +121,26 @@ public class OnlineCues : MonoBehaviour
 
     /// <summary>
     /// A player's one-shot, on this machine: another machine's player's scooter plays it here (its sound, quieter the
-    /// farther it is from this machine's player; a full horn's flash; a rise's gravestone and sparkle). This machine's own
-    /// player played it already, and a seat that isn't here, or a point this scene doesn't have, is skipped
+    /// farther it is from this machine's player; a full horn's flash; a rise's gravestone and sparkle; a d-pad emote on
+    /// their ghost). This machine's own player played it already, and a seat that isn't here, or a point this scene doesn't
+    /// have, is skipped. Dizzy is the exception: only the host judges bumps, so it plays on whichever ghost is in the
+    /// seat, this machine's own players' too
     /// </summary>
     public void Show(int seat, ScooterCue cue)
     {
         OrderHandler player = OrderSync.HandlerIn(seat);
-        if (player == null || !RemoteAvatar.IsRemote(player))
+        if (player == null)
+            return;
+
+        if (cue.Kind == CueKind.Dizzy)
+        {
+            PlayerEmotes dizzy = player.GetComponentInParent<PlayerEmotes>();
+            if (dizzy != null)
+                dizzy.ShowDizzy();
+            return;
+        }
+
+        if (!RemoteAvatar.IsRemote(player))
             return;
 
         // A rise: the gravestone and sparkle at the player's point, when this scene has that point
@@ -126,6 +156,15 @@ public class OnlineCues : MonoBehaviour
         SoundPool sounds = player.GetComponent<SoundPool>();
         if (sounds != null)
             sounds.PlayRemote(cue.Kind);
+
+        // A d-pad emote: their ghost plays it too (its sound is the pool's, above)
+        int pad = ScooterCue.EmoteIndex(cue.Kind);
+        if (pad >= 0)
+        {
+            PlayerEmotes ghost = player.GetComponentInParent<PlayerEmotes>();
+            if (ghost != null)
+                ghost.ShowPad(pad);
+        }
 
         if (cue.Kind == CueKind.HornReady)
         {

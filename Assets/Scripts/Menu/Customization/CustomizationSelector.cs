@@ -128,13 +128,23 @@ public class CustomizationSelector : MonoBehaviour
                 currentSlider = colorSlider;
                 SetIntValue(direction, ref currentPlayerColor, playerColors.Length);
                 UpdateGhostColor();
+                ShowOff();
                 return;
             case CustomizationChanging.playerHat:
                 currentSlider = hatSlider;
                 SetIntValue(direction, ref currentPlayerHat, playerHats.Length);
                 UpdateHat();
+                ShowOff();
                 return;
         }
+    }
+
+    // The player picked a new colour or hat: their ghost shows it off (PlayerEmotes; not the first look Start puts on)
+    void ShowOff()
+    {
+        PlayerEmotes emotes = GetComponentInParent<PlayerEmotes>(true);
+        if (emotes != null)
+            emotes.Restyled();
     }
 
     public void SetIntValue(bool direction, ref int valueToChange, int maxAmount)

@@ -22,6 +22,20 @@ public static class BoostRingRules
     const float PULSE_SPEED = 4f;
     const float BURST_END_SCALE = 1.6f;
 
+    /// <summary>
+    /// Whether the prompt and the match count follow the online rule: online with another machine's human in the match.
+    /// Solo with CPU drivers is hosted online too, but plays like local (local players and bots only)
+    /// </summary>
+    public static bool WithPeopleOnline(bool online, System.Collections.Generic.IEnumerable<PlayerSlot> players)
+    {
+        if (!online || players == null)
+            return false;
+        foreach (PlayerSlot slot in players)
+            if (slot != null && !slot.IsLocal && !slot.IsBot)
+                return true;
+        return false;
+    }
+
     /// <summary>How much of the recharge is done, 0 to 1: a max of zero or less, or a value that is not a number, counts as full</summary>
     public static float Fill(float elapsed, float max)
     {

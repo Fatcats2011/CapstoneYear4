@@ -71,6 +71,8 @@ public class BoostRing : MonoBehaviour
     bool listening;
     bool hidden;
     bool hintOffered;
+    bool isBot; // looked up as each full spell starts (a developer's autopilot can come and go: BotAutopilot)
+    bool fromOutsideAMatch = true; // the last state seen was outside a match (the lobby, a cutscene, the results)
     float burstAge = BoostRingRules.BURST_SECONDS;
     float fade = 1f;
 
@@ -142,10 +144,15 @@ public class BoostRing : MonoBehaviour
         Ready();
 
         float dt = DeltaTime();
+        bool inMatch = FollowMatch();
         // A boost under way drains the gauge from full: its first frame still reads full, and must not glow or prompt
         bool isFull = BoostRingRules.Full(fill) && (control == null || !control.Boosting);
         if (isFull)
+        {
+            if (TimeFull <= 0f)
+                isBot = control != null && control.GetComponent<BotDriver>() != null;
             TimeFull += dt;
+        }
         else
         {
             TimeFull = 0f;
@@ -157,9 +164,40 @@ public class BoostRing : MonoBehaviour
 
         Draw(fill, slowed, isFull);
 
-        bool isBot = control != null && control.GetComponent<BotDriver>() != null;
-        ShowPrompt(isBot);
-        OfferHint(isBot);
+        ShowPrompt();
+        OfferHint(inMatch);
+    }
+
+    /// <summary>
+    /// Whether this is a match, where the idle hint may be offered. Coming into one from outside (the lobby, a cutscene,
+    /// the results), a ring left full there starts its time full again: else a rematch would offer the hint on its first
+    /// frame, and online the prompt's delay would already be over. A pause or the golden cutscene isn't leaving it
+    /// </summary>
+    bool FollowMatch()
+    {
+        GameState? state = StateNow();
+        bool inMatch = state == null || state == GameState.Begin || state == GameState.MainLoop || state == GameState.FinalPackage;
+        if (inMatch)
+        {
+            if (fromOutsideAMatch)
+            {
+                TimeFull = 0f;
+                hintOffered = false;
+            }
+            fromOutsideAMatch = false;
+        }
+        else if (state != GameState.Paused && state != GameState.GoldenCutscene)
+            fromOutsideAMatch = true;
+        return inMatch;
+    }
+
+    /// <summary>The game state now, as the hints see it (tests set Hints.State); none without a game manager</summary>
+    static GameState? StateNow()
+    {
+        if (Hints.State != null)
+            return Hints.State();
+        GameManager game = GameManager.Instance;
+        return game != null ? game.MainState : (GameState?)null;
     }
 
     void Draw(float fill, bool slowed, bool isFull)
@@ -184,12 +222,12 @@ public class BoostRing : MonoBehaviour
         ring.SetPropertyBlock(block);
     }
 
-    void ShowPrompt(bool isBot)
+    void ShowPrompt()
     {
         if (prompt == null)
             return;
 
-        bool show = BoostRingRules.ShowPrompt(GameAuthority.IsOnline, BoostPrompts.OnlineMatches, isBot, TimeFull)
+        bool show = BoostRingRules.ShowPrompt(BoostPrompts.WithPeopleOnline(), BoostPrompts.OnlineMatches, isBot, TimeFull)
             && OnlyItsPlayerSees();
         if (prompt.activeSelf != show)
             prompt.SetActive(show);
@@ -197,14 +235,15 @@ public class BoostRing : MonoBehaviour
 
     /// <summary>
     /// Puts the prompt on its player's world layer, which only their camera draws. False while their view isn't set up
-    /// yet (every camera would see it). A scooter with no view at all (no PlayerCameraResizer above it) keeps its own
+    /// yet, and for a scooter with no view (no PlayerCameraResizer above it: the Player - Cinemachine root holds a local
+    /// player's): every camera would see it there
     /// </summary>
     bool OnlyItsPlayerSees()
     {
         if (view == null)
             view = GetComponentInParent<PlayerCameraResizer>(true);
         if (view == null)
-            return true;
+            return false;
 
         int layer = view.playerWorldLayer;
         if (layer == 0)
@@ -218,21 +257,12 @@ public class BoostRing : MonoBehaviour
     }
 
     /// <summary>A boost left full: the BoostReady hint, once a full spell, in a match (not the lobby: Hints would spend it there)</summary>
-    void OfferHint(bool isBot)
+    void OfferHint(bool inMatch)
     {
-        if (hintOffered || isBot || !BoostRingRules.OfferIdleHint(TimeFull) || !InMatch())
+        if (hintOffered || isBot || !inMatch || !BoostRingRules.OfferIdleHint(TimeFull))
             return;
         hintOffered = true;
         Hints.Offer(HintKind.BoostReady, OrderSync.SeatOf(this));
-    }
-
-    static bool InMatch()
-    {
-        GameManager game = GameManager.Instance;
-        if (game == null)
-            return true;
-        GameState state = game.MainState;
-        return state == GameState.Begin || state == GameState.MainLoop || state == GameState.FinalPackage;
     }
 
     /// <summary>The boost was spent: the ring flares out and fades, and starts filling from empty</summary>

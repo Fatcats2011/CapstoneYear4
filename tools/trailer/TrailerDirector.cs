@@ -46,6 +46,20 @@ public class TrailerDirector : MonoBehaviour
     float recordStart;
     AudioListener tapped;
     StreamWriter events;
+    StreamWriter emoteLog;
+    bool asksWritten;
+    PlayerEmotes[] found = new PlayerEmotes[0];
+    int findEvery;
+    readonly Dictionary<PlayerEmotes, Watched> watched = new Dictionary<PlayerEmotes, Watched>();
+
+    // What a ghost's emotes react to, seen from outside them, so the emote log can be checked against what happened
+    class Watched
+    {
+        public BallDriving Ball;
+        public BallDriving.BoostDelegate Boost;
+        public float Air, Still, Left, Rise;
+        public bool Golden, Launched;
+    }
     Order lastLode;
     TrailerStills stills;
 
@@ -128,6 +142,7 @@ public class TrailerDirector : MonoBehaviour
             }
             PressWhileLoading();
             WatchLode();
+            WatchTriggers();
             if (State() == GameState.Results && resultsAt < 0f)
                 resultsAt = Time.time;
             if (resultsAt >= 0f && Time.time - resultsAt > RESULTS_HOLD)
@@ -302,6 +317,8 @@ public class TrailerDirector : MonoBehaviour
 
         events = new StreamWriter(Path.Combine(folder, take + ".events.csv"));
         events.WriteLine("seconds,event,seat,other,detail");
+        emoteLog = new StreamWriter(Path.Combine(folder, take + ".emotes.csv"));
+        emoteLog.WriteLine("seconds,seat,action,version,state,object");
         Listen(true);
         recordStart = Time.realtimeSinceStartup;
         if (Int("stills", 0) == 1)
@@ -414,6 +431,8 @@ public class TrailerDirector : MonoBehaviour
         {
             yield return stills.Finish();
             events.Close();
+            WriteAsks();
+            emoteLog.Close();
             yield break;
         }
         yield return null;
@@ -424,6 +443,8 @@ public class TrailerDirector : MonoBehaviour
         encoder.WaitForExit();
         AudioTap.End();
         events.Close();
+        WriteAsks();
+        emoteLog.Close();
         Debug.Log("TRAILER wrote " + frames + " frames, " + repeated + " repeated, " + failedReadbacks + " failed; sound "
             + AudioTap.SecondsWritten.ToString("0.0") + " s; encoder exit " + encoder.ExitCode);
     }
@@ -438,6 +459,7 @@ public class TrailerDirector : MonoBehaviour
             FeatSync.Sank += OnSank;
             ModeMatch.Happened += OnMode;
             GameManager.Instance.StateApplied += OnState;
+            GhostEmotes.Began += OnEmote;
         }
         else
         {
@@ -446,6 +468,11 @@ public class TrailerDirector : MonoBehaviour
             FeatSync.Delivered -= OnDelivered;
             FeatSync.Sank -= OnSank;
             ModeMatch.Happened -= OnMode;
+            GhostEmotes.Began -= OnEmote;
+            foreach (KeyValuePair<PlayerEmotes, Watched> pair in watched)
+                if (pair.Value.Ball != null)
+                    pair.Value.Ball.OnBoostStart -= pair.Value.Boost;
+            watched.Clear();
             if (GameManager.Instance != null)
                 GameManager.Instance.StateApplied -= OnState;
         }
@@ -464,7 +491,109 @@ public class TrailerDirector : MonoBehaviour
     void OnDelivered(int seat, Constants.OrderValue value) => Log("delivery", seat, -1, value.ToString());
     void OnSank(int seat) => Log("fell_in_water", seat, -1, "");
     void OnMode(ModeMoment moment) => Log(moment.Kind.ToString(), moment.Seat, moment.Other, moment.Strength.ToString("0.00", CultureInfo.InvariantCulture));
-    void OnState(GameState state) => Log("state", -1, -1, state.ToString());
+    void OnState(GameState state)
+    {
+        Log("state", -1, -1, state.ToString());
+        if (state == GameState.Results)
+            WriteAsks();
+    }
+
+    // ---- The ghost emote log: every move that starts, and the triggers it should answer
+
+    float Now() => Time.realtimeSinceStartup - recordStart;
+
+    void OnEmote(GhostEmotes emotes, GhostMove move)
+    {
+        if (emoteLog == null || emotes == null || move == null)
+            return;
+        PlayerEmotes player = emotes.GetComponentInParent<PlayerEmotes>();
+        int seat = player != null ? player.Seat : -1;
+        string where = emotes.transform.root.name + "/" + emotes.name;
+        emoteLog.WriteLine(Now().ToString("0.00", CultureInfo.InvariantCulture) + "," + seat + "," + move.Action + "," + move.Name.Replace(',', ' ')
+            + "," + State() + "," + where.Replace(',', ' '));
+        emoteLog.Flush();
+    }
+
+    static bool MatchOn()
+    {
+        GameState state = State();
+        return state == GameState.Begin || state == GameState.MainLoop || state == GameState.FinalPackage;
+    }
+
+    // As PlayerEmotes measures them: a boost, 0.4 s in the air, picking up the golden order, 12 s standing still
+    void WatchTriggers()
+    {
+        if (events == null)
+            return;
+        bool on = MatchOn();
+        if (++findEvery % 30 == 1)
+            found = FindObjectsOfType<PlayerEmotes>();
+        foreach (PlayerEmotes player in found)
+        {
+            if (player == null)
+                continue;
+            if (!watched.TryGetValue(player, out Watched w))
+            {
+                w = new Watched { Ball = player.GetComponentInChildren<BallDriving>(true) };
+                PlayerEmotes owner = player;
+                w.Boost = () => { if (MatchOn()) Log("boost", owner.Seat, -1, ""); };
+                if (w.Ball != null)
+                    w.Ball.OnBoostStart += w.Boost;
+                watched[player] = w;
+            }
+            if (!on || player.Handler == null)
+            {
+                w.Air = w.Still = 0f;
+                w.Golden = false;
+                continue;
+            }
+            float dt = Time.deltaTime;
+            float air = w.Ball == null || w.Ball.Grounded ? 0f : w.Air + dt;
+            if (w.Air < PlayerEmoteRules.AIR_SECONDS && air >= PlayerEmoteRules.AIR_SECONDS)
+                Log("airborne", player.Seat, -1, "");
+            if (air <= 0f)
+            {
+                w.Left = player.Position.y;
+                w.Rise = 0f;
+                w.Launched = false;
+            }
+            else
+            {
+                w.Rise = Mathf.Max(w.Rise, player.Position.y - w.Left);
+            }
+            // A launch (as PlayerEmoteRules.Wheee): the time in the air and a rise
+            if (!w.Launched && air >= PlayerEmoteRules.AIR_SECONDS && w.Rise >= PlayerEmoteRules.LAUNCH_RISE)
+            {
+                w.Launched = true;
+                Log("launched", player.Seat, -1, w.Rise.ToString("0.00", CultureInfo.InvariantCulture));
+            }
+            w.Air = air;
+            float still = player.Velocity.magnitude < PlayerEmoteRules.STILL_SPEED ? w.Still + dt : 0f;
+            if (w.Still < PlayerEmoteRules.BORED_SECONDS && still >= PlayerEmoteRules.BORED_SECONDS)
+                Log("still_12s", player.Seat, -1, "");
+            w.Still = still;
+            bool golden = player.Handler.HoldsGoldenOrder;
+            if (golden && !w.Golden)
+                Log("golden_pickup", player.Seat, -1, "");
+            w.Golden = golden;
+        }
+    }
+
+    // How many times each seat's emotes were asked for (played or turned away), once, as the results come
+    void WriteAsks()
+    {
+        if (asksWritten || folder == null)
+            return;
+        asksWritten = true;
+        using (StreamWriter asks = new StreamWriter(Path.Combine(folder, take + ".asks.csv")))
+        {
+            asks.WriteLine("seat,action,asked");
+            foreach (PlayerEmotes player in FindObjectsOfType<PlayerEmotes>())
+                foreach (GhostAction action in Enum.GetValues(typeof(GhostAction)))
+                    if (player.AskedFor(action) > 0)
+                        asks.WriteLine(player.Seat + "," + action + "," + player.AskedFor(action));
+        }
+    }
 
     void WatchLode()
     {

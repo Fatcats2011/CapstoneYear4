@@ -96,41 +96,23 @@ public class EmoteHandler : MonoBehaviour
     }
 
     /// <summary>
-    /// 
+    /// A d-pad press: its bubble and sound (index 0 up, 1 right, 2 down, 3 left: PlayerEmoteRules.PadIndex), and the
+    /// player's ghost plays the matching emote (PlayerEmotes.Pad, which also sends it to the other machines online)
     /// </summary>
-    /// <param name="dpad"></param>
     public void Emote(Vector2 dpad)
     {
         if(emoting) { return; }
-        int index = -1;
-        switch(dpad.x)
-        {
-            case 1:
-                index = 1;
-                break;
-            case -1:
-                index = 3;
-                break;
-            default:
-                switch(dpad.y)
-                {
-                    case 1:
-                        index = 0;
-                        break;
-                    case -1:
-                        index = 2;
-                        break;
-                    default:
-                        break;
-                }
-                break;
-        }
+        int index = PlayerEmoteRules.PadIndex(dpad);
         if(index != -1)
         {
             StopEmoteShow();
             currEmote = emoteSprites[index];
             soundPool.PlayEmote(index);
             StartEmoteShow();
+
+            PlayerEmotes ghost = GetComponentInParent<PlayerEmotes>();
+            if (ghost != null)
+                ghost.Pad(index);
         }
     }
 

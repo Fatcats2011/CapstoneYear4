@@ -175,7 +175,7 @@ public static class PodiumActs
     }
 
     // The squash of a landing: a short bump at the very end of a jump
-    static float Land(float t)
+    internal static float Land(float t)
     {
         return t < 0.85f ? 0f : Mathf.Sin(Mathf.PI * (t - 0.85f) / 0.15f);
     }

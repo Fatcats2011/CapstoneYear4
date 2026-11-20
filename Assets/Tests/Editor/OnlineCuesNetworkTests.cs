@@ -14,11 +14,13 @@ namespace DoA.Tests
     /// - Hosting: this machine hosts with the game. Its player's one-shots go to every client, in order, but not its order
     ///   sounds (every machine replays those). Another machine's one-shots play on that player's scooter here, quieter the
     ///   farther it is from this machine's player, and the host passes them on to every client. A machine speaks only for
-    ///   its own seat. The host's clock rings out to every client: a new wave's bells, and time up. The other machine is a
-    ///   session without the game.
+    ///   its own seat, and only of a kind it may send. D-pad emotes play on that player's ghost here and go to every client;
+    ///   a hard bump the host judges goes out as Dizzy for its victim. The host's clock rings out to every client: a new
+    ///   wave's bells, and time up. The other machine is a session without the game.
     /// - Joining: this machine joins with the game. Its player's fall in the water reaches the host, then where they rise.
     ///   The host's player's fall shows here: its sound, then its gravestone and the reborn sparkle at its point. A rise at a
-    ///   point this scene doesn't have shows nothing.
+    ///   point this scene doesn't have shows nothing. This machine's d-pad emote reaches the host; the host's plays on its
+    ///   ghost here, and the host's Dizzy plays on whichever ghost it names, this machine's own too.
     /// Loads the game scene: a minute or two each. No lambda captures a local: after EnterPlayMode even assigning one throws
     /// </summary>
     public class OnlineCuesNetworkTests
@@ -212,6 +214,18 @@ namespace DoA.Tests
             return farthest;
         }
 
+        // The ghost emotes of the player in a seat, here (on their top object, as OnlineCues finds them)
+        static PlayerEmotes GhostOf(int seat)
+        {
+            return OrderSync.HandlerIn(seat).GetComponentInParent<PlayerEmotes>();
+        }
+
+        // Whether a ghost asked for an action since it had asked this many times
+        static bool AskedSince(PlayerEmotes ghost, int count, GhostAction action)
+        {
+            return ghost.AskCount > count && ghost.Asked == action;
+        }
+
         // Whether a gravestone stands there
         static bool GraveStandsAt(Vector3 spot)
         {
@@ -374,6 +388,62 @@ namespace DoA.Tests
                 yield return null;
             Assert.AreEqual(before, heard.Cues.Count, "not the sender's seat");
 
+            // Their d-pad emote: their ghost here plays its action (up: BigWave), and the host passes it on
+            ShareAt(theirs, near);
+            deadline = Time.realtimeSinceStartup + WAIT;
+            while (!IsAt(1, near) && Time.realtimeSinceStartup < deadline)
+                yield return null;
+            PlayerEmotes theirGhost = GhostOf(1);
+            Assert.IsNotNull(theirGhost, "their ghost has its emotes here");
+            int asked = theirGhost.AskCount;
+            other.Match.ReportCue(1, ScooterCue.Emote(0));
+            deadline = Time.realtimeSinceStartup + WAIT;
+            while (!AskedSince(theirGhost, asked, GhostAction.BigWave) && Time.realtimeSinceStartup < deadline)
+                yield return null;
+            Assert.IsTrue(AskedSince(theirGhost, asked, GhostAction.BigWave), "their ghost waves here");
+            deadline = Time.realtimeSinceStartup + WAIT;
+            while (!heard.Heard(1, ScooterCue.Emote(0)) && Time.realtimeSinceStartup < deadline)
+                yield return null;
+            Assert.IsTrue(heard.Heard(1, ScooterCue.Emote(0)), "and every client hears it");
+
+            // This machine's player's d-pad emote: their ghost plays it here (down: Cackle) and every client hears it
+            PlayerEmotes myGhost = GhostOf(0);
+            myGhost.Pad(2);
+            Assert.AreEqual(GhostAction.Cackle, myGhost.Asked);
+            deadline = Time.realtimeSinceStartup + WAIT;
+            while (!heard.Heard(0, ScooterCue.Emote(2)) && Time.realtimeSinceStartup < deadline)
+                yield return null;
+            Assert.IsTrue(heard.Heard(0, ScooterCue.Emote(2)), "this machine's emote reaches every client");
+
+            // A client can't emote for a seat it doesn't own, send a kind the game doesn't know, or say it's dizzy (only
+            // the host judges bumps): none is shown or passed on
+            before = heard.Cues.Count;
+            int myAsked = myGhost.AskCount;
+            asked = theirGhost.AskCount;
+            other.Match.ReportCue(0, ScooterCue.Emote(1));
+            other.Match.ReportCue(1, ScooterCue.Of((CueKind)200));
+            other.Match.ReportCue(1, ScooterCue.Of(CueKind.Dizzy));
+            for (float until = Time.realtimeSinceStartup + 1f; Time.realtimeSinceStartup < until;)
+                yield return null;
+            Assert.AreEqual(before, heard.Cues.Count, "nothing passed on");
+            Assert.IsFalse(AskedSince(myGhost, myAsked, GhostAction.Taunt), "not their seat");
+            Assert.IsFalse(AskedSince(theirGhost, asked, GhostAction.SeeingStars), "a client's Dizzy");
+
+            // The host judges a hard bump on their player: their ghost here sees stars once (from the bump itself), and
+            // every client hears Dizzy for their seat. A soft one sends nothing
+            asked = theirGhost.AskCount;
+            FeatSync.Bump(0, 1, 0.9f);
+            Assert.AreEqual(asked + 1, theirGhost.AskCount, "once, from the bump");
+            Assert.AreEqual(GhostAction.SeeingStars, theirGhost.Asked);
+            deadline = Time.realtimeSinceStartup + WAIT;
+            while (!heard.Heard(1, ScooterCue.Of(CueKind.Dizzy)) && Time.realtimeSinceStartup < deadline)
+                yield return null;
+            Assert.IsTrue(heard.Heard(1, ScooterCue.Of(CueKind.Dizzy)), "Dizzy for their seat");
+            FeatSync.Bump(1, 0, 0.3f);
+            for (float until = Time.realtimeSinceStartup + 1f; Time.realtimeSinceStartup < until;)
+                yield return null;
+            Assert.IsFalse(heard.Heard(0, ScooterCue.Of(CueKind.Dizzy)), "a soft bump sends nothing");
+
             // The host's clock rings out: a new wave's bells, then time up
             ClockRecorder rang = new ClockRecorder(other.Match);
             OrderManager.Instance.wave = 1;
@@ -512,6 +582,42 @@ namespace DoA.Tests
             for (float until = Time.realtimeSinceStartup + 1f; Time.realtimeSinceStartup < until;)
                 yield return null;
             Assert.LessOrEqual(Object.FindObjectsOfType<RespawnGravestone>().Length, graves, "no new gravestone");
+
+            // This machine's player's d-pad emote: their ghost plays it (left: Raspberry), and the host hears it
+            PlayerEmotes myGhost = GhostOf(1);
+            Assert.IsNotNull(myGhost, "this machine's ghost has its emotes");
+            myGhost.Pad(3);
+            Assert.AreEqual(GhostAction.Raspberry, myGhost.Asked);
+            deadline = Time.realtimeSinceStartup + WAIT;
+            while (!reported.Cues.Contains(ScooterCue.Emote(3)) && Time.realtimeSinceStartup < deadline)
+                yield return null;
+            Assert.AreEqual(mine.Network.LocalClientId, reported.Machine);
+            Assert.AreEqual(ScooterCue.Emote(3), reported.Cues[reported.Cues.Count - 1]);
+            Assert.AreEqual(1, reported.Seats[reported.Seats.Count - 1], "for its own seat");
+
+            // The host's player's d-pad emote plays on their ghost here (right: Taunt)
+            PlayerEmotes hostGhost = GhostOf(0);
+            Assert.IsNotNull(hostGhost, "the host's ghost has its emotes here");
+            int asked = hostGhost.AskCount;
+            host.Match.SendCue(0, ScooterCue.Emote(1));
+            deadline = Time.realtimeSinceStartup + WAIT;
+            while (!AskedSince(hostGhost, asked, GhostAction.Taunt) && Time.realtimeSinceStartup < deadline)
+                yield return null;
+            Assert.IsTrue(AskedSince(hostGhost, asked, GhostAction.Taunt), "the host's ghost taunts here");
+
+            // The host says a player was bumped hard: whoever it is sees stars here, this machine's own player too
+            int myAsked = myGhost.AskCount;
+            host.Match.SendCue(1, ScooterCue.Of(CueKind.Dizzy));
+            deadline = Time.realtimeSinceStartup + WAIT;
+            while (!AskedSince(myGhost, myAsked, GhostAction.SeeingStars) && Time.realtimeSinceStartup < deadline)
+                yield return null;
+            Assert.IsTrue(AskedSince(myGhost, myAsked, GhostAction.SeeingStars), "this machine's ghost sees stars");
+            asked = hostGhost.AskCount;
+            host.Match.SendCue(0, ScooterCue.Of(CueKind.Dizzy));
+            deadline = Time.realtimeSinceStartup + WAIT;
+            while (!AskedSince(hostGhost, asked, GhostAction.SeeingStars) && Time.realtimeSinceStartup < deadline)
+                yield return null;
+            Assert.IsTrue(AskedSince(hostGhost, asked, GhostAction.SeeingStars), "the host's ghost sees stars here");
 
             log.MachinesLeave(); // Windows may report a leaving machine's closed port: see LogCollector.CLOSED_PORT
             mine.Leave();
