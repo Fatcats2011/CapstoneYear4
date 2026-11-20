@@ -273,9 +273,14 @@ public static class PlayerEmoteRules
         return Pick(GhostAction.WarmUp, GhostAction.KnuckleCrack, last, random);
     }
 
-    /// <summary>A new hat or colour: HatShowOff or MirrorCheck</summary>
-    public static GhostAction Restyled(GhostAction? last, System.Random random)
+    /// <summary>
+    /// A new hat or colour: HatShowOff or MirrorCheck. With no hat showing after it (the NoHat look) always MirrorCheck:
+    /// there is no hat to show off
+    /// </summary>
+    public static GhostAction Restyled(GhostAction? last, System.Random random, bool hatShows = true)
     {
+        if (!hatShows)
+            return GhostAction.MirrorCheck;
         return Pick(GhostAction.HatShowOff, GhostAction.MirrorCheck, last, random);
     }
 

@@ -7,11 +7,13 @@ using UnityEngine;
 /// Plays the ghost's emotes (GhostMoves) on the bones of its model, on top of what its Animator plays. One move at a
 /// time: a higher priority interrupts, and each action waits out its cooldown, counted from when it began
 /// (GhostEmoteRules). Each action plays its versions in a shuffled round (never the same twice running), turning to a
-/// random side. Sits on the Animator's GameObject; moves are put on in LateUpdate, after the Animator.
+/// random side; a ghost with no hat showing passes over the versions that need one (GhostMove.NeedsHat), and an action
+/// with none left doesn't play. Sits on the Animator's GameObject; moves are put on in LateUpdate, after the Animator.
 /// A move with a Clip also plays that state on the Animator's "Emotes" layer (an override layer masked to the head,
 /// hands and fingers), easing the layer's weight up at the start and back down at the end; the layer rests on its
 /// "Empty" state at weight 0 otherwise; a clip move that follows another cross-fades the hands across. The weight set
-/// in a frame's LateUpdate is what the next frame's Animator uses.
+/// in a frame's LateUpdate is what the next frame's Animator uses. The hands (and fingers) also grow with that weight,
+/// up to 1 + GhostRig.HAND_SWELL times their size, so they read at game size (GhostRig.SetHands, back exactly at 0).
 /// A move that interrupts another eases the body over from where the interrupted one left it (BLEND); an entrance
 /// starts hidden at once instead.
 /// A move with a Prop has it in its hands (GhostProps: the parcel it carries, through Carry, or a crown)
@@ -43,6 +45,7 @@ public class GhostEmotes : MonoBehaviour
     GhostProps props;
     System.Random random;
     TitlePlaylist[] playlists;
+    int[] picked;           // each action's version picked last (-1: none yet)
     float[] cooldowns;
 
     GhostMove playing;
@@ -121,39 +124,88 @@ public class GhostEmotes : MonoBehaviour
         {
             emotes.random = random ?? new System.Random();
             emotes.playlists = new TitlePlaylist[ACTIONS];
+            emotes.picked = new int[ACTIONS];
+            for (int i = 0; i < ACTIONS; i++)
+                emotes.picked[i] = -1;
         }
         if (emotes.cooldowns == null)
             emotes.cooldowns = new float[ACTIONS];
         return emotes;
     }
 
+    /// <summary>Whether the ghost wears a hat that shows (GhostRig.HasHat): the NeedsHat versions are picked only then</summary>
+    public bool ShowsHat => rig != null && rig.HasHat;
+
+    /// <summary>Whether this ghost can show the version now: it doesn't need a hat, or the ghost wears one</summary>
+    public bool CanShow(GhostMove move)
+    {
+        return move != null && (!move.NeedsHat || ShowsHat);
+    }
+
     /// <summary>
-    /// Starts a version of the action. False when it has no versions, is cooling down, or something at least as
-    /// important is playing
+    /// Starts a version of the action. False when it has no versions it can show (a hatless ghost skips the NeedsHat
+    /// ones), is cooling down, or something at least as important is playing
     /// </summary>
     public bool Play(GhostAction action)
     {
         GhostMove[] moves = GhostMoves.For(action);
-        if (moves.Length == 0 || rig == null || cooldowns == null)
+        if (!CanPlay(action))
             return false;
-        GhostAction? now = playing != null ? playing.Action : (GhostAction?)null;
-        if (!GhostEmoteRules.CanStart(action, now, cooldowns[(int)action]))
+        int pick = Pick(action, moves);
+        if (pick < 0)
             return false;
-
-        TitlePlaylist list = playlists[(int)action];
-        if (list == null)
-            list = playlists[(int)action] = new TitlePlaylist(moves.Length, random);
-        Begin(moves[list.Next()], random.Next(2) == 0 ? -1f : 1f);
+        Begin(moves[pick], random.Next(2) == 0 ? -1f : 1f);
         return true;
     }
 
-    /// <summary>Whether Play(action) would start it now (it has versions, isn't cooling down, nothing as important plays)</summary>
+    /// <summary>
+    /// Whether Play(action) would start it now (it has versions this ghost can show, isn't cooling down, nothing as
+    /// important plays)
+    /// </summary>
     public bool CanPlay(GhostAction action)
     {
-        if (GhostMoves.For(action).Length == 0 || rig == null || cooldowns == null)
+        if (rig == null || cooldowns == null || Showable(GhostMoves.For(action)) == 0)
             return false;
         GhostAction? now = playing != null ? playing.Action : (GhostAction?)null;
         return GhostEmoteRules.CanStart(action, now, cooldowns[(int)action]);
+    }
+
+    int Showable(GhostMove[] moves)
+    {
+        int count = 0;
+        foreach (GhostMove move in moves)
+            if (CanShow(move))
+                count++;
+        return count;
+    }
+
+    /// <summary>
+    /// The next version of the action from its shuffled round (TitlePlaylist), passing over the ones it can't show now,
+    /// and never the one it picked last time unless that is the only one it can show. -1 when it can show none
+    /// </summary>
+    int Pick(GhostAction action, GhostMove[] moves)
+    {
+        int showable = Showable(moves);
+        if (showable == 0)
+            return -1;
+        TitlePlaylist list = playlists[(int)action];
+        if (list == null)
+            list = playlists[(int)action] = new TitlePlaylist(moves.Length, random);
+        int last = picked[(int)action];
+        // The rest of this round and a whole new one hold every version, so one that fits comes up within these
+        for (int tries = 0; tries < 2 * moves.Length; tries++)
+        {
+            int i = list.Next();
+            if (!CanShow(moves[i]) || (i == last && showable > 1))
+                continue;
+            return picked[(int)action] = i;
+        }
+        for (int i = 0; i < moves.Length; i++)
+        {
+            if (CanShow(moves[i]) && (i != last || showable == 1))
+                return picked[(int)action] = i;
+        }
+        return -1;
     }
 
     /// <summary>Plays this version, whatever is playing (previews and captures). Side is +1 or -1</summary>
@@ -358,6 +410,9 @@ public class GhostEmotes : MonoBehaviour
             blending = false;
             resting = false;
         }
+
+        // The hands swell with the Emotes layer's weight (so they read at game size), on what the Animator wrote
+        rig.SetHands(1f + GhostRig.HAND_SWELL * weight);
 
         // The props after the pose: the hands are where they show this frame
         props.Step(playing, time, dt);

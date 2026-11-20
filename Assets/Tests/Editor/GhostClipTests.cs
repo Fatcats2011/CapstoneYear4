@@ -418,6 +418,50 @@ namespace DoA.Tests
                 | System.Reflection.BindingFlags.NonPublic).Invoke(emotes, null);
         }
 
+        /// <summary>
+        /// With the Animator running: each frame the hands are their base (what the Animator wrote, or the last base
+        /// when it left the scale alone) times 1 + HAND_SWELL x the layer weight (a full 1.6 in the middle), never
+        /// compounding, and after the move exactly the base again
+        /// </summary>
+        [Test]
+        public void ClipMove_SwellsTheHandsOnTopOfTheAnimator()
+        {
+            GhostEmotes emotes = Bound();
+            Transform[] hands = { emotes.Rig.HandLeft, emotes.Rig.HandRight };
+            Vector3[] bases = { hands[0].localScale, hands[1].localScale };
+            Vector3[] wrote = { bases[0], bases[1] };
+            GhostMove move = GhostMoves.All.First(m => m.Clip != null);
+            emotes.Play(move, 1f);
+
+            const float DT = 1f / 60f;
+            float time = 0f, peak = 1f;
+            bool rewrites = false;
+            while (time < move.Length + 0.3f)
+            {
+                animator.Update(DT);
+                for (int h = 0; h < 2; h++)
+                    if (hands[h].localScale != wrote[h])
+                    {
+                        bases[h] = hands[h].localScale;
+                        rewrites = true;
+                    }
+                emotes.Step(DT);
+                time += DT;
+                float swell = 1f + GhostRig.HAND_SWELL * emotes.ClipWeight;
+                peak = Mathf.Max(peak, swell);
+                for (int h = 0; h < 2; h++)
+                {
+                    Assert.Less((hands[h].localScale - bases[h] * swell).magnitude, 1e-4f, hands[h].name + " at " + time);
+                    wrote[h] = hands[h].localScale;
+                }
+            }
+            TestContext.WriteLine("The Animator rewrites the hands' scale: " + rewrites);
+            Assert.AreEqual(1f + GhostRig.HAND_SWELL, peak, 1e-3f, "full swell in the middle");
+            Assert.AreEqual(1f, emotes.Rig.HandScale);
+            for (int h = 0; h < 2; h++)
+                Assert.Less((hands[h].localScale - bases[h]).magnitude, 1e-6f, hands[h].name + " back on its base after the move");
+        }
+
         [Test]
         public void PlainMove_LeavesTheLayerAlone()
         {

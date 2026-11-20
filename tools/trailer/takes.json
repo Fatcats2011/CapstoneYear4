@@ -17,5 +17,7 @@
   "20_emotes_fullscreen": { "seats": 1, "mode": "Standard", "seconds": 540 },
   "21_emotes_4player_menus": { "menus": 1, "seats": 4, "mode": "Standard", "seconds": 620 },
   "22_emotes_fullscreen_tuned": { "seats": 1, "mode": "Standard", "seconds": 540 },
-  "23_emotes_fullscreen_launch": { "seats": 1, "mode": "Standard", "seconds": 540 }
+  "23_emotes_fullscreen_launch": { "seats": 1, "mode": "Standard", "seconds": 540 },
+  "30_emotes_r5_fullscreen": { "seats": 1, "mode": "Standard", "seconds": 540, "width": 1920, "height": 1080 },
+  "31_emotes_r5_4player_menus": { "menus": 1, "seats": 4, "mode": "Standard", "seconds": 620, "width": 1920, "height": 1080 }
 }

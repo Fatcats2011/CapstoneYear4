@@ -28,6 +28,11 @@ public sealed class GhostMove
     public GhostProp Prop;
     /// <summary>A crown's time in hand, as shares of the move: it comes from the head before, goes back to it after</summary>
     public float PropIn, PropOut = 1f;
+    /// <summary>
+    /// True when the move reads only with a hat on (it lifts, spins, throws or clamps the hat): GhostEmotes never picks it
+    /// for a ghost with no hat showing
+    /// </summary>
+    public bool NeedsHat;
     /// <summary>The hand clip it plays on the Animator's Emotes layer: the state's name (null when none)</summary>
     public readonly string Clip;
     /// <summary>Animator.StringToHash(Clip), worked out once (0 when none)</summary>
@@ -54,6 +59,13 @@ public sealed class GhostMove
         Prop = prop;
         PropIn = from;
         PropOut = to;
+        return this;
+    }
+
+    /// <summary>The same move, flagged as reading only with a hat on (NeedsHat)</summary>
+    internal GhostMove WithHat()
+    {
+        NeedsHat = true;
         return this;
     }
 

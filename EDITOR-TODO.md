@@ -414,7 +414,7 @@ Nothing to set up: the emotes are added when players join. Play a couch match wi
 - **In a match, each fires and reads from the game camera:**
   - Steal: the thief cackles, the victim shakes a fist.
   - Delivery: a flourish. The golden order too.
-  - Boost: a hold-your-hat. Only about one boost in a few (20 s apart).
+  - Boost: arms out like a plane, or a superhero lean. Only about one boost in a few (20 s apart). Still readable under the purple boost tint?
   - Airtime: "Wheee" after a real jump off a ramp or bump. Not on a drop into the river.
   - Hard bump: stars around the head.
   - Golden order: a treasure hold on pickup, then every 15 s.
@@ -422,13 +422,15 @@ Nothing to set up: the emotes are added when players join. Play a couch match wi
   - Not carrying, closing on a carrier: a scheming look.
   - Standing still for 12 s: bored.
 - **Not spammy:** the same emote never twice running, and a big one (steal, bump) cuts a small one. Does a ghost ever feel like it is always doing something?
-- **Lobby:** a new player materialises; readying up warms up or cracks knuckles; a new hat or colour shows off; ready while someone isn't, after 5 s, impatient.
+- **Lobby:** a new player materialises; readying up warms up or cracks knuckles; a new hat or colour shows off (switching to no hat checks a mirror instead); ready while someone isn't, after 5 s, impatient. Raised hands stay inside each lobby quarter.
+- **No hat:** play once with the default (no hat). No emote should reach for or throw a hat that isn't there.
 - **Countdown:** every ghost revs at 3, 2, 1.
 - **Results:** the winner (victory or crown polish) and the last place (tantrum or fade away) emote every few seconds. The podium acts wait for them.
-- **Props:** the parcel is in the ghost's hands during the cackle, treasure hold and side eye, then back on the rack. The winner holds a crown. Does anything flicker or stay behind?
+- **Props:** the parcel arcs over the head into the ghost's hands during the cackle, treasure hold and side eye, then back to its spot beside the scooter. Try carrying two. The winner holds a crown. Does anything flicker or stay behind?
+- **Split screen:** in a 4-player quarter, do the hand-only emotes still read (hands swell while emoting)? The hand-rub ones are known to be weak there.
 - **Online:** other players' ghosts emote too (steal, delivery, boost, lobby, results). A hard hit shows stars on the victim's ghost on every machine, yours too.
 - **Decided (2026-11-20):** the d-pad emotes stay off in matches. They work in code but nothing is bound to them, by choice.
-- **Known:** Bored is mostly hidden behind the theft replay.
+- **Known:** Bored is mostly hidden behind the theft replay. At night the horns bloom into two bright discs that read like eyes from behind (art: cap their glow?).
 
 ## 16c. Accessibility: to build, then playtest
 

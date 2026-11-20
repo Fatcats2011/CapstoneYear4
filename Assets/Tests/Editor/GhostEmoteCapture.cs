@@ -16,15 +16,17 @@ namespace DoA.Tests
     /// (where the in-game player camera sits), "behindzoom" (the same spot and aim at FOV 18) and "front3q" (front-left three-quarter)
     /// A move with a hand clip plays it on the Animator's Emotes layer: the capture runs the Animator (animator.Update) before
     /// each Step, so the layer's weight from the last Step is what that Update evaluates.
-    /// The ghost carries a medium order's package on its rack (Order.prefab's mesh, size and turn, floating and bobbing),
-    /// so the parcel moves hold it; the crown moves show the crown. props.txt logs where the props and the hands are
+    /// The ghost carries two medium orders' packages where the game floats them (Order.prefab's mesh, size and turn,
+    /// floating and bobbing, at OrderHandler's order2Position and order1Position: beside the scooter at shoulder height),
+    /// so the parcel moves hold the first; the crown moves show the crown. props.txt logs where the props and the hands are.
+    /// Then a hatless pass ("_nohat", behind and front3q) of every move a hatless ghost can play (NoHat is the default look)
     /// </summary>
     public class GhostEmoteCapture
     {
         const string AVATAR = "Assets/Prefabs/Player Prefabs/PlayerAvatar.prefab";
         const string ORDER = "Assets/Prefabs/Packages/Order.prefab";
 
-        sealed class Carried : IGhostCarry
+        internal sealed class Carried : IGhostCarry
         {
             public Transform mesh;
             public Transform Parcel() { return mesh; }
@@ -48,6 +50,8 @@ namespace DoA.Tests
             // Nothing else here: Play Mode reloads the scripts, and only a bare test method survives that
             EditorSceneManager.playModeStartScene = null;
             yield return new EnterPlayMode();
+            // Only the capture's own Updates move anything: on a yield the Animator would add the real frame time
+            Time.timeScale = 0f;
             yield return Film();
         }
 
@@ -88,7 +92,12 @@ namespace DoA.Tests
 
             Animator animator = actor.Model.Find("Scooter/" + ScooterLook.MODEL + "/Player Model").GetComponent<Animator>();
             GhostEmotes emotes = GhostEmotes.On(animator, new System.Random(1));
-            emotes.Carry = new Carried { mesh = Package(actor) };
+            Transform package = Package(actor, false);
+            Transform second = Package(actor, false, SECOND);
+            File.AppendAllText(Path.Combine(folder, "info.txt"), System.Environment.NewLine + "packages at the order slots, world size "
+                + package.GetComponent<Renderer>().bounds.size.ToString("F2") + ", first at " + package.parent.position.ToString("F2")
+                + ", second at " + second.parent.position.ToString("F2") + ", head at " + emotes.Rig.Head.position.ToString("F2"));
+            emotes.Carry = new Carried { mesh = package };
             // A skinned mesh is skinned once a frame: several renders in one frame would all show the first pose
             foreach (SkinnedMeshRenderer skin in actor.GetComponentsInChildren<SkinnedMeshRenderer>(true))
                 skin.forceMatrixRecalculationPerRender = true;
@@ -130,12 +139,26 @@ namespace DoA.Tests
             Transform[] all = animator.GetComponentsInChildren<Transform>(true);
             Vector3[] positions = all.Select(t => t.localPosition).ToArray(), scales = all.Select(t => t.localScale).ToArray();
             Quaternion[] rotations = all.Select(t => t.localRotation).ToArray();
+            PlayerHatInformationSO noHat = AssetDatabase.FindAssets("t:PlayerHatInformationSO")
+                .Select(g => AssetDatabase.LoadAssetAtPath<PlayerHatInformationSO>(AssetDatabase.GUIDToAssetPath(g)))
+                .First(h => !h.displayHat);
+            foreach (bool hatless in new[] { false, true })
+            {
+            if (hatless)
+            {
+                // The default look: no hat. Only the moves a hatless ghost plays (GhostEmotes skips NeedsHat for it)
+                actor.SetHat(noHat);
+                File.AppendAllText(Path.Combine(folder, "info.txt"), System.Environment.NewLine + "hatless pass: " + noHat.name
+                    + ", shows a hat " + emotes.ShowsHat);
+            }
             int index = 0;
             foreach (GhostMove move in GhostMoves.All.ToList())
             {
                 index++;
-                string stem = index.ToString("00") + "_" + move.Action + "_" + move.Name.Replace(' ', '_');
-                foreach (string view in new[] { "behind", "behindzoom", "front3q" })
+                if (hatless && !emotes.CanShow(move))
+                    continue;
+                string stem = index.ToString("00") + "_" + move.Action + "_" + move.Name.Replace(' ', '_') + (hatless ? "_nohat" : "");
+                foreach (string view in hatless ? new[] { "behind", "front3q" } : new[] { "behind", "behindzoom", "front3q" })
                 {
                     bool frontView = view == "front3q";
                     cam.fieldOfView = view == "behindzoom" ? 18f : 60f;
@@ -188,16 +211,23 @@ namespace DoA.Tests
                     yield return null;
                 }
             }
+            }
 
             Object.Destroy(frame);
             Object.Destroy(target);
             yield return null;
         }
 
+        /// <summary>OrderHandler's slot for the first order picked up (OrderHandler.PickupOrder fills order2 first), and the second's</summary>
+        internal const string FIRST = "order2Position", SECOND = "order1Position";
+
         // A medium order's package (Order.prefab's mesh, material, size and turn), one down under its root as
-        // Order.SetMeshPosition puts it, floating and bobbing as Order.Pickup sets it, on the rack (TitleActor.Carry: the
-        // capture's scooter is the title's, whose OrderHandler slots aren't where its model is)
-        static Transform Package(TitleActor actor)
+        // Order.SetMeshPosition puts it, floating and bobbing as Order.Pickup sets it, where the game carries it: its root
+        // at the scooter's OrderHandler slot (PlayerAvatar.prefab: order2Position at (-1.5, 3.13, -1.5) from Control, the
+        // ghost's left; order1Position at (1.5, 3.13, -1.5), its right), a child of the slot as OrderHandler.PickupOrder
+        // makes it. manual: its float and bob tweens run only on DOTween.ManualUpdate (a capture stepped by hand at a
+        // frozen timescale)
+        internal static Transform Package(TitleActor actor, bool manual, string slot = FIRST)
         {
             Order prefab = AssetDatabase.LoadAssetAtPath<GameObject>(ORDER).GetComponent<Order>();
             GameObject root = new GameObject("Capture Order");
@@ -209,12 +239,15 @@ namespace DoA.Tests
             mesh.transform.localRotation = prefab.orderMeshObject.transform.localRotation;
             mesh.transform.localScale = Vector3.one * prefab.meshScale[1];
             mesh.transform.localPosition = -Vector3.up;
-            actor.Carry(root.transform);
-            File.AppendAllText(Path.Combine(Directory.GetParent(Application.dataPath).FullName, "Logs", "ghost-emotes", "info.txt"),
-                System.Environment.NewLine + "package on the rack, world size " + mesh.GetComponent<Renderer>().bounds.size.ToString("F2"));
+            OrderHandler handler = actor.GetComponentInChildren<OrderHandler>(true);
+            Transform at = (Transform)new SerializedObject(handler).FindProperty(slot).objectReferenceValue;
+            root.transform.SetPositionAndRotation(at.position, actor.transform.rotation);
+            root.transform.SetParent(at, true);
+            UpdateType update = manual ? UpdateType.Manual : UpdateType.Normal;
             mesh.transform.DOLocalRotate(new Vector3(0f, 0f, 90f), 2f, RotateMode.FastBeyond360)
-                .SetLoops(-1, LoopType.Incremental).SetRelative().SetEase(Ease.Linear);
-            mesh.transform.DOLocalMove(new Vector3(0f, 0.1f, 0f), 1f).SetLoops(-1, LoopType.Yoyo).SetRelative().SetEase(Ease.Linear);
+                .SetLoops(-1, LoopType.Incremental).SetRelative().SetEase(Ease.Linear).SetUpdate(update);
+            mesh.transform.DOLocalMove(new Vector3(0f, 0.1f, 0f), 1f).SetLoops(-1, LoopType.Yoyo).SetRelative().SetEase(Ease.Linear)
+                .SetUpdate(update);
             return mesh.transform;
         }
 

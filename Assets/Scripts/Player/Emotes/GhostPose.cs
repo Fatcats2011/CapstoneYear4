@@ -34,6 +34,8 @@ public struct GhostPose
     public float TailWag;
     /// <summary>Hat up (+)</summary>
     public float HatLift;
+    /// <summary>Hat to its right (+), off the head (a hat thrown aside)</summary>
+    public float HatShift;
     /// <summary>Hat turns about up</summary>
     public float HatSpin;
     /// <summary>Hat flips forward (+)</summary>
@@ -56,7 +58,8 @@ public struct GhostPose
             && Near(HeadYaw, r.HeadYaw, tolerance) && Near(HeadPitch, r.HeadPitch, tolerance)
             && Near(HeadRoll, r.HeadRoll, tolerance) && Near(HeadPop, r.HeadPop, tolerance)
             && Near(TailUp, r.TailUp, tolerance) && Near(TailWag, r.TailWag, tolerance)
-            && Near(HatLift, r.HatLift, tolerance) && Near(HatSpin, r.HatSpin, tolerance)
+            && Near(HatLift, r.HatLift, tolerance) && Near(HatShift, r.HatShift, tolerance)
+            && Near(HatSpin, r.HatSpin, tolerance)
             && Near(HatTip, r.HatTip, tolerance) && Near(Fade, r.Fade, tolerance)
             && Near(HatFade, r.HatFade, tolerance);
     }
@@ -78,7 +81,8 @@ public struct GhostPose
             HeadYaw = Mathf.LerpAngle(a.HeadYaw, b.HeadYaw, k), HeadPitch = Mathf.LerpAngle(a.HeadPitch, b.HeadPitch, k),
             HeadRoll = Mathf.LerpAngle(a.HeadRoll, b.HeadRoll, k), HeadPop = Mathf.Lerp(a.HeadPop, b.HeadPop, k),
             TailUp = Mathf.LerpAngle(a.TailUp, b.TailUp, k), TailWag = Mathf.LerpAngle(a.TailWag, b.TailWag, k),
-            HatLift = Mathf.Lerp(a.HatLift, b.HatLift, k), HatSpin = Mathf.LerpAngle(a.HatSpin, b.HatSpin, k),
+            HatLift = Mathf.Lerp(a.HatLift, b.HatLift, k), HatShift = Mathf.Lerp(a.HatShift, b.HatShift, k),
+            HatSpin = Mathf.LerpAngle(a.HatSpin, b.HatSpin, k),
             HatTip = Mathf.LerpAngle(a.HatTip, b.HatTip, k),
             Fade = Mathf.Lerp(a.Fade, b.Fade, k), HatFade = Mathf.Lerp(a.HatFade, b.HatFade, k)
         };

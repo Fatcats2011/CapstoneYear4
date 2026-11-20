@@ -178,6 +178,24 @@ namespace DoA.Tests
             Assert.IsTrue(Playing(mesh), "its tweens go on");
         }
 
+        /// <summary>On its way from the rack to the hands it arcs up over the head, not through the body</summary>
+        [Test]
+        public void CarriedOrder_ArcsOverTheHeadOnTheWay()
+        {
+            Player p = NewPlayer();
+            Order order = Give(p);
+            Transform mesh = order.orderMeshObject.transform;
+            GhostRig rig = p.emotes.Rig;
+            p.emotes.Play(Move("Parcel Overhead"), 1f);
+            float highest = float.MinValue;
+            for (float t = 0f; t < GhostProps.PARCEL_IN; t += DT)
+            {
+                Run(p.emotes, DT);
+                highest = Mathf.Max(highest, Vector3.Dot(mesh.position - rig.Head.position, rig.Up) / rig.U);
+            }
+            Assert.Greater(highest, GhostProps.PARCEL_OVER - 0.3f, "over the hat part way");
+        }
+
         [Test]
         public void ParcelSpin_SitsOverTheRightHand()
         {
@@ -353,7 +371,8 @@ namespace DoA.Tests
             Assert.AreSame(p.emotes.transform, props.Crown.transform.parent, "under the ghost");
             Vector3 hold = move.Prop == GhostProp.CrownLeft ? p.emotes.Rig.HandLeft.position : Hands(p.emotes);
             Assert.Less(Vector3.Distance(props.Crown.transform.position, hold), p.emotes.Rig.U, "at the hands");
-            Assert.AreEqual(GhostProps.CROWN_WIDE * p.emotes.Rig.U, props.Crown.bounds.size.x, 0.05f, "its width");
+            Assert.AreEqual(GhostProps.CROWN_WIDE * GhostProps.CROWN_HELD * p.emotes.Rig.U, props.Crown.bounds.size.x, 0.05f,
+                "its width: bigger in the hands");
 
             Run(p.emotes, move.Length * 0.5f + 0.2f);
             Assert.IsFalse(props.CrownShown, "hidden at the end");

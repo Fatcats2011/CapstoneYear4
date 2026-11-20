@@ -1,4 +1,5 @@
 using System.Collections;
+using DG.Tweening;
 using System.IO;
 using System.Linq;
 using NUnit.Framework;
@@ -11,6 +12,8 @@ namespace DoA.Tests
 {
     /// <summary>
     /// Not a check: films every ghost emote (GhostMoves.All, in order) as numbered PNG frames in Logs/ghost-video/frames (run by name).
+    /// In the parcel moves the ghost carries a medium package where the game floats it, beside the scooter at the first order slot (as GhostEmoteCapture), so they show it. Time.timeScale is 0
+    /// while it films: the Animator, the emote and the package's tweens move only by the hand-made 1/FPS steps.
     /// Each move: 0.4 s rest, the move, 0.3 s rest, at 60 fps (1280x720). Each frame is two views side by side (left behindzoom,
     /// right front3q, wide enough for the whole scooter).
     /// frames.csv lists the frame range of every move; a script then labels the frames and encodes the video
@@ -35,6 +38,9 @@ namespace DoA.Tests
             // Nothing else here: Play Mode reloads the scripts, and only a bare test method survives that
             EditorSceneManager.playModeStartScene = null;
             yield return new EnterPlayMode();
+            // Only Film's own steps move anything: on each yield the Animator would otherwise add the real frame time
+            // (large, as rendering and PNG encoding are slow), so the hand clips ran fast and popped every 30 frames
+            Time.timeScale = 0f;
             yield return Film();
         }
 
@@ -74,6 +80,11 @@ namespace DoA.Tests
 
             Animator animator = actor.Model.Find("Scooter/" + ScooterLook.MODEL + "/Player Model").GetComponent<Animator>();
             GhostEmotes emotes = GhostEmotes.On(animator, new System.Random(1));
+            // A medium package at the game's first order slot (beside the scooter, the ghost's left), as GhostEmoteCapture's,
+            // so the parcel moves hold it; its float and bob tweens are stepped by hand with the rest. Only the parcel moves
+            // carry it (as in a match: the rest mostly play with nothing carried)
+            Transform package = GhostEmoteCapture.Package(actor, true);
+            GhostEmoteCapture.Carried carried = new GhostEmoteCapture.Carried { mesh = package };
             // Stepped by hand at exactly 1/FPS: its own LateUpdate would add the real frame time on each yield
             emotes.enabled = false;
             // A skinned mesh is skinned once a frame: several renders in one frame would all show the first pose
@@ -111,6 +122,8 @@ namespace DoA.Tests
             {
                 index++;
                 emotes.Stop();
+                package.parent.gameObject.SetActive(move.HoldsParcel);
+                emotes.Carry = move.HoldsParcel ? carried : null;
                 for (int i = 0; i < all.Length; i++)
                 {
                     all[i].localPosition = positions[i];
@@ -124,6 +137,7 @@ namespace DoA.Tests
                 {
                     if (f == rest)
                         emotes.Play(move, 1f);
+                    DOTween.ManualUpdate(dt, dt);
                     animator.Update(dt);
                     emotes.Step(dt);
                     cam.fieldOfView = 18f;

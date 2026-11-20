@@ -276,13 +276,13 @@ public class PlayerEmotes : MonoBehaviour, IGhostCarry
 
     /// <summary>
     /// The player's hat or colour changed in player select (CustomizationSelector, OnlineGame for another machine's):
-    /// HatShowOff or MirrorCheck
+    /// HatShowOff or MirrorCheck (MirrorCheck when the new look has no hat showing)
     /// </summary>
     public void Restyled()
     {
         if (!LobbyIsOn())
             return;
-        lastStyle = PlayerEmoteRules.Restyled(lastStyle, Random);
+        lastStyle = PlayerEmoteRules.Restyled(lastStyle, Random, emotes == null || emotes.ShowsHat);
         Ask(lastStyle.Value);
     }
 

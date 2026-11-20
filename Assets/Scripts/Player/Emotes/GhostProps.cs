@@ -5,7 +5,7 @@ using UnityEngine.Rendering;
 
 /// <summary>
 /// What a ghost carries, as GhostProps sees it: the visible mesh of a parcel on its scooter, and whether it still has it
-/// (PlayerEmotes answers from its OrderHandler; captures from a package on the rack)
+/// (PlayerEmotes answers from its OrderHandler; captures from a package at the order slot)
 /// </summary>
 public interface IGhostCarry
 {
@@ -19,7 +19,7 @@ public interface IGhostCarry
 /// <summary>
 /// The props in a ghost's hands while a move plays (GhostMove.Prop). Cosmetic only. Run by GhostEmotes, after the pose.
 /// Parcel: the parcel the ghost carries (IGhostCarry) leaves its spot on the rack for the middle of the hands over
-/// PARCEL_IN seconds, follows them (ParcelSpin: spins about up over the right hand) and goes back over the move's last
+/// PARCEL_IN seconds, arcing up over the hat on the way (and on the way back: PARCEL_ARC, PARCEL_OVER), follows them (ParcelSpin: spins about up over the right hand) and goes back over the move's last
 /// PARCEL_OUT seconds, or over PARCEL_CUT when a move without it interrupts. It keeps its parent; on its way to the hands it
 /// shrinks to PARCEL_HELD of its size on the rack (a big bag would hide the head), growing back on the way back. Its world
 /// position, turn and local scale are written; the tweens running on it are paused meanwhile, and its local position, turn
@@ -28,21 +28,32 @@ public interface IGhostCarry
 /// put back that someone else set since, and only the tweens this paused that are still alive resume.
 /// Crown: a camera-facing sprite of the winner's crown (RematchCrown.Art), CROWN_WIDE U across, made the first time it is
 /// needed and kept (hidden) under the ghost: it grows out of the head, goes to the hands' middle (Crown) or the left
-/// hand (CrownLeft) by the move's PropIn, stays there until PropOut, goes back to the head and shrinks away by the end
+/// hand (CrownLeft) by the move's PropIn, stays there until PropOut, goes back to the head and shrinks away by the end.
+/// It grows to CROWN_HELD times its size on the way to the hands (as the hands swell), so it reads at the podium's size
 /// </summary>
 public sealed class GhostProps
 {
     /// <summary>Seconds: the parcel goes to the hands over the first, back over a move's last, back after an interrupt</summary>
-    internal const float PARCEL_IN = 0.15f, PARCEL_OUT = 0.2f, PARCEL_CUT = 0.12f;
+    internal const float PARCEL_IN = 0.3f, PARCEL_OUT = 0.3f, PARCEL_CUT = 0.12f;
+    /// <summary>
+    /// In U: the parcel's path between the rack and the hands arcs up at least PARCEL_ARC (at its middle), and high
+    /// enough that its middle passes PARCEL_OVER above the Head (over the hat), so it never goes through the body
+    /// </summary>
+    internal const float PARCEL_ARC = 1.5f, PARCEL_OVER = 2.4f;
     /// <summary>The parcel's size in the hands, as a share of its size on the rack</summary>
     internal const float PARCEL_HELD = 0.45f;
     /// <summary>In U: how far over the right hand the spun parcel's bottom sits</summary>
     const float SPIN_ABOVE = 0.15f;
     /// <summary>Degrees a second the spun parcel turns</summary>
     const float SPIN_SPEED = 540f;
-    /// <summary>In U: the crown's width, and how far above the hands' point and the Head it sits</summary>
+    /// <summary>
+    /// In U: the crown's width, and how far above the hands' point and the Head it sits (over the head it is above the
+    /// hat, so it grows out of and shrinks back into the air over the hat, never in front of the face)
+    /// </summary>
     internal const float CROWN_WIDE = 1.6f;
-    const float CROWN_ABOVE_HANDS = 0.55f, CROWN_ABOVE_HEAD = 0.9f;
+    internal const float CROWN_ABOVE_HANDS = 0.55f, CROWN_ABOVE_HEAD = 2.3f;
+    /// <summary>The crown's size in the hands, times its size at the head (it grows on the way; its lift over the hands too)</summary>
+    internal const float CROWN_HELD = 1.4f;
     /// <summary>The share of the crown's way out (and back) spent growing (and shrinking) at the head</summary>
     const float CROWN_GROW = 0.35f;
 
@@ -267,7 +278,12 @@ public sealed class GhostProps
 
         Vector3 rackPosition = parcelParent != null ? parcelParent.TransformPoint(parcelPosition) : parcelPosition;
         Quaternion rackRotation = parcelParent != null ? parcelParent.rotation * parcelRotation : parcelRotation;
-        parcel.SetPositionAndRotation(Vector3.Lerp(rackPosition, at, k), Quaternion.Slerp(rackRotation, held, k));
+        // Up and over the hat on the way (the hands are still low inside the body when it sets off)
+        Vector3 straight = Vector3.Lerp(rackPosition, at, k);
+        Vector3 middle = (rackPosition + at) * 0.5f;
+        float arc = Mathf.Max(PARCEL_ARC * rig.U, Vector3.Dot(rig.Head.position - middle, up) + PARCEL_OVER * rig.U);
+        Vector3 path = straight + up * (arc * Mathf.Sin(Mathf.PI * k));
+        parcel.SetPositionAndRotation(path, Quaternion.Slerp(rackRotation, held, k));
         wrotePosition = parcel.localPosition;
         wroteRotation = parcel.localRotation;
         wroteScale = parcel.localScale;
@@ -341,7 +357,7 @@ public sealed class GhostProps
         Vector3 hands = playing.Prop == GhostProp.CrownLeft
             ? rig.HandLeft.position
             : (rig.HandLeft.position + rig.HandRight.position) * 0.5f;
-        hands += up * (CROWN_ABOVE_HANDS * u);
+        hands += up * (CROWN_ABOVE_HANDS * CROWN_HELD * u);
 
         // Out: grows at the head, then goes to the hands. Back: goes to the head, then shrinks away
         float size, way;
@@ -366,7 +382,8 @@ public sealed class GhostProps
         Transform t = crown.transform;
         t.position = Vector3.Lerp(head, hands, way);
         float across = crown.sprite != null ? crown.sprite.bounds.size.x : 1f;
-        SetWorldScale(t, Mathf.Max(1e-4f, size) * CROWN_WIDE * u / Mathf.Max(1e-4f, across));
+        float held = Mathf.Lerp(1f, CROWN_HELD, way);
+        SetWorldScale(t, Mathf.Max(1e-4f, size) * held * CROWN_WIDE * u / Mathf.Max(1e-4f, across));
         Camera view = Camera.main;
         if (view != null)
             t.rotation = view.transform.rotation;

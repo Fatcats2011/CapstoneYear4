@@ -77,7 +77,7 @@ namespace DoA.Tests
             pose.Tall = 1.2f; pose.Wide = 0.9f;
             pose.HeadYaw = 30f; pose.HeadPitch = 10f; pose.HeadRoll = 12f; pose.HeadPop = 0.2f;
             pose.TailUp = 20f; pose.TailWag = 25f;
-            pose.HatLift = 0.3f; pose.HatSpin = 90f; pose.HatTip = 30f;
+            pose.HatLift = 0.3f; pose.HatShift = 0.2f; pose.HatSpin = 90f; pose.HatTip = 30f;
             pose.Fade = 0.3f; pose.HatFade = 0.2f;
             return pose;
         }
@@ -397,6 +397,15 @@ namespace DoA.Tests
 
             rig.Apply(Only(p => p.Pose.HatLift = 0.5f));
             Assert.Less((hat.position - (hatAt + up * 0.5f * u)).magnitude, 1e-4f, "HatLift lifts the hat");
+            rig.Apply(Only(p => p.Pose.HatShift = 0.5f));
+            Assert.Less((hat.position - (hatAt + right * 0.5f * u)).magnitude, 1e-4f, "HatShift moves the hat to its right");
+            Assert.Less((head.position - headAt).magnitude, 1e-4f, "the hat alone");
+            // With the body turned, along its right as it now stands
+            rig.Apply(Only(p => { p.Pose.Yaw = 90f; p.Pose.HatShift = 0.5f; }));
+            Vector3 hatTurned = hat.position;
+            rig.Apply(Only(p => p.Pose.Yaw = 90f));
+            Assert.Less((hatTurned - (hat.position + Quaternion.AngleAxis(90f, up) * right * 0.5f * u)).magnitude, 1e-4f,
+                "HatShift follows the turned body's right");
 
             rig.Apply(Only(p => p.Pose.Tall = 1.5f));
             Vector3 tallAxis = torso.localScale;
@@ -416,6 +425,91 @@ namespace DoA.Tests
             Assert.Greater((hat.localPosition - hatAt).magnitude, 1e-3f, "the hat moved");
             rig.Clear();
             AssertSame(before, "after Clear");
+        }
+
+        /// <summary>The hands and the fingers under them grow by the factor, never pile up, and go back exactly</summary>
+        [Test]
+        public void SetHands_SwellsHandsAndFingers_RestoresExactly()
+        {
+            GhostRig rig = GhostRig.Find(animator);
+            Assert.IsNotNull(rig.HandLeft, "a left hand");
+            Assert.IsNotNull(rig.HandRight, "a right hand");
+            List<Snap> before = Take();
+            Transform finger = rig.HandLeft.Find("Finger.Left");
+            Vector3 left = rig.HandLeft.localScale, right = rig.HandRight.localScale;
+            float fingerWorld = finger != null ? finger.lossyScale.magnitude : 0f;
+
+            for (int i = 0; i < 5; i++)
+            {
+                rig.SetHands(1.6f);
+                Assert.Less((rig.HandLeft.localScale - left * 1.6f).magnitude, 1e-5f, "left, call " + i);
+                Assert.Less((rig.HandRight.localScale - right * 1.6f).magnitude, 1e-5f, "right, call " + i);
+            }
+            Assert.AreEqual(1.6f, rig.HandScale, 1e-6f);
+            if (finger != null)
+                Assert.AreEqual(fingerWorld * 1.6f, finger.lossyScale.magnitude, 1e-4f, "the finger follows");
+
+            rig.SetHands(1.3f);
+            Assert.Less((rig.HandLeft.localScale - left * 1.3f).magnitude, 1e-5f, "a smaller swell is on the base, not on the last");
+            rig.SetHands(1f);
+            AssertSame(before, "after SetHands(1)", 0f + 1e-7f);
+
+            // Clear (Stop, a rest pose) puts them back too, with a pose on
+            rig.BeginHat();
+            rig.Apply(Busy());
+            rig.SetHands(1.6f);
+            rig.Clear();
+            AssertSame(before, "after Clear");
+            Assert.AreEqual(1f, rig.HandScale);
+        }
+
+        /// <summary>
+        /// On top of the Animator: a hand scale the Animator rewrites becomes the new base; one it leaves alone (or only
+        /// its rotation rewritten) keeps the old base, so the swell never compounds
+        /// </summary>
+        [Test]
+        public void SetHands_BuildsOnTheAnimator_DoesNotPileUp()
+        {
+            GhostRig rig = GhostRig.Find(animator);
+            Transform hand = rig.HandRight;
+            Vector3 scale = hand.localScale;
+            Quaternion turn = hand.localRotation;
+            for (int i = 0; i <= 30; i++)
+            {
+                // The "Animator": a new rotation every frame, a new scale every third
+                hand.localRotation = turn * Quaternion.Euler(0f, 0.1f * i, 0f);
+                if (i % 3 == 0)
+                    hand.localScale = scale * (1f + 0.01f * i);
+                Vector3 animated = scale * (1f + 0.01f * (i - i % 3));
+                float swell = 1f + GhostRig.HAND_SWELL * Mathf.Sin(Mathf.PI * i / 30f);
+                rig.SetHands(swell);
+                Assert.Less((hand.localScale - animated * swell).magnitude, 1e-5f, "frame " + i);
+            }
+            hand.localScale = scale;
+            rig.SetHands(1f);
+            Assert.Less((hand.localScale - scale).magnitude, 1e-7f, "back");
+            Assert.AreEqual(turn * Quaternion.Euler(0f, 3f, 0f), hand.localRotation, "the Animator's rotation stays");
+        }
+
+        /// <summary>A clip move swells the hands with the layer weight (none in Edit Mode without the layer: then none)</summary>
+        [Test]
+        public void ClipMove_SwellsTheHands_ThenEndsBackExactly()
+        {
+            GhostEmotes emotes = GhostEmotes.On(animator, new System.Random(5));
+            List<Snap> before = Take();
+            GhostMove move = GhostMoves.All.First(m => m.Clip != null);
+            emotes.Play(move, 1f);
+            float t = 0f;
+            Vector3 left = before.First(s => s.transform == emotes.Rig.HandLeft).scale;
+            while (t < move.Length + 0.3f)
+            {
+                emotes.Step(0.02f);
+                t += 0.02f;
+                float expected = 1f + GhostRig.HAND_SWELL * emotes.ClipWeight;
+                Assert.Less((emotes.Rig.HandLeft.localScale - left * expected).magnitude, 1e-5f, "at " + t);
+            }
+            Assert.IsNull(emotes.Playing);
+            AssertSame(before, "after the move");
         }
 
         [Test]
@@ -439,8 +533,16 @@ namespace DoA.Tests
             SkinnedMeshRenderer body = animator.transform.Find("Player_Model").GetComponent<SkinnedMeshRenderer>();
             Renderer hatLook = rig.Hat.GetComponent<Renderer>();
             Assert.IsFalse(body.HasPropertyBlock(), "no block to start with");
+            Material[] slots = body.sharedMaterials;
+            Assert.IsTrue(slots.Any(m => m != null && !m.HasProperty("_DitherThreshold")), "the eyes and horns can't dither");
+
+            rig.Apply(Only(p => p.Pose.Fade = GhostRig.PLAIN_OUT * 0.5f));
+            CollectionAssert.AreEqual(slots, body.sharedMaterials, "a light fade leaves the eyes and horns as they are");
 
             rig.Apply(Only(p => p.Pose.Fade = 0.5f));
+            foreach (Material material in body.sharedMaterials)
+                Assert.IsTrue(material == null || material.HasProperty("_DitherThreshold"),
+                    "every slot (eyes and horns too) dithers halfway: " + (material != null ? material.name : "-"));
             Assert.IsTrue(body.HasPropertyBlock(), "the body dithers");
             MaterialPropertyBlock block = new MaterialPropertyBlock();
             body.GetPropertyBlock(block);
@@ -455,6 +557,7 @@ namespace DoA.Tests
                 Assert.IsTrue(hatLook.forceRenderingOff, "the hat is off at HatFade 1");
 
             rig.Clear();
+            CollectionAssert.AreEqual(slots, body.sharedMaterials, "the eyes and horns wear their own materials again");
             Assert.IsFalse(body.HasPropertyBlock(), "the block is gone");
             Assert.IsFalse(body.forceRenderingOff, "drawn again");
             Assert.AreNotEqual(UnityEngine.Rendering.ShadowCastingMode.Off, body.shadowCastingMode, "its shadow is back");
@@ -507,9 +610,112 @@ namespace DoA.Tests
             Assert.IsTrue(emotes.Play(GhostAction.SeeingStars), "its cooldown after it began");
         }
 
+        // The hat on (a hat that shows) or off (the NoHat look), as CustomizationSelector and ScooterLook put them
+        void Hat(bool on)
+        {
+            PlayerHatInformationSO hat = AssetDatabase.FindAssets("t:PlayerHatInformationSO")
+                .Select(g => AssetDatabase.LoadAssetAtPath<PlayerHatInformationSO>(AssetDatabase.GUIDToAssetPath(g)))
+                .First(h => h.displayHat == on);
+            actor.SetHat(hat);
+        }
+
+        [Test]
+        public void HasHat_FollowsTheLook()
+        {
+            GhostRig rig = GhostRig.Find(animator);
+            Hat(true);
+            Assert.IsTrue(rig.HasHat, "a hat on");
+            Hat(false);
+            Assert.IsFalse(rig.HasHat, "the NoHat look");
+            Hat(true);
+            Assert.IsTrue(rig.HasHat, "on again");
+        }
+
+        // Every action played this many times in a row (cooldowns run out between), with what it picked each time
+        static List<GhostMove> PlayRounds(GhostEmotes emotes, GhostAction action, int rounds)
+        {
+            List<GhostMove> played = new List<GhostMove>();
+            for (int i = 0; i < rounds; i++)
+            {
+                emotes.Stop();
+                emotes.Tick(60f);
+                Assert.IsTrue(emotes.Play(action), action + " round " + i);
+                played.Add(emotes.Playing);
+            }
+            emotes.Stop();
+            return played;
+        }
+
+        [Test]
+        public void Hatless_NeverPlaysAVersionThatNeedsAHat_NorTheSameTwiceRunning()
+        {
+            Hat(false);
+            GhostEmotes emotes = GhostEmotes.On(animator, new System.Random(5));
+            Assert.IsFalse(emotes.ShowsHat);
+            foreach (GhostAction action in System.Enum.GetValues(typeof(GhostAction)))
+            {
+                GhostMove[] moves = GhostMoves.For(action);
+                GhostMove[] showable = moves.Where(m => !m.NeedsHat).ToArray();
+                Assert.Greater(showable.Length, 0, action + ": a hatless ghost has a version to play");
+                Assert.IsTrue(emotes.CanPlay(action), action.ToString());
+                List<GhostMove> played = PlayRounds(emotes, action, 4 * moves.Length);
+                for (int i = 0; i < played.Count; i++)
+                {
+                    Assert.IsFalse(played[i].NeedsHat, action + ": " + played[i].Name + " needs a hat");
+                    if (i > 0 && showable.Length > 1)
+                        Assert.AreNotSame(played[i - 1], played[i], action + " twice running");
+                }
+                CollectionAssert.AreEquivalent(showable, played.Distinct().ToArray(), action + ": every hatless version comes up");
+            }
+        }
+
+        [Test]
+        public void Hatted_PlaysTheVersionsThatNeedAHat_NeverTheSameTwiceRunning()
+        {
+            Hat(true);
+            GhostEmotes emotes = GhostEmotes.On(animator, new System.Random(5));
+            Assert.IsTrue(emotes.ShowsHat);
+            int needing = 0;
+            foreach (GhostAction action in System.Enum.GetValues(typeof(GhostAction)))
+            {
+                GhostMove[] moves = GhostMoves.For(action);
+                List<GhostMove> played = PlayRounds(emotes, action, 4 * moves.Length);
+                for (int i = 1; i < played.Count; i++)
+                {
+                    if (moves.Length > 1)
+                        Assert.AreNotSame(played[i - 1], played[i], action + " twice running");
+                }
+                CollectionAssert.AreEquivalent(moves, played.Distinct().ToArray(), action + ": every version comes up");
+                needing += played.Count(m => m.NeedsHat);
+            }
+            Assert.Greater(needing, 0, "the hat versions play");
+        }
+
+        [Test]
+        public void HatComingOff_TheNextPickSkipsTheHatVersions_AndDoesntRepeat()
+        {
+            Hat(true);
+            GhostEmotes emotes = GhostEmotes.On(animator, new System.Random(9));
+            for (int round = 0; round < 20; round++)
+            {
+                bool on = round % 3 != 2;
+                Hat(on);
+                emotes.Tick(60f);
+                Assert.IsTrue(emotes.Play(GhostAction.HatShowOff));
+                GhostMove now = emotes.Playing;
+                if (!on)
+                    Assert.IsFalse(now.NeedsHat, "round " + round + ": " + now.Name);
+                emotes.Stop();
+            }
+            Hat(false);
+            Assert.IsTrue(emotes.Play(GhostAction.HatShowOff), "Spin Round: the only hatless one, so it may repeat");
+            Assert.AreEqual("Spin Round", emotes.Playing.Name);
+        }
+
         [Test]
         public void Versions_NeverTheSameTwiceRunning()
         {
+            Hat(true);
             GhostEmotes emotes = GhostEmotes.On(animator, new System.Random(11));
             string last = null;
             HashSet<string> seen = new HashSet<string>();
@@ -563,6 +769,7 @@ namespace DoA.Tests
             bool[] blocks = looks.Select(l => l.HasPropertyBlock()).ToArray();
             bool[] off = looks.Select(l => l.forceRenderingOff).ToArray();
             UnityEngine.Rendering.ShadowCastingMode[] shadows = looks.Select(l => l.shadowCastingMode).ToArray();
+            Material[][] slots = looks.Select(l => l.sharedMaterials).ToArray();
             foreach (GhostMove move in GhostMoves.All.Where(m => Enumerable.Range(0, 41).Any(i => m.At(i / 40f, 1f).Fade > 0.5f)))
             {
                 emotes.Play(move, 1f);
@@ -580,6 +787,7 @@ namespace DoA.Tests
                     Assert.AreEqual(blocks[i], looks[i].HasPropertyBlock(), what + " block");
                     Assert.AreEqual(off[i], looks[i].forceRenderingOff, what + " drawn");
                     Assert.AreEqual(shadows[i], looks[i].shadowCastingMode, what + " shadow");
+                    CollectionAssert.AreEqual(slots[i], looks[i].sharedMaterials, what + " materials");
                 }
             }
         }

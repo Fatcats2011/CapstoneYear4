@@ -125,6 +125,19 @@ namespace DoA.Tests
         }
 
         [Test]
+        public void Restyled_WithNoHatShowing_IsAlwaysMirrorCheck()
+        {
+            System.Random random = new System.Random(4);
+            foreach (GhostAction? last in new GhostAction?[] { null, GhostAction.HatShowOff, GhostAction.MirrorCheck })
+            {
+                for (int i = 0; i < 6; i++)
+                    Assert.AreEqual(GhostAction.MirrorCheck, PlayerEmoteRules.Restyled(last, random, false), "after " + last);
+            }
+            Assert.AreEqual(GhostAction.HatShowOff, PlayerEmoteRules.Restyled(GhostAction.MirrorCheck, random, true),
+                "a hat on: they take turns");
+        }
+
+        [Test]
         public void NewLook_NotTheFirstLook_NorNoChange()
         {
             Assert.IsFalse(PlayerEmoteRules.NewLook(-1, 0), "the first look, as they appear");
@@ -287,6 +300,38 @@ namespace DoA.Tests
             selector.SetDisableOptionsCustomization(true); // ready: the sliders are locked
             selector.SetCustomizationValue(true);
             Assert.AreEqual(1, Picked(player, GhostAction.HatShowOff, GhostAction.MirrorCheck), "nothing changed");
+        }
+
+        [Test]
+        public void ARestyleThatLeavesNoHat_ChecksTheMirror()
+        {
+            GameObject view = (GameObject)PrefabUtility.InstantiatePrefab(AssetDatabase.LoadAssetAtPath<GameObject>(VIEW));
+            objects.Keep(view);
+            PlayerInstantiate.Instance.Roster.JoinLocal(view.GetComponent<PlayerInput>());
+            PlayerEmotes player = PlayerEmotes.Attach(view);
+            Assert.IsNotNull(player);
+            Assert.IsNotNull(player.Emotes, "the view's ghost has emotes");
+            CustomizationSelector selector = view.GetComponentInChildren<CustomizationSelector>(true);
+            selector.UpdateHat();
+
+            SerializedObject picking = new SerializedObject(selector);
+            picking.FindProperty("customizationChanging").enumValueIndex = 1; // the hat slider
+            picking.ApplyModifiedPropertiesWithoutUndo();
+            int hatless = 0, hatted = 0;
+            for (int i = 0; i < selector.Hats.Count + 1; i++)
+            {
+                player.Emotes.Stop();
+                selector.SetCustomizationValue(true);
+                if (player.Emotes.ShowsHat)
+                {
+                    hatted++;
+                    continue;
+                }
+                hatless++;
+                Assert.AreEqual(GhostAction.MirrorCheck, player.Asked, "no hat to show off");
+            }
+            Assert.Greater(hatless, 0, "went past the NoHat look");
+            Assert.Greater(hatted, 0, "and past a hat");
         }
 
         // ---- Waiting

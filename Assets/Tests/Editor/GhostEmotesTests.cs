@@ -155,7 +155,7 @@ namespace DoA.Tests
             (GhostAction.Raspberry, "Tail Point"), (GhostAction.KnuckleCrack, "Neck Crack"), (GhostAction.Cackle, "Parcel Shake"),
             (GhostAction.Cackle, "Parcel Spin"), (GhostAction.FistShake, "Arm Flail"), (GhostAction.FistShake, "Hat Throw"),
             (GhostAction.FistShake, "Lunge Grab"), (GhostAction.DeliveryFlourish, "Sweeping Bow"), (GhostAction.DeliveryFlourish, "High Fist"),
-            (GhostAction.DeliveryFlourish, "Hat Lift"), (GhostAction.DeliveryFlourish, "Brush Off"), (GhostAction.HoldYourHat, "Hat Clamp"),
+            (GhostAction.DeliveryFlourish, "Hat Lift"), (GhostAction.DeliveryFlourish, "Brush Off"), (GhostAction.SeeingStars, "Hat Clamp"),
             (GhostAction.HoldYourHat, "Plane Arms"), (GhostAction.HoldYourHat, "Superhero"), (GhostAction.Wheee, "Arms Up"),
             (GhostAction.Wheee, "Starfish"), (GhostAction.TreasureHold, "Parcel Overhead"), (GhostAction.TreasureHold, "Parcel Hug"),
             (GhostAction.TreasureHold, "Presenting"), (GhostAction.JumpScare, "Hat Grab"), (GhostAction.Bored, "Big Stretch Up"),
@@ -176,7 +176,7 @@ namespace DoA.Tests
             return new[]
             {
                 p.Lift, p.Push, p.Shift, p.Pitch, p.Yaw, p.Roll, p.Tall, p.Wide, p.HeadYaw, p.HeadPitch, p.HeadRoll,
-                p.HeadPop, p.TailUp, p.TailWag, p.HatLift, p.HatSpin, p.HatTip, p.Fade, p.HatFade
+                p.HeadPop, p.TailUp, p.TailWag, p.HatLift, p.HatSpin, p.HatTip, p.Fade, p.HatFade, p.HatShift
             };
         }
 
@@ -187,6 +187,32 @@ namespace DoA.Tests
             Assert.AreEqual(78, expected.Length);
             foreach ((GhostAction action, string name) in expected)
                 Assert.IsTrue(GhostMoves.For(action).Any(m => m.Name == name && m.Action == action), action + " / " + name);
+        }
+
+        /// <summary>
+        /// The versions whose read is the hat (lifted, spun, thrown, clamped or left behind) need one; a hat bump on the
+        /// side doesn't. Every action keeps a version a hatless ghost can play
+        /// </summary>
+        [Test]
+        public void Catalogue_TheHatVersionsNeedAHat_EveryActionKeepsAHatlessOne()
+        {
+            string[] needHat =
+            {
+                "Hat Throw", "Hat Lift", "Hat Clamp", "Floating Hat", "Hat Spin", "Hat Grab", "Hat Twirl", "Hat Flip",
+                "Hat Left Behind"
+            };
+            CollectionAssert.AreEquivalent(needHat, GhostMoves.All.Where(m => m.NeedsHat).Select(m => m.Name).ToArray());
+            foreach (GhostAction action in Enum.GetValues(typeof(GhostAction)))
+                Assert.IsTrue(GhostMoves.For(action).Any(m => !m.NeedsHat), action + " has a hatless version");
+        }
+
+        /// <summary>The boost's emote has no version whose read is a hand on the head (lost under the boost's purple tint)</summary>
+        [Test]
+        public void Catalogue_HoldYourHat_IsArmsOutOnly()
+        {
+            CollectionAssert.AreEquivalent(new[] { "Plane Arms", "Superhero" },
+                GhostMoves.For(GhostAction.HoldYourHat).Select(m => m.Name).ToArray());
+            Assert.AreEqual(GhostAction.SeeingStars, GhostMoves.All.First(m => m.Name == "Hat Clamp").Action);
         }
 
         [Test]
@@ -299,7 +325,8 @@ namespace DoA.Tests
                         string where = move.Name + " side " + side + " i " + i;
                         foreach (float f in Fields(p))
                             Assert.IsTrue(!float.IsNaN(f) && !float.IsInfinity(f), where);
-                        Assert.GreaterOrEqual(p.Lift, -0.7f, where);
+                        // Hide sinks deepest: into the seat, only the hat showing
+                        Assert.GreaterOrEqual(p.Lift, -1.1f - 1e-4f, where);
                         Assert.GreaterOrEqual(p.Fade, 0f, where);
                         Assert.LessOrEqual(p.Fade, 1f, where);
                         Assert.GreaterOrEqual(p.HatFade, 0f, where);
@@ -342,7 +369,8 @@ namespace DoA.Tests
                 Assert.LessOrEqual(move.Length, 2.5f + 1e-4f, move.Name);
                 Assert.AreEqual(Math.Round(move.Length, 1), move.Length, 1e-4f, move.Name + " in tenths");
             }
-            Assert.AreEqual(1.5f, GhostMoves.All.First(m => m.Name == "Bounce").Length, 1e-6f, "Bounce fits a countdown beep");
+            // The countdown's second RevBounce waits for a longer first one to end (PlayerEmotes.TickLobby)
+            Assert.AreEqual(1.8f, GhostMoves.All.First(m => m.Name == "Bounce").Length, 1e-6f, "Bounce: two bounces and the Go lunge");
         }
 
         // Each field: its name, whether it is an angle (compared the short way round), the most it may move between
@@ -355,7 +383,7 @@ namespace DoA.Tests
             ("HeadPitch", true, 35f, false), ("HeadRoll", true, 35f, false), ("HeadPop", false, 0.6f, false),
             ("TailUp", true, 35f, false), ("TailWag", true, 35f, false), ("HatLift", false, 0.6f, true),
             ("HatSpin", true, 35f, true), ("HatTip", true, 35f, true), ("Fade", false, 0.35f, false),
-            ("HatFade", false, 0.35f, true)
+            ("HatFade", false, 0.35f, true), ("HatShift", false, 0.6f, true)
         };
 
         /// <summary>
@@ -403,9 +431,9 @@ namespace DoA.Tests
             string[] sided =
             {
                 "Turn And Cackle", "Check Behind", "Look Back", "Double Take", "Parcel Hug", "Shrug", "Turn And Wave",
-                "Sly Rub", "Thumbs In Ears"
+                "Sly Rub", "Thumbs In Ears", "Ear Waggle"
             };
-            int[] flips = { 4, 5, 8, 10, 2, 13 };   // Yaw, Roll, HeadYaw, HeadRoll, Shift, TailWag
+            int[] flips = { 4, 5, 8, 10, 2, 13, 19 };   // Yaw, Roll, HeadYaw, HeadRoll, Shift, TailWag, HatShift
             List<string> found = new List<string>();
             foreach (GhostMove move in GhostMoves.All)
             {
@@ -430,7 +458,7 @@ namespace DoA.Tests
                 }
             }
             CollectionAssert.AreEquivalent(sided, found, "the moves that turn to a side");
-            foreach (string name in new[] { "Shrug", "Turn And Wave", "Sly Rub", "Thumbs In Ears" })
+            foreach (string name in new[] { "Shrug", "Turn And Wave", "Sly Rub", "Thumbs In Ears", "Ear Waggle" })
             {
                 GhostMove move = GhostMoves.All.First(m => m.Name == name);
                 Assert.AreNotEqual(0f, move.At(0.5f, 1f).HeadYaw, name + " turns its head");
@@ -444,11 +472,12 @@ namespace DoA.Tests
         {
             GhostMove move = GhostMoves.All.First(m => m.Name == "Turn And Wave");
             GhostPose early = move.At(0.06f, 1f);
-            Assert.Greater(early.HeadYaw / 60f, early.Yaw / 100f + 0.05f, "the head is further round early on");
+            Assert.Greater(early.HeadYaw / 35f, early.Yaw / 140f + 0.05f, "the head is further round early on");
             GhostPose late = move.At(0.9f, 1f);
-            Assert.Less(late.HeadYaw / 60f, late.Yaw / 100f - 0.02f, "the head is further home on the way back");
-            Assert.AreEqual(100f, move.At(0.5f, 1f).Yaw, 1e-3f, "both all the way round in the middle");
-            Assert.AreEqual(60f, move.At(0.5f, 1f).HeadYaw, 1e-3f);
+            Assert.Less(late.HeadYaw / 35f, late.Yaw / 140f - 0.02f, "the head is further home on the way back");
+            // Body three-quarters to the camera (so the hands' left and right read as its sides), face round to it
+            Assert.AreEqual(140f, move.At(0.5f, 1f).Yaw, 1e-3f, "both all the way round in the middle");
+            Assert.AreEqual(35f, move.At(0.5f, 1f).HeadYaw, 1e-3f);
         }
 
         [Test]

@@ -11,10 +11,13 @@ using UnityEngine.Rendering;
 /// facing +z: so this is the ghost's own right, with no flip. A bone the Animator doesn't rewrite (Head, the hat) still
 /// holds what Apply wrote last frame: Apply sees that and builds on the pose under it, so offsets never pile up.
 /// Fade: the body's URP/OToonLit dithers pixels away through _DitherThreshold in its lit and outline passes (1 = all
-/// drawn, 0 = none; no keyword), but the horns (URP/Lit), the eyes (URP/Unlit) and every hat (URP/Lit) can't, so the
-/// body also shrinks as it fades and the hat only shrinks; at the end both are switched off, shadow and all. The fade
-/// writes only _DitherThreshold into a renderer's property block, on top of whatever else the block holds, and puts
-/// back just that value afterwards
+/// drawn, 0 = none; no keyword), but the horns (URP/Lit) and the eyes (URP/Unlit), material slots on the body's own
+/// renderer, and every hat (URP/Lit) can't. So from PLAIN_OUT of fade the body's slots that can't dither wear the body's
+/// own dithering material and fade with it (else the eye whites show through the back of the fading head and the horns
+/// are left floating), a renderer with no dithering material at all is switched off from there, the body also shrinks
+/// as it fades, and the hat only shrinks; at the end both are switched off, shadow and all. Each slot goes back when the
+/// fade drops under PLAIN_OUT, unless something else changed it meanwhile. The fade writes only _DitherThreshold into
+/// a renderer's property block, on top of whatever else the block holds, and puts back just that value afterwards
 /// </summary>
 public sealed class GhostRig
 {
@@ -33,8 +36,18 @@ public sealed class GhostRig
     const float GONE = 0.999f;
     /// <summary>From this much fade the body casts no shadow (the shadow pass doesn't dither)</summary>
     const float NO_SHADOW = 0.5f;
+    /// <summary>
+    /// From this much fade the slots that can't dither (eyes, horns) wear the body's dithering material, and a renderer
+    /// that can't dither at all is switched off: before the dithered body lets them show through
+    /// </summary>
+    internal const float PLAIN_OUT = 0.2f;
     /// <summary>The hat's smallest scale (a zero scale breaks its matrix)</summary>
     const float TINY = 1e-4f;
+    /// <summary>
+    /// How much bigger the hands (and the fingers under them) grow while a hand clip plays, at the Emotes layer's full
+    /// weight (SetHands): 1.6x, so a hand reads at game size
+    /// </summary>
+    public const float HAND_SWELL = 0.6f;
 
     /// <summary>
     /// A bone this rig moves: the pose it builds on, and what it wrote last. Kept apart for position, rotation and
@@ -117,6 +130,8 @@ public sealed class GhostRig
     readonly Bone torso, head, tail, tailIK, hat;
     readonly Transform handLeft, handRight;
     readonly Bone[] bones;   // the ones found, parents before children
+    readonly Bone[] hands;   // the hands found (SetHands scales them, apart from the pose)
+    float handScale = 1f;
 
     // The ghost's axes and its size at rest, in the Animator's space
     readonly Vector3 upLocal, forwardLocal, rightLocal, sizeLocal;
@@ -131,6 +146,8 @@ public sealed class GhostRig
     readonly float[] ditherWas;     // that value, or the material's own when it held none
     readonly bool[] wasOff;
     readonly ShadowCastingMode[] shadows;
+    readonly Material[][] covered;  // the slots as they were while the plain ones wear the dithering material (null: not)
+    readonly Material[] coverWith;  // that material
     readonly Renderer hatLook;
     bool hatWasOff;
     readonly MaterialPropertyBlock block = new MaterialPropertyBlock();
@@ -142,6 +159,13 @@ public sealed class GhostRig
     public Transform Tail => tail?.transform;
     public Transform TailIK => tailIK?.transform;
     public Transform Hat => hat?.transform;
+
+    /// <summary>
+    /// Whether the ghost wears a hat that shows: the Hat Object is switched on (the NoHat look switches it off:
+    /// CustomizationSelector.UpdateHat, ScooterLook.ShowHat) and its renderer is enabled. A hat faded out by a move still
+    /// counts: it comes back
+    /// </summary>
+    public bool HasHat => hat != null && hat.transform.gameObject.activeSelf && (hatLook == null || hatLook.enabled);
     public Transform HandLeft => handLeft;
     public Transform HandRight => handRight;
 
@@ -191,6 +215,10 @@ public sealed class GhostRig
         bones[i++] = head;
         if (tailIK != null) bones[i++] = tailIK;
         if (hat != null) bones[i++] = hat;
+        hands = handLeft != null && handRight != null
+            ? new[] { new Bone(handLeft), new Bone(handRight) }
+            : handLeft != null ? new[] { new Bone(handLeft) }
+            : handRight != null ? new[] { new Bone(handRight) } : new Bone[0];
 
         // The axes, from the rest pose: the skin's bind pose when a skin holds the bones, else the pose it stands in now
         Rest rest = new Rest(root, torsoBone, headBone, tail?.transform, handLeft, handRight);
@@ -234,6 +262,8 @@ public sealed class GhostRig
         ditherWas = new float[bodyCount];
         wasOff = new bool[bodyCount];
         shadows = new ShadowCastingMode[bodyCount];
+        covered = new Material[bodyCount][];
+        coverWith = new Material[bodyCount];
         int b = 0;
         foreach (Renderer look in all)
         {
@@ -413,7 +443,7 @@ public sealed class GhostRig
         {
             Transform hatT = hat.transform;
             Vector3 body = torsoT.position;
-            Vector3 at = body + (hatT.position - body) / shrink + up2 * (pose.HatLift * u);
+            Vector3 at = body + (hatT.position - body) / shrink + (up2 * pose.HatLift + right2 * pose.HatShift) * u;
             Quaternion hatTurn = Quaternion.AngleAxis(pose.HatSpin, up2) * Quaternion.AngleAxis(pose.HatTip, right2);
             hatT.SetPositionAndRotation(at, hatTurn * hatT.rotation);
             hatT.localScale = hat.BaseScale * (Mathf.Max(TINY, 1f - pose.HatFade) / shrink);
@@ -427,13 +457,46 @@ public sealed class GhostRig
     }
 
     /// <summary>
-    /// Everything back: the bones nothing rewrote (the hat, Head) to their base, the renderers as they were. The
-    /// Animator owns the bones again
+    /// The hands' (and so the fingers') scale, times this, on top of what the Animator wrote this frame (call after it,
+    /// each frame: built on each hand's base scale, channel by channel, so it never piles up). 1 puts them back
+    /// exactly. Apart from Apply: GhostEmotes sets it from the Emotes layer's weight, 1 + HAND_SWELL x weight
+    /// </summary>
+    public void SetHands(float scale)
+    {
+        if (Mathf.Abs(scale - 1f) < 1e-6f)
+        {
+            RestoreHands();
+            return;
+        }
+        handScale = scale;
+        for (int i = 0; i < hands.Length; i++)
+        {
+            Bone hand = hands[i];
+            hand.Begin();
+            hand.transform.localScale = hand.BaseScale * scale;
+            hand.End();
+        }
+    }
+
+    /// <summary>The hands' scale as last set (1: their own)</summary>
+    public float HandScale => handScale;
+
+    void RestoreHands()
+    {
+        for (int i = 0; i < hands.Length; i++)
+            hands[i].Restore();
+        handScale = 1f;
+    }
+
+    /// <summary>
+    /// Everything back: the bones nothing rewrote (the hat, Head, the hands) to their base, the renderers as they were.
+    /// The Animator owns the bones again
     /// </summary>
     public void Clear()
     {
         for (int i = 0; i < bones.Length; i++)
             bones[i].Restore();
+        RestoreHands();
         SetFade(0f);
         SetHatFade(0f);
     }
@@ -485,7 +548,56 @@ public sealed class GhostRig
                 }
             }
             look.shadowCastingMode = value > NO_SHADOW ? ShadowCastingMode.Off : shadows[i];
-            look.forceRenderingOff = wasOff[i] || value >= GONE;
+            bool plainOut = value >= PLAIN_OUT;
+            Cover(i, dithers[i] && plainOut);
+            look.forceRenderingOff = wasOff[i] || value >= GONE || (!dithers[i] && plainOut);
+        }
+    }
+
+    /// <summary>
+    /// On: the renderer's slots that can't dither wear its first material that can (so they dither with it). Off: each
+    /// goes back to what it was, unless something else put another material there meanwhile
+    /// </summary>
+    void Cover(int i, bool on)
+    {
+        if (on == (covered[i] != null))
+            return;
+        Renderer look = body[i];
+        Material[] now = look.sharedMaterials;
+        if (on)
+        {
+            Material with = null;
+            foreach (Material material in now)
+                if (material != null && material.HasProperty(DITHER))
+                {
+                    with = material;
+                    break;
+                }
+            if (with == null)
+                return;
+            Material[] was = (Material[])now.Clone();
+            bool any = false;
+            for (int j = 0; j < now.Length; j++)
+                if (now[j] != null && !now[j].HasProperty(DITHER))
+                {
+                    now[j] = with;
+                    any = true;
+                }
+            if (!any)
+                return;
+            covered[i] = was;
+            coverWith[i] = with;
+            look.sharedMaterials = now;
+        }
+        else
+        {
+            Material[] was = covered[i];
+            for (int j = 0; j < now.Length && j < was.Length; j++)
+                if (was[j] != null && !was[j].HasProperty(DITHER) && now[j] == coverWith[i])
+                    now[j] = was[j];
+            covered[i] = null;
+            coverWith[i] = null;
+            look.sharedMaterials = now;
         }
     }
 
