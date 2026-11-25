@@ -281,6 +281,7 @@ namespace DoA.Tests
             Time.timeScale = FAST;
             PlayerHatInformationSO[] dealt = null, atTheEnd = null;
             PlayerHatInformationSO seenOnThief = null;
+            bool hatBeforeSteal = false, hatHidden = false;
             stage.SkitEnded = (skit, cast) => atTheEnd = cast.Select(a => a.Hat).ToArray();
             bool done = false;
             stage.StartCoroutine(Run(stage, index, () => done = true));
@@ -289,17 +290,72 @@ namespace DoA.Tests
             {
                 if (stage.CurrentCast != null)
                 {
+                    TitleActor thief = stage.CurrentCast[1];
+                    Vector3 at = thief.transform.localPosition;
+                    bool inSight = Mathf.Abs(at.x) < stage.EdgeX(at.z) + 1f;
                     if (dealt == null)
                         dealt = stage.CurrentCast.Select(a => a.Hat).ToArray();
-                    else if (stage.CurrentCast[1].Hat == dealt[0])
+                    else if (thief.Hat == dealt[0])
                         seenOnThief = dealt[0];
+                    else if (inSight && seenOnThief == null && thief.Hat.displayHat)
+                        hatBeforeSteal = true;
+                    // While the hat flies over, the thief's own copy waits hidden
+                    if (thief.Hat == dealt[0] && !thief.HatModel.GetComponent<MeshRenderer>().enabled)
+                        hatHidden = true;
                 }
                 yield return null;
             }
 
             Assert.IsTrue(done, "the skit finishes");
             Assert.AreSame(dealt[0], seenOnThief, "the thief wore the victim's hat on the way");
+            Assert.IsFalse(hatBeforeSteal, "the thief is bare-headed on screen until it steals the hat");
+            Assert.IsTrue(hatHidden, "the hat flew over (the thief's waited hidden) rather than swapping heads");
             CollectionAssert.AreEqual(dealt, atTheEnd, "everyone's own hat back, off screen");
+        }
+
+        /// <summary>
+        /// Not a check: plays every skit at a steady 60 frames a second and writes down every ghost's, bone's and
+        /// package's place each frame to Logs/title/motion.csv (TitleMotionRecorder), to find the snaps (run by name)
+        /// </summary>
+        [UnityTest, Explicit]
+        public IEnumerator TitleMotionTrace()
+        {
+            // Nothing else here: Play Mode reloads the scripts, and only a bare test method survives that
+            EditorSceneManager.playModeStartScene = AssetDatabase.LoadAssetAtPath<SceneAsset>(TitleScreenBuilder.MENU_SCENE);
+            yield return new EnterPlayMode();
+            yield return TitleMotionTrace_InPlayMode();
+        }
+
+        static IEnumerator TitleMotionTrace_InPlayMode()
+        {
+            TitleStage stage = null;
+            yield return Title(s => stage = s);
+            stage.manual = true;
+            stage.Halt();
+            string folder = Path.Combine(Directory.GetParent(Application.dataPath).FullName, "Logs", "title");
+            Directory.CreateDirectory(folder);
+            yield return Seconds(0.2f);
+
+            Time.captureFramerate = 60;
+            TitleMotionRecorder recorder = new TitleMotionRecorder { stage = stage };
+            recorder.Start();
+            recorder.rows.Append("skit,frame,obj,seen,px,py,pz,qx,qy,qz,qw,sx,sy,sz\n");
+            for (int i = 0; i < stage.skits.Length; i++)
+            {
+                bool done = false;
+                recorder.skit = stage.skits[i].Name.Replace(' ', '_');
+                stage.Film(true);
+                stage.StartCoroutine(Run(stage, i, () => done = true));
+                float deadline = Time.realtimeSinceStartup + 60f;
+                while (!done && Time.realtimeSinceStartup < deadline)
+                    yield return null;
+                stage.Halt();
+                yield return null;
+            }
+            Time.captureFramerate = 0;
+            File.WriteAllText(Path.Combine(folder, "motion.csv"), recorder.rows.ToString());
+            recorder.Stop();
+            yield return null;
         }
 
         /// <summary>

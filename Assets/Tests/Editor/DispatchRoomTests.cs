@@ -510,40 +510,92 @@ namespace DoA.Tests
         }
 
         [Test]
-        public void Board_Customize_PopsUpThePlayersPreview_AndCloses()
+        public void Board_Customize_PopsUpTheGhostAndTheChoices_AndCloses()
         {
-            // X on Dispatch: the colour and hat sliders, over everything; B closes them
+            // X on Dispatch: the player's ghost and their colour and hat, in the game's card, over everything; B closes it
             DispatchBoard board = objects.Add<DispatchBoard>();
-            GameObject panel = objects.NewGameObject("Customize");
-            RawImage preview = objects.NewGameObject("Preview").AddComponent<RawImage>();
-            Set(board, "customizePanel", panel);
-            Set(board, "customizePicture", preview);
+            GameObject old = objects.NewGameObject("Customize"); // the builder's old pop-up, in a scene not rebuilt
+            Set(board, "customizePanel", old);
+            CustomizationSelector choices = objects.Add<CustomizationSelector>();
+            PlayerColorInformationSO purple = ScriptableObject.CreateInstance<PlayerColorInformationSO>();
+            purple.displayName = "Purple";
+            PlayerColorInformationSO red = ScriptableObject.CreateInstance<PlayerColorInformationSO>();
+            red.name = "Red"; // no display name: the asset's
+            PlayerHatInformationSO noHat = ScriptableObject.CreateInstance<PlayerHatInformationSO>();
+            noHat.displayName = "No Hat";
+            Set(choices, "playerColors", new[] { purple, red });
+            Set(choices, "playerHats", new[] { noHat });
             Texture2D seen = new Texture2D(2, 2);
+            try
+            {
+                board.ShowCustomize(seen, choices, null);
+                CustomizeCard card = board.Customize;
+                Assert.IsNotNull(card, "built as it first opens");
+                Assert.IsTrue(card.gameObject.activeSelf, "open");
+                Assert.IsFalse(old.activeSelf, "the old pop-up stays hidden");
+                Assert.AreSame(seen, card.Picture.texture, "the player's own preview");
+                Assert.AreEqual(DispatchRules.CustomizeCrop(0), card.Picture.uvRect, "cropped to the ghost");
+                Assert.AreEqual("PURPLE", card.ColourShown);
+                Assert.AreEqual("NO HAT", card.HatShown);
+                Assert.IsFalse(card.HatPicked, "the colour row is the d-pad's first");
 
-            board.ShowCustomize(seen, 1);
-            Assert.IsTrue(panel.activeSelf, "open");
-            Assert.AreSame(seen, preview.texture, "the player's own preview, sliders and all");
-            Assert.AreEqual(DispatchRules.CustomizeCrop(1), preview.uvRect, "only the ghost and its sliders");
+                Set(choices, "currentPlayerColor", 1);
+                board.ShowCustomize(seen, choices, null);
+                Assert.AreEqual("RED", card.ColourShown, "follows the choice");
 
-            board.ShowCustomize(null, -1);
-            Assert.IsFalse(panel.activeSelf, "closed");
-            UnityEngine.Object.DestroyImmediate(seen);
+                board.ShowCustomize(null, null, null);
+                Assert.IsFalse(card.gameObject.activeSelf, "closed");
+            }
+            finally
+            {
+                UnityEngine.Object.DestroyImmediate(seen);
+                UnityEngine.Object.DestroyImmediate(purple);
+                UnityEngine.Object.DestroyImmediate(red);
+                UnityEngine.Object.DestroyImmediate(noHat);
+            }
         }
 
         [Test]
-        public void CustomizeCrop_KeepsTheGhostAndItsSliders_MirroredOnEvenPlayers()
+        public void Board_Customize_NeverOpened_BuildsNothing()
         {
-            // Players 1 and 3 have their sliders right of the ghost, players 2 and 4 left (PlayerCameraResizer)
-            Rect odd = DispatchRules.CustomizeCrop(0);
-            Rect even = DispatchRules.CustomizeCrop(1);
+            DispatchBoard board = objects.Add<DispatchBoard>();
 
-            Assert.That(odd.width, Is.LessThan(0.8f), "the empty sides are cut");
-            Assert.That(odd.xMin, Is.GreaterThan(0.2f), "player 1: the empty left goes");
-            Assert.That(odd.xMax, Is.GreaterThan(0.95f), "player 1: the sliders on the right stay");
-            Assert.AreEqual(1 - odd.xMax, even.xMin, 1e-5f, "player 2: the same, mirrored");
-            Assert.AreEqual(odd.width, even.width, 1e-5f);
-            Assert.AreEqual(odd, DispatchRules.CustomizeCrop(2), "player 3 as player 1");
-            Assert.AreEqual(even, DispatchRules.CustomizeCrop(3), "player 4 as player 2");
+            board.ShowCustomize(null, null, null);
+
+            Assert.IsNull(board.Customize);
+        }
+
+        [Test]
+        public void CustomizeCard_TheRowTheDpadChanges_IsInGold()
+        {
+            CustomizeCard card = CustomizeCard.Build(objects.NewGameObject("Board").transform);
+
+            card.ShowChoices(null, "PURPLE", null, "NO HAT", true);
+
+            Assert.IsTrue(card.HatPicked);
+            TMPro.TMP_Text hat = card.transform.Find("Card/Panel/Hat Row/Name").GetComponent<TMPro.TMP_Text>();
+            TMPro.TMP_Text colour = card.transform.Find("Card/Panel/Colour Row/Name").GetComponent<TMPro.TMP_Text>();
+            Assert.AreEqual(GameCard.GOLD, hat.color, "the picked row");
+            Assert.AreEqual(Color.white, colour.color);
+            Assert.IsFalse(card.transform.Find("Card/Panel/Hat Row/Icon").GetComponent<Image>().enabled, "no icon: none shown");
+        }
+
+        [Test]
+        public void CustomizeCrop_JustTheGhost_TheSameForEverySeat()
+        {
+            // Only the sliders change sides for players 2 and 4 (PlayerCameraResizer); the pop-up shows no sliders
+            Rect crop = DispatchRules.CustomizeCrop(0);
+
+            for (int seat = 1; seat < Constants.MAX_PLAYERS; seat++)
+                Assert.AreEqual(crop, DispatchRules.CustomizeCrop(seat), "seat " + seat);
+            Assert.That(crop.width, Is.LessThan(0.6f), "tight round the ghost");
+            Assert.That(crop.xMin, Is.GreaterThanOrEqualTo(0f));
+            Assert.That(crop.xMax, Is.LessThanOrEqualTo(1f));
+            Assert.That(crop.yMin, Is.GreaterThanOrEqualTo(0f));
+            Assert.That(crop.yMax, Is.LessThanOrEqualTo(1f));
+            Vector2 size = CustomizeCard.PictureSize(crop);
+            Assert.AreEqual(CustomizeCard.PICTURE_WIDTH, size.x);
+            Assert.AreEqual(size.x / size.y, crop.width * 16f / (crop.height * 9f), 0.01f, "the ghost isn't stretched");
         }
 
         [Test]

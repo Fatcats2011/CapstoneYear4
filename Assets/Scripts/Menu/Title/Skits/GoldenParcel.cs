@@ -5,8 +5,9 @@ using static TitleSkitTools;
 
 /// <summary>
 /// A ghost rides in proudly with a golden package. Three more pour in and mob it: all four circle fast in a spinning
-/// scuffle with gold "!"s popping, and the package changes hands again and again. Then they scatter, and the ghost
-/// left holding the gold is not the one that came in with it: it leaves last, cheering, with a wheelie
+/// scuffle with gold "!"s popping, and the package changes hands again and again. The scuffle winds up and winds down,
+/// so nobody starts or stops spinning in a blink. Then they scatter, and the ghost left holding the gold is not the one
+/// that came in with it: it leaves last, cackling, with a wheelie, while the one robbed pounds its fists
 /// </summary>
 public class GoldenParcel : TitleSkit
 {
@@ -16,6 +17,10 @@ public class GoldenParcel : TitleSkit
     // The scuffle's circle (an ellipse on the floor) and how long and fast it goes
     const float RX = 2f, RZ = 1f, ZC = 0.4f;
     const float OMEGA = 6f, SCUFFLE = 2.6f;
+    /// <summary>Seconds the circling and the spinning take to wind up to full speed, and to wind down again at the end</summary>
+    const float WIND = 0.45f;
+    /// <summary>Degrees a second each ghost spins on the spot at full speed</summary>
+    const float SPIN = 540f;
 
     /// <summary>Where each ghost starts on the circle (angle): cast[0] on the left, cast[1] right, cast[2] far, cast[3] near</summary>
     static readonly float[] START = { Mathf.PI, 0f, Mathf.PI * 0.5f, Mathf.PI * 1.5f };
@@ -42,7 +47,7 @@ public class GoldenParcel : TitleSkit
         Wheelie(cast[0], 20f, 0.9f);
         yield return WaitRide(1.2f);
         cast[0].Drive(0f);
-        cast[0].Cheer();
+        cast[0].Emote(GhostAction.DeliveryFlourish, "High Fist");
         yield return Beat(0.5f);
 
         // The three others pour in: two from the right, one from the left, to their places round it
@@ -58,21 +63,31 @@ public class GoldenParcel : TitleSkit
         Say(stage, cast[0], "?", WHITE, 0.9f);
         yield return comeIn.WaitForCompletion();
 
-        // The scuffle: everyone circles the centre, spinning, squashing, "!"s popping, the package snatched about
+        // The scuffle: everyone circles the centre, spinning, squashing, "!"s popping, the package snatched about. It
+        // winds up from a standstill and back down to one, and each ghost turns from where it faced to its spin
+        Quaternion[] facing = new Quaternion[cast.Length];
         for (int i = 0; i < cast.Length; i++)
+        {
             cast[i].Drive(0.8f);
+            facing[i] = cast[i].transform.localRotation;
+        }
 
         IEnumerator steal = null;
         int nextSteal = 0, nextPop = 0, nextSquash = 0;
+        float around = 0f, spun = 0f;
         for (float s = 0f; s < SCUFFLE; s += Time.deltaTime)
         {
+            float pace = Smooth01(s / WIND) * Smooth01((SCUFFLE - s) / WIND);
+            around += OMEGA * pace * Time.deltaTime;
+            spun += SPIN * pace * Time.deltaTime;
+            float turnIn = Smooth01(s / WIND);
             for (int i = 0; i < cast.Length; i++)
             {
-                float angle = START[i] + OMEGA * s;
+                float angle = START[i] + around;
                 Vector3 heading = new Vector3(-RX * Mathf.Sin(angle), 0f, RZ * Mathf.Cos(angle));
                 float yaw = Mathf.Atan2(heading.x, heading.z) * Mathf.Rad2Deg;
                 cast[i].transform.localPosition = OnCircle(angle);
-                cast[i].transform.localRotation = Quaternion.Euler(0f, yaw + 540f * s, 0f);
+                cast[i].transform.localRotation = Quaternion.Slerp(facing[i], Quaternion.Euler(0f, yaw + spun, 0f), turnIn);
             }
 
             // A steal is stepped by hand each frame so the circling goes on while it flies
@@ -105,8 +120,8 @@ public class GoldenParcel : TitleSkit
         Tween outNear = Leave(stage, cast[3], LEFT, -1.2f, 1.3f);
         yield return Wait(0.15f);
         Tween outFar = Leave(stage, cast[1], RIGHT, 1.8f, 1.3f);
-        winner.Cheer();
-        cast[0].Slump();
+        winner.Emote(GhostAction.Cackle, "Shoulder Shake");
+        cast[0].Emote(GhostAction.Tantrum, "Fist Pound");
         Say(stage, cast[0], "?", WHITE, 0.9f);
         yield return Beat(0.6f);
         Tween outRobbed = Leave(stage, cast[0], LEFT, 1.4f, 1.3f);
@@ -123,11 +138,18 @@ public class GoldenParcel : TitleSkit
         yield return outWinner.WaitForCompletion();
     }
 
+    /// <summary>0 to 1 with no jump in speed at either end (clamped)</summary>
+    static float Smooth01(float u)
+    {
+        u = Mathf.Clamp01(u);
+        return u * u * (3f - 2f * u);
+    }
+
     /// <summary>Turns and rides off in a direction, drifting to a depth on the way</summary>
     static Tween Leave(TitleStage stage, TitleActor ghost, int direction, float toZ, float seconds)
     {
         ghost.Drive(1f);
-        Turn(ghost, direction, 0.2f);
+        Turn(ghost, direction, 0.3f);
         return RideTo(ghost, direction * (stage.OffX(toZ) + 0.5f), toZ, seconds, Ease.InQuad);
     }
 }

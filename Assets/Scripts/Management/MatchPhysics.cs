@@ -13,6 +13,19 @@ public static class MatchPhysics
 
     public static float SpeedScale { get; private set; } = 1f;
 
+    /// <summary>
+    /// How much faster scooters turn at this Speed: turning by the same degrees a second at double the speed makes a circle
+    /// twice as wide, so it scales with the speed, a little less than in step (playtest, 2026-11-25: high speeds steered badly)
+    /// </summary>
+    public static float TurnScale => TurnScaleFor(SpeedScale);
+
+    internal const float TURN_EXPONENT = 0.75f;
+
+    public static float TurnScaleFor(float speedScale)
+    {
+        return Mathf.Pow(Mathf.Max(speedScale, 0.01f), TURN_EXPONENT);
+    }
+
     public static void Apply(HouseRules rules)
     {
         SpeedScale = rules.SpeedScale;

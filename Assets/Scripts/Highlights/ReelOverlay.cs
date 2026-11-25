@@ -4,7 +4,8 @@ using UnityEngine.UI;
 
 /// <summary>
 /// The highlight reel's look (style C, hidden-camera footage), built by code over the reel's camera: a light grey tint
-/// and scanlines, a faint frame, a blinking REC dot, the camera's number, the match clock's time and the clip's caption.
+/// and scanlines, a faint frame, a blinking REC dot, the camera's number, the match clock's time, the clip's caption, and
+/// each player's name over their stand-in (ShowNameTags).
 /// Only the look lives here, so another style can replace this layer alone. The cutscene skip prompt is built on its
 /// canvas too (CutsceneSkip.PromptParent). See docs/superpowers/specs/2026-10-28-highlight-reel-design.md
 /// </summary>
@@ -30,6 +31,18 @@ public class ReelOverlay : MonoBehaviour
     const float CAPTION_SIZE = 64f;
     const float MARGIN = 24f; // the texts from the frame's corners
     const float DOT_SIZE = 28f;
+
+    /// <summary>A name tag floats this far over its stand-in's model (metres)</summary>
+    public const float TAG_HEIGHT = 1.6f;
+
+    /// <summary>A stand-in further from the camera than this (metres) shows no name tag</summary>
+    public const float TAG_RANGE = 45f;
+
+    const float TAG_SIZE = 34f;
+    const float TAG_OUTLINE = 0.25f;
+    static readonly Color TAG_OUTLINE_COLOUR = new Color(0.08f, 0.07f, 0.1f, 1f);
+
+    readonly TMP_Text[] nameTags = new TMP_Text[Constants.MAX_PLAYERS]; // by seat: null for a seat with no stand-in
 
     Image dot;
     RawImage scanlines;
@@ -153,6 +166,71 @@ public class ReelOverlay : MonoBehaviour
             caption.gameObject.SetActive(shownNow.HasValue);
             if (shownNow.HasValue)
                 LocalizedText.On(caption, CaptionKey(shownNow.Value));
+        }
+    }
+
+    /// <summary>
+    /// Where a name tag shows, from its point (over the stand-in) as the camera sees it: true with that point on screen
+    /// (viewport x and y), false when it's behind the camera, off the screen, or further than TAG_RANGE
+    /// </summary>
+    public static bool TagPlace(Vector3 viewport, float distance, out Vector2 place)
+    {
+        place = new Vector2(viewport.x, viewport.y);
+        return viewport.z > 0f && distance <= TAG_RANGE
+            && viewport.x >= 0f && viewport.x <= 1f && viewport.y >= 0f && viewport.y <= 1f;
+    }
+
+    /// <summary>
+    /// A name tag for each seat with a name (by seat; null: none): the player's name, shortened as the steal lines do,
+    /// white in Bangers with a dark outline, under the frame's texts. Hidden until ShowNameTags places it
+    /// </summary>
+    internal void BuildNameTags(string[] names)
+    {
+        RectTransform root = (RectTransform)transform;
+        for (int seat = 0; seat < nameTags.Length && seat < names.Length; seat++)
+        {
+            if (names[seat] == null)
+                continue;
+            TMP_Text tag = GameCard.Words(root, "Name Tag P" + (seat + 1), TAG_SIZE, Color.white);
+            tag.richText = false; // a name is plain text
+            tag.enableWordWrapping = false;
+            tag.outlineWidth = TAG_OUTLINE;
+            tag.outlineColor = TAG_OUTLINE_COLOUR;
+            tag.text = StealFeedbackRules.Short(names[seat]);
+            RectTransform rect = tag.rectTransform;
+            rect.pivot = new Vector2(0.5f, 0f);
+            rect.sizeDelta = new Vector2(400f, TAG_SIZE * 1.4f);
+            rect.SetSiblingIndex(2); // over the tint and scanlines, under the frame's texts and the skip prompt
+            tag.gameObject.SetActive(false);
+            nameTags[seat] = tag;
+        }
+    }
+
+    /// <summary>Each name tag over its seat's stand-in as the camera sees it, or hidden (see TagPlace; a stand-in hidden: hidden)</summary>
+    internal void ShowNameTags(Camera camera, System.Func<int, Transform> standIn)
+    {
+        for (int seat = 0; seat < nameTags.Length; seat++)
+        {
+            TMP_Text tag = nameTags[seat];
+            if (tag == null)
+                continue;
+
+            Transform body = camera != null ? standIn(seat) : null;
+            bool shown = false;
+            if (body != null && body.gameObject.activeInHierarchy)
+            {
+                Vector3 point = body.position + Vector3.up * TAG_HEIGHT;
+                Vector3 viewport = camera.WorldToViewportPoint(point);
+                shown = TagPlace(viewport, Vector3.Distance(camera.transform.position, point), out Vector2 place);
+                if (shown)
+                {
+                    RectTransform rect = tag.rectTransform;
+                    rect.anchorMin = rect.anchorMax = place;
+                    rect.anchoredPosition = Vector2.zero;
+                }
+            }
+            if (tag.gameObject.activeSelf != shown)
+                tag.gameObject.SetActive(shown);
         }
     }
 

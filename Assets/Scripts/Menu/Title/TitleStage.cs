@@ -112,6 +112,8 @@ public class TitleStage : MonoBehaviour
         {
             actors[i] = TitleActor.Create(avatarPrefab, transform, "Title Ghost " + (i + 1), shadowMaterial);
             actors[i].Park(ParkingSpot(i));
+            if (actors[i].Emotes != null)
+                actors[i].Emotes.View = stageCamera;
         }
 
         if (stageCamera != null)

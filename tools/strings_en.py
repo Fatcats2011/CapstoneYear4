@@ -206,7 +206,7 @@ ROWS = [
     ("reel.caption.explosion", "Caption: the cursed package was passed or went off (Hot Potato)", "PACKAGE DETONATED"),
     ("reel.caption.survivor", "Caption: the last player still in (Hot Potato)", "LAST SURVIVOR"),
     # Dispatch (online lobby)
-    ("dispatch.dispatched", "A player who's ready", "DISPATCHED"),
+    ("dispatch.dispatched", "Stamp on a ready player's ticket (short: a 232 x 70 stamp)", "READY"),
     ("dispatch.gettingready", "A player who isn't ready yet", "GETTING READY…"),
     ("dispatch.hiring", "An empty seat", "HIRING…"),
     ("dispatch.readycount", "{0} ready of {1} seated", "{0} / {1} READY"),

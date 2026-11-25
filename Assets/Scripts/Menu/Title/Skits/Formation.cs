@@ -4,9 +4,9 @@ using UnityEngine;
 using static TitleSkitTools;
 
 /// <summary>
-/// Three ghosts ride in side by side and show off in unison: a donut each, a hop, a clap. A fourth arrives late and
-/// flat out, can't stop, and bowls through them one after another; each is sent spinning off to the right, and the
-/// bowler wobbles out after them
+/// Three ghosts ride in side by side and show off in unison: a donut each, a hop, and raising the roof. A fourth arrives
+/// late and flat out, can't stop, and bowls through them one after another; each is sent spinning off to the right, its
+/// head rolling, and the bowler wobbles out after them
 /// </summary>
 public class Formation : TitleSkit
 {
@@ -47,9 +47,9 @@ public class Formation : TitleSkit
             hop = Hop(cast[i], 0.7f, 0.5f);
         yield return hop.WaitForCompletion();
 
-        // ...and a clap, hands high, proud
+        // ...and raising the roof, proud
         for (int i = 0; i < 3; i++)
-            cast[i].Clap();
+            cast[i].Emote(GhostAction.Victory, "Raise The Roof");
         yield return Beat(0.8f);
 
         // Here comes the fourth, late, with the brakes not working: nose up, skidding
@@ -90,6 +90,7 @@ public class Formation : TitleSkit
         ghost.Drive(1f);
         Say(stage, ghost, "!", PINK);
         Squash(ghost, 0.35f, 0.4f);
+        ghost.Emote(GhostAction.SeeingStars, "Head Rolls");
 
         float toX = stage.OffX(toZ) + 0.5f;
         float seconds = Mathf.Max(0.8f, (toX - ghost.transform.localPosition.x) / 11f);

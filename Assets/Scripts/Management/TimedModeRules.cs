@@ -23,6 +23,10 @@ public static class TimedModeRules
     // Hot Potato
     /// <summary>The fuse's length in seconds (random between the two when they differ); its seconds left count down on the package and the HUD's clock</summary>
     public const float FUSE_MIN = 40f, FUSE_MAX = 40f;
+    /// <summary>Seconds a pass adds to the fuse, up to a full fuse left (playtest, 2026-11-25)</summary>
+    public const float PASS_BONUS = 5f;
+    /// <summary>The potato's holder drives with this much more engine, and recharges boost in this share of the usual time</summary>
+    public const float POTATO_FORCE = 1.15f, POTATO_RECHARGE = 0.6f;
     /// <summary>The round plays until one player is left; this only guards against a round that never ends (four fuses are far shorter)</summary>
     public const float POTATO_ROUND_LIMIT = 600f;
     /// <summary>Seconds before the first potato appears, and before the next one after an explosion</summary>
@@ -71,6 +75,12 @@ public static class TimedModeRules
     public static float TickInterval(float progress)
     {
         return 1f - 0.85f * progress;
+    }
+
+    /// <summary>When the fuse ends after a pass at now: PASS_BONUS later, but never more than a full fuse from now</summary>
+    public static float PassedFuse(float fuseEnd, float now)
+    {
+        return System.Math.Min(fuseEnd + PASS_BONUS, now + FUSE_MAX);
     }
 
     /// <summary>

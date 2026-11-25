@@ -40,6 +40,7 @@ public class CustomizationSelector : MonoBehaviour
 
     [SerializeField] PhaseIndicator phaseIndicator;
     [SerializeField] GameObject[] sliderGameobjcts;
+    CanvasGroup sliderLook; // hides the sliders' look while Dispatch's pop-up shows the choices itself (SetSlidersShown)
 
     [Header("Animations")]
     Animator currentSlider;
@@ -128,19 +129,69 @@ public class CustomizationSelector : MonoBehaviour
                 currentSlider = colorSlider;
                 SetIntValue(direction, ref currentPlayerColor, playerColors.Length);
                 UpdateGhostColor();
-                ShowOff();
                 return;
             case CustomizationChanging.playerHat:
                 currentSlider = hatSlider;
                 SetIntValue(direction, ref currentPlayerHat, playerHats.Length);
                 UpdateHat();
-                ShowOff();
                 return;
         }
     }
 
-    // The player picked a new colour or hat: their ghost shows it off (PlayerEmotes; not the first look Start puts on)
-    void ShowOff()
+    /// <summary>Whether the hat row is the one the d-pad's left and right change (else the colour row)</summary>
+    public bool ChangingHat { get { return customizationChanging == CustomizationChanging.playerHat; } }
+
+    // A scroll is no reason to show off (playtest, 2026-11-25): on Dispatch the ghost does once DONE closes the pop-up
+    // (MenuInteractions), and in Local Play once the new look has stayed put a moment (Update)
+    readonly RestyleWatch restyle = new RestyleWatch();
+
+    // The sliders come up (Dispatch's X, Local Play's player select): the look to compare with is the one now
+    void OnEnable()
+    {
+        MarkLook();
+    }
+
+    // Local Play has no DONE: its ghost shows a new look off once the player stops scrolling. Online, MenuInteractions
+    // decides, as the pop-up closes
+    void Update()
+    {
+        if (!GameAuthority.IsOnline && restyle.Settled(currentPlayerColor, currentPlayerHat, Time.unscaledTime))
+            ShowOff();
+    }
+
+    /// <summary>The look now is the one a later change is measured from (the pop-up opened, or the player readied)</summary>
+    public void MarkLook()
+    {
+        restyle.Mark(currentPlayerColor, currentPlayerHat);
+    }
+
+    /// <summary>Whether the colour or hat changed since the look was last marked; marks the look now either way</summary>
+    public bool TakeChanged()
+    {
+        return restyle.Take(currentPlayerColor, currentPlayerHat);
+    }
+
+    /// <summary>
+    /// Shows or hides the sliders' look (they still work): Dispatch's customize pop-up shows the player's ghost from
+    /// their preview and the choices itself, so the sliders mustn't show in that picture
+    /// </summary>
+    public void SetSlidersShown(bool shown)
+    {
+        if (sliderLook == null)
+        {
+            if (shown)
+                return;
+            sliderLook = GetComponent<CanvasGroup>();
+            if (sliderLook == null)
+                sliderLook = gameObject.AddComponent<CanvasGroup>();
+        }
+        float alpha = shown ? 1f : 0f;
+        if (sliderLook.alpha != alpha)
+            sliderLook.alpha = alpha;
+    }
+
+    /// <summary>The player's ghost shows off its new colour or hat (PlayerEmotes)</summary>
+    public void ShowOff()
     {
         PlayerEmotes emotes = GetComponentInParent<PlayerEmotes>(true);
         if (emotes != null)

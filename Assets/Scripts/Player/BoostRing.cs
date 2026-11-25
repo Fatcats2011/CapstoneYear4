@@ -23,9 +23,14 @@ public class BoostRing : MonoBehaviour
     static readonly int BurstAlphaId = Shader.PropertyToID("_BurstAlpha");
     static readonly int RingRadiusId = Shader.PropertyToID("_RingRadius");
     static readonly int ThicknessId = Shader.PropertyToID("_Thickness");
+    static readonly int OutlineId = Shader.PropertyToID("_Outline");
 
     /// <summary>How much wider the quad is than the ring, leaving room for the burst (BoostRingRules grows it to 1.6)</summary>
-    const float QUAD_SPAN = 1.75f;
+    internal const float QUAD_SPAN = 1.75f;
+    /// <summary>The dark outline either side of the band, as a share of the band's half-width (the shader's _Outline)</summary>
+    internal const float OUTLINE = 0.6f;
+    /// <summary>The burst band's half-width, as a share of the ring's (the shader draws it thinner)</summary>
+    const float BURST_HALF_WIDTH = 0.7f;
     /// <summary>How long a just-filled ring flashes, with the horns</summary>
     const float FILL_FLASH_SECONDS = 0.25f;
 
@@ -40,9 +45,9 @@ public class BoostRing : MonoBehaviour
     [SerializeField] float radius = 1.2f;
     [Tooltip("The band's width, as a share of the radius")]
     [Range(0.02f, 0.5f)]
-    [SerializeField] float thickness = 0.12f;
-    [Tooltip("How far above the ground the ring floats, so the ground doesn't flicker through it")]
-    [SerializeField] float lift = 0.05f;
+    [SerializeField] internal float thickness = 0.24f;
+    [Tooltip("How far above the ground the ring floats, so the ground doesn't flicker through it (the shader also pulls its depth towards the camera, past low clutter)")]
+    [SerializeField] internal float lift = 0.12f;
     [Tooltip("How far below the ground-check point (BallDriving.ScooterNormal) the ground is")]
     [SerializeField] float groundBelowCheck = 0.11f;
     [Tooltip("How fast the ring fades out in the air and back on landing, per second")]
@@ -199,10 +204,14 @@ public class BoostRing : MonoBehaviour
         return inMatch;
     }
 
-    /// <summary>The title, options, credits, player select or Dispatch: no ring there</summary>
+    /// <summary>
+    /// The title, options, credits, player select or Dispatch, and the results' podium: no ring there (its button prompt
+    /// floated inside a scooter on the podium: playtest, 2026-11-25)
+    /// </summary>
     internal static bool InMenus(GameState? state)
     {
-        return state == GameState.Menu || state == GameState.Options || state == GameState.Credits || state == GameState.PlayerSelect;
+        return state == GameState.Menu || state == GameState.Options || state == GameState.Credits || state == GameState.PlayerSelect
+            || state == GameState.Results;
     }
 
     /// <summary>The game state now, as the hints see it (tests set Hints.State); none without a game manager</summary>
@@ -233,7 +242,21 @@ public class BoostRing : MonoBehaviour
         block.SetFloat(BurstAlphaId, BoostRingRules.BurstAlpha(burstAge));
         block.SetFloat(RingRadiusId, ringRadius);
         block.SetFloat(ThicknessId, ringRadius * thickness);
+        block.SetFloat(OutlineId, OUTLINE);
         ring.SetPropertyBlock(block);
+    }
+
+    /// <summary>
+    /// How far from the quad's centre the ring ever draws, in its UV (the quad's edge is 0.5): the band with its dark
+    /// outline, or the burst at its widest. A band of this thickness (a share of the radius) must stay under 0.5
+    /// </summary>
+    internal static float OuterReach(float thickness)
+    {
+        float ringRadius = 0.5f / QUAD_SPAN;
+        float halfWidth = ringRadius * thickness * 0.5f;
+        float band = ringRadius + halfWidth * (1f + OUTLINE);
+        float burst = ringRadius * BoostRingRules.BurstScale(BoostRingRules.BURST_SECONDS) + halfWidth * BURST_HALF_WIDTH;
+        return Mathf.Max(band, burst);
     }
 
     void ShowPrompt()

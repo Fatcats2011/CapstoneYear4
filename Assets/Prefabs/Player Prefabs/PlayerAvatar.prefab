@@ -32041,8 +32041,8 @@ MonoBehaviour:
   prompt: {fileID: 552196843435491348}
   control: {fileID: 1947754518326518209}
   radius: 1.2
-  thickness: 0.12
-  lift: 0.05
+  thickness: 0.24
+  lift: 0.12
   groundBelowCheck: 0.11
   fadeSpeed: 6
   promptAhead: 0.3

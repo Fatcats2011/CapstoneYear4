@@ -41,6 +41,7 @@ public class ChainChase : TitleSkit
         yield return Wait(0.2f);
         yield return Steal(cast[1], cast[0]);
         Say(stage, cast[0], "!", WHITE, 0.8f);
+        cast[0].Emote(GhostAction.FistShake, "Arm Flail");
 
         // Then the third lifts it off the second: it never gets a moment to enjoy it
         yield return Wait(0.35f);
@@ -48,8 +49,11 @@ public class ChainChase : TitleSkit
         yield return Wait(0.2f);
         yield return Steal(cast[2], cast[1]);
         Say(stage, cast[1], "!", WHITE, 0.8f);
+        cast[1].Emote(GhostAction.FistShake, "Arm Flail");
 
         yield return last.WaitForCompletion();
+        foreach (TitleActor ghost in cast)
+            ghost.EndEmote(0.05f);
 
         // A beat of nothing at all. Out of sight the parcel finds its way to the tail-ender, who leads the way back
         yield return Wait(0.3f);
@@ -71,6 +75,7 @@ public class ChainChase : TitleSkit
         yield return Wait(0.2f);
         yield return Steal(cast[2], cast[3]);
         Say(stage, cast[3], "!", WHITE, 0.8f);
+        cast[3].Emote(GhostAction.FistShake, "Arm Flail");
 
         yield return last.WaitForCompletion();
     }

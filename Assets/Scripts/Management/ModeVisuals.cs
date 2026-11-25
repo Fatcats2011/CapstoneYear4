@@ -175,8 +175,12 @@ public class ModeVisuals : MonoBehaviour
 
         if (potatoShows)
             ShowPotato(match);
-        else if (potato != null)
-            potato.SetActive(false);
+        else
+        {
+            if (potato != null)
+                potato.SetActive(false);
+            BuffPotatoHolder(ModeMatch.NONE);
+        }
 
         if (match != null)
             ShowPlayers(match);
@@ -290,8 +294,31 @@ public class ModeVisuals : MonoBehaviour
         return lode != null && lode.PlayerHolding != null ? OrderSync.SeatOf(lode.PlayerHolding) : ModeMatch.NONE;
     }
 
+    // Hot Potato: its holder drives faster and recharges boost quicker, to catch someone to pass it to. The machine that
+    // drives them does it; every frame, as a fall's dropped packages reset the recharge
+    int buffedSeat = ModeMatch.NONE;
+
+    void BuffPotatoHolder(int seat)
+    {
+        if (buffedSeat != seat)
+            SetPotatoBuff(buffedSeat, false);
+        buffedSeat = seat;
+        SetPotatoBuff(seat, true);
+    }
+
+    static void SetPotatoBuff(int seat, bool on)
+    {
+        OrderHandler handler = OrderSync.HandlerIn(seat);
+        BallDriving ball = handler != null ? handler.GetComponent<BallDriving>() : null;
+        if (ball == null || RemoteAvatar.IsRemote(handler))
+            return;
+        ball.ModeForce = on ? TimedModeRules.POTATO_FORCE : 1f;
+        ball.SetModeRecharge(on ? TimedModeRules.POTATO_RECHARGE : 1f);
+    }
+
     void ShowPotato(ModeMatch match)
     {
+        BuffPotatoHolder(match.PotatoSeat);
         Transform holder = BallOf(match.PotatoSeat);
         float progress = TimedModeRules.FuseProgress(Time.time, match.FuseLit, match.FuseEnd);
         Show(ref potato, MakePotato);
@@ -354,7 +381,7 @@ public class ModeVisuals : MonoBehaviour
     GameObject MakeCrown()
     {
         Order order = AnyOrder();
-        Material gold = Glowing(order != null ? order.MaterialOf(3) : null, CROWN_GOLD, CROWN_GOLD * 0.35f, "Crown Gold");
+        Material gold = Matte(Glowing(order != null ? order.MaterialOf(3) : null, CROWN_GOLD, CROWN_GOLD * 0.35f, "Crown Gold"));
         GameObject root = new GameObject("Crown", typeof(MeshFilter), typeof(MeshRenderer));
         DontDestroyOnLoad(root);
         root.transform.localScale = Vector3.one * CROWN_SCALE;
@@ -374,8 +401,9 @@ public class ModeVisuals : MonoBehaviour
         Light light = root.AddComponent<Light>();
         light.type = LightType.Point;
         light.color = new Color(1f, 0.85f, 0.3f);
-        light.range = 10f;
-        light.intensity = 5f;
+        light.range = 6f;
+        light.intensity = 1.8f;
+        light.shadows = LightShadows.None;
 
         crownMarker = root.AddComponent<CompassMarker>();
         crownMarker.icon = ModeIcons.Crown();
@@ -437,18 +465,29 @@ public class ModeVisuals : MonoBehaviour
         triangles.Add(start + 2);
     }
 
-    // A tall pillar of light, soft at its sides and fading upwards, seen from all over the town
+    /// <summary>The share of BEACON_WIDTH the pillar is at a height (0 its foot, 1 its top): it funnels from the crown up to full width</summary>
+    internal static float BeaconWidth(float up)
+    {
+        float rise = Mathf.Clamp01(up / BEACON_FUNNEL);
+        return Mathf.Lerp(BEACON_FOOT, 1f, 1f - (1f - rise) * (1f - rise));
+    }
+
+    /// <summary>The pillar's width at its foot (a share of BEACON_WIDTH), and the share of its height it takes to open out</summary>
+    internal const float BEACON_FOOT = 0.12f, BEACON_FUNNEL = 0.25f;
+
+    // A tall pillar of light, funnelling out of what it marks, soft at its sides and fading upwards, seen from all over the town
     GameObject MakeBeacon()
     {
-        const int W = 32, H = 128;
+        const int W = 64, H = 256;
         Color[] pixels = new Color[W * H];
         for (int y = 0; y < H; y++)
         {
             float up = (y + 0.5f) / H;
+            float wide = BeaconWidth(up);
             for (int x = 0; x < W; x++)
             {
-                float across = Mathf.Abs((x + 0.5f) / W * 2f - 1f);
-                pixels[y * W + x] = new Color(1f, 1f, 1f, (1f - across * across) * (1f - up * up));
+                float across = Mathf.Abs((x + 0.5f) / W * 2f - 1f) / wide;
+                pixels[y * W + x] = new Color(1f, 1f, 1f, Mathf.Clamp01(1f - across * across) * (1f - up * up));
             }
         }
         Texture2D texture = new Texture2D(W, H, TextureFormat.RGBA32, false) { name = "Crown Beacon", wrapMode = TextureWrapMode.Clamp };
@@ -538,6 +577,35 @@ public class ModeVisuals : MonoBehaviour
             copy.SetColor("_EmissionColor", glow);
         }
         return copy;
+    }
+
+    // The golden order's look made dull for the crown: it caught every light and shone (playtest, 2026-11-25)
+    static Material Matte(Material gold)
+    {
+        if (gold == null)
+            return null;
+        SetIf(gold, "_Smoothness", 0.15f);
+        SetIf(gold, "_Glossiness", 0.15f);
+        SetIf(gold, "_Metallic", 0f);
+        SetIf(gold, "_EnvironmentReflections", 0f);
+        SetIf(gold, "_GlossyReflections", 0f);
+        SetIf(gold, "_RimPower", 0.75f);
+        gold.EnableKeyword("_ENVIRONMENTREFLECTIONS_OFF");
+        gold.EnableKeyword("_GLOSSYREFLECTIONS_OFF");
+        gold.EnableKeyword("_SPECULARHIGHLIGHTS_OFF");
+        if (gold.HasProperty("_RimColor"))
+            gold.SetColor("_RimColor", CROWN_GOLD * 0.18f);
+        if (gold.HasProperty("_EmissionMap"))
+            gold.SetTexture("_EmissionMap", null);
+        if (gold.HasProperty("_EmissionColor"))
+            gold.SetColor("_EmissionColor", CROWN_GOLD * 0.15f);
+        return gold;
+    }
+
+    static void SetIf(Material material, string property, float value)
+    {
+        if (material.HasProperty(property))
+            material.SetFloat(property, value);
     }
 
     static void Part(PrimitiveType type, Transform parent, Vector3 at, Vector3 scale, Quaternion rotation, Material material)
@@ -865,6 +933,7 @@ public class ModeVisuals : MonoBehaviour
         spectators.Clear();
 
         SetSlowBoost(shownCrown, false);
+        BuffPotatoHolder(ModeMatch.NONE);
         ShowHat();
         if (crownOnCompass)
             RemoveFromCompasses(crownMarker);

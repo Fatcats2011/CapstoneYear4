@@ -4,9 +4,10 @@ using UnityEngine;
 using static TitleSkitTools;
 
 /// <summary>
-/// Two ghosts ride in from opposite sides, face to face, and a big package appears between them. They heave at it,
-/// three rounds, each one lurching further, until it pops straight up and both are flung backwards off the screen's
-/// edges, noses in the air, while it drops to the floor behind them
+/// Two ghosts ride in from opposite sides, face to face, and a big package appears between them. One beckons "come at
+/// me", the other limbers up; they heave at it, three rounds, each one lurching further, until it pops straight up and
+/// both are flung backwards off the screen's edges, noses in the air and arms flung wide, while it drops to the floor
+/// behind them
 /// </summary>
 public class TugOfWar : TitleSkit
 {
@@ -41,7 +42,12 @@ public class TugOfWar : TitleSkit
         parcel.DOScale(size, 0.25f).SetEase(Ease.OutBack).SetLink(parcel.gameObject);
         Say(stage, left, "!", WHITE, 0.8f);
         Say(stage, right, "!", GREEN, 0.8f);
-        yield return Beat(0.6f);
+        left.Emote(GhostAction.Taunt, "Come At Me");
+        right.Emote(GhostAction.KnuckleCrack, "Lace And Push");
+        yield return Beat(1.1f);
+        left.EndEmote(0.3f);
+        right.EndEmote(0.3f);
+        yield return Wait(0.3f);
 
         // Three rounds, each heave dragging both ghosts and the package one way, then the other, harder every time
         Transform[] pieces = { left.transform, right.transform, parcel };
@@ -72,6 +78,8 @@ public class TugOfWar : TitleSkit
         Squash(right, 0.25f, 0.4f);
         Pitch(left, 25f, 0.25f);
         Pitch(right, 25f, 0.25f);
+        left.Emote(GhostAction.Wheee, "Starfish");
+        right.Emote(GhostAction.Wheee, "Starfish");
         Ride(left, -off, 1.25f, Ease.InQuad);
         yield return Ride(right, off, 1.25f, Ease.InQuad).WaitForCompletion();
     }

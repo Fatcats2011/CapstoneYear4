@@ -294,12 +294,16 @@ namespace DoA.Tests
             SerializedObject picking = new SerializedObject(selector);
             picking.FindProperty("customizationChanging").enumValueIndex = 1; // the hat slider
             picking.ApplyModifiedPropertiesWithoutUndo();
+            selector.MarkLook(); // the pop-up opens
             selector.SetCustomizationValue(true);
+            Assert.AreEqual(0, player.AskCount, "a scroll alone shows nothing off (playtest, 2026-11-25)");
+            Assert.IsTrue(selector.TakeChanged(), "DONE: the hat changed while it was open");
+            selector.ShowOff();
             Assert.AreEqual(1, Picked(player, GhostAction.HatShowOff, GhostAction.MirrorCheck));
 
             selector.SetDisableOptionsCustomization(true); // ready: the sliders are locked
             selector.SetCustomizationValue(true);
-            Assert.AreEqual(1, Picked(player, GhostAction.HatShowOff, GhostAction.MirrorCheck), "nothing changed");
+            Assert.IsFalse(selector.TakeChanged(), "nothing changed");
         }
 
         [Test]
@@ -322,6 +326,7 @@ namespace DoA.Tests
             {
                 player.Emotes.Stop();
                 selector.SetCustomizationValue(true);
+                selector.ShowOff(); // as DONE would
                 if (player.Emotes.ShowsHat)
                 {
                     hatted++;

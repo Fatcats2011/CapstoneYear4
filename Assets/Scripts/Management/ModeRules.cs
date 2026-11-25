@@ -20,8 +20,10 @@ public static class ModeRules
                 return RuleShow.Shown;
             case Rule.Waves:
             case Rule.WaveLength:
-            case Rule.GoldenOrder:
                 return HasDeliveries(mode) ? RuleShow.Shown : RuleShow.Hidden;
+            case Rule.GoldenOrder:
+                // Only Standard ends in the golden round (playtest, 2026-11-25): Gold Rush's big moments are its Mother Lodes
+                return mode == GameMode.Standard ? RuleShow.Shown : RuleShow.Hidden;
             case Rule.RoundTimer:
                 // Hot Potato plays until one player is left: its clock is the fuse
                 return HasDeliveries(mode) || mode == GameMode.HotPotato ? RuleShow.Hidden : RuleShow.Shown;

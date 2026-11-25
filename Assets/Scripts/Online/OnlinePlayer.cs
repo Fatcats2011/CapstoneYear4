@@ -15,6 +15,7 @@ public class OnlinePlayer : NetworkBehaviour
     readonly NetworkVariable<int> colour = new NetworkVariable<int>(0, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Owner);
     readonly NetworkVariable<int> hat = new NetworkVariable<int>(0, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Owner);
     readonly NetworkVariable<bool> ready = new NetworkVariable<bool>(false, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Owner);
+    readonly NetworkVariable<bool> customizing = new NetworkVariable<bool>(false, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Owner);
     readonly NetworkVariable<FixedString32Bytes> displayName = new NetworkVariable<FixedString32Bytes>(default, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Owner);
     readonly NetworkVariable<ulong> steamId = new NetworkVariable<ulong>(0, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Owner);
     readonly NetworkVariable<int> score = new NetworkVariable<int>(0);
@@ -33,6 +34,12 @@ public class OnlinePlayer : NetworkBehaviour
 
     /// <summary>Whether they're ready in player select</summary>
     public bool Ready { get { return ready.Value; } }
+
+    /// <summary>
+    /// Whether they have Dispatch's customize pop-up open (X). Every machine shows their colour and hat as they scroll,
+    /// but their ghost shows its new look off only as the pop-up closes (OnlineGame, RestyleWatch.Closed)
+    /// </summary>
+    public bool Customizing { get { return customizing.Value; } }
 
     /// <summary>Their name (their Steam name, cleaned): "" until they share one. Show it with PlayerNames.Shown</summary>
     public string Name { get { return displayName.Value.ToString(); } }
@@ -83,6 +90,16 @@ public class OnlinePlayer : NetworkBehaviour
             hat.Value = chosenHat;
         if (ready.Value != isReady)
             ready.Value = isReady;
+    }
+
+    /// <summary>
+    /// This machine's player: shares whether their customize pop-up is open (only a change goes out: two per X, at most).
+    /// Does nothing for another machine's player
+    /// </summary>
+    public void ShareCustomizing(bool open)
+    {
+        if (IsOwner && customizing.Value != open)
+            customizing.Value = open;
     }
 
     /// <summary>

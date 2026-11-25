@@ -53,6 +53,7 @@ public class HighlightReel : MonoBehaviour
     ReelList list;
     ReelRecording recording;
     ReelOverlay overlay;
+    readonly ReelControls controls = new ReelControls();
     readonly Actor[] standIns = new Actor[Constants.MAX_PLAYERS];
     readonly List<Renderer> hiddenRenderers = new List<Renderer>();
     readonly List<Behaviour> hiddenParts = new List<Behaviour>(); // the HUD's canvases, the headlights and logo decals
@@ -80,8 +81,13 @@ public class HighlightReel : MonoBehaviour
             reel.HidePlayers();
             reel.BuildCamera();
             reel.overlay = ReelOverlay.Build(holder.transform);
+            reel.overlay.BuildNameTags(reel.Names());
 
+            // The match has the UI map off: the skip is read from each player's own devices, and their boost and pause
+            // wait meanwhile, so holding A to skip does nothing else (ReelControls)
+            reel.controls.Take();
             reel.Skipper = holder.AddComponent<CutsceneSkip>();
+            reel.Skipper.Pressed = ReelControls.Pressed;
             reel.Skipper.PromptParent = reel.overlay.transform;
             reel.Skipper.Skip = reel.End;
             reel.Skipper.Open(CutsceneSkip.VotingSeats(), decides); // the CPU drivers don't vote
@@ -214,6 +220,19 @@ public class HighlightReel : MonoBehaviour
         float timeLeft = clip.TimeLeftAtStart - (float)(time - clip.Start);
         bool captioned = time >= clip.KeyTime - ReelOverlay.CAPTION_BEFORE && time <= clip.KeyTime + ReelOverlay.CAPTION_AFTER;
         overlay.Show(cameraNumber, timeLeft, captioned ? clip.Caption : (Caption?)null);
+        overlay.ShowNameTags(Camera, StandIn);
+    }
+
+    // Each stand-in's player's name, as the scoreboard shows it, taken once as the reel starts (null: no stand-in)
+    string[] Names()
+    {
+        string[] names = new string[standIns.Length];
+        for (int seat = 0; seat < standIns.Length; seat++)
+        {
+            if (standIns[seat] != null)
+                names[seat] = Scoreboard.ShownName(seat);
+        }
+        return names;
     }
 
     // A stand-in where its seat was at a time: hidden while the rider was (or with nothing recorded), trailing while boosting
@@ -419,6 +438,7 @@ public class HighlightReel : MonoBehaviour
         restored = true;
         if (Skipper != null)
             Skipper.Close();
+        controls.Give();
 
         foreach (Renderer renderer in hiddenRenderers)
         {

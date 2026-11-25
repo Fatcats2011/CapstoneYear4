@@ -101,7 +101,7 @@ namespace DoA.Tests
             Assert.IsFalse(seats[0].GettingReady.activeSelf);
             Assert.IsFalse(seats[1].Stamp.activeSelf);
             Assert.IsTrue(seats[1].GettingReady.activeSelf);
-            Assert.AreEqual("DISPATCHED", seats[0].StampText.text);
+            Assert.AreEqual("READY", seats[0].StampText.text, "the stamp says READY (playtest, 2026-11-25)");
         }
 
         [Test]

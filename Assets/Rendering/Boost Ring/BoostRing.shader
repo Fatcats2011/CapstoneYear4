@@ -1,11 +1,14 @@
-// The boost ring under a scooter (BoostRing): unlit, see-through and added on top of what is behind it, so it glows.
-// It's drawn on a flat quad: the band is the UV distance from the quad's centre, and the fill runs clockwise from the
-// scooter's nose (+V) by angle, up to _Fill. The rest of the band is a faint track. _Dashed breaks the filled part into
-// dashes (a slowed recharge, carrying a package). The colour is _ColorLow while charging (the horns' colour now) and
-// _ColorFull when full, brightened by _Pulse. A spent boost draws a second band at _BurstScale times the radius, faded
-// by _BurstAlpha. _Fade hides it all while the scooter is in the air.
-// No depth write and a normal depth test, lifted a little off the ground by its script: the ground hides it rather than
-// it flickering against the ground. Plain HLSL, nothing platform-specific (D3D11, Metal, Vulkan).
+// The boost ring under a scooter (BoostRing): unlit and see-through, drawn on a flat quad. The band is the UV distance
+// from the quad's centre, and the fill runs clockwise from the scooter's nose (+V) by angle, up to _Fill. The rest of
+// the band is the track: dim, but kept above _TrackFloor so an empty ring still reads. _Dashed breaks the filled part
+// into dashes (a slowed recharge, carrying a package). The colour is _ColorLow while charging (the horns' colour now)
+// and _ColorFull when full, brightened by _Pulse. A spent boost draws a second band at _BurstScale times the radius,
+// faded by _BurstAlpha. _Fade hides it all while the scooter is in the air.
+// Premultiplied (Blend One OneMinusSrcAlpha): the colour is added, an HDR glow for the bloom, while the alpha darkens a
+// band a little wider than the ring (_Backing, _Outline), so it stands out on bright pavement as well as at night.
+// No depth write and a normal depth test, but its depth is pulled _DepthBias metres towards the camera (not its place
+// on screen): low clutter in front of it (grass, kerbs, bricks) can't hide it, while a wall or a car still does.
+// Plain HLSL, nothing platform-specific (D3D11, Metal, Vulkan), and no depth texture needed.
 Shader "DoA/Boost Ring"
 {
     Properties
@@ -19,8 +22,12 @@ Shader "DoA/Boost Ring"
         _BurstScale ("Burst scale", Float) = 1
         _BurstAlpha ("Burst alpha", Range(0, 1)) = 0
         _RingRadius ("Ring radius (UV)", Range(0, 0.5)) = 0.2857
-        _Thickness ("Ring thickness (UV)", Range(0, 0.25)) = 0.0343
-        _Track ("Unfilled track brightness", Range(0, 1)) = 0.35
+        _Thickness ("Ring thickness (UV)", Range(0, 0.25)) = 0.0686
+        _Track ("Unfilled track brightness", Range(0, 1)) = 0.6
+        _TrackFloor ("Unfilled track's least brightness", Range(0, 1)) = 0.12
+        _Backing ("Dark backing's strength", Range(0, 1)) = 0.6
+        _Outline ("Dark outline, as a share of the band's half-width", Range(0, 1)) = 0.6
+        _DepthBias ("Depth pulled towards the camera (m)", Range(0, 1)) = 0.3
         _Dashes ("Dashes around the ring", Float) = 24
         _ChargeGlow ("Glow while charging", Float) = 1
         _FullGlow ("Glow when full", Float) = 2.5
@@ -33,9 +40,10 @@ Shader "DoA/Boost Ring"
 
         Pass
         {
-            Blend One One, Zero One
+            Blend One OneMinusSrcAlpha, Zero One
             ZWrite Off
             ZTest LEqual
+            Offset -1, -1
             Cull Off
 
             HLSLPROGRAM
@@ -56,6 +64,10 @@ Shader "DoA/Boost Ring"
                 float _RingRadius;
                 float _Thickness;
                 float _Track;
+                float _TrackFloor;
+                float _Backing;
+                float _Outline;
+                float _DepthBias;
                 float _Dashes;
                 float _ChargeGlow;
                 float _FullGlow;
@@ -77,7 +89,17 @@ Shader "DoA/Boost Ring"
             Varyings vert(Attributes input)
             {
                 Varyings output;
-                output.positionCS = TransformObjectToHClip(input.positionOS.xyz);
+                float3 positionWS = TransformObjectToWorld(input.positionOS.xyz);
+                float4 positionCS = TransformWorldToHClip(positionWS);
+
+                // The same point moved towards the camera (view space looks down -z), kept past the near plane: only
+                // its depth is used, so the ring stays where it is on screen
+                float3 positionVS = TransformWorldToView(positionWS);
+                positionVS.z = min(positionVS.z + _DepthBias, -_ProjectionParams.y * 1.05);
+                float4 nearerCS = TransformWViewToHClip(positionVS);
+                positionCS.z = nearerCS.z / nearerCS.w * positionCS.w;
+
+                output.positionCS = positionCS;
                 output.uv = input.uv;
                 return output;
             }
@@ -102,17 +124,19 @@ Shader "DoA/Boost Ring"
                 float dash = _Dashed > 0.5 ? step(frac(around * _Dashes), 0.6) : 1.0;
 
                 float ring = Band(r, _RingRadius, halfWidth, aa);
+                float backing = Band(r, _RingRadius, halfWidth * (1.0 + _Outline), aa) * _Backing;
                 float lit = filled * dash;
                 float glow = full ? _FullGlow * (1.0 + _Pulse * _PulseGlow) : _ChargeGlow;
                 half3 colour = full ? _ColorFull.rgb : _ColorLow.rgb;
-                half3 rgb = (colour * glow * lit + _ColorLow.rgb * _Track * (1.0 - lit)) * ring;
+                half3 track = max(_ColorLow.rgb * _Track, (half3)_TrackFloor);
+                half3 rgb = (colour * glow * lit + track * (1.0 - lit)) * ring;
 
-                // The spent boost: a thinner band flaring out
+                // The spent boost: a thinner band flaring out, glow only
                 float burst = Band(r, _RingRadius * _BurstScale, halfWidth * 0.7, aa) * _BurstAlpha;
                 rgb += _ColorFull.rgb * _FullGlow * burst;
 
-                // Added (Blend One One), leaving the view's alpha alone
-                return half4(rgb * _Fade, 0);
+                // Premultiplied: the colour added, the backing darkening what is behind; the view's alpha left alone
+                return half4(rgb * _Fade, backing * _Fade);
             }
             ENDHLSL
         }

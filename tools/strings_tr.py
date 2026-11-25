@@ -200,7 +200,7 @@ ROWS = {
     "results.employee": ["Employé du mois", "Mitarbeiter des Monats", "Impiegato del mese", "Werknemer van de maand", "Empleado del mes", "Funcionário do mês", "Pracownik miesiąca", "Ayın Çalışanı", "Zaměstnanec měsíce", "Angajatul lunii", "A hónap dolgozója", "Månadens anställd", "Månedens medarbejder"],
 
     # Dispatch
-    "dispatch.dispatched": ["EXPÉDIÉ", "UNTERWEGS", "SPEDITO", "VERZONDEN", "DESPACHADO", "DESPACHADO", "WYSŁANY", "YOLA ÇIKTI", "ODESLÁNO", "EXPEDIAT", "KIKÜLDVE", "UTSKICKAD", "AFSENDT"],
+    "dispatch.dispatched": ["PRÊT", "BEREIT", "PRONTO", "KLAAR", "LISTO", "PRONTO", "GOTOWY", "HAZIR", "PŘIPRAVEN", "GATA", "KÉSZ", "REDO", "KLAR"],
     "dispatch.gettingready": ["SE PRÉPARE…", "MACHT SICH BEREIT…", "SI PREPARA…", "MAAKT ZICH KLAAR…", "PREPARÁNDOSE…", "SE PREPARANDO…", "SZYKUJE SIĘ…", "HAZIRLANIYOR…", "CHYSTÁ SE…", "SE PREGĂTEȘTE…", "KÉSZÜLŐDIK…", "GÖR SIG REDO…", "GØR SIG KLAR…"],
     "dispatch.hiring": ["ON EMBAUCHE…", "WIR STELLEN EIN…", "CERCASI…", "VACATURE…", "SE BUSCA…", "CONTRATANDO…", "ZATRUDNIMY…", "ELEMAN ARANIYOR…", "PŘIJÍMÁME…", "ANGAJĂM…", "FELVÉTEL…", "VI ANSTÄLLER…", "VI ANSÆTTER…"],
     "dispatch.readycount": ["{0} / {1} PRÊTS", "{0} / {1} BEREIT", "{0} / {1} PRONTI", "{0} / {1} KLAAR", "{0} / {1} LISTOS", "{0} / {1} PRONTOS", "{0} / {1} GOTOWYCH", "{0} / {1} HAZIR", "{0} / {1} PŘIPRAVENO", "{0} / {1} GATA", "{0} / {1} KÉSZ", "{0} / {1} REDO", "{0} / {1} KLAR"],

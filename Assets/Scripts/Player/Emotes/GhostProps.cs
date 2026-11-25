@@ -21,7 +21,9 @@ public interface IGhostCarry
 /// Parcel: the parcel the ghost carries (IGhostCarry) leaves its spot on the rack for the middle of the hands over
 /// PARCEL_IN seconds, arcing up over the hat on the way (and on the way back: PARCEL_ARC, PARCEL_OVER), follows them (ParcelSpin: spins about up over the right hand) and goes back over the move's last
 /// PARCEL_OUT seconds, or over PARCEL_CUT when a move without it interrupts. It keeps its parent; on its way to the hands it
-/// shrinks to PARCEL_HELD of its size on the rack (a big bag would hide the head), growing back on the way back. Its world
+/// shrinks to PARCEL_HELD of its size on the rack (a big bag would hide the head), and never past PARCEL_MAX_HALF (the
+/// golden package, a swollen one), growing back on the way back; where the hands would hold it inside the body, head or
+/// horns (a capsule: BODY_RADIUS, BODY_TOP) it is held pushed straight out of them instead. Its world
 /// position, turn and local scale are written; the tweens running on it are paused meanwhile, and its local position, turn
 /// and scale go back exactly as they were before they resume. A parcel move that follows another carries on with the same parcel.
 /// When the parcel leaves the ghost meanwhile (delivered, stolen, dropped, destroyed), it is let go at once: nothing is
@@ -43,6 +45,16 @@ public sealed class GhostProps
     internal const float PARCEL_ARC = 1.5f, PARCEL_OVER = 2.0f;
     /// <summary>The parcel's size in the hands, as a share of its size on the rack</summary>
     internal const float PARCEL_HELD = 0.85f;
+    /// <summary>
+    /// In U: the largest half-size a held parcel's box may have, whatever its size on the rack (the golden package, a
+    /// swollen stolen one, the Mother Lode clipped into the face at PARCEL_HELD alone: playtest, 2026-11-25)
+    /// </summary>
+    internal const float PARCEL_MAX_HALF = 0.55f;
+    /// <summary>
+    /// In U: the ghost's body as a held parcel keeps clear of it, a capsule from the Torso up to BODY_TOP over the Head
+    /// (the horn tips), BODY_RADIUS round. A parcel the hands hold inside it is pushed straight out of it
+    /// </summary>
+    internal const float BODY_RADIUS = 1.0f, BODY_TOP = 1.6f;
     /// <summary>In U: how far over the right hand the spun parcel's bottom sits</summary>
     const float SPIN_ABOVE = 0.15f;
     /// <summary>Degrees a second the spun parcel turns</summary>
@@ -72,7 +84,8 @@ public sealed class GhostProps
     Vector3 parcelScale;             // its local scale as it was
     Quaternion parcelInTorso;        // its turn in the Torso's, as it was taken (it turns with the body)
     Vector3 parcelCentre;            // its box's middle, in its own space (the hands hold the middle, not the pivot)
-    Vector3 parcelExtents;           // half its box, along its own axes, at its size in the world
+    Vector3 parcelBox;               // half its box, in its own space (zero: no mesh, a stand-in size is used)
+    Vector3 parcelExtents;           // half its box, along its own axes, at its rack size in the world (each frame)
     readonly List<Tween> paused = new List<Tween>();
     bool parcelPlaying;              // the move playing holds it (false: going back after an interrupt)
     GhostProp parcelKind;
@@ -88,6 +101,14 @@ public sealed class GhostProps
     bool crownPlaying;
 
     static readonly List<GhostProps> crowned = new List<GhostProps>();
+    // Every parcel a ghost holds now, or has on its way to its hands or back (Order hides its arrow meanwhile)
+    static readonly HashSet<Transform> inHands = new HashSet<Transform>();
+
+    /// <summary>Whether a ghost holds this parcel mesh now, or has it on its way to its hands or back</summary>
+    public static bool InHands(Transform mesh)
+    {
+        return mesh != null && inHands.Contains(mesh);
+    }
 
     public GhostProps(Transform owner, GhostRig rig)
     {
@@ -177,6 +198,7 @@ public sealed class GhostProps
         if (mesh == null)
             return;
         parcel = mesh;
+        inHands.Add(mesh);
         parcelParent = mesh.parent;
         parcelPosition = mesh.localPosition;
         parcelRotation = mesh.localRotation;
@@ -188,18 +210,17 @@ public sealed class GhostProps
         parcelWeight = 0f;
         spin = 0f;
 
-        // Its box (the mesh's bounds, at its own size): the hands hold its middle
+        // Its box (the mesh's bounds, in its own space): the hands hold its middle
         parcelCentre = Vector3.zero;
-        parcelExtents = Vector3.one * (0.3f * rig.U);
+        parcelBox = Vector3.zero;
         MeshFilter filter = mesh.GetComponent<MeshFilter>();
         if (filter != null && filter.sharedMesh != null)
         {
             Bounds box = filter.sharedMesh.bounds;
             parcelCentre = box.center;
-            Vector3 size = mesh.lossyScale;
-            parcelExtents = new Vector3(Mathf.Abs(box.extents.x * size.x), Mathf.Abs(box.extents.y * size.y),
-                Mathf.Abs(box.extents.z * size.z));
+            parcelBox = box.extents;
         }
+        MeasureParcel();
 
         // Its tweens (the float and the bob) wait while it is in hand
         paused.Clear();
@@ -256,8 +277,11 @@ public sealed class GhostProps
     void Place(float weight)
     {
         float k = Mathf.SmoothStep(0f, 1f, weight);
-        // Smaller in the hands: its box (measured on the rack) shrinks with it
-        float shrink = Mathf.Lerp(1f, PARCEL_HELD, k);
+        float u = rig.U;
+        MeasureParcel();
+        // Smaller in the hands, and never bigger there than PARCEL_MAX_HALF: its box (at its rack size) shrinks with it
+        float heldShare = HeldShare(parcelExtents, u);
+        float shrink = Mathf.Lerp(1f, heldShare, k);
         parcel.localScale = parcelScale * shrink;
         Vector3 up = rig.Up;
         Quaternion held = rig.Torso.rotation * parcelInTorso;
@@ -266,15 +290,18 @@ public sealed class GhostProps
         {
             held = Quaternion.AngleAxis(spin, up) * held;
             // Its bottom just over the hand: half its height along up, as it is turned now
-            float half = shrink * (Mathf.Abs(Vector3.Dot(held * new Vector3(parcelExtents.x, 0f, 0f), up))
-                + Mathf.Abs(Vector3.Dot(held * new Vector3(0f, parcelExtents.y, 0f), up))
-                + Mathf.Abs(Vector3.Dot(held * new Vector3(0f, 0f, parcelExtents.z), up)));
-            at = rig.HandRight.position + up * (SPIN_ABOVE * rig.U + half);
+            float half = shrink * Support(held, parcelExtents, up);
+            at = rig.HandRight.position + up * (SPIN_ABOVE * u + half);
         }
         else
         {
             at = (rig.HandLeft.position + rig.HandRight.position) * 0.5f;
         }
+        // Out of the body, the head and the horns at its size in the hands (the clips were made for a medium package):
+        // the hold point moves, so it comes in with the hold weight below, never popping
+        Vector3 bottom, top;
+        Body(out bottom, out top);
+        at = Clear(at, held, parcelExtents * heldShare, bottom, top, BODY_RADIUS * u, rig.Forward + up);
         at -= held * Vector3.Scale(parcelCentre, parcel.lossyScale);
 
         Vector3 rackPosition = parcelParent != null ? parcelParent.TransformPoint(parcelPosition) : parcelPosition;
@@ -284,15 +311,79 @@ public sealed class GhostProps
         Vector3 middle = (rackPosition + at) * 0.5f;
         // Half its height along up at the middle of the trip (turned and sized as it is there)
         Quaternion midTurn = Quaternion.Slerp(rackRotation, held, 0.5f);
-        float midHalf = Mathf.Lerp(1f, PARCEL_HELD, 0.5f) * (Mathf.Abs(Vector3.Dot(midTurn * new Vector3(parcelExtents.x, 0f, 0f), up))
-            + Mathf.Abs(Vector3.Dot(midTurn * new Vector3(0f, parcelExtents.y, 0f), up))
-            + Mathf.Abs(Vector3.Dot(midTurn * new Vector3(0f, 0f, parcelExtents.z), up)));
-        float arc = Mathf.Max(PARCEL_ARC * rig.U, Vector3.Dot(rig.Head.position - middle, up) + PARCEL_OVER * rig.U + midHalf);
+        float midHalf = Mathf.Lerp(1f, heldShare, 0.5f) * Support(midTurn, parcelExtents, up);
+        float arc = Mathf.Max(PARCEL_ARC * u, Vector3.Dot(rig.Head.position - middle, up) + PARCEL_OVER * u + midHalf);
         Vector3 path = straight + up * (arc * Mathf.Sin(Mathf.PI * k));
         parcel.SetPositionAndRotation(path, Quaternion.Slerp(rackRotation, held, k));
         wrotePosition = parcel.localPosition;
         wroteRotation = parcel.localRotation;
         wroteScale = parcel.localScale;
+    }
+
+    // Half its box in the world at its rack size, now (its parent may have grown since it was taken): no mesh, a
+    // stand-in of 0.3 U
+    void MeasureParcel()
+    {
+        if (parcelBox == Vector3.zero)
+        {
+            parcelExtents = Vector3.one * (0.3f * rig.U);
+            return;
+        }
+        Vector3 size = Vector3.Scale(parcelParent != null ? parcelParent.lossyScale : Vector3.one, parcelScale);
+        parcelExtents = new Vector3(Mathf.Abs(parcelBox.x * size.x), Mathf.Abs(parcelBox.y * size.y), Mathf.Abs(parcelBox.z * size.z));
+    }
+
+    /// <summary>The ghost's body as a held parcel keeps clear of it: from the Torso to the horn tips</summary>
+    internal void Body(out Vector3 bottom, out Vector3 top)
+    {
+        bottom = rig.Torso.position;
+        top = rig.Head.position + rig.Up * (BODY_TOP * rig.U);
+    }
+
+    /// <summary>
+    /// A parcel's size in the hands, as a share of its rack size (half its box there, in the world): PARCEL_HELD, or
+    /// less so its largest half-size is at most PARCEL_MAX_HALF U
+    /// </summary>
+    internal static float HeldShare(Vector3 rackExtents, float u)
+    {
+        float largest = Mathf.Max(rackExtents.x, Mathf.Max(rackExtents.y, rackExtents.z));
+        if (largest <= 1e-6f)
+            return PARCEL_HELD;
+        return Mathf.Min(PARCEL_HELD, PARCEL_MAX_HALF * u / largest);
+    }
+
+    /// <summary>How far a box (half-sizes along its own axes, turned so) reaches from its middle along a direction</summary>
+    internal static float Support(Quaternion turn, Vector3 extents, Vector3 direction)
+    {
+        return Mathf.Abs(Vector3.Dot(turn * new Vector3(extents.x, 0f, 0f), direction))
+            + Mathf.Abs(Vector3.Dot(turn * new Vector3(0f, extents.y, 0f), direction))
+            + Mathf.Abs(Vector3.Dot(turn * new Vector3(0f, 0f, extents.z), direction));
+    }
+
+    /// <summary>The point on a segment closest to a point</summary>
+    internal static Vector3 Closest(Vector3 a, Vector3 b, Vector3 point)
+    {
+        Vector3 ab = b - a;
+        float length = ab.sqrMagnitude;
+        if (length < 1e-12f)
+            return a;
+        return a + ab * Mathf.Clamp01(Vector3.Dot(point - a, ab) / length);
+    }
+
+    /// <summary>
+    /// A box's middle moved, if it must, straight out of a capsule (a segment bottom to top, radius round) until the box
+    /// no longer reaches into it along that way: out from the capsule's closest point, or along fallback when the
+    /// middle is on its spine. Unchanged when it is clear already
+    /// </summary>
+    internal static Vector3 Clear(Vector3 centre, Quaternion turn, Vector3 extents, Vector3 bottom, Vector3 top, float radius,
+        Vector3 fallback)
+    {
+        Vector3 spine = Closest(bottom, top, centre);
+        Vector3 off = centre - spine;
+        float distance = off.magnitude;
+        Vector3 way = distance > 1e-4f ? off / distance : (fallback.sqrMagnitude > 1e-8f ? fallback.normalized : Vector3.forward);
+        float need = radius + Support(turn, extents, way);
+        return distance >= need ? centre : spine + way * need;
     }
 
     // Back on the rack exactly as it was, and its tweens go on from where they waited
@@ -305,6 +396,7 @@ public sealed class GhostProps
             parcel.localScale = parcelScale;
         }
         Resume();
+        Release();
         parcel = null;
         parcelWeight = 0f;
         parcelPlaying = false;
@@ -325,9 +417,18 @@ public sealed class GhostProps
         if (parcel != null && (parcel.localScale - wroteScale).sqrMagnitude < 1e-8f)
             parcel.localScale = parcelScale;
         Resume();
+        Release();
         parcel = null;
         parcelWeight = 0f;
         parcelPlaying = false;
+    }
+
+    // Not in this ghost's hands any more (a destroyed mesh too: Unity's null still finds it in the set)
+    void Release()
+    {
+        if (!ReferenceEquals(parcel, null))
+            inHands.Remove(parcel);
+        inHands.RemoveWhere(mesh => mesh == null);
     }
 
     void Resume()
@@ -451,6 +552,7 @@ public sealed class GhostProps
     {
         RenderPipelineManager.beginCameraRendering -= FaceCamera;
         crowned.Clear();
+        inHands.Clear();
     }
 
     /// <summary>A uniform world size under its parent, whatever the parent's own scale</summary>

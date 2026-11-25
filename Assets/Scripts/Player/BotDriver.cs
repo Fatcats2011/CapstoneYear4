@@ -38,6 +38,10 @@ public class BotDriver : MonoBehaviour, IDriveInput
     const float OVERRUN = 15f;        // road ending this far past its target counts as an edge to stop short of, in metres
     const float TARGET_TURN = 120f;   // it brakes for such a target as for a corner this sharp
     const float ORDER_BARRED = 20f;   // how long it leaves an order alone after failing to reach it, in seconds
+    const float JUMP_LOOK = 35f;      // the golden round: a lip this near, with road across a gap past it, is a jump (metres)
+    const float JUMP_MIN = 6f, JUMP_MAX = 36f, JUMP_STEP = 3f; // how far past the lip it looks for the landing
+    const float JUMP_RISE = 1.5f;     // a landing no higher than this above the lip can be reached
+    const float JUMP_BOOST_ANGLE = 12f, JUMP_BOOST_SPEED = 12f; // lined up this well and this fast, it boosts off the lip
     const float PARTIAL_GIVE_UP = 10f; // a path that stops short of its order, this close to the stop (metres): it can't be got at
     const float DODGE_MOST = 6f;      // the most the courier's swerve moves its aim, in metres (more leaves the road)
 
@@ -232,8 +236,17 @@ public class BotDriver : MonoBehaviour, IDriveInput
         if (corner < 0 && ToRoad(position, out Vector3 road))
             Aim = road;
 
+        // The golden round's gaps: the road stops at a lip with more road across from it. Lined up on the landing, flat out
+        // and boosting off the lip, without the water caution that braked bots to a crawl there (playtest, 2026-11-25)
+        bool jumping = JumpAhead(position, out Vector3 landing);
+        if (jumping)
+            Aim = landing;
+
         // About to leave the road (water, a wall): off the pedals and turning back on to it
-        bool edgeAhead = EdgeAhead(position, velocity, speed, out Vector3 awayFromEdge, out bool water);
+        bool edgeAhead = false, water = false;
+        Vector3 awayFromEdge = position;
+        if (!jumping)
+            edgeAhead = EdgeAhead(position, velocity, speed, out awayFromEdge, out water);
         if (edgeAhead)
             Aim = awayFromEdge;
 
@@ -253,6 +266,11 @@ public class BotDriver : MonoBehaviour, IDriveInput
         {
             steer = BotBrain.Steer(driving.transform.forward, toAim);
             BotBrain.Pedals(speed, edgeAhead ? (water ? WATER_SPEED : WALL_SPEED) : CornerLimit(position), bearing, out accelerate, out brake);
+            if (jumping)
+            {
+                accelerate = 1f;
+                brake = 0f;
+            }
         }
 
         // Chasing: a boost into the victim when close and lined up, whenever it can (the game's boost rules still apply)
@@ -264,7 +282,8 @@ public class BotDriver : MonoBehaviour, IDriveInput
         }
         sinceBoost += dt;
         if (UsesBoost && boostHeld < 0f && !stuck.Reversing && !(edgeAhead && water)
-            && (hit || (sinceBoost >= profile.BoostEvery && BotBrain.Boosts(bearing, StraightAhead(position, toAim)))))
+            && (hit || (jumping && Mathf.Abs(bearing) <= JUMP_BOOST_ANGLE && speed >= JUMP_BOOST_SPEED)
+                || (sinceBoost >= profile.BoostEvery && BotBrain.Boosts(bearing, StraightAhead(position, toAim)))))
         {
             boostHeld = 0f;
             sinceBoost = 0f;
@@ -273,6 +292,56 @@ public class BotDriver : MonoBehaviour, IDriveInput
             BoostButton?.Invoke(true);
         }
         ReleaseBoost(dt);
+    }
+
+    Vector3 jumpLanding;
+    bool hasJump;
+    float nextJumpLook;
+
+    // In the golden round, whether its path stops at a lip near here with road again across a gap: then where to land.
+    // Looked for along the path's last stretch, then towards the target. Never in the main round: the city's river has
+    // road across it too, and no ramp
+    bool JumpAhead(Vector3 position, out Vector3 landing)
+    {
+        landing = position;
+        GameManager game = GameManager.Instance;
+        if (game == null || game.MainState != GameState.FinalPackage || Target == null || path == null || corners.Count == 0
+            || path.status != NavMeshPathStatus.PathPartial || !ScooterAgent(out int agent))
+            return false;
+        Vector3 lip = corners[corners.Count - 1];
+        if (Flat(lip - position) > JUMP_LOOK)
+            return false;
+        if (Time.time < nextJumpLook)
+        {
+            landing = jumpLanding;
+            return hasJump;
+        }
+        nextJumpLook = Time.time + REPATH_EVERY;
+        hasJump = false;
+        Vector3 before = corners.Count >= 2 ? corners[corners.Count - 2] : position;
+        NavMeshQueryFilter filter = Filter(agent);
+        foreach (Vector3 way in new[] { lip - before, Target.Value - lip })
+        {
+            Vector3 dir = new Vector3(way.x, 0f, way.z);
+            if (dir.sqrMagnitude < 1f)
+                continue;
+            dir.Normalize();
+            for (float d = JUMP_MIN; d <= JUMP_MAX && !hasJump; d += JUMP_STEP)
+            {
+                // Road there, not above the lip, and not joined to it by road: across a gap
+                if (NavMesh.SamplePosition(lip + dir * d, out NavMeshHit across, JUMP_STEP, filter)
+                    && across.position.y <= lip.y + JUMP_RISE && Flat(across.position - lip) >= JUMP_MIN - 1f
+                    && NavMesh.Raycast(lip, across.position, out NavMeshHit _, filter))
+                {
+                    jumpLanding = across.position;
+                    hasJump = true;
+                }
+            }
+            if (hasJump)
+                break;
+        }
+        landing = jumpLanding;
+        return hasJump;
     }
 
     Vector3 Velocity()

@@ -452,6 +452,24 @@ Nothing to set up: the emotes are added when players join. Play a couch match wi
   - Moves feel less robotic; tell me any that still look too quick or too slow.
 - **Opening cutscene:** if the clock tower still looks broken, note what you see (the hands, the bells, the camera, a freeze). In my test the hands reach midnight and the shots play.
 
+## 16r. Playtest fixes, 2026-11-25 (25 minutes)
+
+- **Dispatch:**
+  - The stamp reads READY.
+  - Scrolling hats and colours: no emote until you close with DONE (B or X), then one, only if something changed. A (ready) plays only the ready emote. Another machine sees the same.
+  - Local Play: the ghost shows off about 1 s after you stop scrolling.
+  - The customize pop-up: CUSTOMIZE, the ghost alone (horns and scooter not cut off), COLOUR and HAT rows with the active one in gold, DONE. Check players 1 and 2 online.
+- **Highlight reel:** names float over the ghosts; holding A (Space or Enter on a keyboard) skips it; after it, A doesn't boost by itself and no pause menu opens.
+- **Results:** no X or ring inside the podium scooters.
+- **Boost ring:** thicker, with a dark edge; readable on bright bricks, in grass and at kerbs; not showing through walls or cars; doesn't draw over your own front wheel (if it does, lower `_DepthBias` on `BoostRing.mat` to 0.2).
+- **Kings Crown:** the pillar funnels out of the crown; the crown no longer glares.
+- **Hot Potato:** the holder is quicker and recharges boost faster; each pass adds 5 s to the fuse (up to 40 s).
+- **No golden round** in Gold Rush, Kings Crown, Infection or Hot Potato; Standard still has it.
+- **Speed 150% and 200%:** turning feels tighter than before.
+- **Opening cutscene:** the hour hand stays on 12.
+- **Golden round with bots:** the package carrier takes the jumps; tell me if chasers still fall around the first gap.
+- **Packages in emotes** (golden, stolen, Mother Lode): never inside the face or body; the arrow floats above the package and hides while it's in the ghost's hands.
+
 ## 16c. Accessibility: to build, then playtest
 
 For Steam's store-page accessibility section. None of these exist yet. Today Options → ACCESSIBILITY has only Reduce motion.

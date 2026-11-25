@@ -146,7 +146,15 @@ public class Order : MonoBehaviour
     [SerializeField] private Vector3 bobPosition;
 
     // tweening
-    private Tween floatyTween, bobbyTween, arrowTween;
+    private Tween floatyTween, bobbyTween;
+
+    /// <summary>
+    /// The direction arrow over a carried package: ARROW_GAP metres over the top of the package as drawn (its bob, its
+    /// swell, the Mother Lode), bobbing ARROW_BOB on its own over ARROW_BOB_SECONDS. It used to bob on its own tween and
+    /// drifted into the package (playtest, 2026-11-25). Hidden while a ghost holds the package in its hands (GhostProps)
+    /// </summary>
+    internal const float ARROW_GAP = 0.35f, ARROW_BOB = 0.15f, ARROW_BOB_SECONDS = 2f;
+    private Renderer[] arrowRenderers;
     private Quaternion initMeshRotation;
     /// <summary>How the package mesh is turned at rest, for other things drawn like packages (ModeVisuals); before Awake, as the scene has it</summary>
     internal Quaternion MeshRestRotation => meshRenderer != null ? initMeshRotation : orderMeshObject.transform.localRotation;
@@ -227,6 +235,32 @@ public class Order : MonoBehaviour
         Vector3 newDir = dropoff.position - arrow.transform.position;
         newDir = new Vector3(newDir.x, 0, newDir.z);
         arrow.transform.rotation = Quaternion.LookRotation(newDir, Vector3.up);
+    }
+
+    // After the package's tweens (and a ghost's hands) have moved it this frame: the arrow over it. Every machine works
+    // this out from the package it draws, so online clients (who replay Pickup) see the same
+    private void LateUpdate()
+    {
+        if (arrow == null || !arrow.activeSelf || meshRenderer == null)
+            return;
+        if (arrowRenderers == null)
+            arrowRenderers = arrow.GetComponentsInChildren<Renderer>(true);
+
+        bool inHands = GhostProps.InHands(orderMeshObject.transform);
+        foreach (Renderer part in arrowRenderers)
+            if (part != null && part.enabled == inHands)
+                part.enabled = !inHands;
+        if (inHands)
+            return;
+
+        arrow.transform.position = ArrowSpot(meshRenderer.bounds, Time.time);
+    }
+
+    /// <summary>Where the arrow sits over a package drawn within these bounds (world), at a time: over its middle, above its top</summary>
+    internal static Vector3 ArrowSpot(Bounds package, float time)
+    {
+        float bob = ARROW_BOB * 0.5f * (1f - Mathf.Cos(2f * Mathf.PI * time / ARROW_BOB_SECONDS));
+        return new Vector3(package.center.x, package.max.y + ARROW_GAP + bob, package.center.z);
     }
 
 
@@ -310,9 +344,8 @@ public class Order : MonoBehaviour
 
         floatyTween.Kill();
         bobbyTween.Kill();
-        arrowTween.Kill();
 
-        // start tweening
+        // start tweening (the arrow follows the package by itself: LateUpdate)
         floatyTween = orderMeshObject.transform.DOLocalRotate(meshRotation, rotationDuration, RotateMode.FastBeyond360)
             .SetLoops(-1, LoopType.Incremental)
             .SetRelative()
@@ -321,11 +354,6 @@ public class Order : MonoBehaviour
             .SetLoops(-1, LoopType.Yoyo)
             .SetRelative()
             .SetEase(Ease.Linear);
-        arrowTween = arrow.transform.DOLocalMove(bobPosition, bobbingDuration)
-            .SetLoops(-1, LoopType.Yoyo)
-            .SetRelative()
-            .SetEase(Ease.Linear);
-
 
         beconIndicator.RemoveBeconIndicator();
     }
@@ -368,10 +396,6 @@ public class Order : MonoBehaviour
             .SetRelative()
             .SetEase(Ease.Linear);
         bobbyTween = orderMeshObject.transform.DOLocalMove(bobPosition, bobbingDuration)
-            .SetLoops(-1, LoopType.Yoyo)
-            .SetRelative()
-            .SetEase(Ease.Linear);
-        arrowTween = arrow.transform.DOLocalMove(bobPosition, bobbingDuration)
             .SetLoops(-1, LoopType.Yoyo)
             .SetRelative()
             .SetEase(Ease.Linear);
@@ -602,7 +626,6 @@ public class Order : MonoBehaviour
     {
         floatyTween.Kill();
         bobbyTween.Kill();
-        arrowTween.Kill();
 
         arrow.transform.localPosition = Vector3.zero;
 

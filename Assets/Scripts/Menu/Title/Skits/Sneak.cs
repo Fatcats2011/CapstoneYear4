@@ -4,9 +4,9 @@ using UnityEngine;
 using static TitleSkitTools;
 
 /// <summary>
-/// A ghost rides in slowly with a package, stops and dozes off. A second tiptoes in behind it in little stop-start steps,
-/// lifts the package, tiptoes two steps away, and then the sleeper wakes: the thief boosts off with a wheelie and the
-/// sleeper gives chase
+/// A ghost rides in slowly with a package, stops and naps (the in-game Nap, Zzz and all). A second tiptoes in behind it in
+/// little stop-start steps, lifts the package, tiptoes two steps away rubbing its hands, and then the sleeper wakes with
+/// a leap: the thief boosts off with a wheelie and the sleeper gives chase
 /// </summary>
 public class Sneak : TitleSkit
 {
@@ -37,20 +37,18 @@ public class Sneak : TitleSkit
         Place(thief, startX, THIEF_Z, LEFT, 0.1f);
 
         float clock = Ridden(1.2f);
-        bool asleep = false;
-        Tween doze = null;
+        bool asleep = false, awake = false;
         for (int i = 0; i < STEPS; i++)
         {
             if (!asleep && clock >= Ridden(ARRIVE) - 0.05f)
             {
                 asleep = true;
                 sleeper.Drive(0f);
-                doze = Wobble(sleeper, 4f, 0.7f, 8);
+                stage.StartCoroutine(Nap(sleeper, () => awake));
             }
-            if (asleep)
-                Say(stage, sleeper, "Z", WHITE, 1.0f);
 
-            Ride(thief, startX - step * (i + 1), 0.35f, Ease.OutSine);
+            // A shuffle that eases off and stops, not a jump to speed
+            Ride(thief, startX - step * (i + 1), 0.35f, Ease.InOutSine);
             yield return Wait(0.6f);
             clock += 0.6f;
         }
@@ -59,34 +57,47 @@ public class Sneak : TitleSkit
         yield return Beat(0.4f);
         yield return Steal(thief, sleeper);
 
-        // Doesn't run: turns round, and tiptoes two steps away, very pleased with itself
+        // Doesn't run: turns round, and tiptoes two steps away rubbing its hands, very pleased with itself
         thief.Drive(0f);
         Turn(thief, RIGHT, 0.3f);
+        thief.Emote(GhostAction.Scheme, "Sly Rub");
         yield return Wait(0.4f);
         for (int i = 0; i < 2; i++)
         {
-            Ride(thief, thief.transform.localPosition.x + 1f, 0.3f, Ease.OutSine);
+            Ride(thief, thief.transform.localPosition.x + 1f, 0.3f, Ease.InOutSine);
             yield return Wait(0.55f);
         }
 
-        // The sleeper wakes at last: "!" and a jump. The thief is gone in a blaze, nose up
-        if (doze != null)
-            doze.Kill();
-        sleeper.Model.localRotation = Quaternion.identity;
+        // The sleeper wakes at last: "!" and a leap. The thief is gone in a blaze, nose up
+        awake = true;
         Say(stage, sleeper, "!", WHITE);
-        Hop(sleeper, 0.8f, 0.35f);
+        sleeper.Emote(GhostAction.JumpScare, "Leap");
+        thief.EndEmote(0.15f);
         thief.Drive(1f);
         Wheelie(thief, 30f, 1.0f);
         Tween away = Ride(thief, thiefOff + 0.5f, 1.2f, Ease.InQuad);
 
         // A beat to take it in, then it gives chase
         yield return Beat(0.3f);
-        Turn(sleeper, RIGHT, 0.2f);
+        Turn(sleeper, RIGHT, 0.35f);
         yield return Beat(0.3f);
         sleeper.Drive(1f);
         Tween chase = Ride(sleeper, off + 0.5f, 1.6f, Ease.InQuad);
 
         yield return away.WaitForCompletion();
         yield return chase.WaitForCompletion();
+    }
+
+    /// <summary>The in-game Nap, again each time it ends, until the sleeper wakes (or the show stops)</summary>
+    static IEnumerator Nap(TitleActor sleeper, System.Func<bool> awake)
+    {
+        while (!awake())
+        {
+            if (sleeper.Emotes == null)
+                yield break;
+            if (sleeper.Emotes.Playing == null)
+                sleeper.Emote(GhostAction.Bored, "Nap");
+            yield return null;
+        }
     }
 }

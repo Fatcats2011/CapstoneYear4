@@ -226,7 +226,8 @@ namespace DoA.Tests
             Assert.IsFalse(With(GameMode.Infection, steals: true).StealsOn, "Infection has no steals");
             Assert.IsFalse(With(steals: false).StealsOn);
             Assert.IsFalse(With(GameMode.KingsCrown).GoldenOn, "no golden round without deliveries");
-            Assert.IsTrue(With(GameMode.GoldRush).GoldenOn);
+            Assert.IsFalse(With(GameMode.GoldRush).GoldenOn, "only Standard has a golden round");
+            Assert.IsTrue(With(GameMode.Standard).GoldenOn);
             Assert.IsFalse(With(golden: false).GoldenOn);
         }
 

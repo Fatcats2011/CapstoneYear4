@@ -151,6 +151,9 @@ public class ModeMatch
         safeSeat = seat;
         safeUntil = now + (Mode == GameMode.KingsCrown ? TimedModeRules.CROWN_SAFE_SECONDS : TimedModeRules.NO_TAG_BACKS);
         float strength = kind == ModeMomentKind.PotatoPassed ? TimedModeRules.FuseProgress(now, FuseLit, FuseEnd) : 0f;
+        // A pass buys time (online the snapshot carries the new end)
+        if (kind == ModeMomentKind.PotatoPassed)
+            FuseEnd = TimedModeRules.PassedFuse(FuseEnd, now);
         Happened?.Invoke(new ModeMoment(kind, kind == ModeMomentKind.PotatoPassed ? from : seat, kind == ModeMomentKind.PotatoPassed ? seat : from, strength));
         Changed?.Invoke();
     }

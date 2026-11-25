@@ -4,7 +4,8 @@ using UnityEngine;
 using static TitleSkitTools;
 
 /// <summary>
-/// One ghost cruises across with a package; a second roars up from behind, grabs it and speeds off; the first gives chase
+/// One ghost cruises across with a package; a second roars up from behind, grabs it and speeds off cackling back at it;
+/// the first shakes its fists and gives chase
 /// </summary>
 public class TheSnatch : TitleSkit
 {
@@ -30,12 +31,15 @@ public class TheSnatch : TitleSkit
 
         yield return Steal(thief, courier);
         Say(stage, courier, "!", WHITE);
+        Squash(courier, 0.2f, 0.35f);
         Ride(thief, off, 1.3f, Ease.InQuad);
         Wheelie(thief, 30f, 1.0f);
+        thief.Emote(GhostAction.Cackle, "Turn And Cackle");
 
-        // A beat of disbelief, then after it
-        yield return Beat(0.7f);
-        Hop(courier, 0.5f, 0.3f);
+        // A beat of disbelief, fists shaking, then after it
+        yield return Beat(0.3f);
+        courier.Emote(GhostAction.FistShake, "Arm Flail");
+        yield return Beat(0.5f);
         courier.Drive(1f);
         yield return Ride(courier, off, 1.5f, Ease.InQuad).WaitForCompletion();
     }

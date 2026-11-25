@@ -123,6 +123,26 @@ namespace DoA.Tests
             return (emotes.Rig.HandLeft.position + emotes.Rig.HandRight.position) * 0.5f;
         }
 
+        // Where a held cube package's middle belongs for a hold point: there, or pushed out of the ghost's body capsule
+        static Vector3 HeldAt(GhostEmotes emotes, Vector3 hold, Transform mesh)
+        {
+            emotes.Props.Body(out Vector3 bottom, out Vector3 top);
+            GhostRig rig = emotes.Rig;
+            return GhostProps.Clear(hold, mesh.rotation, mesh.lossyScale * 0.5f, bottom, top, GhostProps.BODY_RADIUS * rig.U,
+                rig.Forward + rig.Up);
+        }
+
+        // Whether a held cube package's box stays out of the ghost's body capsule (as GhostProps measures it)
+        static void AssertOutOfTheBody(GhostEmotes emotes, Transform mesh, string message)
+        {
+            emotes.Props.Body(out Vector3 bottom, out Vector3 top);
+            Vector3 spine = GhostProps.Closest(bottom, top, mesh.position);
+            Vector3 off = mesh.position - spine;
+            Assert.Greater(off.magnitude, 1e-3f, message + ": off the spine");
+            float reach = GhostProps.Support(mesh.rotation, mesh.lossyScale * 0.5f, off.normalized);
+            Assert.GreaterOrEqual(off.magnitude + 1e-3f, GhostProps.BODY_RADIUS * emotes.Rig.U + reach, message);
+        }
+
         [Test]
         public void ParcelMoves_AreMarked()
         {
@@ -162,7 +182,8 @@ namespace DoA.Tests
 
             Assert.AreSame(mesh, p.emotes.Props.Parcel, "it holds the carried order's package");
             Assert.AreEqual(1f, p.emotes.Props.ParcelWeight, 1e-4f, "in the hands mid-move");
-            Assert.Less(Vector3.Distance(Hands(p.emotes), mesh.position), 1e-3f, "between the hands");
+            Assert.Less(Vector3.Distance(HeldAt(p.emotes, Hands(p.emotes), mesh), mesh.position), 1e-3f,
+                "between the hands, or pushed straight out of the body from there");
             Assert.Less((mesh.lossyScale - size * GhostProps.PARCEL_HELD).sqrMagnitude, 1e-8f, "smaller in the hands");
             Assert.AreSame(parent, mesh.parent, "its parent kept");
             Assert.IsTrue(Paused(mesh), "its tweens wait");
@@ -210,10 +231,90 @@ namespace DoA.Tests
             Vector3 up = p.emotes.Rig.Up;
             Vector3 off = mesh.position - hand;
             Assert.Greater(Vector3.Dot(off, up), 0.2f, "above the hand");
-            Assert.Less((off - up * Vector3.Dot(off, up)).magnitude, 1e-3f, "right over it");
+            // Over the hand, or pushed out of the body from there (a push has an upward part too, so the hold point can't be
+            // rebuilt from the height alone): clear of the body, and still near the hand
+            AssertOutOfTheBody(p.emotes, mesh, "clear of the body");
+            Assert.Less(Vector3.Distance(mesh.position, hand), 3f * p.emotes.Rig.U, "still at the right hand");
             Quaternion a = mesh.rotation;
             Run(p.emotes, DT);
             Assert.Greater(Quaternion.Angle(a, mesh.rotation), 1f, "it spins");
+        }
+
+        /// <summary>
+        /// The golden package (or a swollen stolen one, the Mother Lode) clipped into the ghost's face: held, it is no
+        /// bigger than PARCEL_MAX_HALF and its box stays out of the body, head and horns (playtest, 2026-11-25)
+        /// </summary>
+        [TestCase("Parcel Shake")]
+        [TestCase("Parcel Spin")]
+        [TestCase("Parcel Overhead")]
+        [TestCase("Parcel Hug")]
+        [TestCase("Presenting")]
+        [TestCase("Parcel Clutch")]
+        public void BigParcel_Held_IsCappedAndOutOfTheHead(string name)
+        {
+            Player p = NewPlayer();
+            Order order = Give(p);
+            Transform mesh = order.orderMeshObject.transform;
+            mesh.localScale = Vector3.one * 4f; // half 1.6 U on the rack (the rack is 0.8)
+            GhostMove move = Move(name);
+            p.emotes.Play(move, 1f);
+            Run(p.emotes, move.Length * 0.5f);
+
+            Assert.AreEqual(1f, p.emotes.Props.ParcelWeight, 1e-4f, "in the hands mid-move");
+            float u = p.emotes.Rig.U;
+            float largest = Mathf.Max(mesh.lossyScale.x, Mathf.Max(mesh.lossyScale.y, mesh.lossyScale.z)) * 0.5f;
+            Assert.LessOrEqual(largest, GhostProps.PARCEL_MAX_HALF * u + 1e-4f, "no bigger than the cap");
+            AssertOutOfTheBody(p.emotes, mesh, "out of the head capsule");
+        }
+
+        /// <summary>Order hides its direction arrow while the package is in a ghost's hands (it bobbed into it)</summary>
+        [Test]
+        public void InHands_WhileAParcelMoveHoldsIt_NotAfter()
+        {
+            Player p = NewPlayer();
+            Order order = Give(p);
+            Transform mesh = order.orderMeshObject.transform;
+            Assert.IsFalse(GhostProps.InHands(mesh), "on the rack");
+            GhostMove move = Move("Parcel Hug");
+            p.emotes.Play(move, 1f);
+            Run(p.emotes, DT);
+            Assert.IsTrue(GhostProps.InHands(mesh), "on its way to the hands");
+            Run(p.emotes, move.Length + 0.3f);
+            Assert.IsFalse(GhostProps.InHands(mesh), "back on the rack");
+
+            p.emotes.Play(move, 1f);
+            Run(p.emotes, move.Length * 0.5f);
+            Assert.IsTrue(GhostProps.InHands(mesh));
+            p.emotes.Props.Stop();
+            Assert.IsFalse(GhostProps.InHands(mesh), "Stop puts it back");
+        }
+
+        [Test]
+        public void SmallParcel_KeepsItsHeldShare_BigOneIsCapped()
+        {
+            Assert.AreEqual(GhostProps.PARCEL_HELD, GhostProps.HeldShare(Vector3.one * 0.3f, 1f), 1e-6f);
+            Assert.AreEqual(0.55f / 2f, GhostProps.HeldShare(new Vector3(0.5f, 2f, 1f), 1f), 1e-6f);
+            Assert.AreEqual(0.55f, GhostProps.HeldShare(new Vector3(0.5f, 2f, 1f), 2f), 1e-6f, "in U");
+        }
+
+        [Test]
+        public void Clear_PushesABoxStraightOutOfTheCapsule_LeavesOneClearAlone()
+        {
+            Vector3 bottom = Vector3.zero, top = Vector3.up * 3f;
+            Vector3 extents = Vector3.one * 0.5f;
+            Vector3 inside = new Vector3(0f, 1.5f, 0.6f);
+            Vector3 pushed = GhostProps.Clear(inside, Quaternion.identity, extents, bottom, top, 1f, Vector3.forward);
+            Assert.Less(Vector3.Distance(new Vector3(0f, 1.5f, 1.5f), pushed), 1e-4f, "out along forward, radius + half");
+
+            Vector3 above = new Vector3(0f, 3.4f, 0f);
+            Assert.Less(Vector3.Distance(new Vector3(0f, 4.5f, 0f),
+                GhostProps.Clear(above, Quaternion.identity, extents, bottom, top, 1f, Vector3.forward)), 1e-4f, "over the top: up");
+
+            Vector3 onSpine = GhostProps.Clear(new Vector3(0f, 1f, 0f), Quaternion.identity, extents, bottom, top, 1f, Vector3.forward);
+            Assert.Less(Vector3.Distance(new Vector3(0f, 1f, 1.5f), onSpine), 1e-4f, "on the spine: the fallback way");
+
+            Vector3 clear = new Vector3(0f, 1f, 2f);
+            Assert.AreEqual(clear, GhostProps.Clear(clear, Quaternion.identity, extents, bottom, top, 1f, Vector3.forward));
         }
 
         [Test]

@@ -281,15 +281,13 @@ namespace DoA.Tests
             objects.Keep(board.transform.root.gameObject);
 
             SerializedObject so = new SerializedObject(board);
-            foreach (string field in new[] { "root", "readyLine", "banner", "matchmakingLine", "fillPrompt", "backdrop", "customizePanel", "customizePicture" })
+            foreach (string field in new[] { "root", "readyLine", "banner", "matchmakingLine", "fillPrompt", "backdrop" })
                 Assert.IsNotNull(so.FindProperty(field).objectReferenceValue, field);
             Assert.AreEqual(Constants.MAX_PLAYERS, so.FindProperty("tickets").arraySize);
             Assert.IsFalse(((GameObject)so.FindProperty("root").objectReferenceValue).activeSelf);
             Assert.IsFalse(((GameObject)so.FindProperty("banner").objectReferenceValue).activeSelf);
             Assert.AreNotSame(board.gameObject, so.FindProperty("root").objectReferenceValue, "hiding root mustn't stop the board's Update");
-            GameObject customize = (GameObject)so.FindProperty("customizePanel").objectReferenceValue;
-            Assert.IsFalse(customize.activeSelf, "the customize pop-up starts closed");
-            Assert.AreEqual(customize.transform.parent.childCount - 1, customize.transform.GetSiblingIndex(), "drawn over the rest of the board");
+            Assert.IsNull(so.FindProperty("customizePanel").objectReferenceValue, "the board builds X's pop-up itself (CustomizeCard)");
 
             Canvas canvas = board.GetComponent<Canvas>();
             Assert.AreEqual(RenderMode.ScreenSpaceOverlay, canvas.renderMode);
@@ -316,7 +314,7 @@ namespace DoA.Tests
             objects.Keep(board.transform.root.gameObject);
 
             ButtonGlyph[] glyphs = board.GetComponentsInChildren<ButtonGlyph>(true);
-            Assert.AreEqual(5, glyphs.Length, "clock in, customize, invite, leave, and the pop-up's done");
+            Assert.AreEqual(4, glyphs.Length, "clock in, customize, invite and leave (the customize card builds its own done)");
             foreach (ButtonGlyph glyph in glyphs)
             {
                 Assert.IsNotNull(glyph.playStation, glyph.name);

@@ -25,7 +25,7 @@ Online multiplayer is being built in steps (roadmap Phase 3: `docs/superpowers/p
 - **Seats.** The host takes the first seat (P1) and each joiner the lowest free one. A seat is the player's slot on every machine: their company, podium, spawn point and name (P1–P4). In code, seats count from 0.
 - **This machine's player moves into its seat**, taking their controller with them. Since Phase 3J several players can share one machine: see Phase 3J below.
 - **Player select is the online lobby, called Dispatch** (`DispatchMenu`, `DispatchBoard`; Local Play's player select is unchanged).
-  - Every other player's scooter stands on its podium, in its company's colours, with their ghost colour and hat, which update as they change them.
+  - Every other player's scooter stands on its podium, in its company's colours, with their ghost colour and hat, which update as they change them. Their ghost shows a new look off only once, as their customize pop-up closes with DONE (`OnlinePlayer.Customizing`, `RestyleWatch.Closed`), not on every scroll.
   - **The room.**
     - Online, the scooters stand in the Dispatch room's seats (`PlayerInstantiate.dispatchSeats`, the `SeatN_Spawn` points of `Dispatch_Room.fbx`), all four in one view.
     - Offline they stand in the menu's own booths (`menuSpawnPositions`), as before.
@@ -44,7 +44,7 @@ Online multiplayer is being built in steps (roadmap Phase 3: `docs/superpowers/p
       - On arriving, it moves the scooters onto its seats.
       - **Tools → Dead on Arrival → Dispatch** sets the scene up and builds the board (`DispatchLobbyBuilder`).
     - Picking Multiplayer shows the board at once, while the lobby is still being made (`OnlinePlay.GettingOnline`), and the board re-checks after every Update (`LateUpdate`), so Local Play's player select never flashes up first. Until the room's scene is up, a dark backdrop covers the screen (`DispatchBoard.backdrop`).
-    - **Customize (X)** pops up over the board (`DispatchBoard.customizePanel`): the room dimmed, and the player's own preview (`PlayerSelectCanvas.ViewPicture`, Player N Cam's picture: their ghost and the colour and hat sliders, cropped to them by `DispatchRules.CustomizeCrop`, mirrored for players 2 and 4). B closes it, as it closes the sliders (`DispatchMenu`). The quarter-screen preview panels stay hidden on Dispatch: the board would cover them.
+    - **Customize (X)** pops up over the board (`CustomizeCard`, built by `DispatchBoard` at runtime in the game's card style): the room dimmed, CUSTOMIZE, the player's ghost from their preview (`PlayerSelectCanvas.ViewPicture`, cropped to the ghost by `DispatchRules.CustomizeCrop`, the same for every seat) in a dark rounded inset, a COLOUR and a HAT row (`< icon NAME >`, the row the d-pad changes in gold) and DONE. The sliders never show on Dispatch (`CustomizationSelector.SetSlidersShown`); the old builder-made pop-up (`DispatchBoard.customizePanel`) stays hidden. B (or X again) closes it with DONE, and the ghost shows its new look off once if it changed (`DispatchMenu`, `RestyleWatch`); A readies from it (the ghost cheers instead). The quarter-screen preview panels stay hidden on Dispatch: the board would cover them.
     - **Profile pictures.** Each player's Steam ID travels with their name (`OnlinePlayer.SteamId`, written by its owner). Every machine loads each player's large Steam avatar itself (`SteamAvatars`: asked of Steam until it's there, made into a texture once, none without Steam) and the board hangs it under that player's podium (`DispatchBoard.avatarFrames`, at the room's `SeatN_Avatar` anchors). A free seat, a player without Steam or a picture still loading shows none.
     - **The wall clock** tells the computer's time (`RoomClock`). Its hands were modelled at ten to two: it works out twelve and three from them, so a mirrored import still reads right.
     - The "ALL ORDERS DISPATCHED" banner sits over the tickets, clear of player select's 3-2-1 at the screen's centre.
@@ -61,7 +61,7 @@ Online multiplayer is being built in steps (roadmap Phase 3: `docs/superpowers/p
 - **Clients follow the host's menus:** title screen and player select. The host's options and credits show as the title screen.
 - **When everyone's ready, the match starts on every machine** (Phase 3C, below).
 - How it works:
-  - **Network objects.** The host spawns two kinds of small network objects: `OnlineMatch` (its game state, sent one state at a time and in order) and an `OnlinePlayer` per machine (seat, colour, hat, ready).
+  - **Network objects.** The host spawns two kinds of small network objects: `OnlineMatch` (its game state, sent one state at a time and in order) and an `OnlinePlayer` per machine (seat, colour, hat, ready, customizing).
     - The prefabs are in `Assets/Prefabs/Online/`, listed in `Assets/Resources/Online/OnlinePrefabs.asset`.
     - Netcode also lists them in `Assets/DefaultNetworkPrefabs.asset`.
     - Each prefab file saves its Netcode id, and a build uses the saved one. After a script builds or changes an online prefab, use **Tools → Dead on Arrival → Online → Save Network Prefab IDs** (`NetworkPrefabIds`). `OnlinePrefabsTests` checks the saved ids.

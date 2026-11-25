@@ -57,10 +57,12 @@ public class PassTheParcel : TitleSkit
             yield return Beat(0.3f);
         }
 
-        // The back one has it for keeps and shows off, while the middle one wonders where it went
+        // The back one has it for keeps and shows off, cackling, while the middle one looks round for where it went
         Wheelie(cast[2], 28f, 1.0f);
+        cast[2].Emote(GhostAction.Cackle, "Shoulder Shake");
         Say(stage, cast[1], "?", WHITE, 0.9f);
-        yield return Beat(0.4f);
+        cast[1].Emote(GhostAction.SideEye, "Double Take");
+        yield return Beat(0.6f);
 
         // The line tears off, the thief last
         Tween leave = null;

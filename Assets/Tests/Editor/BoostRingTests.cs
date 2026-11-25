@@ -87,6 +87,12 @@ namespace DoA.Tests
             state = GameState.Begin;
             ring.Show(1f, false);
             Assert.IsTrue(ring.ring.enabled, "back in a match");
+
+            // On the results' podium its prompt floated inside a scooter (playtest, 2026-11-25)
+            state = GameState.Results;
+            ring.Show(1f, false);
+            Assert.IsFalse(ring.ring.enabled, "no ring on the podium");
+            Assert.IsFalse(ring.prompt.activeSelf, "no prompt on the podium");
         }
 
         static float Shown(BoostRing ring, string property)
@@ -327,8 +333,38 @@ namespace DoA.Tests
             Assert.IsFalse(ShaderUtil.ShaderHasError(shader), "compiles here");
             Material material = AssetDatabase.LoadAssetAtPath<Material>(BoostRingSetup.MATERIAL);
             Assert.AreSame(shader, material.shader);
-            foreach (string property in new[] { "_Fill", "_Pulse", "_Dashed", "_Fade", "_ColorLow", "_ColorFull", "_BurstScale", "_BurstAlpha", "_RingRadius", "_Thickness" })
+            foreach (string property in new[] { "_Fill", "_Pulse", "_Dashed", "_Fade", "_ColorLow", "_ColorFull", "_BurstScale", "_BurstAlpha", "_RingRadius", "_Thickness",
+                "_Track", "_TrackFloor", "_Backing", "_Outline", "_DepthBias" })
                 Assert.IsTrue(material.HasProperty(property), property);
+            Assert.Greater(material.GetFloat("_DepthBias"), 0.1f, "pulled past low clutter (playtest, 2026-11-25)");
+            Assert.Less(material.GetFloat("_DepthBias"), 0.6f, "but no x-ray through walls");
+        }
+
+        [Test]
+        public void PlayerPrefab_RingIsThickAndLifted_AndStaysInsideItsQuad()
+        {
+            // It got lost among sidewalk bricks and grass, and was too thin (playtest, 2026-11-25)
+            GameObject root = PrefabUtility.LoadPrefabContents(BoostRingSetup.PREFAB);
+            try
+            {
+                BoostRing ring = root.GetComponentInChildren<BoostRing>(true);
+                Assert.IsNotNull(ring);
+                Assert.GreaterOrEqual(ring.thickness, 0.2f, "about twice the old 0.12");
+                Assert.GreaterOrEqual(ring.lift, 0.1f, "off the ground clutter");
+                Assert.Less(BoostRing.OuterReach(ring.thickness), 0.5f, "the outline and the burst fit inside the quad");
+            }
+            finally
+            {
+                PrefabUtility.UnloadPrefabContents(root);
+            }
+        }
+
+        [Test]
+        public void OuterReach_GrowsWithThickness_AndTheBurstIsTheWidest()
+        {
+            float ringRadius = 0.5f / BoostRing.QUAD_SPAN;
+            Assert.Greater(BoostRing.OuterReach(0.4f), BoostRing.OuterReach(0.24f));
+            Assert.AreEqual(ringRadius * 1.6f + ringRadius * 0.24f * 0.5f * 0.7f, BoostRing.OuterReach(0.24f), 1e-5f);
         }
 
         [Test]

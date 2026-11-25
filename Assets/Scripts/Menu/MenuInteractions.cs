@@ -263,7 +263,21 @@ public class MenuInteractions : MonoBehaviour
             return;
 
         RefreshDispatchSliders();
+        if (action == DispatchAction.OpenSliders)
+            customizationSelector.MarkLook();
+        else
+            ShowOffIfRestyled();
         PlayDispatchSound(action == DispatchAction.OpenSliders);
+    }
+
+    ///<summary>
+    /// The pop-up closed with DONE (X again, or B): the ghost shows off its new look, once, if the colour or hat changed
+    /// while it was open. Not on every scroll (playtest, 2026-11-25), and not when A readies from it (the ghost cheers)
+    ///</summary>
+    private void ShowOffIfRestyled()
+    {
+        if (customizationSelector.TakeChanged())
+            customizationSelector.ShowOff();
     }
 
     ///<summary>
@@ -394,6 +408,7 @@ public class MenuInteractions : MonoBehaviour
                 break;
             case DispatchAction.CloseSliders:
                 RefreshDispatchSliders();
+                ShowOffIfRestyled();
                 PlayDispatchSound(false);
                 break;
             case DispatchAction.Unready:
@@ -486,6 +501,10 @@ public class MenuInteractions : MonoBehaviour
     {
         if (!readiedUp)
             soundPool.PlayEnterUI();
+
+        // Readying cheers (PlayerEmotes.Readied): a new look not shown off yet isn't, after it (Dispatch's A from the
+        // pop-up, or Local Play's A before the look settled)
+        customizationSelector.MarkLook();
 
         readyUpText.SetActive(true);
         readiedUp = true;

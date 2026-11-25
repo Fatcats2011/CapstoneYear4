@@ -4,8 +4,9 @@ using UnityEngine;
 using static TitleSkitTools;
 
 /// <summary>
-/// A ghost with a package pulls up centre stage, spins a donut and cheers for itself. A second creeps in behind,
-/// lifts the package off its back while it basks, and zooms away. The show-off notices late, slumps, and gives chase
+/// A ghost with a package pulls up centre stage, spins a donut and dances for itself. A second creeps in behind, rubs
+/// its hands, lifts the package off its back while it basks, and zooms away. The show-off notices late, shakes its
+/// fists, and gives chase
 /// </summary>
 public class ShowOff : TitleSkit
 {
@@ -37,17 +38,18 @@ public class ShowOff : TitleSkit
         star.Drive(0.8f);
         yield return Donut(star, 2f, 1.6f).WaitForCompletion();
 
-        // Pose, with the package on show, back turned to the sneak
+        // A little dance, with the package on show, back turned to the sneak
         star.Drive(0f);
-        star.Cheer();
-        Hop(star, 0.7f, 0.5f);
+        star.Emote(GhostAction.Victory, "Arm Pump Dance");
         yield return Beat(0.6f);
 
-        // The sneak arrives, stops, and has a good look at its prize
+        // The sneak arrives, stops, and rubs its hands over its prize
         yield return creep.WaitForCompletion();
         sneak.Drive(0f);
-        Say(stage, sneak, "?", PINK, 0.7f);
-        yield return Beat(0.5f);
+        sneak.Emote(GhostAction.Scheme, "Hand Rub");
+        yield return Beat(0.8f);
+        sneak.EndEmote(0.2f);
+        yield return Wait(0.2f);
 
         // The lift, and a getaway with its nose in the air
         yield return Steal(sneak, star, 0.3f);
@@ -59,12 +61,11 @@ public class ShowOff : TitleSkit
         yield return Beat(0.4f);
         Say(stage, star, "!", WHITE, 0.9f);
         Squash(star, 0.3f, 0.4f);
-        star.Slump();
-        yield return Beat(0.9f);
+        star.Emote(GhostAction.FistShake, "Arm Flail");
+        yield return Beat(0.8f);
 
         // After it
         star.Drive(1f);
-        Hop(star, 0.5f, 0.3f);
         yield return Ride(star, off, 1.4f, Ease.InQuad).WaitForCompletion();
     }
 }

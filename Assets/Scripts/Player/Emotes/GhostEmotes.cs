@@ -85,6 +85,9 @@ public class GhostEmotes : MonoBehaviour
     /// <summary>The move playing (null when none)</summary>
     public GhostMove Playing => playing;
 
+    /// <summary>The camera the Zzz turn to face (null: the main camera). The title screen's stage films with its own</summary>
+    public Camera View { get; set; }
+
     /// <summary>
     /// A move began on a ghost (each one that actually starts, from Play or a preview). For debug captures (the trailer
     /// tool's emote log): nothing in the game listens
@@ -521,7 +524,7 @@ public class GhostEmotes : MonoBehaviour
 
         if (zeds.Count == 0)
             return;
-        Camera view = Camera.main;
+        Camera view = View != null ? View : Camera.main;
         for (int i = zeds.Count - 1; i >= 0; i--)
         {
             Zed zed = zeds[i];
@@ -576,7 +579,7 @@ public class GhostEmotes : MonoBehaviour
         holder.transform.SetParent(transform, false);
         holder.transform.position = from;
         SetWorldScale(holder.transform, ZZZ_SMALL * u);
-        Camera view = Camera.main;
+        Camera view = View != null ? View : Camera.main;
         if (view != null)
             holder.transform.rotation = view.transform.rotation;
         // The mesh is otherwise built a frame later: a capture that renders in the same frame would see nothing

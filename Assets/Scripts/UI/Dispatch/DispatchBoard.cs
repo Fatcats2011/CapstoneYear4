@@ -19,8 +19,8 @@ public class DispatchBoard : MonoBehaviour
     [SerializeField] GameObject banner;
     [SerializeField] RectTransform[] avatarFrames; // by seat: each player's Steam profile picture, under their podium
     [SerializeField] RawImage[] avatarPictures;    // by seat: the picture inside each frame
-    [SerializeField] GameObject customizePanel;    // X's pop-up: the player's colour and hat sliders, over the board
-    [SerializeField] RawImage customizePicture;    // inside it, the player's own preview (Player N Cam's picture)
+    [Tooltip("The old builder-made customize pop-up, if the scene still has one: kept hidden (CustomizeCard replaced it)")]
+    [SerializeField] GameObject customizePanel;
     [SerializeField] TMP_Text matchmakingLine; // optional: searching, open to anyone (with the seconds to a start), friends only
     [SerializeField] TMP_Text fillPrompt; // optional: the right shoulder's label, what pressing it does (host only)
     [Tooltip("Each ticket sits over its seat's anchor on the room's board (DispatchRoom, its own scene) while the room is up")]
@@ -52,6 +52,10 @@ public class DispatchBoard : MonoBehaviour
     bool fillPromptSet; // fillPromptShown has been applied since the board came up
     DispatchRoomLoader roomLoader;
     RectTransform[] ticketRects;
+    CustomizeCard customizeCard; // X's pop-up, built the first time it opens
+
+    /// <summary>X's pop-up (null until it first opens)</summary>
+    internal CustomizeCard Customize { get { return customizeCard; } }
 
     /// <summary>How the room's scene loads (Unity's, additive; tests set a fake before the board first shows)</summary>
     internal IRoomScenes RoomScenes { get; set; }
@@ -289,7 +293,8 @@ public class DispatchBoard : MonoBehaviour
 
         if (!on)
         {
-            ShowCustomize(null, -1);
+            ShowCustomize(null, null, null);
+            ShowLocalSliders(true);
             SetBanner(false);
             statusShown = null;
             statusKeyed = false;
@@ -487,19 +492,30 @@ public class DispatchBoard : MonoBehaviour
         }
     }
 
-    /// <summary>X's pop-up: open on a seat's preview, cropped to its ghost and sliders (null: closed)</summary>
-    public void ShowCustomize(Texture preview, int seat)
+    /// <summary>
+    /// X's pop-up (CustomizeCard): open on a player's preview, cropped to their ghost, and their choices; device is
+    /// theirs, for DONE's button. A null preview or choices closes it. The old builder-made pop-up stays hidden
+    /// </summary>
+    public void ShowCustomize(Texture preview, CustomizationSelector choices, UnityEngine.InputSystem.InputDevice device)
     {
-        if (customizePicture != null && customizePicture.texture != preview)
-            customizePicture.texture = preview;
-        if (customizePicture != null && preview != null)
-            customizePicture.uvRect = DispatchRules.CustomizeCrop(seat);
-        if (customizePanel != null && customizePanel.activeSelf != (preview != null))
-            customizePanel.SetActive(preview != null);
+        if (customizePanel != null && customizePanel.activeSelf)
+            customizePanel.SetActive(false);
+
+        bool open = preview != null && choices != null;
+        if (customizeCard == null)
+        {
+            if (!open)
+                return;
+            customizeCard = CustomizeCard.Build(root != null ? root.transform : transform);
+        }
+        Transform card = customizeCard.transform;
+        if (open && card.parent != null && card.GetSiblingIndex() != card.parent.childCount - 1)
+            card.SetAsLastSibling(); // over the rest of the board (a prompt built later included)
+        customizeCard.Show(preview, choices, device);
     }
 
-    // A player here with the sliders open (X): their preview pops up over the board (the quarter-screen panels stay hidden,
-    // the board would cover them)
+    // A player here with the sliders open (X): their ghost and choices pop up over the board (the quarter-screen panels
+    // stay hidden, the board would cover them). The sliders themselves never show on Dispatch: the pop-up shows the choices
     void ShowCustomizingView()
     {
         PlayerSelectCanvas canvas = PlayerSelectCanvas.Instance;
@@ -507,18 +523,41 @@ public class DispatchBoard : MonoBehaviour
         if (canvas == null || players == null)
             return;
 
-        int seat = -1;
+        ShowLocalSliders(false);
+        PlayerSlot customizing = null;
+        PlayerUIHandler customizingHandler = null;
         foreach (PlayerSlot slot in players.Roster.LocalPlayers)
         {
             PlayerUIHandler handler = slot.Input == null ? null : slot.Input.GetComponent<PlayerUIHandler>();
             if (handler != null && handler.menuInteractions != null && handler.menuInteractions.DispatchCustomizing)
             {
-                seat = slot.Index;
+                customizing = slot;
+                customizingHandler = handler;
                 break;
             }
         }
         canvas.SetPlayerViews(true, -1);
-        ShowCustomize(seat < 0 ? null : canvas.ViewPicture(seat), seat);
+        if (customizing == null)
+        {
+            ShowCustomize(null, null, null);
+            return;
+        }
+        ShowCustomize(canvas.ViewPicture(customizing.Index), customizingHandler.customizationSelector,
+            customizing.Input.devices.Count > 0 ? customizing.Input.devices[0] : null);
+    }
+
+    // Every local player's sliders shown or hidden (they still work): hidden while the board is up
+    static void ShowLocalSliders(bool shown)
+    {
+        PlayerInstantiate players = PlayerInstantiate.Instance;
+        if (players == null)
+            return;
+        foreach (PlayerSlot slot in players.Roster.LocalPlayers)
+        {
+            PlayerUIHandler handler = slot.Input == null ? null : slot.Input.GetComponent<PlayerUIHandler>();
+            if (handler != null && handler.customizationSelector != null)
+                handler.customizationSelector.SetSlidersShown(shown);
+        }
     }
 
     /// <summary>The "all orders dispatched" banner over the countdown: on or off (on twice leaves one)</summary>

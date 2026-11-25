@@ -605,8 +605,8 @@ public class BallDriving : MonoBehaviour
         Quaternion newRotation = Quaternion.Lerp(scooterModel.parent.localRotation, intendedRotation, MODEL_ROTATION_TIME);
         scooterModel.parent.localRotation = newRotation;
 
-        //Rotates the control object
-        transform.rotation = LevelTurn(transform.eulerAngles, rotationAmount, Time.deltaTime);
+        //Rotates the control object (faster under the Speed mutator, or the turns widen with the speed)
+        transform.rotation = LevelTurn(transform.eulerAngles, rotationAmount * MatchPhysics.TurnScale, Time.deltaTime);
 
         ControlSpeedLines();
 
@@ -687,8 +687,8 @@ public class BallDriving : MonoBehaviour
             totalForce *= GoldRushRules.LODE_CARRY_FORCE;
 
         //The Speed mutator (MATCH RULES): everyone's force, and the top speed steering scales by
-        totalForce *= MatchPhysics.SpeedScale;
-        scaledVelocityMax = accelerationPower * MatchPhysics.SpeedScale * CSV_RATIO;
+        totalForce *= MatchPhysics.SpeedScale * ModeForce;
+        scaledVelocityMax = accelerationPower * MatchPhysics.SpeedScale * ModeForce * CSV_RATIO;
 
         //force ranges from 0 to about ~45-46 at the highest
 
@@ -1593,6 +1593,21 @@ public class BallDriving : MonoBehaviour
         speedLinesMain = potentialPlayerSpeedLineMaterials[playerIndex - 1];
         shownSpeedLines = Comfort.SpeedLines(speedLineValue); // a new material: SetSpeedLines writes changes from here
         speedLinesMain.SetFloat(SpeedLinesRemap, shownSpeedLines);
+    }
+
+    /// <summary>A mode's extra engine for this scooter (Hot Potato's holder: TimedModeRules.POTATO_FORCE), 1 otherwise</summary>
+    internal float ModeForce = 1f;
+
+    /// <summary>
+    /// A mode's boost recharge for this scooter: the usual time times share (Hot Potato's holder recharges faster), or the
+    /// usual time again with 1. Re-applied every frame by ModeVisuals, as dropping packages resets it
+    /// </summary>
+    internal void SetModeRecharge(float share)
+    {
+        float currentElapsedTimeRatio = boostElapsedTime / boostTimerMaxTime;
+        boostRechargeTime = boostRechargeTimeSet * share;
+        RechargeSlowed = share > 1f;
+        SetBoostRatio(currentElapsedTimeRatio);
     }
 
     /// <summary>

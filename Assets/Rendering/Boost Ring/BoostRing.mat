@@ -25,19 +25,23 @@ Material:
     m_TexEnvs: []
     m_Ints: []
     m_Floats:
+    - _Backing: 0.6
     - _BurstAlpha: 0
     - _BurstScale: 1
     - _ChargeGlow: 1
     - _Dashed: 0
     - _Dashes: 24
+    - _DepthBias: 0.3
     - _Fade: 1
     - _Fill: 1
     - _FullGlow: 2.5
+    - _Outline: 0.6
     - _Pulse: 0
     - _PulseGlow: 1.5
     - _RingRadius: 0.2857
-    - _Thickness: 0.0343
-    - _Track: 0.35
+    - _Thickness: 0.0686
+    - _Track: 0.6
+    - _TrackFloor: 0.12
     m_Colors:
     - _ColorFull: {r: 0.27482426, g: 0.07075471, b: 1, a: 1}
     - _ColorLow: {r: 0.2264151, g: 0.2264151, b: 0.2264151, a: 1}

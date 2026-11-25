@@ -140,15 +140,15 @@ public static class DispatchRules
     }
 
     /// <summary>
-    /// The part of a player's preview the customize pop-up shows: the ghost and its colour and hat sliders, without the
-    /// empty sides. Players 1 and 3 have their sliders right of the ghost, players 2 and 4 left
-    /// (PlayerCameraResizer.RelocateCustomizationMenu), so the crop mirrors for them
+    /// The part of a player's preview (Player N Cam's picture) the customize pop-up shows: just their ghost on its
+    /// scooter. The pop-up shows the choices itself, with the sliders hidden (CustomizationSelector.SetSlidersShown).
+    /// The ghost stands in the same place for every seat (only the sliders change sides for players 2 and 4,
+    /// PlayerCameraResizer.RelocateCustomizationMenu), so every seat has the same crop
     /// </summary>
     public static Rect CustomizeCrop(int seat)
     {
-        const float left = 0.27f, width = 0.72f, bottom = 0.03f, height = 0.88f;
-        bool mirrored = (seat + 1) % 2 == 0;
-        return new Rect(mirrored ? 1 - left - width : left, bottom, width, height);
+        const float left = 0.29f, width = 0.55f, bottom = 0.1f, height = 0.77f;
+        return new Rect(left, bottom, width, height);
     }
 
     /// <summary>At least one seat is taken and every taken seat is ready (the host alone can start)</summary>

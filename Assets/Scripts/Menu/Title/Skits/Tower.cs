@@ -5,7 +5,7 @@ using static TitleSkitTools;
 
 /// <summary>
 /// A ghost wobbles slowly across with five packages stacked up behind it. A small quick ghost zips past and whips the
-/// bottom one out; the other four come down all over the floor. The carrier stops, slumps, and trudges off
+/// bottom one out, cackling; the other four come down all over the floor. The carrier stops, sobs, and trudges off
 /// leaving them
 /// </summary>
 public class Tower : TitleSkit
@@ -50,6 +50,7 @@ public class Tower : TitleSkit
         Say(stage, carrier, "!", WHITE, 1.0f);
         yield return Steal(zipper, carrier, 0.3f);
         Wheelie(zipper, 30f, 1.0f);
+        zipper.Emote(GhostAction.Cackle, "Shoulder Shake");
 
         // And down it all comes, bottom first, a little after each other
         float x = carrier.transform.localPosition.x;
@@ -65,15 +66,15 @@ public class Tower : TitleSkit
             yield return Wait(0.12f);
         }
 
-        // The carrier coasts to a stop, takes it in, and slumps
+        // The carrier coasts to a stop, takes it in, and sobs
         carrier.Drive(0f);
-        carrier.Slump();
         Squash(carrier, 0.2f, 0.4f);
         yield return amble.WaitForCompletion();
+        carrier.Emote(GhostAction.Tantrum, "Sob");
         yield return Beat(0.8f);
 
-        // Then trudges off, leaving the mess
+        // Then trudges off, still sobbing, leaving the mess: it pulls away rather than jumping to speed
         carrier.Drive(0.3f);
-        yield return Ride(carrier, off, 3.0f).WaitForCompletion();
+        yield return PullAway(carrier, off, 3.0f).WaitForCompletion();
     }
 }

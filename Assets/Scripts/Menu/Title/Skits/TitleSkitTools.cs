@@ -35,12 +35,12 @@ public static class TitleSkitTools
         return Quaternion.Euler(0f, direction >= 0 ? 90f : -90f, 0f);
     }
 
-    /// <summary>Puts a ghost on the stage, facing along the lane, in its driving pose</summary>
+    /// <summary>Puts a ghost on the stage, facing along the lane, in its driving pose, already leaning into its speed</summary>
     public static void Place(TitleActor actor, float x, float z, int direction, float speed01 = 1f)
     {
         actor.transform.localPosition = new Vector3(x, 0f, z);
         actor.transform.localRotation = Facing(direction);
-        actor.Drive(speed01);
+        actor.Settle(speed01);
     }
 
     /// <summary>Rides along the lane to x</summary>
@@ -61,6 +61,51 @@ public static class TitleSkitTools
         return actor.transform.DOLocalMove(new Vector3(toX, 0f, toZ), Ridden(seconds)).SetEase(ease).SetLink(actor.gameObject);
     }
 
+    /// <summary>
+    /// Rides along the lane from where it is at a steady speed (units a second, as seen: not paced) to brakeAt, then
+    /// brakes evenly to a stop at stopAt. One move, so the speed never jumps where the cruise hands over to the brake, as
+    /// it does between two tweens. CruiseTime says when the braking starts
+    /// </summary>
+    public static Tween CruiseAndBrake(TitleActor actor, float brakeAt, float stopAt, float speed)
+    {
+        float from = actor.transform.localPosition.x;
+        float cruise = CruiseTime(actor, brakeAt, speed);
+        float brake = 2f * Mathf.Abs(stopAt - brakeAt) / speed;
+        float onward = Mathf.Sign(brakeAt - from), slowing = Mathf.Sign(stopAt - brakeAt);
+        float time = 0f;
+        return DOTween.To(() => time, t =>
+            {
+                time = t;
+                Vector3 at = actor.transform.localPosition;
+                if (t <= cruise)
+                {
+                    at.x = from + onward * speed * t;
+                }
+                else
+                {
+                    float s = Mathf.Min(t - cruise, brake);
+                    at.x = brakeAt + slowing * (speed * s - speed * s * s / (2f * brake));
+                }
+                actor.transform.localPosition = at;
+            }, cruise + brake, cruise + brake)
+            .SetEase(Ease.Linear).SetTarget(actor.transform).SetLink(actor.gameObject);
+    }
+
+    /// <summary>Seconds from where it is to brakeAt at this speed: when CruiseAndBrake starts braking</summary>
+    public static float CruiseTime(TitleActor actor, float brakeAt, float speed)
+    {
+        return Mathf.Abs(brakeAt - actor.transform.localPosition.x) / speed;
+    }
+
+    /// <summary>
+    /// Rides off along the lane to x from a standstill: pulls away and gathers speed, rather than jumping straight to it.
+    /// Takes as long as a ride asked to take this long
+    /// </summary>
+    public static Tween PullAway(TitleActor actor, float toX, float seconds)
+    {
+        return Ride(actor, toX, seconds, Ease.InSine);
+    }
+
     /// <summary>Turns to face the other way along the lane</summary>
     public static Tween Turn(TitleActor actor, int direction, float seconds)
     {
@@ -74,46 +119,99 @@ public static class TitleSkitTools
             .SetEase(ease).SetLink(actor.gameObject);
     }
 
-    /// <summary>Lifts the nose and sets it down again</summary>
+    /// <summary>
+    /// A tween of 0 to 1 over this long that puts f(share, the value it started from) on one of the tilt's channels
+    /// (TitleActor.Pitch or Roll). It takes the channel over from whatever was moving it, from where that left it
+    /// </summary>
+    static Tween Channel(TitleActor actor, bool pitch, float seconds, System.Func<float, float, float> f)
+    {
+        Tween old = pitch ? actor.PitchTween : actor.RollTween;
+        if (old != null && old.IsActive())
+            old.Kill();
+        float from = pitch ? actor.Pitch : actor.Roll;
+        float share = 0f;
+        Tween tween = DOTween.To(() => share, v =>
+            {
+                share = v;
+                if (pitch)
+                    actor.Pitch = f(v, from);
+                else
+                    actor.Roll = f(v, from);
+            }, 1f, Mathf.Max(0.01f, seconds))
+            .SetEase(Ease.Linear).SetTarget(actor.Model).SetLink(actor.gameObject);
+        if (pitch)
+            actor.PitchTween = tween;
+        else
+            actor.RollTween = tween;
+        return tween;
+    }
+
+    /// <summary>0 to 1 with no jump in speed at either end (clamped)</summary>
+    static float Smooth(float u)
+    {
+        u = Mathf.Clamp01(u);
+        return u * u * (3f - 2f * u);
+    }
+
+    /// <summary>
+    /// Lifts the nose and sets it down again: up briskly, held a moment, down softly, and a small bump as the wheel lands
+    /// </summary>
     public static Tween Wheelie(TitleActor actor, float degrees, float seconds)
     {
-        return actor.Model.DOLocalRotate(new Vector3(-degrees, 0f, 0f), seconds * 0.5f)
-            .SetEase(Ease.OutQuad).SetLoops(2, LoopType.Yoyo).SetLink(actor.gameObject);
+        return Channel(actor, true, seconds, (u, from) =>
+            {
+                float up = Smooth(u / 0.35f);
+                float down = Smooth((u - 0.55f) / 0.45f);
+                return Mathf.Lerp(from, degrees, up) * (1f - down);
+            })
+            .OnComplete(() => actor.Squash(0.08f, 0.35f));
     }
 
     /// <summary>Tips the nose up (or down, negative) and keeps it there</summary>
     public static Tween Pitch(TitleActor actor, float degrees, float seconds)
     {
-        return actor.Model.DOLocalRotate(new Vector3(-degrees, 0f, 0f), seconds).SetEase(Ease.OutQuad).SetLink(actor.gameObject);
+        return Channel(actor, true, seconds, (u, from) => Mathf.Lerp(from, degrees, Smooth(u)));
     }
 
-    /// <summary>Rocks from side to side, back to level at the end</summary>
+    /// <summary>
+    /// Rocks from side to side, level again at the end. It rocks in from wherever it leans and dies away at the end, so
+    /// it never jerks over to one side to start or snaps level to finish
+    /// </summary>
     public static Tween Wobble(TitleActor actor, float degrees, float period, int rocks)
     {
-        actor.Model.localRotation = Quaternion.Euler(0f, 0f, -degrees);
-        return actor.Model.DOLocalRotate(new Vector3(0f, 0f, degrees), period)
-            .SetEase(Ease.InOutSine).SetLoops(rocks, LoopType.Yoyo).SetLink(actor.gameObject)
-            .OnComplete(() => actor.Model.localRotation = Quaternion.identity);
+        rocks = Mathf.Max(1, rocks);
+        float edge = Mathf.Min(0.3f, 1f / rocks);
+        return Channel(actor, false, period * rocks, (u, from) =>
+            {
+                float swing = degrees * Mathf.Sin(Mathf.PI * rocks * u) * Smooth(u / edge) * Smooth((1f - u) / edge);
+                return from * (1f - Smooth(u / edge)) + swing;
+            });
     }
 
-    /// <summary>A little jump on the spot</summary>
+    /// <summary>Leans over (+ to its left) and stays leaning; 0 is level again</summary>
+    public static Tween Lean(TitleActor actor, float degrees, float seconds)
+    {
+        return Channel(actor, false, seconds, (u, from) => Mathf.Lerp(from, degrees, Smooth(u)));
+    }
+
+    /// <summary>A little jump on the spot: up, and down onto its wheels with a small squash, wherever it started from</summary>
     public static Tween Hop(TitleActor actor, float height, float seconds)
     {
-        return actor.Model.DOLocalMoveY(actor.Model.localPosition.y + height, seconds * EMOTE_PACE * 0.5f)
-            .SetEase(Ease.OutQuad).SetLoops(2, LoopType.Yoyo).SetLink(actor.gameObject);
+        if (actor.HopTween != null && actor.HopTween.IsActive())
+            actor.HopTween.Kill();
+        float half = seconds * EMOTE_PACE * 0.5f;
+        Sequence hop = DOTween.Sequence().SetTarget(actor.Model).SetLink(actor.gameObject);
+        hop.Append(actor.Model.DOLocalMoveY(height, half).SetEase(Ease.OutQuad));
+        hop.Append(actor.Model.DOLocalMoveY(0f, half).SetEase(Ease.InQuad));
+        hop.OnComplete(() => actor.Squash(0.12f, 0.35f));
+        actor.HopTween = hop;
+        return hop;
     }
 
     /// <summary>Squashes and springs back: a bump, a start, a surprise</summary>
-    public static Tween Squash(TitleActor actor, float amount = 0.25f, float seconds = 0.35f)
+    public static void Squash(TitleActor actor, float amount = 0.25f, float seconds = 0.35f)
     {
-        return actor.Model.DOPunchScale(new Vector3(amount, -amount, amount), seconds * EMOTE_PACE, 6, 0.6f).SetLink(actor.gameObject);
-    }
-
-    /// <summary>Flies across the stage in an arc (the ghost's root)</summary>
-    public static Tween Leap(TitleActor actor, float toX, float toZ, float height, float seconds)
-    {
-        return actor.transform.DOLocalJump(new Vector3(toX, 0f, toZ), height, 1, seconds)
-            .SetEase(Ease.Linear).SetLink(actor.gameObject);
+        actor.Squash(amount, seconds * EMOTE_PACE);
     }
 
     /// <summary>Throws a loose package in an arc to a point on the stage</summary>
@@ -150,16 +248,19 @@ public static class TitleSkitTools
         thief.Grab();
         Squash(victim, 0.18f, 0.3f);
 
-        // It flies to where the thief's rack will be: followed each frame, since the thief is moving
+        // It flies to where the thief's rack will be: followed each frame, since the thief is moving. It turns over
+        // twice on the way and comes down square on the rack, so it doesn't snap straight as it lands
         Vector3 from = package.position;
+        Quaternion turned = package.rotation;
         float height = 1.3f;
-        for (float t = 0f; t < seconds; t += Time.deltaTime)
+        for (float t = Time.deltaTime; t < seconds; t += Time.deltaTime)
         {
             float k = t / seconds;
+            k = Mathf.Lerp(k, k * k * (3f - 2f * k), 0.5f);   // a little softer off the victim and onto the rack
             Vector3 at = Vector3.Lerp(from, thief.RackPoint(package), k);
             at.y += Mathf.Sin(k * Mathf.PI) * height;
             package.position = at;
-            package.Rotate(0f, 0f, 720f * Time.deltaTime, Space.Self);
+            package.rotation = Quaternion.Slerp(turned, thief.Model.rotation, k) * Quaternion.Euler(0f, 0f, 720f * k);
             yield return null;
         }
         thief.Carry(package);

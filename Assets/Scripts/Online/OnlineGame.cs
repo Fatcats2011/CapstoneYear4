@@ -79,6 +79,7 @@ public class OnlineGame : MonoBehaviour
         public int Hat = -1;
         public bool Ready;  // the readiness applied here (PlayerInstantiate.SetRemoteReady)
         public bool Forced; // host: made ready for the automatic start, whatever their own machine says
+        public readonly RestyleWatch Restyle = new RestyleWatch(); // when their ghost shows off a new look: as their pop-up closes
     }
 
     OnlineSession session;
@@ -839,8 +840,10 @@ public class OnlineGame : MonoBehaviour
             if (slot == null || !slot.IsLocal)
                 continue;
 
-            CustomizationSelector picked = slot.Input.GetComponent<PlayerUIHandler>().customizationSelector;
+            PlayerUIHandler handler = slot.Input.GetComponent<PlayerUIHandler>();
+            CustomizationSelector picked = handler.customizationSelector;
             localPlayer.Share(picked.ColourIndex, picked.HatIndex, players.IsReady(slot.Index));
+            localPlayer.ShareCustomizing(handler.menuInteractions != null && handler.menuInteractions.DispatchCustomizing);
             localPlayer.ShareName(myName);
             localPlayer.ShareSteamId(myId);
         }
@@ -854,11 +857,10 @@ public class OnlineGame : MonoBehaviour
             OnlinePlayer player = pair.Key;
             RemotePlayer shown = pair.Value;
 
-            // A change after the first look shows off the ghost's new colour or hat (PlayerEmotes, cosmetic)
-            bool restyled = false;
+            // Their colour and hat show as they scroll; their ghost shows the new look off once, as their customize pop-up
+            // closes with DONE, if it changed while it was open (PlayerEmotes, cosmetic)
             if (player.Colour != shown.Colour)
             {
-                restyled |= PlayerEmoteRules.NewLook(shown.Colour, player.Colour);
                 shown.Colour = player.Colour;
                 PlayerColorInformationSO colour = Pick(choices.Colours, player.Colour);
                 if (colour != null)
@@ -867,13 +869,12 @@ public class OnlineGame : MonoBehaviour
 
             if (player.Hat != shown.Hat)
             {
-                restyled |= PlayerEmoteRules.NewLook(shown.Hat, player.Hat);
                 shown.Hat = player.Hat;
                 PlayerHatInformationSO hat = Pick(choices.Hats, player.Hat);
                 if (hat != null)
                     shown.Avatar.ShowHat(hat);
             }
-            if (restyled)
+            if (shown.Restyle.Closed(player.Customizing, player.Colour, player.Hat, player.Ready))
             {
                 PlayerEmotes emotes = PlayerEmotes.Of(shown.Avatar != null ? shown.Avatar.gameObject : null);
                 if (emotes != null)

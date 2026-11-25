@@ -11,7 +11,7 @@ namespace DoA.Tests
 
         //                      Speed LowG Waves WaveLen Round Steals Golden Bots
         [TestCase(GameMode.Standard, S, S, S, S, H, S, S, S)]
-        [TestCase(GameMode.GoldRush, S, S, S, S, H, L, S, S)]
+        [TestCase(GameMode.GoldRush, S, S, S, S, H, L, H, S)]
         [TestCase(GameMode.KingsCrown, S, S, H, H, S, L, H, S)]
         [TestCase(GameMode.Infection, S, S, H, H, S, H, H, S)]
         [TestCase(GameMode.HotPotato, S, S, H, H, H, L, H, S)]

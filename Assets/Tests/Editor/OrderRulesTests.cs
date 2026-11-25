@@ -165,6 +165,28 @@ namespace DoA.Tests
             Assert.IsFalse(robbed.HasGoldenOrder);
         }
 
+        /// <summary>
+        /// The direction arrow sits over the package as drawn, a gap above its top however tall it is (a swollen stolen
+        /// one, the Mother Lode), bobbing a little on its own: it used to bob into the package (playtest, 2026-11-25)
+        /// </summary>
+        [Test]
+        public void ArrowSpot_OverThePackagesTop_ByTheGap_PlusItsBob()
+        {
+            Bounds small = new Bounds(new Vector3(1f, 2f, 3f), Vector3.one * 0.8f);
+            Bounds tall = new Bounds(new Vector3(1f, 2f, 3f), Vector3.one * 2f);
+            for (float t = 0f; t < Order.ARROW_BOB_SECONDS * 2f; t += 0.1f)
+            {
+                Vector3 at = Order.ArrowSpot(small, t);
+                Assert.AreEqual(1f, at.x, 1e-5f, "over its middle");
+                Assert.AreEqual(3f, at.z, 1e-5f);
+                float over = at.y - small.max.y;
+                Assert.GreaterOrEqual(over, Order.ARROW_GAP - 1e-5f, "never into it");
+                Assert.LessOrEqual(over, Order.ARROW_GAP + Order.ARROW_BOB + 1e-5f, "a gentle bob");
+                Assert.AreEqual(over, Order.ArrowSpot(tall, t).y - tall.max.y, 1e-5f, "the same gap over a bigger one");
+            }
+            Assert.AreNotEqual(Order.ArrowSpot(small, 0f).y, Order.ArrowSpot(small, Order.ARROW_BOB_SECONDS * 0.5f).y, "it bobs");
+        }
+
         // The golden order, held by a player, with the parts letting go of it touches (Awake sets these in a real order)
         Order GoldenOrderHeldBy(OrderHandler player)
         {
