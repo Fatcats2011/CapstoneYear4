@@ -10,7 +10,8 @@ using UnityEngine;
 ///   The host's own ghosts heard the bump already (PlayerEmotes.HearBump).
 /// - Every machine shows another machine's player's one-shots on their scooter (Show): its sound, quieter the farther it
 ///   is from this machine's player (RemoteSound), a full horn's flash, a rise's gravestone and sparkle at its point, and
-///   a d-pad emote on their ghost (PlayerEmotes.ShowPad). Dizzy plays on any player's ghost here, this machine's too.
+///   a d-pad emote on their ghost (PlayerEmotes.ShowPad), and a wall hit's sway on their ghost (PlayerEmotes.ShowWallBump,
+///   as hard as its speed). Dizzy plays on any player's ghost here, this machine's too.
 ///   A one-shot is about the moment it happens, so it doesn't wait with the host's states (HostQueue).
 /// - The host's match clock rings on every client (ClockCue): a new wave's bells, and time up, when each client's player
 ///   stops too (OrderManager.FollowHostClockCue).
@@ -150,6 +151,15 @@ public class OnlineCues : MonoBehaviour
             Respawn respawn = player.GetComponent<BallDriving>().Sphere.GetComponent<Respawn>();
             if (point != null && respawn != null)
                 respawn.ShowRise(point);
+            return;
+        }
+
+        // A wall hit: their ghost sways, as hard as they hit (no sound: its own machine's sparks and thud aren't cues)
+        if (cue.Kind == CueKind.WallBump)
+        {
+            PlayerEmotes ghost = player.GetComponentInParent<PlayerEmotes>();
+            if (ghost != null)
+                ghost.ShowWallBump(ScooterCue.WallSpeed(cue));
             return;
         }
 

@@ -73,6 +73,22 @@ namespace DoA.Tests
             return ring;
         }
 
+        [Test]
+        public void OutsideAMatch_NoRingAndNoPrompt()
+        {
+            // In the lobby its button prompt sat inside the scooter on Dispatch's stand (playtest, 2026-11-20)
+            BoostRing ring = NewRing(out GameObject _);
+            state = GameState.PlayerSelect;
+            ring.Show(1f, false);
+            ring.Show(1f, false);
+            Assert.IsFalse(ring.ring.enabled, "no ring in the lobby");
+            Assert.IsFalse(ring.prompt.activeSelf, "no prompt in the lobby");
+
+            state = GameState.Begin;
+            ring.Show(1f, false);
+            Assert.IsTrue(ring.ring.enabled, "back in a match");
+        }
+
         static float Shown(BoostRing ring, string property)
         {
             MaterialPropertyBlock block = new MaterialPropertyBlock();

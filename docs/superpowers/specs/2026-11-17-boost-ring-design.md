@@ -11,7 +11,7 @@ New players don't notice the horn glow. They can't tell when boost will be back,
 - Small and quiet while charging, loudest when full (fits "added UI stays small").
 
 ## Non-goals
-- No HUD bar. The existing `hornSliderLeft/Right` sliders are left as they are.
+- No HUD bar. The old horn charge bars at the bottom of the screen were removed on 2026-11-23 (user): the ring replaces them.
 - No change to boost rules or timings.
 - Online: other machines' scooters get no ring. Their charge isn't synced, and their horns already flash through `CueKind.HornReady`. Online CPU bots get no ring either (nothing drives their gauge).
 

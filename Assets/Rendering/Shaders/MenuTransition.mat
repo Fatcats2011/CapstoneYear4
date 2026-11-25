@@ -24,19 +24,19 @@ Material:
     serializedVersion: 3
     m_TexEnvs:
     - _BlackCamera:
-        m_Texture: {fileID: 8400000, guid: 21e126844943e81498563d191a23f6fc, type: 2}
+        m_Texture: {fileID: 0}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _ColorCamera:
-        m_Texture: {fileID: 8400000, guid: 8a27938015a1c8042b026b9e3d851753, type: 2}
+        m_Texture: {fileID: 0}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _MainTex:
-        m_Texture: {fileID: 8400000, guid: 8a27938015a1c8042b026b9e3d851753, type: 2}
+        m_Texture: {fileID: 0}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _RevealColorTex:
-        m_Texture: {fileID: 8400000, guid: 21e126844943e81498563d191a23f6fc, type: 2}
+        m_Texture: {fileID: 0}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _TransitionTexture:

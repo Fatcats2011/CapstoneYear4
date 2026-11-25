@@ -565,6 +565,72 @@ namespace DoA.Tests
                 Assert.IsFalse(hatLook.forceRenderingOff, "the hat is back");
         }
 
+        /// <summary>
+        /// A colour change mid fade (a join's Materialise in the dispatch room) reads Renderer.materials, which copies
+        /// every slot, the covered eyes and horns too: once the fade is over the eyes and horns still wear their own
+        /// materials, by slot, the new colour stays on, and a plain material put in meanwhile (a horn glow) stays too
+        /// </summary>
+        [Test]
+        public void Fade_AColourChangeMidFade_StillGivesTheEyesBack()
+        {
+            GhostRig rig = GhostRig.Find(animator);
+            SkinnedMeshRenderer body = animator.transform.Find("Player_Model").GetComponent<SkinnedMeshRenderer>();
+            Material[] slots = body.sharedMaterials;
+            int plain = System.Array.FindIndex(slots, m => m != null && !m.HasProperty("_DitherThreshold"));
+            int otherPlain = System.Array.FindLastIndex(slots, m => m != null && !m.HasProperty("_DitherThreshold"));
+            Assert.GreaterOrEqual(plain, 0, "a slot that can't dither (eyes, horns)");
+            List<Material> made = new List<Material>();
+            try
+            {
+                rig.Apply(Only(p => p.Pose.Fade = 0.6f));
+                Assert.IsTrue(body.sharedMaterials[plain].HasProperty("_DitherThreshold"), "covered while faded");
+
+                // As Renderer.materials then a new colour in slot 0: every slot a copy
+                Material[] copies = body.sharedMaterials.Select(m => m != null ? new Material(m) : null).ToArray();
+                made.AddRange(copies.Where(m => m != null));
+                Material colour = new Material(slots[0]) { name = "New Colour" };
+                made.Add(colour);
+                copies[0] = colour;
+                body.sharedMaterials = copies;
+
+                // A horn glow put back in mid fade: covered while the fade lasts, kept after
+                Material glow = null;
+                if (otherPlain != plain)
+                {
+                    glow = new Material(slots[otherPlain]) { name = "Horn Glow" };
+                    made.Add(glow);
+                    Material[] now = body.sharedMaterials;
+                    now[otherPlain] = glow;
+                    body.sharedMaterials = now;
+                    rig.Apply(Only(p => p.Pose.Fade = 0.7f));
+                    Assert.IsTrue(body.sharedMaterials[otherPlain].HasProperty("_DitherThreshold"), "the glow is covered too");
+                }
+
+                rig.Clear();
+                Material[] after = body.sharedMaterials;
+                Assert.AreSame(colour, after[0], "the new colour stays");
+                for (int j = 1; j < slots.Length; j++)
+                {
+                    Material wanted = j == otherPlain && glow != null ? glow : slots[j];
+                    if (slots[j] != null && slots[j].HasProperty("_DitherThreshold"))
+                        continue;
+                    Assert.AreSame(wanted, after[j], "slot " + j + " wears its own material again");
+                }
+
+                // And again with nothing changing: the cover comes and goes cleanly
+                body.sharedMaterials = after;
+                rig.Apply(Only(p => p.Pose.Fade = 0.5f));
+                rig.Clear();
+                CollectionAssert.AreEqual(after, body.sharedMaterials, "a second fade puts the same slots back");
+            }
+            finally
+            {
+                body.sharedMaterials = slots;
+                foreach (Material material in made)
+                    Object.DestroyImmediate(material);
+            }
+        }
+
         [Test]
         public void Play_NoVersions_Lower_Higher()
         {
@@ -579,6 +645,72 @@ namespace DoA.Tests
             Assert.IsFalse(emotes.Play(GhostAction.SeeingStars), "lower doesn't interrupt");
             Assert.IsFalse(emotes.Play((GhostAction)999), "an action with no versions");
             Assert.AreEqual(GhostAction.Cackle, emotes.Playing.Action);
+        }
+
+        /// <summary>
+        /// Landing mid Wheee: EaseOut takes it (body and hands) back to rest over the seconds asked, not snapping and not
+        /// playing on to its end. Only the action playing eases out, and only once
+        /// </summary>
+        [Test]
+        public void EaseOut_EndsTheMoveSoon_Smoothly()
+        {
+            GhostEmotes emotes = GhostEmotes.On(animator, new System.Random(4));
+            List<Snap> before = Take();
+            GhostMove arms = GhostMoves.All.First(m => m.Name == "Arms Up");
+            emotes.Play(arms, 1f);
+            for (int i = 0; i < 12; i++)
+                emotes.Step(1f / 30f);
+            Assert.IsFalse(emotes.EaseOut(GhostAction.Bored, 0.25f), "not the action playing");
+            Assert.IsTrue(emotes.EaseOut(GhostAction.Wheee, 0.25f));
+            Assert.IsFalse(emotes.EaseOut(GhostAction.Wheee, 0.25f), "already easing out");
+            float weight = emotes.ClipWeight;
+            Vector3 torso = emotes.Rig.Torso.position;
+            Vector3 rest = before.First(s => s.transform == emotes.Rig.Torso).position;
+            Vector3 restWorld = emotes.Rig.Torso.parent.TransformPoint(rest);
+            emotes.Step(1f / 30f);
+            Assert.IsNotNull(emotes.Playing, "not a snap");
+            Assert.Greater((emotes.Rig.Torso.position - restWorld).magnitude, 0.2f * (torso - restWorld).magnitude,
+                "the body doesn't snap home");
+            // The hands (when the layer is up: an Animator bound in the test)
+            if (weight > 0f)
+            {
+                Assert.Less(emotes.ClipWeight, weight + 1e-4f, "the hands ease down");
+                Assert.Greater(emotes.ClipWeight, 0.5f * weight, "not all at once");
+            }
+            for (int i = 0; i < 8; i++)
+                emotes.Step(1f / 30f);
+            Assert.IsNull(emotes.Playing, "over a quarter of a second later, long before its " + arms.Length + " s");
+            for (int i = 0; i < 6; i++)
+                emotes.Step(1f / 30f);
+            Assert.AreEqual(0f, emotes.ClipWeight, "the hands back");
+            AssertSame(before, "after easing out");
+        }
+
+        /// <summary>A wall hit's sway plays smaller for a softer hit: the same pose, eased toward rest by the strength</summary>
+        [Test]
+        public void Play_AtAStrength_ScalesThePose()
+        {
+            GhostEmotes emotes = GhostEmotes.On(animator, new System.Random(2));
+            Assert.IsTrue(emotes.Play(GhostAction.WallBump, 0.5f));
+            GhostMove move = emotes.Playing;
+            Assert.AreEqual(GhostAction.WallBump, move.Action);
+            Transform head = animator.transform.Find(GhostRig.HEAD);
+            Quaternion rest = head.rotation;
+            const int FRAMES = 12;  // 0.2 s in: swaying
+            for (int i = 0; i < FRAMES; i++)
+                emotes.Step(1f / 60f);
+            float half = Quaternion.Angle(rest, head.rotation);
+            emotes.Stop();
+            Assert.IsFalse(emotes.Play(GhostAction.WallBump, 1f), "cooling down");
+
+            // The same version in full (which side it turns doesn't change how far)
+            emotes.Play(move, 1f);
+            for (int i = 0; i < FRAMES; i++)
+                emotes.Step(1f / 60f);
+            float full = Quaternion.Angle(rest, head.rotation);
+            emotes.Stop();
+            Assert.Greater(full, 3f, "it sways");
+            Assert.AreEqual(0.5f * full, half, 0.15f * full, "half as far at half strength");
         }
 
         [Test]

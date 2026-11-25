@@ -16,7 +16,9 @@ using UnityEngine;
 /// up to 1 + GhostRig.HAND_SWELL times their size, so they read at game size (GhostRig.SetHands, back exactly at 0).
 /// A move that interrupts another eases the body over from where the interrupted one left it (BLEND); an entrance
 /// starts hidden at once instead.
-/// A move with a Prop has it in its hands (GhostProps: the parcel it carries, through Carry, or a crown)
+/// A move with a Prop has it in its hands (GhostProps: the parcel it carries, through Carry, or a crown).
+/// A move can play smaller (Play's strength: a wall hit's sway by its speed), and end early, easing back to rest
+/// (EaseOut: a Wheee as the ghost lands)
 /// </summary>
 public class GhostEmotes : MonoBehaviour
 {
@@ -27,7 +29,7 @@ public class GhostEmotes : MonoBehaviour
     public const string EMPTY = "Empty";
     static readonly int EMPTY_HASH = Animator.StringToHash(EMPTY);
     /// <summary>Seconds: the layer's weight eases up over the first of these, down over the last, and out on an interrupt</summary>
-    internal const float CLIP_IN = 0.12f, CLIP_OUT = 0.15f, CLIP_CUT = 0.1f;
+    internal const float CLIP_IN = 0.25f, CLIP_OUT = 0.2f, CLIP_CUT = 0.1f;
     /// <summary>Seconds: one clip move's hands cross-fade into the next's over this, when the layer is already up</summary>
     internal const float CLIP_CROSS = 0.12f;
     /// <summary>Above this layer weight a clip that follows another cross-fades instead of starting at once</summary>
@@ -52,6 +54,9 @@ public class GhostEmotes : MonoBehaviour
     float time;     // seconds into the move
     float side;     // +1 or -1: which way it turns
     bool resting;   // the move just ended: put the rest pose on once more
+    float strength = 1f;    // how big the move plays: its pose eased this far from rest (1: in full)
+    float easeAt = -1f;     // seconds into the move it began easing out early (-1: it plays to its end)
+    float easeFor;          // seconds that ease takes
 
     Animator animator;
     int layer = -2;         // the Emotes layer's index: -1 none, -2 not looked up yet
@@ -148,6 +153,14 @@ public class GhostEmotes : MonoBehaviour
     /// </summary>
     public bool Play(GhostAction action)
     {
+        return Play(action, 1f);
+    }
+
+    /// <summary>
+    /// As Play(action), at a size: its pose eased from rest by strength (0 to 1; a wall hit's sway by its speed)
+    /// </summary>
+    public bool Play(GhostAction action, float size)
+    {
         GhostMove[] moves = GhostMoves.For(action);
         if (!CanPlay(action))
             return false;
@@ -155,7 +168,30 @@ public class GhostEmotes : MonoBehaviour
         if (pick < 0)
             return false;
         Begin(moves[pick], random.Next(2) == 0 ? -1f : 1f);
+        strength = Mathf.Clamp01(size);
         return true;
+    }
+
+    /// <summary>
+    /// Ends the action early, when it plays: its pose (and hand clip) eases back to rest over this many seconds from now,
+    /// and it ends then (a Wheee as the ghost lands). False when it isn't playing, or already easing out
+    /// </summary>
+    public bool EaseOut(GhostAction action, float seconds)
+    {
+        if (playing == null || playing.Action != action || easeAt >= 0f)
+            return false;
+        float left = playing.Length - time;
+        if (left <= seconds)
+            return false;
+        easeAt = time;
+        easeFor = Mathf.Max(1e-3f, seconds);
+        return true;
+    }
+
+    /// <summary>0 to 1: how far an early ease out has gone (0 when there's none)</summary>
+    float Eased()
+    {
+        return easeAt >= 0f ? Mathf.SmoothStep(0f, 1f, (time - easeAt) / easeFor) : 0f;
     }
 
     /// <summary>
@@ -235,6 +271,8 @@ public class GhostEmotes : MonoBehaviour
         time = 0f;
         side = turnSide;
         resting = false;
+        strength = 1f;
+        easeAt = -1f;
         nextZed = 0f;
         cooldowns[(int)move.Action] = GhostEmoteRules.Cooldown(move.Action);
 
@@ -275,6 +313,7 @@ public class GhostEmotes : MonoBehaviour
     public void Stop()
     {
         playing = null;
+        easeAt = -1f;
         resting = false;
         blending = false;
         shown = GhostPose.Rest;
@@ -309,7 +348,7 @@ public class GhostEmotes : MonoBehaviour
         if (clipPlaying && playing != null)
         {
             float up = Mathf.Lerp(weightFrom, 1f, Mathf.SmoothStep(0f, 1f, time / CLIP_IN));
-            goal = up * Mathf.SmoothStep(0f, 1f, (playing.Length - time) / CLIP_OUT);
+            goal = up * Mathf.SmoothStep(0f, 1f, (playing.Length - time) / CLIP_OUT) * (1f - Eased());
         }
         else
         {
@@ -374,10 +413,11 @@ public class GhostEmotes : MonoBehaviour
         if (playing == null)
             return;
         time += dt;
-        if (time >= playing.Length)
+        if (time >= playing.Length || (easeAt >= 0f && time >= easeAt + easeFor))
         {
             playing = null;
             resting = true;
+            easeAt = -1f;
         }
     }
 
@@ -393,6 +433,10 @@ public class GhostEmotes : MonoBehaviour
         if (playing != null)
         {
             GhostPose pose = playing.At(time / playing.Length, side);
+            if (strength < 1f)
+                pose = GhostPose.Lerp(GhostPose.Rest, pose, strength);
+            if (easeAt >= 0f)
+                pose = GhostPose.Lerp(pose, GhostPose.Rest, Eased());
             if (blending)
             {
                 if (time >= BLEND)
@@ -436,6 +480,7 @@ public class GhostEmotes : MonoBehaviour
         playing = null;
         resting = false;
         blending = false;
+        easeAt = -1f;
         shown = GhostPose.Rest;
         clipOn = false;
         clipPlaying = false;

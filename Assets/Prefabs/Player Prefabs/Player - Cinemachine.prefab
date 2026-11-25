@@ -983,6 +983,12 @@ MonoBehaviour:
   WestFaceEvent:
     m_PersistentCalls:
       m_Calls: []
+  LeftShoulderEvent:
+    m_PersistentCalls:
+      m_Calls: []
+  RightShoulderEvent:
+    m_PersistentCalls:
+      m_Calls: []
   LeftPadEvent:
     m_PersistentCalls:
       m_Calls: []
@@ -2619,14 +2625,6 @@ PrefabInstance:
       propertyPath: m_Name
       value: PlayerAvatar
       objectReference: {fileID: 0}
-    - target: {fileID: 4526571285755507798, guid: fe705839d57ef804db9b99fe872215f2, type: 3}
-      propertyPath: hornSliderLeft
-      value: 
-      objectReference: {fileID: 110003888640411645}
-    - target: {fileID: 4526571285755507798, guid: fe705839d57ef804db9b99fe872215f2, type: 3}
-      propertyPath: hornSliderRight
-      value: 
-      objectReference: {fileID: 7645400703520107787}
     - target: {fileID: 8118744050130269251, guid: fe705839d57ef804db9b99fe872215f2, type: 3}
       propertyPath: m_LocalPosition.x
       value: 0
@@ -3196,17 +3194,6 @@ PrefabInstance:
       addedObject: {fileID: 890173192872275766}
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 477d1cb7b9311fa479eeb18deb2a7c81, type: 3}
---- !u!114 &110003888640411645 stripped
-MonoBehaviour:
-  m_CorrespondingSourceObject: {fileID: 3470031458764411373, guid: 477d1cb7b9311fa479eeb18deb2a7c81, type: 3}
-  m_PrefabInstance: {fileID: 3580019541855933968}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 3e286de84156d8746b0880081925235c, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
 --- !u!1 &195588922581166810 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 3681718914090548426, guid: 477d1cb7b9311fa479eeb18deb2a7c81, type: 3}
@@ -3274,17 +3261,6 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: f4688fdb7df04437aeb418b961361dc5, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
---- !u!114 &7645400703520107787 stripped
-MonoBehaviour:
-  m_CorrespondingSourceObject: {fileID: 6608790152377662235, guid: 477d1cb7b9311fa479eeb18deb2a7c81, type: 3}
-  m_PrefabInstance: {fileID: 3580019541855933968}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 3e286de84156d8746b0880081925235c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
 --- !u!4 &8376488116330561128 stripped

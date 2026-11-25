@@ -751,7 +751,7 @@ public class OnlineGame : MonoBehaviour
                 continue;
             }
 
-            // The horn gauge's sliders live in a view, which a CPU driver has none of
+            // The horn gauge stays off for an online CPU driver
             foreach (PhaseIndicator horns in avatar.GetComponentsInChildren<PhaseIndicator>(true))
                 horns.enabled = false;
             // Nothing drives its boost ring then (the horns do): an online CPU driver has none

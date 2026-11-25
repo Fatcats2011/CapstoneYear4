@@ -34,5 +34,10 @@ public class BallCollision : MonoBehaviour
         control.DriftDrop(true);
 
         PeterSparker.Instance.CreateImpactFromCollider(other, control.transform.position);
+
+        // The ghost sways with the hit (in a match; online it goes to the other machines too)
+        PlayerEmotes ghost = control.GetComponentInParent<PlayerEmotes>();
+        if (ghost != null)
+            ghost.HitWall(control.CurrentVelocity);
     }
 }

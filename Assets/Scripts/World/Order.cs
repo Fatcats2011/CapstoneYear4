@@ -148,6 +148,8 @@ public class Order : MonoBehaviour
     // tweening
     private Tween floatyTween, bobbyTween, arrowTween;
     private Quaternion initMeshRotation;
+    /// <summary>How the package mesh is turned at rest, for other things drawn like packages (ModeVisuals); before Awake, as the scene has it</summary>
+    internal Quaternion MeshRestRotation => meshRenderer != null ? initMeshRotation : orderMeshObject.transform.localRotation;
 
     [Header("Order Type Information")]
     [SerializeField] Sprite[] possiblePackageTypes;

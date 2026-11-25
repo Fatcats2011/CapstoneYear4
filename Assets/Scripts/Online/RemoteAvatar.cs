@@ -3,7 +3,7 @@ using UnityEngine;
 /// <summary>
 /// Another machine's player on this machine: their scooter (PlayerAvatar.prefab) with no view: no cameras, menus or
 /// controller. What only the player's own machine runs is off: controls and physics (BallDriving; the ball is
-/// kinematic), falling in water (Respawn), the horn gauge (PhaseIndicator, whose sliders live in a view) and its sounds
+/// kinematic), falling in water (Respawn), the horn gauge (PhaseIndicator: the owner's machine drives it) and its sounds
 /// (SoundPool: no engine hum here. Its owner's one-shots play through it, SoundPool.PlayRemote, from OnlineCues). It stays
 /// where the online game puts it, dressed as the player. See docs/online.md
 /// </summary>

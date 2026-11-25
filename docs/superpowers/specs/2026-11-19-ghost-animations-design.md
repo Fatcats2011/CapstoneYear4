@@ -300,3 +300,12 @@ These were dropped from the second list because they only read from the front. E
 7. Raspberry (22) as a d-pad emote: which direction, and which of today's four emote sprites does it sit with or replace?
 8. Does the ghost's face have a mouth that can show a tongue (22a)? If not: a face texture swap, a small tongue mesh, or drop 22a.
 9. Shared playlists: should Mirror Check join Hat Show-Off's, Knuckle Crack join Warm Up's, and Crown Polish join Victory's (one random pick between them), or should they fire separately?
+
+## Playtest fixes (2026-11-20)
+- **26. Wall Bump** (new, last in `GhostAction`): the scooter hits a wall at 10 m/s or more (`BallCollision`, on the machine that drives it). Two short code-only reactions, *Wobble* (1.0 s: knocked back, then a dying side-to-side sway, the head a beat behind) and *Knocked Silly* (1.2 s: a squash and a hat hop, then a bobblehead wobble). They play at 50% size at 10 m/s, full size from 30 m/s. Priority 55 (over Wheee, under Delivery), cooldown 1.5 s. Online it goes out as `CueKind.WallBump` with the speed in whole m/s, only when it played on the sender. Reactions are a new length category, 0.8–1.2 s; emotes stay 1.5–2.5 s.
+- **Landing:** a Wheee still playing when the ghost lands eases back to rest over 0.25 s (`GhostEmotes.EaseOut`) instead of playing on.
+- **Drop In** falls with gravity (speeding up into the ground), then squashes and makes a small rebound hop.
+- **Eyes after a fade:** a colour change during a fade (`Renderer.materials` copies every slot) left the eye and horn slots wearing the body's dithering material. The cover now comes off by slot index, and `ScooterLook.ShowColour` and `PhaseIndicator` write `sharedMaterials`.
+- **Parcel:** held at 85% of its rack size; its arc over the head now clears by the parcel's own half height.
+- **Polish:** smooth hops (`Hops`) instead of `abs(sin)` bounces; slower Shoulder Shake (2.0 s, 4 hops), Neck Crack (2.0 s), Hat Flip (1.8 s, with a toss and a catch), and half the bob rate in Drum Solo, Arm Pump Dance and Fist Pound; swings build and die away; secondary motion (head lag, settle) in Crown Overhead, Polish, Nap and Big Stretch. Hand clips unchanged.
+- 26 actions, 80 versions.

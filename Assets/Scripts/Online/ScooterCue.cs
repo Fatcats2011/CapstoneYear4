@@ -1,12 +1,15 @@
 using Unity.Netcode;
+using UnityEngine;
 
 /// <summary>
 /// What a player's one-shot is (ScooterCue). New kinds go on the end: an older game refuses a kind it doesn't know
 /// (NetChecks.Defined, where a cue arrives), so the numbers already sent must not move.
 /// - Emote0..Emote3: the player's d-pad emote, by its index (EmoteHandler: up, right, down, left).
-/// - Dizzy: the player was bumped hard and sees stars. Only the host sends it (it judges bumps): a client can't report it
+/// - Dizzy: the player was bumped hard and sees stars. Only the host sends it (it judges bumps): a client can't report it.
+/// - WallBump: the player's scooter hit a wall (BallCollision, on its own machine) and their ghost sways; its Point is the
+///   impact speed in whole m/s
 /// </summary>
-public enum CueKind : byte { Boost, DriftBoost, HornReady, Phase, PhaseEnd, Death, Rise, Emote0, Emote1, Emote2, Emote3, Dizzy }
+public enum CueKind : byte { Boost, DriftBoost, HornReady, Phase, PhaseEnd, Death, Rise, Emote0, Emote1, Emote2, Emote3, Dizzy, WallBump }
 
 /// <summary>
 /// A player's one-shot as it travels online: something their scooter does in a moment (a boost, a drift boost, a full
@@ -18,7 +21,7 @@ public enum CueKind : byte { Boost, DriftBoost, HornReady, Phase, PhaseEnd, Deat
 public struct ScooterCue : INetworkSerializable
 {
     public CueKind Kind;
-    /// <summary>A rise's respawn point (its index: RespawnManager.PointAt); -1 for every other kind</summary>
+    /// <summary>A rise's respawn point (its index: RespawnManager.PointAt); a wall bump's speed in whole m/s; -1 for every other kind</summary>
     public int Point;
 
     /// <summary>A one-shot that names no place: any kind but Rise</summary>
@@ -45,6 +48,21 @@ public struct ScooterCue : INetworkSerializable
         return kind == CueKind.Dizzy;
     }
 
+    /// <summary>The player's scooter hit a wall at this speed (m/s): sent in whole m/s, kept to WALL_MIN..WALL_MAX</summary>
+    public static ScooterCue WallBump(float speed)
+    {
+        return new ScooterCue { Kind = CueKind.WallBump, Point = Mathf.RoundToInt(Mathf.Clamp(speed, WALL_MIN, WALL_MAX)) };
+    }
+
+    /// <summary>The speeds a wall bump's cue carries, m/s (another machine's game could send any number: kept to these)</summary>
+    public const int WALL_MIN = 0, WALL_MAX = 60;
+
+    /// <summary>A wall bump's speed, m/s, kept to WALL_MIN..WALL_MAX whatever arrived</summary>
+    public static float WallSpeed(ScooterCue cue)
+    {
+        return Mathf.Clamp(cue.Point, WALL_MIN, WALL_MAX);
+    }
+
     /// <summary>The player rises from their grave at that respawn point</summary>
     public static ScooterCue Rise(int point)
     {
@@ -59,6 +77,8 @@ public struct ScooterCue : INetworkSerializable
 
     public override string ToString()
     {
+        if (Kind == CueKind.WallBump)
+            return "WallBump at " + Point;
         return Kind == CueKind.Rise ? "Rise at " + Point : Kind.ToString();
     }
 }

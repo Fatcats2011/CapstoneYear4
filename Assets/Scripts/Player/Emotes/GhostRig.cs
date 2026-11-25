@@ -15,8 +15,8 @@ using UnityEngine.Rendering;
 /// renderer, and every hat (URP/Lit) can't. So from PLAIN_OUT of fade the body's slots that can't dither wear the body's
 /// own dithering material and fade with it (else the eye whites show through the back of the fading head and the horns
 /// are left floating), a renderer with no dithering material at all is switched off from there, the body also shrinks
-/// as it fades, and the hat only shrinks; at the end both are switched off, shadow and all. Each slot goes back when the
-/// fade drops under PLAIN_OUT, unless something else changed it meanwhile. The fade writes only _DitherThreshold into
+/// as it fades, and the hat only shrinks; at the end both are switched off, shadow and all. Each slot goes back, by its
+/// index, when the fade drops under PLAIN_OUT, unless something else made it plain again meanwhile (Cover). The fade writes only _DitherThreshold into
 /// a renderer's property block, on top of whatever else the block holds, and puts back just that value afterwards
 /// </summary>
 public sealed class GhostRig
@@ -45,9 +45,9 @@ public sealed class GhostRig
     const float TINY = 1e-4f;
     /// <summary>
     /// How much bigger the hands (and the fingers under them) grow while a hand clip plays, at the Emotes layer's full
-    /// weight (SetHands): 1.6x, so a hand reads at game size
+    /// weight (SetHands): 1.15x, so a hand reads at game size
     /// </summary>
-    public const float HAND_SWELL = 0.6f;
+    public const float HAND_SWELL = 0.15f;
 
     /// <summary>
     /// A bone this rig moves: the pose it builds on, and what it wrote last. Kept apart for position, rotation and
@@ -555,31 +555,46 @@ public sealed class GhostRig
     }
 
     /// <summary>
-    /// On: the renderer's slots that can't dither wear its first material that can (so they dither with it). Off: each
-    /// goes back to what it was, unless something else put another material there meanwhile
+    /// On: the renderer's slots that can't dither wear its first material that can (so they dither with it); a slot
+    /// something else made plain again meanwhile (a horn glow put back) is covered too, and that material is the one to
+    /// put back. Off: each covered slot goes back to its own material by its index, whenever it still wears a dithering
+    /// material: the cover itself, or a copy of it (Renderer.materials, read by a colour change mid fade, copies every
+    /// slot, so the cover can't be told by reference: that left the eyes covered for good). A slot something else made
+    /// plain meanwhile keeps what was put there
     /// </summary>
     void Cover(int i, bool on)
     {
-        if (on == (covered[i] != null))
-            return;
         Renderer look = body[i];
+        if (!on && covered[i] == null)
+            return;
         Material[] now = look.sharedMaterials;
         if (on)
         {
-            Material with = null;
-            foreach (Material material in now)
-                if (material != null && material.HasProperty(DITHER))
-                {
-                    with = material;
-                    break;
-                }
+            Material with = coverWith[i];
+            if (with == null)
+            {
+                foreach (Material material in now)
+                    if (material != null && material.HasProperty(DITHER))
+                    {
+                        with = material;
+                        break;
+                    }
+            }
             if (with == null)
                 return;
-            Material[] was = (Material[])now.Clone();
+            Material[] was = covered[i];
+            if (was == null || was.Length != now.Length)
+            {
+                Material[] grown = (Material[])now.Clone();
+                for (int j = 0; was != null && j < was.Length && j < grown.Length; j++)
+                    grown[j] = was[j];
+                was = grown;
+            }
             bool any = false;
             for (int j = 0; j < now.Length; j++)
                 if (now[j] != null && !now[j].HasProperty(DITHER))
                 {
+                    was[j] = now[j];
                     now[j] = with;
                     any = true;
                 }
@@ -593,7 +608,7 @@ public sealed class GhostRig
         {
             Material[] was = covered[i];
             for (int j = 0; j < now.Length && j < was.Length; j++)
-                if (was[j] != null && !was[j].HasProperty(DITHER) && now[j] == coverWith[i])
+                if (was[j] != null && !was[j].HasProperty(DITHER) && now[j] != null && now[j].HasProperty(DITHER))
                     now[j] = was[j];
             covered[i] = null;
             coverWith[i] = null;

@@ -56,8 +56,15 @@ namespace DoA.Tests
             string[] viewParts = new[] { typeof(PlayerInput), typeof(InputManager), typeof(PlayerUIHandler), typeof(PlayerCameraResizer), typeof(MenuInteractions),
                     typeof(Camera), typeof(Canvas), typeof(AudioListener), typeof(CinemachineBrain), typeof(CinemachineVirtualCamera), typeof(PhaseChecker) }
                 .Concat(ViewComponentsOnControl)
-                .Where(part => avatar.GetComponentInChildren(part, true) != null).Select(part => part.Name).ToArray();
+                .Where(part => avatar.GetComponentsInChildren(part, true).Any(found => !InBoostRing(found)))
+                .Select(part => part.Name).ToArray();
             CollectionAssert.IsEmpty(viewParts, "the local view's parts don't belong in the scooter every machine sees");
+        }
+
+        // The boost ring's button prompt is a small world-space canvas on the scooter, hidden on other machines' scooters
+        static bool InBoostRing(Component part)
+        {
+            return part.GetComponentInParent<BoostRing>(true) != null;
         }
 
         [Test]
@@ -80,7 +87,6 @@ namespace DoA.Tests
         // The fields the other half fills: prefab overrides on the nested avatar, or view fields pointing into it
         [TestCase(typeof(BallDriving), new[] { "inp", "cameraResizer", "orbitalCamera" })]
         [TestCase(typeof(OrderHandler), new[] { "numberHandler", "playerAnimator" })]
-        [TestCase(typeof(PhaseIndicator), new[] { "hornSliderLeft", "hornSliderRight" })]
         [TestCase(typeof(DrivingIndicators), new[] { "iconCamera", "thisPlayer" })]
         [TestCase(typeof(OrbitalCamera), new[] { "inputManager", "virtualCameraMain", "virtualCameraIcon", "CameraFocus" })]
         [TestCase(typeof(Compass), new[] { "compassImage", "compassCalc", "player", "orbitalCamera", "playerCam" })]
@@ -95,6 +101,15 @@ namespace DoA.Tests
 
             string[] empty = fields.Where(field => Link(owner, field) == null).ToArray();
             CollectionAssert.IsEmpty(empty, component.Name + " fields left empty");
+        }
+
+        [Test]
+        public void DrivingCanvas_HasNoOldBoostBars()
+        {
+            // The boost ring under the scooter replaced the two horn charge bars at the bottom of the screen
+            GameObject canvas = Load("Assets/Prefabs/Player Prefabs/Driving Canvas.prefab");
+            Assert.IsNull(canvas.transform.Find("Horn Charge Left"), "left boost bar");
+            Assert.IsNull(canvas.transform.Find("Horn Charge Right"), "right boost bar");
         }
 
         [Test]

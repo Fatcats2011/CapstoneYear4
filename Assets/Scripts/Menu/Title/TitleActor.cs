@@ -144,6 +144,9 @@ public class TitleActor : MonoBehaviour
         // What only a match shows: the arrows over a scooter and the respawn wisp
         Hide("Control/Player Dependent Objects");
         Hide("Control/Groundcheck/Basket/DeathWisp");
+        foreach (BoostRing ring in avatar.GetComponentsInChildren<BoostRing>(true))
+            ring.Hide();
+        Hide("Control/Boost Ring"); // its quad draws by itself, whether the ring's script woke or not
 
         animator = avatar.transform.Find(ScooterLook.MODEL).GetComponentInChildren<Animator>(true);
     }

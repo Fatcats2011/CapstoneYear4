@@ -39,9 +39,10 @@ public static class ScooterLook
     {
         Transform root = avatar.transform;
         SkinnedMeshRenderer ghost = root.Find(GHOST).GetComponent<SkinnedMeshRenderer>();
-        Material[] materials = ghost.materials;
+        // Only slot 0, and shared: .materials copies every slot, eyes and horns too (and a fading ghost's covered ones)
+        Material[] materials = ghost.sharedMaterials;
         materials[0] = colour.colorMaterial;
-        ghost.materials = materials;
+        ghost.sharedMaterials = materials;
         root.Find(EYELID_LEFT).GetComponent<MeshRenderer>().material = colour.colorMaterial;
         root.Find(EYELID_RIGHT).GetComponent<MeshRenderer>().material = colour.colorMaterial;
     }

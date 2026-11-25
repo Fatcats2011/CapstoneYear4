@@ -6,8 +6,6 @@ using UnityEngine.Rendering.Universal;
 
 public class PhaseIndicator : MonoBehaviour
 {
-    [SerializeField] SliderBar hornSliderLeft;
-    [SerializeField] SliderBar hornSliderRight;
     [SerializeField] float intensity = 3;
     [SerializeField] float readyIntensityBonus = 1.5f;
 
@@ -38,7 +36,7 @@ public class PhaseIndicator : MonoBehaviour
     public bool ShowPhase = false;
 
     private const float RATIO_EPSILON = 0.0001f;
-    private float lastRatio = float.NaN; // the gauge ratio last drawn on the sliders and horns
+    private float lastRatio = float.NaN; // the gauge ratio last drawn on the horns
 
     private float currentBoostMaxTime;
     private float currentBoostRechargeAmount;
@@ -72,10 +70,11 @@ public class PhaseIndicator : MonoBehaviour
         hornGlow.SetColor(HashReference._baseColorProperty, readyColor);
         hornGlow.SetColor(HashReference._emissionColorProperty, color);
 
-        Material[] ghostMaterials = ghostRenderer.materials;
+        // Shared, not .materials: that copies every slot, and a copy taken mid fade (GhostRig.Cover) is not the cover
+        Material[] ghostMaterials = ghostRenderer.sharedMaterials;
         ghostMaterials[1] = hornGlow;
 
-        ghostRenderer.materials = ghostMaterials;
+        ghostRenderer.sharedMaterials = ghostMaterials;
 
         lastRatio = float.NaN; // the new horn material needs drawing again
     }
@@ -110,8 +109,6 @@ public class PhaseIndicator : MonoBehaviour
             return;
         lastRatio = ratio;
 
-        hornSliderLeft.value = ratio;
-        hornSliderRight.value = ratio;
         hornGlowValue = ratio * hornValueMax;
 
         float intensityFactor = Mathf.Pow(2, (hornGlowValue * intensity));

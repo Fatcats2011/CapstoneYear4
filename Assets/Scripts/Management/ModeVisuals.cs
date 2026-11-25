@@ -16,14 +16,15 @@ using UnityEngine.UI;
 public class ModeVisuals : MonoBehaviour
 {
     const float ABOVE = 3.2f;
+    const float POTATO_ABOVE = 2.7f;
     const float SPIN = 90f;
     const float CROWN_SCALE = 1.5f;
     const float BEACON_WIDTH = 5f, BEACON_HEIGHT = 90f;
-    const float POTATO_SCALE = 1.7f;
-    const float FLAME_SIZE = 4.2f;
+    const float POTATO_SCALE = 1f;
+    const float FLAME_SIZE = 2.6f;
     const float FLAME_FPS = 14f;
-    const float NUMBER_ABOVE = 1.9f;
-    const float NUMBER_SIZE = 16f;
+    const float NUMBER_ABOVE = 1.25f;
+    const float NUMBER_SIZE = 11f;
     const float FLAME_BEHIND = 0.9f;  // towards the far side of the package, from each camera
     static readonly Color BEACON = new Color(1f, 0.82f, 0.25f, 0.45f);
     static readonly Color CURSED = new Color(0.26f, 0.02f, 0.55f, 1f);
@@ -188,12 +189,18 @@ public class ModeVisuals : MonoBehaviour
 
     void ShowCrown(ModeMatch match)
     {
-        Transform holder = BallOf(match.CrownSeat);
         Show(ref crown, MakeCrown);
-        Vector3 at = holder != null ? holder.position + Vector3.up * ABOVE
-            : match.CrownSpot + Vector3.up * (0.5f + 0.25f * Mathf.Sin(Time.time * 2f));
-        crown.transform.position = at;
-        crown.transform.Rotate(0f, SPIN * Time.deltaTime, 0f, Space.World);
+        Vector3 at;
+        if (WearCrown(match.CrownSeat))
+            at = crown.transform.position;
+        else
+        {
+            // On the road: big, spinning and bobbing, to be seen from afar
+            crown.transform.localScale = Vector3.one * CROWN_SCALE;
+            at = match.CrownSpot + Vector3.up * (0.5f + 0.25f * Mathf.Sin(Time.time * 2f));
+            crown.transform.position = at;
+            crown.transform.Rotate(0f, SPIN * Time.deltaTime, 0f, Space.World);
+        }
         // Every frame: dropping packages (a fall in the water) puts a holder's recharge back to normal
         SetSlowBoost(match.CrownSeat, true);
 
@@ -207,6 +214,82 @@ public class ModeVisuals : MonoBehaviour
         }
     }
 
+    /// <summary>The crown on its holder's head, as wide as a hat (CROWN_HAT_WIDE heads), in place of their hat</summary>
+    internal const float CROWN_HAT_WIDE = 1.15f, CROWN_ON_HEAD = 0.12f;
+    int hatHiddenSeat = ModeMatch.NONE;
+    Renderer hiddenHat;
+
+    // Worn by the seat's ghost: at their hat's spot, turned with their head, their own hat hidden meanwhile. False with
+    // nobody holding it, or no ghost to wear it
+    bool WearCrown(int seat)
+    {
+        GameObject player = PlayerOf(seat);
+        Transform torso = Find(player, "Torso");
+        Transform head = torso != null ? torso.Find("Head") : null;
+        Transform hat = head != null ? head.Find("Hat Object") : null;
+        if (seat == ModeMatch.NONE || head == null || torso == null)
+        {
+            ShowHat();
+            return false;
+        }
+
+        if (hatHiddenSeat != seat)
+        {
+            ShowHat();
+            hatHiddenSeat = seat;
+            hiddenHat = hat != null ? hat.GetComponent<Renderer>() : null;
+            if (hiddenHat != null && !hiddenHat.enabled)
+                hiddenHat = null; // hatless: nothing to put back
+            if (hiddenHat != null)
+                hiddenHat.enabled = false;
+        }
+
+        float headSize = Vector3.Distance(torso.position, head.position);
+        Vector3 spot = hat != null ? hat.position : head.position;
+        crown.transform.position = spot + Vector3.up * (CROWN_ON_HEAD * headSize);
+        crown.transform.localScale = Vector3.one * (CROWN_HAT_WIDE * headSize / (2f * CROWN_RADIUS));
+        Vector3 facing = head.forward;
+        facing.y = 0f;
+        if (facing.sqrMagnitude > 1e-4f)
+            crown.transform.rotation = Quaternion.LookRotation(facing);
+        return true;
+    }
+
+    // The hat the crown covered comes back
+    void ShowHat()
+    {
+        if (hiddenHat != null)
+            hiddenHat.enabled = true;
+        hiddenHat = null;
+        hatHiddenSeat = ModeMatch.NONE;
+    }
+
+    // Whoever carries the beacon's object (the crown, the Mother Lode) doesn't see its pillar: it would fill their view
+    static bool CarriesBeacon(int seat, Camera camera)
+    {
+        if (seat == ModeMatch.NONE || PlayerInstantiate.Instance == null || seat >= Constants.MAX_PLAYERS)
+            return false;
+        PlayerSlot slot = PlayerInstantiate.Instance.Roster[seat];
+        if (slot == null)
+            return false;
+        // Every player sits under one shared holder, so it's that player's own branch (or its reference camera) that counts
+        PlayerCameraResizer view = slot.Input != null ? slot.Input.GetComponent<PlayerCameraResizer>() : null;
+        if (view != null && view.PlayerReferenceCamera == camera)
+            return true;
+        Transform own = slot.Input != null ? slot.Input.transform : null;
+        return own != null && own != own.root && camera.transform.IsChildOf(own);
+    }
+
+    // The seat carrying the beacon's object now, or NONE
+    static int BeaconCarrier()
+    {
+        ModeMatch match = ModeMatch.Current;
+        if (match != null && match.Mode == GameMode.KingsCrown)
+            return match.CrownSeat;
+        Order lode = Order.CurrentLode;
+        return lode != null && lode.PlayerHolding != null ? OrderSync.SeatOf(lode.PlayerHolding) : ModeMatch.NONE;
+    }
+
     void ShowPotato(ModeMatch match)
     {
         Transform holder = BallOf(match.PotatoSeat);
@@ -214,7 +297,7 @@ public class ModeVisuals : MonoBehaviour
         Show(ref potato, MakePotato);
         potato.SetActive(holder != null);
         if (holder != null)
-            potato.transform.position = holder.position + Vector3.up * ABOVE;
+            potato.transform.position = holder.position + Vector3.up * POTATO_ABOVE;
         float beat = Mathf.PingPong(Time.time / TimedModeRules.TickInterval(progress), 1f);
         potatoPulse.localScale = Vector3.one * (POTATO_SCALE + 0.35f * beat * progress);
         potatoPulse.Rotate(0f, SPIN * (1f + 3f * progress) * Time.deltaTime, 0f, Space.World);
@@ -250,6 +333,10 @@ public class ModeVisuals : MonoBehaviour
             toCamera.y = 0f;
             if (toCamera.sqrMagnitude > 0.01f)
                 beacon.transform.rotation = Quaternion.LookRotation(-toCamera);
+            SpriteRenderer pillar = beacon.GetComponent<SpriteRenderer>();
+            bool seen = !CarriesBeacon(BeaconCarrier(), camera);
+            if (pillar.enabled != seen)
+                pillar.enabled = seen;
         }
     }
 
@@ -391,8 +478,11 @@ public class ModeVisuals : MonoBehaviour
         {
             GameObject package = new GameObject("Package", typeof(MeshFilter), typeof(MeshRenderer));
             package.transform.SetParent(pulse.transform, false);
+            // Lying as a package on the road does (its mesh is modelled on its side), its middle at the root
+            Quaternion rest = order.MeshRestRotation;
+            package.transform.localRotation = rest;
             package.transform.localScale = Vector3.one * order.meshScale[2];
-            package.transform.localPosition = -mesh.bounds.center * order.meshScale[2];
+            package.transform.localPosition = -(rest * mesh.bounds.center) * order.meshScale[2];
             package.GetComponent<MeshFilter>().sharedMesh = mesh;
             package.GetComponent<MeshRenderer>().sharedMaterial = Glowing(order.MaterialOf(2), CURSED, CURSED_GLOW * 0.12f, "Cursed Package");
         }
@@ -775,6 +865,7 @@ public class ModeVisuals : MonoBehaviour
         spectators.Clear();
 
         SetSlowBoost(shownCrown, false);
+        ShowHat();
         if (crownOnCompass)
             RemoveFromCompasses(crownMarker);
         crownOnCompass = false;

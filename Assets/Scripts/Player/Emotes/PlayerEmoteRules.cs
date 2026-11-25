@@ -5,6 +5,7 @@ using UnityEngine;
 /// emote: GhostEmoteRules still decides whether it plays (priorities and cooldowns).
 /// - ForSteal, ForGain, HardBump: emotes from what happened (a steal, a delivery, a hard bump).
 /// - PadIndex, ForPad: the player's own d-pad emotes.
+/// - WallStrength: how hard a wall hit sways the ghost. LAND_EASE: a Wheee easing out on landing.
 /// - AirFor/Wheee, StillFor/Bored, TreasureHold: emotes from what a ghost has been doing for a while.
 /// - Behind, ClosingSpeed, Closing, CarrierLook, Scheme: emotes from where the others are and where they're going.
 /// - Pick, Readied, Restyled, ImpatientDue: the lobby. REV_AGAIN: the countdown. ForPodium, PodiumGap: the results.
@@ -138,6 +139,24 @@ public static class PlayerEmoteRules
     public static bool Wheee(float airFor, float rise, bool already)
     {
         return !already && airFor >= AIR_SECONDS && rise >= LAUNCH_RISE;
+    }
+
+    /// <summary>Seconds a Wheee still playing as the ghost lands takes to ease back to rest (not a snap, not its full length)</summary>
+    public const float LAND_EASE = 0.25f;
+
+    /// <summary>
+    /// A wall hit's speeds, m/s: BallCollision counts a hit from WALL_SOFT (a gentler touch is nothing); from WALL_HARD
+    /// the sway is at its fullest
+    /// </summary>
+    public const float WALL_SOFT = 10f, WALL_HARD = 30f;
+
+    /// <summary>The share of its full size a WallBump sways at, from the impact speed: WALL_WEAKEST at WALL_SOFT, 1 from WALL_HARD</summary>
+    public const float WALL_WEAKEST = 0.5f;
+
+    /// <summary>How big a wall hit's sway is (GhostEmotes.Play's strength), from its speed in m/s</summary>
+    public static float WallStrength(float speed)
+    {
+        return Mathf.Lerp(WALL_WEAKEST, 1f, Mathf.InverseLerp(WALL_SOFT, WALL_HARD, speed));
     }
 
     /// <summary>The highest rise this time in the air, after a frame at height y (left: the height it left the ground at)</summary>

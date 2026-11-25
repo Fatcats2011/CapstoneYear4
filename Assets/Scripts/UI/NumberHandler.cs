@@ -28,8 +28,8 @@ public class NumberHandler : MonoBehaviour
     [SerializeField] Image[] timerImages;
 
     [Header("Final Order Countdown")]
-    [SerializeField] GameObject finalOrderTextObject;
-    [SerializeField] Image finalOrderCountdownImage;
+    [SerializeField] internal GameObject finalOrderTextObject;
+    [SerializeField] internal Image finalOrderCountdownImage;
 
     [Header("Final Order Value")]
     [SerializeField] string finalOrderValue;
@@ -201,9 +201,12 @@ public class NumberHandler : MonoBehaviour
         {
             // "Golden Order In..." with a golden round, "Time's Up In..." without. The placed text follows the language
             // by itself (PlacedText) but leaves alone any words code wrote there, and this is called every frame
-            TMP_Text countdown = finalOrderTextObject.GetComponentInChildren<TMP_Text>(true);
-            if (countdown != null)
-                countdown.text = Loc.Get(ModeFeedbackRules.CountdownKey(HouseRules.Playing.GoldenOn));
+            // Every layer of it: the words are drawn twice (a back copy and its Front copy over it), and only the back one
+            // was set, so a match without a golden round still read "Golden Order In..." (playtest, 2026-11-20)
+            string words = Loc.Get(ModeFeedbackRules.CountdownKey(HouseRules.Playing.GoldenOn));
+            foreach (TMP_Text countdown in finalOrderTextObject.GetComponentsInChildren<TMP_Text>(true))
+                if (countdown.text != words)
+                    countdown.text = words;
         }
         finalOrderCountdownImage.transform.parent.gameObject.SetActive(enabled);
     }

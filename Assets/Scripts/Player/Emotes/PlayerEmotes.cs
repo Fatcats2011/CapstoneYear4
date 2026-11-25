@@ -6,8 +6,9 @@ using UnityEngine;
 /// A player's ghost emoting in a match, from what this machine already sees, so every machine shows every ghost's emotes
 /// with nothing sent: a steal (StealFeedback), a delivery (ScoreFeedback), a boost (BallDriving.OnBoostStart), a hard bump
 /// (FeatSync.Bumped, offline and on the host), and, polled each frame, time in the air, the golden order, rivals close
-/// behind or a carrier ahead, and standing still. Two come as one-shots online (OnlineCues): the player's d-pad emotes
-/// (Pad, ShowPad) and, on clients, a hard bump (ShowDizzy). PlayerEmoteRules decides when; GhostEmotes plays it
+/// behind or a carrier ahead, and standing still; a Wheee still playing as the ghost lands eases out (LAND_EASE). Three
+/// come as one-shots online (OnlineCues): the player's d-pad emotes (Pad, ShowPad), a wall hit, which only the scooter's
+/// own machine sees (HitWall, ShowWallBump), and, on clients, a hard bump (ShowDizzy). PlayerEmoteRules decides when; GhostEmotes plays it
 /// (priorities and cooldowns). Cosmetic only: nothing here changes play. Sits on the player's top object, put there as the
 /// player is seated (Attach: PlayerInstantiate).
 /// Outside the match, in player select: Materialise once the player has joined (Joined, a frame later, so the ghost is
@@ -427,6 +428,39 @@ public class PlayerEmotes : MonoBehaviour, IGhostCarry
         Ask(GhostAction.SeeingStars);
     }
 
+    /// <summary>
+    /// This machine's scooter hit a wall at this speed, m/s (BallCollision: only the machine that drives it sees its hits).
+    /// In a match its ghost sways, harder the faster it hit (PlayerEmoteRules.WallStrength); online the other machines
+    /// sway it too: it goes out as a one-shot (CueKind.WallBump) when it played here, so a scrape along a wall sends one
+    /// per sway, not one per touch
+    /// </summary>
+    public void HitWall(float speed)
+    {
+        if (!MatchIsOn() || Respawning(this))
+            return;
+        Asked = GhostAction.WallBump;
+        AskCount++;
+        askedEach[(int)GhostAction.WallBump]++;
+        if (emotes != null && !emotes.Play(GhostAction.WallBump, PlayerEmoteRules.WallStrength(speed)))
+            return;
+
+        int seat = Seat;
+        if (GameAuthority.IsOnline && seat >= 0 && !RemoteAvatar.IsRemote(handler))
+            CueSync.Play(seat, ScooterCue.WallBump(speed));
+    }
+
+    /// <summary>Online: another machine's scooter hit a wall at this speed, m/s (CueKind.WallBump, OnlineCues.Show): its ghost sways here</summary>
+    public void ShowWallBump(float speed)
+    {
+        if (!MatchIsOn())
+            return;
+        Asked = GhostAction.WallBump;
+        AskCount++;
+        askedEach[(int)GhostAction.WallBump]++;
+        if (emotes != null)
+            emotes.Play(GhostAction.WallBump, PlayerEmoteRules.WallStrength(speed));
+    }
+
     /// <summary>A bump (offline and on the host; clients get CueKind.Dizzy instead): this seat hit hard is SeeingStars</summary>
     internal void HearBump(int bumper, int victim, float strength)
     {
@@ -462,6 +496,9 @@ public class PlayerEmotes : MonoBehaviour, IGhostCarry
         airFor = PlayerEmoteRules.AirFor(airFor, ball == null || ball.Grounded, dt);
         if (airFor <= 0f)
         {
+            // Landed: a Wheee still playing eases out now instead of playing on to its end on the ground
+            if (wheeed && emotes != null)
+                emotes.EaseOut(GhostAction.Wheee, PlayerEmoteRules.LAND_EASE);
             airLeft = Position.y;
             airRise = 0f;
             wheeed = false;

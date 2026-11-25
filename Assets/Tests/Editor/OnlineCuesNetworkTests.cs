@@ -406,6 +406,18 @@ namespace DoA.Tests
                 yield return null;
             Assert.IsTrue(heard.Heard(1, ScooterCue.Emote(0)), "and every client hears it");
 
+            // Their scooter hit a wall (only their machine sees it): their ghost sways here, and the host passes it on
+            asked = theirGhost.AskCount;
+            other.Match.ReportCue(1, ScooterCue.WallBump(22f));
+            deadline = Time.realtimeSinceStartup + WAIT;
+            while (!AskedSince(theirGhost, asked, GhostAction.WallBump) && Time.realtimeSinceStartup < deadline)
+                yield return null;
+            Assert.IsTrue(AskedSince(theirGhost, asked, GhostAction.WallBump), "their ghost sways here");
+            deadline = Time.realtimeSinceStartup + WAIT;
+            while (!heard.Heard(1, ScooterCue.WallBump(22f)) && Time.realtimeSinceStartup < deadline)
+                yield return null;
+            Assert.IsTrue(heard.Heard(1, ScooterCue.WallBump(22f)), "and every client hears it");
+
             // This machine's player's d-pad emote: their ghost plays it here (down: Cackle) and every client hears it
             PlayerEmotes myGhost = GhostOf(0);
             myGhost.Pad(2);

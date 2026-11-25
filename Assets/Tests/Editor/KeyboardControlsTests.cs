@@ -148,6 +148,22 @@ namespace DoA.Tests
         }
 
         [Test]
+        public void Refresh_TheAssetAsOnDisk_StillGetsEveryKey()
+        {
+            // The asset on disk carries a Keyboard scheme an editor saved, without M: launch must add today's keys anyway
+            // (playtest, 2026-11-20: M did nothing in the lobby)
+            InputActionAsset asset = InputActionAsset.FromJson(Resources.Load<InputActionAsset>(KeyboardControls.ASSET).ToJson());
+            copies.Add(asset);
+
+            Assert.IsTrue(KeyboardControls.Refresh(asset));
+            Assert.IsTrue(HasKey(asset.FindAction("UI/UnPause", true), "m"), "M");
+            Assert.IsTrue(HasKey(asset.FindAction("Player/Boost", true), "space"), "Space");
+            int once = BindingCount(asset);
+            KeyboardControls.Refresh(asset);
+            Assert.AreEqual(once, BindingCount(asset), "refreshing twice adds nothing");
+        }
+
+        [Test]
         public void Install_BindsFAndR_WhenTheShoulderActionsExist()
         {
             InputActionAsset asset = PristineCopy();

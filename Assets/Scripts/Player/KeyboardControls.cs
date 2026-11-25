@@ -24,7 +24,7 @@ public static class KeyboardControls
     static void InstallOnLaunch()
     {
         InputActionAsset asset = Resources.Load<InputActionAsset>(ASSET);
-        if (asset == null || !Install(asset))
+        if (asset == null || !Refresh(asset))
             return;
 
         // In the editor the asset is a project file, loaded once: Play Mode leaves it as it found it
@@ -45,6 +45,17 @@ public static class KeyboardControls
 
         asset.Disable();
         Uninstall(asset);
+    }
+
+    /// <summary>
+    /// The keyboard scheme with today's keys, whatever the asset holds: an editor once saved an installed scheme into the
+    /// asset on disk, and that copy lacked keys added since (M for MATCH RULES), so Install alone skipped it. Always true
+    /// </summary>
+    public static bool Refresh(InputActionAsset asset)
+    {
+        if (HasScheme(asset, SCHEME))
+            Uninstall(asset);
+        return Install(asset);
     }
 
     /// <summary>

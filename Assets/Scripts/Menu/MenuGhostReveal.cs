@@ -1,107 +1,65 @@
 using System.Collections;
-using DG.Tweening;
 using UnityEngine;
 using UnityEngine.UI;
 
 /// <summary>
-/// The phase into the menu. The scene opens on the purple the boot intro's wiper left, which turns out to be a ghost
-/// right up against the camera: it pulls back to show the crew in silhouette, and the title screen wipes in behind
-/// them in full colour. The crew holds its pose for a beat, then rides off, and the title's own show takes over
+/// The phase into the menu. The menu scene opens on the purple the boot intro's wiper left, and after a moment the
+/// title screen wipes in through it on a slant (the MenuTransition shader). It lives on the Menu Ghost Reveal picture,
+/// last on the title canvas; the title's ghost show waits until it is Done.
+/// The shader shows its reveal texture where the wipe hasn't reached and is see-through where it has, so the reveal
+/// texture is one purple pixel with no alpha
 /// </summary>
 public class MenuGhostReveal : MonoBehaviour
 {
-    [SerializeField] float timeToStart;
-    [SerializeField] Animator animator;
-    [SerializeField] Image menuGhostRevealObject;
-    [SerializeField] Material menuGhostRevealMaterialReference;
+    [SerializeField] internal Image menuGhostRevealObject;
+    [SerializeField] internal Material menuGhostRevealMaterialReference;
+    [Tooltip("Seconds of plain purple before the wipe starts")]
+    [SerializeField] internal float holdTime = 0.35f;
     [Tooltip("Seconds the title screen takes to wipe in")]
-    [SerializeField] internal float revealTime = 1.2f;
-    [Tooltip("Seconds the crew holds its pose once the title screen is in")]
-    [SerializeField] internal float holdTime = 1.2f;
-    [Tooltip("Seconds a ghost takes to ride off, and the gap between one leaving and the next")]
-    [SerializeField] internal float leaveTime = 0.9f;
-    [SerializeField] internal float leaveGap = 0.15f;
-    [Tooltip("Degrees the rig's cameras look up past what MenuIntro animates, so the crew stands on the title stage's " +
-        "road beneath it (TitleScreenBuilder sets it to match the stage's camera)")]
-    [SerializeField] internal float lookUp;
-    Material menuGhostRevealMaterial;
-    Camera[] rigCameras;
+    [SerializeField] internal float revealTime = 1f;
+    [Tooltip("The boot intro's wiper colour, which the menu scene opens on")]
+    [SerializeField] internal Color wipeColour = new Color(0.6666667f, 0f, 0.7921569f, 1f);
 
-    /// <summary>The crew has gone and the picture is off: the title screen is the show's</summary>
+    Material wipe;
+    Texture2D purple;
+
+    /// <summary>The title screen is fully in and the picture is off: the title is the show's</summary>
     public bool Done { get; private set; }
 
     void Start()
     {
-        menuGhostRevealMaterial = new Material(menuGhostRevealMaterialReference);
-        menuGhostRevealObject.material = menuGhostRevealMaterial;
-        menuGhostRevealMaterial.SetFloat("_Cutoff", 0);
+        purple = new Texture2D(1, 1, TextureFormat.RGBA32, false) { name = "Menu Wipe Purple" };
+        purple.SetPixel(0, 0, new Color(wipeColour.r, wipeColour.g, wipeColour.b, 0f));
+        purple.Apply();
 
+        wipe = new Material(menuGhostRevealMaterialReference);
+        wipe.SetTexture("_RevealColorTex", purple);
+        wipe.SetFloat("_Cutoff", 0f);
+        menuGhostRevealObject.material = wipe;
         menuGhostRevealObject.enabled = true;
-        rigCameras = GetComponentsInChildren<Camera>(true);
 
-        StartCoroutine(WaitToStart());
-    }
-
-    /// <summary>After the animator has posed the cameras each frame: tip them up a little more</summary>
-    void LateUpdate()
-    {
-        if (lookUp == 0f || animator == null || !animator.enabled || rigCameras == null)
-            return;
-        foreach (Camera rigCamera in rigCameras)
-            rigCamera.transform.localRotation *= Quaternion.Euler(-lookUp, 0f, 0f);
+        StartCoroutine(Reveal());
     }
 
     void OnDestroy()
     {
-        if (menuGhostRevealMaterial != null)
-            Destroy(menuGhostRevealMaterial);
+        if (wipe != null)
+            Destroy(wipe);
+        if (purple != null)
+            Destroy(purple);
     }
 
-    /// <summary>Called by the MenuIntro animation as the crew settles</summary>
-    private void Reveal()
+    IEnumerator Reveal()
     {
-        StartCoroutine(RevealScreen());
-    }
-
-    private IEnumerator WaitToStart()
-    {
-        yield return new WaitForSeconds(timeToStart);
-        animator.enabled = true;
-    }
-
-    private IEnumerator RevealScreen()
-    {
+        yield return new WaitForSeconds(holdTime);
         for (float t = 0f; t < revealTime; t += Time.deltaTime)
         {
-            menuGhostRevealMaterial.SetFloat("_Cutoff", t / revealTime);
+            wipe.SetFloat("_Cutoff", t / revealTime);
             yield return null;
         }
-        menuGhostRevealMaterial.SetFloat("_Cutoff", 1f);
-
-        yield return new WaitForSeconds(holdTime);
-        yield return Leave();
-    }
-
-    /// <summary>The crew rides off the right of the picture one after another, then the rig is switched off</summary>
-    private IEnumerator Leave()
-    {
-        animator.enabled = false; // it would hold the lead ghost in its pose
-        Camera[] cameras = GetComponentsInChildren<Camera>(true);
-        Vector3 away = (cameras.Length > 0 ? cameras[0].transform.right : Vector3.right) * 40f;
-
-        int ghosts = 0;
-        foreach (Transform child in transform)
-        {
-            if (child.GetComponent<Camera>() != null)
-                continue;
-            child.DOMove(child.position + away, leaveTime).SetEase(Ease.InQuad).SetDelay(ghosts * leaveGap).SetLink(child.gameObject);
-            ghosts++;
-        }
-        yield return new WaitForSeconds(leaveTime + Mathf.Max(0, ghosts - 1) * leaveGap + 0.1f);
+        wipe.SetFloat("_Cutoff", 1f);
 
         menuGhostRevealObject.enabled = false;
-        foreach (Camera rigCamera in cameras)
-            rigCamera.enabled = false;
         Done = true;
     }
 }

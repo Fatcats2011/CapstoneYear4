@@ -166,6 +166,14 @@ public class BoostRing : MonoBehaviour
 
         ShowPrompt();
         OfferHint(inMatch);
+
+        // Never in the menus: in the lobby its button prompt sat inside the scooter on Dispatch's stand (playtest,
+        // 2026-11-20). Everything above still runs there, its clock included
+        bool shows = !InMenus(StateNow());
+        if (ring != null && ring.enabled != shows)
+            ring.enabled = shows;
+        if (!shows && prompt != null && prompt.activeSelf)
+            prompt.SetActive(false);
     }
 
     /// <summary>
@@ -189,6 +197,12 @@ public class BoostRing : MonoBehaviour
         else if (state != GameState.Paused && state != GameState.GoldenCutscene)
             fromOutsideAMatch = true;
         return inMatch;
+    }
+
+    /// <summary>The title, options, credits, player select or Dispatch: no ring there</summary>
+    internal static bool InMenus(GameState? state)
+    {
+        return state == GameState.Menu || state == GameState.Options || state == GameState.Credits || state == GameState.PlayerSelect;
     }
 
     /// <summary>The game state now, as the hints see it (tests set Hints.State); none without a game manager</summary>

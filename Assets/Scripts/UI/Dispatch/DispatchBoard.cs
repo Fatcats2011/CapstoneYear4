@@ -101,6 +101,7 @@ public class DispatchBoard : MonoBehaviour
         ShowAvatars(buffer, SteamAvatars.Get);
         FollowRoom();
         ShowCustomizingView();
+        RelayoutPrompts();
 
         // Between sessions in a lobby switch the prompt and line stay as they were: the player's Find still shows it's
         // searching, and a quiet search again is never shown
@@ -174,6 +175,29 @@ public class DispatchBoard : MonoBehaviour
     /// <summary>
     /// Start (M on a keyboard): MATCH RULES, in the prompt row, while this machine hosts (only the host changes them)
     /// </summary>
+    float promptsLaidOut = -1f;
+
+    // The prompt row sizes each prompt by its own content, and a prompt's button art changes width with the device (a key
+    // is wider than a pad button: after a match the last device can differ). The row lays out before its prompts resize,
+    // so once their sizes change it lays out again, or LEAVE and MATCH RULES overlap (playtest, 2026-11-20)
+    void RelayoutPrompts()
+    {
+        RectTransform row = root != null ? root.transform.Find("Prompts") as RectTransform : null;
+        if (row == null)
+            return;
+        float widths = 0f;
+        for (int i = 0; i < row.childCount; i++)
+        {
+            RectTransform prompt = row.GetChild(i) as RectTransform;
+            if (prompt != null && prompt.gameObject.activeSelf)
+                widths += prompt.rect.width + 1000f * (i + 1);
+        }
+        if (Mathf.Approximately(widths, promptsLaidOut))
+            return;
+        promptsLaidOut = widths;
+        UnityEngine.UI.LayoutRebuilder.ForceRebuildLayoutImmediate(row);
+    }
+
     void ShowRulesPrompt(bool host)
     {
         if (rulesPrompt == null)

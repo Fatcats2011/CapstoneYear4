@@ -9,7 +9,7 @@ namespace DoA.Tests
 {
     /// <summary>
     /// The title screen as the builder (TitleScreenBuilder) leaves the menu scene: everything the old screen had wired
-    /// is still wired, the new pictures sit behind the logo and let the mouse through, the intro's ghost rig is kept, and
+    /// is still wired, the new pictures sit behind the logo and let the mouse through, the phase into the menu is a wipe on the canvas, and
     /// the stage has the game's wardrobe, its road and its mist. Opens the menu scene in the editor, without Play Mode
     /// </summary>
     public class TitleScreenSceneTests
@@ -119,11 +119,11 @@ namespace DoA.Tests
             Assert.IsNotNull(stage.stageCamera, "its camera");
             Assert.AreEqual(0f, stage.stageCamera.backgroundColor.a, "films onto nothing");
             Assert.AreSame(canvas.Find(TitleScreenBuilder.GHOSTS).GetComponent<RawImage>(), stage.ghostImage);
-            GameObject rig = Root(TitleScreenBuilder.INTRO_RIG);
-            Assert.IsNotNull(rig, "the intro's ghost crew");
-            Assert.AreSame(rig.GetComponent<MenuGhostReveal>(), stage.intro, "the show waits for the intro");
-            Assert.AreEqual(2, rig.GetComponentsInChildren<Camera>(true).Length, "the intro's two cameras");
-            Assert.Greater(Vector3.Distance(rig.transform.position, stageObject.transform.position), 200f, "the stage is out of the intro's sight");
+            Assert.IsNull(Root(TitleScreenBuilder.OLD_INTRO_RIG), "the intro's old ghost crew is gone");
+            MenuGhostReveal intro = canvas.Find(TitleScreenBuilder.INTRO_PICTURE).GetComponent<MenuGhostReveal>();
+            Assert.IsNotNull(intro, "the phase into the menu");
+            Assert.AreSame(intro, stage.intro, "the show waits for the intro");
+            Assert.IsNotNull(intro.menuGhostRevealMaterialReference, "its wipe");
             Assert.AreEqual(0, stageObject.GetComponentsInChildren<AudioListener>(true).Length, "no ears on the stage");
 
             // The set: a real road and realtime mist, and the picture shown as the premultiplied colour it holds

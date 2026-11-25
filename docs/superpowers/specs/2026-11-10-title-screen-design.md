@@ -59,7 +59,7 @@ The user did not say what is wrong with the current screen; the above is what th
 - **Logo:** `DoA-Logo_02-08-24` (the sprite used today), in the top left where it is today (user, 2026-11-10). A slow gentle bob. The backdrop's glow sits behind it.
 - **Entries, selector, button prompt, P1 controller text, language flag:** same objects, same positions, same wiring.
 - **Draw order, back to front:** backdrop → ghost show → logo → entries, selector and prompts. Ghosts never draw over text.
-- **Intro:** the old phase into the menu stays (user, 2026-11-11: it had been removed and was put back). The purple left by the boot wiper is a ghost against the camera; it pulls back to the crew in silhouette, the title wipes in behind them, the crew holds a beat and rides off right, then the first skit starts. The crew stands on the title's road (user, 2026-11-12: they were floating above it). No fade from black.
+- **Intro:** the menu opens on the purple the boot wiper left, and the title wipes in through it on a slant (MenuTransition), then the first skit starts. The ghost crew that used to pull back into view is gone (user, 2026-11-23: remove the old crew pull-up animation; it had been put back 2026-11-11 and seated on the road 2026-11-12). No fade from black.
 
 ### The stage
 - A `Title Stage` object where the old rig is (far from the world, same place), holding one camera, a ground-less lane and the cast.
@@ -100,7 +100,7 @@ Order: all 12 in a shuffled order, then reshuffled, never the same skit twice in
 ### What stays and what goes
 - **Stays, untouched:** `MainMenu`, `TitleEntries`, `MouseMenus`, the entry images, `Selector`, `Button UI`, `P1 Connected Controller`, the language flag, the Options and Credits canvases (they keep their own purple/pink backgrounds), player select.
 - **Stays but unused:** `MainMenu.menuGhostImage` and its `Selector Ghost Image` (already switched off in the scene) keep their references so `MainMenu` needs no change.
-- **Stays:** the `Menu Ghost Animations` rig, its two cameras, `Menu Ghost Reveal`, `MenuGhostReveal`, `MenuGhosts.controller`, `MenuTransition.mat` and the MainMenu render textures: they are the phase into the menu. The stage stands well clear of the rig.
+- **Goes (2026-11-23):** the `Menu Ghost Animations` rig, its two cameras, `MenuGhosts.controller`, `MenuIntro`/`Start` clips and the MainMenu render textures. **Stays:** `Menu Ghost Reveal`, `MenuGhostReveal` (now a canvas-only wipe) and `MenuTransition.mat`.
 
 ### Boot intro engine sound (user, 2026-11-10)
 - The boot intro (`SplashScreen.unity`, the 3.25 s `Animate` clip: logo appears, a wiper sweeps across) has no sound today. It gets a scooter engine rev timed to the wiper's sweep.

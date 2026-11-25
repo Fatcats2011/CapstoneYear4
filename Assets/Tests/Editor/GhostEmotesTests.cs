@@ -17,7 +17,7 @@ namespace DoA.Tests
             GhostAction[] order =
             {
                 GhostAction.FistShake, GhostAction.Cackle, GhostAction.SeeingStars, GhostAction.JumpScare,
-                GhostAction.DeliveryFlourish, GhostAction.Wheee, GhostAction.HoldYourHat, GhostAction.TreasureHold,
+                GhostAction.DeliveryFlourish, GhostAction.WallBump, GhostAction.Wheee, GhostAction.HoldYourHat, GhostAction.TreasureHold,
                 GhostAction.Taunt, GhostAction.SideEye, GhostAction.Scheme, GhostAction.Bored
             };
 
@@ -52,7 +52,8 @@ namespace DoA.Tests
                 { GhostAction.HatShowOff, (50, 0f) }, { GhostAction.WarmUp, (50, 0f) }, { GhostAction.RevBounce, (50, 0f) },
                 { GhostAction.Victory, (50, 0f) }, { GhostAction.Tantrum, (50, 0f) }, { GhostAction.FadeAway, (50, 0f) },
                 { GhostAction.Impatient, (50, 0f) }, { GhostAction.MirrorCheck, (50, 0f) },
-                { GhostAction.KnuckleCrack, (50, 0f) }, { GhostAction.CrownPolish, (50, 0f) }
+                { GhostAction.KnuckleCrack, (50, 0f) }, { GhostAction.CrownPolish, (50, 0f) },
+                { GhostAction.WallBump, (55, 1.5f) }
             };
             CollectionAssert.AreEquivalent(Enum.GetValues(typeof(GhostAction)), values.Keys, "every action listed");
             foreach (KeyValuePair<GhostAction, (int priority, float cooldown)> pair in values)
@@ -168,7 +169,8 @@ namespace DoA.Tests
             (GhostAction.Raspberry, "Thumbs In Ears"), (GhostAction.MirrorCheck, "Admire"), (GhostAction.MirrorCheck, "Hand Mirror"),
             (GhostAction.KnuckleCrack, "Lace And Push"), (GhostAction.Victory, "Crown Overhead"), (GhostAction.Victory, "Arm Pump Dance"),
             (GhostAction.Victory, "Arms Out Spin"), (GhostAction.Victory, "Raise The Roof"), (GhostAction.Tantrum, "Fist Pound"),
-            (GhostAction.Tantrum, "Flop Back"), (GhostAction.Tantrum, "Sob"), (GhostAction.CrownPolish, "Polish")
+            (GhostAction.Tantrum, "Flop Back"), (GhostAction.Tantrum, "Sob"), (GhostAction.CrownPolish, "Polish"),
+            (GhostAction.WallBump, "Wobble"), (GhostAction.WallBump, "Knocked Silly")
         };
 
         static float[] Fields(GhostPose p)
@@ -181,10 +183,10 @@ namespace DoA.Tests
         }
 
         [Test]
-        public void Catalogue_HasThe78VersionsUnderTheRightActions()
+        public void Catalogue_HasThe80VersionsUnderTheRightActions()
         {
-            Assert.AreEqual(78, GhostMoves.All.Count());
-            Assert.AreEqual(78, expected.Length);
+            Assert.AreEqual(80, GhostMoves.All.Count());
+            Assert.AreEqual(80, expected.Length);
             foreach ((GhostAction action, string name) in expected)
                 Assert.IsTrue(GhostMoves.For(action).Any(m => m.Name == name && m.Action == action), action + " / " + name);
         }
@@ -360,13 +362,18 @@ namespace DoA.Tests
             Assert.AreEqual(3, GhostMoves.All.Count(m => m.Entrance), "Wisp, Drop In and Ta Da");
         }
 
+        /// <summary>
+        /// Emotes run 1.5 to 2.5 s. A wall hit's sway (WallBump) is a reaction, not an emote: it has to be over before the
+        /// next thing happens on the road, so it runs 0.8 to 1.2 s (and no emote is that short)
+        /// </summary>
         [Test]
-        public void Catalogue_LengthsAreOneAndAHalfToTwoAndAHalfSeconds()
+        public void Catalogue_LengthsAreOneAndAHalfToTwoAndAHalfSeconds_ReactionsAboutOne()
         {
             foreach (GhostMove move in GhostMoves.All)
             {
-                Assert.GreaterOrEqual(move.Length, 1.5f - 1e-4f, move.Name);
-                Assert.LessOrEqual(move.Length, 2.5f + 1e-4f, move.Name);
+                bool reaction = move.Action == GhostAction.WallBump;
+                Assert.GreaterOrEqual(move.Length, (reaction ? 0.8f : 1.5f) - 1e-4f, move.Name);
+                Assert.LessOrEqual(move.Length, (reaction ? 1.2f : 2.5f) + 1e-4f, move.Name);
                 Assert.AreEqual(Math.Round(move.Length, 1), move.Length, 1e-4f, move.Name + " in tenths");
             }
             // The countdown's second RevBounce waits for a longer first one to end (PlayerEmotes.TickLobby)
@@ -431,7 +438,7 @@ namespace DoA.Tests
             string[] sided =
             {
                 "Turn And Cackle", "Check Behind", "Look Back", "Double Take", "Parcel Hug", "Shrug", "Turn And Wave",
-                "Sly Rub", "Thumbs In Ears", "Ear Waggle"
+                "Sly Rub", "Thumbs In Ears", "Ear Waggle", "Wobble", "Knocked Silly"
             };
             int[] flips = { 4, 5, 8, 10, 2, 13, 19 };   // Yaw, Roll, HeadYaw, HeadRoll, Shift, TailWag, HatShift
             List<string> found = new List<string>();

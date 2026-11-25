@@ -454,6 +454,80 @@ namespace DoA.Tests
         }
 
         [Test]
+        public void WallStrength_HalfAtTen_FullFromThirty()
+        {
+            Assert.AreEqual(PlayerEmoteRules.WALL_WEAKEST, PlayerEmoteRules.WallStrength(PlayerEmoteRules.WALL_SOFT), 1e-6f);
+            Assert.AreEqual(0.75f, PlayerEmoteRules.WallStrength(20f), 1e-6f);
+            Assert.AreEqual(1f, PlayerEmoteRules.WallStrength(PlayerEmoteRules.WALL_HARD), 1e-6f);
+            Assert.AreEqual(1f, PlayerEmoteRules.WallStrength(80f), 1e-6f);
+            Assert.AreEqual(PlayerEmoteRules.WALL_WEAKEST, PlayerEmoteRules.WallStrength(0f), 1e-6f);
+        }
+
+        [Test]
+        public void WallBumpCue_CarriesTheSpeed_KeptInRange()
+        {
+            ScooterCue cue = ScooterCue.WallBump(23.6f);
+            Assert.AreEqual(CueKind.WallBump, cue.Kind);
+            Assert.AreEqual(24f, ScooterCue.WallSpeed(cue), 1e-6f);
+            Assert.AreEqual(ScooterCue.WALL_MAX, ScooterCue.WallBump(500f).Point);
+            Assert.AreEqual(ScooterCue.WALL_MAX, ScooterCue.WallSpeed(new ScooterCue { Kind = CueKind.WallBump, Point = 9999 }), 1e-6f);
+            Assert.AreEqual(ScooterCue.WALL_MIN, ScooterCue.WallSpeed(new ScooterCue { Kind = CueKind.WallBump, Point = -9999 }), 1e-6f);
+            Assert.IsTrue(NetChecks.Defined(CueKind.WallBump));
+            Assert.IsFalse(ScooterCue.HostOnly(CueKind.WallBump), "the scooter's own machine sends it");
+            Assert.AreEqual(-1, ScooterCue.EmoteIndex(CueKind.WallBump));
+            Assert.IsNull(RemoteSound.KeyFor(CueKind.WallBump), "no sound of its own");
+        }
+
+        [Test]
+        public void HitWall_Offline_SwaysInAMatch_SendsNothing()
+        {
+            PlayerEmotes player = NewPlayer("Player 1", Vector3.zero);
+            sentCount = 0;
+            CueSync.Played += Sent;
+            try
+            {
+                player.HitWall(20f);
+                Assert.AreEqual(GhostAction.WallBump, player.Asked);
+                Assert.AreEqual(0, sentCount, "offline");
+
+                matchOn = false;
+                player.HitWall(20f);
+                Assert.AreEqual(1, player.AskCount, "not outside a match");
+            }
+            finally
+            {
+                CueSync.Played -= Sent;
+            }
+        }
+
+        [Test]
+        public void HitWall_Online_SendsItsSeatsBump_ShowWallBumpSendsNothing()
+        {
+            NewPlayer("Player 1", Vector3.zero);
+            PlayerEmotes player = NewPlayer("Player 2", Vector3.zero);
+            sentCount = 0;
+            CueSync.Played += Sent;
+            GameAuthority.Role = NetworkRole.Client;
+            try
+            {
+                player.HitWall(17.2f);
+                Assert.AreEqual(GhostAction.WallBump, player.Asked);
+                Assert.AreEqual(1, sentCount);
+                Assert.AreEqual(1, sentSeat);
+                Assert.AreEqual(ScooterCue.WallBump(17.2f), sentCue);
+
+                player.ShowWallBump(25f);
+                Assert.AreEqual(2, player.AskedFor(GhostAction.WallBump));
+                Assert.AreEqual(1, sentCount, "another machine's bump isn't sent on");
+            }
+            finally
+            {
+                GameAuthority.Role = NetworkRole.Offline;
+                CueSync.Played -= Sent;
+            }
+        }
+
+        [Test]
         public void OnDisable_StopsListening()
         {
             PlayerEmotes player = NewPlayer("Player 1", Vector3.zero);

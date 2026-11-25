@@ -16,6 +16,7 @@ namespace DoA.Tests
                 CueKind.Emote0, CueKind.Emote1, CueKind.Emote2, CueKind.Emote3, CueKind.Dizzy })
                 yield return ScooterCue.Of(kind);
             yield return ScooterCue.Rise(17);
+            yield return ScooterCue.WallBump(21f);
         }
 
         [TestCaseSource(nameof(EveryKind))]

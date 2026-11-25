@@ -37,11 +37,12 @@ public sealed class GhostProps
     internal const float PARCEL_IN = 0.3f, PARCEL_OUT = 0.3f, PARCEL_CUT = 0.12f;
     /// <summary>
     /// In U: the parcel's path between the rack and the hands arcs up at least PARCEL_ARC (at its middle), and high
-    /// enough that its middle passes PARCEL_OVER above the Head (over the hat), so it never goes through the body
+    /// enough that at its middle the parcel's bottom (its box, at its size there) passes PARCEL_OVER above the Head
+    /// (over the hat), so it never goes through the head or the body, however big the parcel
     /// </summary>
-    internal const float PARCEL_ARC = 1.5f, PARCEL_OVER = 2.4f;
+    internal const float PARCEL_ARC = 1.5f, PARCEL_OVER = 2.0f;
     /// <summary>The parcel's size in the hands, as a share of its size on the rack</summary>
-    internal const float PARCEL_HELD = 0.45f;
+    internal const float PARCEL_HELD = 0.85f;
     /// <summary>In U: how far over the right hand the spun parcel's bottom sits</summary>
     const float SPIN_ABOVE = 0.15f;
     /// <summary>Degrees a second the spun parcel turns</summary>
@@ -281,7 +282,12 @@ public sealed class GhostProps
         // Up and over the hat on the way (the hands are still low inside the body when it sets off)
         Vector3 straight = Vector3.Lerp(rackPosition, at, k);
         Vector3 middle = (rackPosition + at) * 0.5f;
-        float arc = Mathf.Max(PARCEL_ARC * rig.U, Vector3.Dot(rig.Head.position - middle, up) + PARCEL_OVER * rig.U);
+        // Half its height along up at the middle of the trip (turned and sized as it is there)
+        Quaternion midTurn = Quaternion.Slerp(rackRotation, held, 0.5f);
+        float midHalf = Mathf.Lerp(1f, PARCEL_HELD, 0.5f) * (Mathf.Abs(Vector3.Dot(midTurn * new Vector3(parcelExtents.x, 0f, 0f), up))
+            + Mathf.Abs(Vector3.Dot(midTurn * new Vector3(0f, parcelExtents.y, 0f), up))
+            + Mathf.Abs(Vector3.Dot(midTurn * new Vector3(0f, 0f, parcelExtents.z), up)));
+        float arc = Mathf.Max(PARCEL_ARC * rig.U, Vector3.Dot(rig.Head.position - middle, up) + PARCEL_OVER * rig.U + midHalf);
         Vector3 path = straight + up * (arc * Mathf.Sin(Mathf.PI * k));
         parcel.SetPositionAndRotation(path, Quaternion.Slerp(rackRotation, held, k));
         wrotePosition = parcel.localPosition;

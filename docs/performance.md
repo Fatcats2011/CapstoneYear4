@@ -47,7 +47,7 @@ The goal is 120 FPS, or as high as the game can go, with 1 to 4 split-screen pla
     - cutouts no longer throw and catch exceptions every physics step;
     - beacons no longer read object names every step.
   - **HUD writes:**
-    - the timer and horn sliders are written only when they change;
+    - the timer and horn glow are written only when they change;
     - the scooter's drag and speed lines likewise.
   - **Pedestrians'** animators stop animating off-screen.
   - **Online:** other players' scooters are looked up once, not every frame.

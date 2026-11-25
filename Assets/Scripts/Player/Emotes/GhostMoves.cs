@@ -76,6 +76,22 @@ public static class GhostMoves
         return Hold(Span(t, from, to), rise, fall);
     }
 
+    // That many smooth hops, each a little lower than the last: 0 at both ends and between hops, never below 0. Unlike
+    // PodiumActs.Bounces (abs of a sine) it eases into and out of each landing, so a run of hops bobs instead of jerking
+    static float Hops(float t, int count)
+    {
+        t = Mathf.Clamp01(t);
+        float s = Mathf.Sin(Mathf.PI * count * t);
+        return s * s * (1f - 0.35f * t);
+    }
+
+    // A knock that dies away: a sine of that many cycles a second (over a move of that length, s), fading as it goes and
+    // gone by the end. 0 at both ends
+    static float Ring(float t, float length, float hertz, float damping)
+    {
+        return Mathf.Sin(2f * Mathf.PI * hertz * length * t) * Mathf.Exp(-damping * t) * (1f - In(t, .7f, 1f));
+    }
+
     // Side to side: +1 at "at" and every period after, -1 half a period after each
     static float Swing(float t, float at, float period)
     {
@@ -120,21 +136,22 @@ public static class GhostMoves
         return new[]
         {
             /// <summary>1a: shoulders bounce, head tips back and the body shakes side to side, the hat jiggling up with each laugh</summary>
-            new GhostMove(GhostAction.Cackle, "Shoulder Shake", 1.7f, (t, s) =>
-                P(lift: 0.35f * Bounces(t, 5), headPitch: -35f * Hold(t, .15f, .2f), roll: 18f * Wave(t, 6),
-                    hatLift: 0.25f * Bounces(t, 5))),
+            new GhostMove(GhostAction.Cackle, "Shoulder Shake", 2.0f, (t, s) =>
+                P(lift: 0.3f * Hops(t, 4), headPitch: -35f * Hold(t, .15f, .2f), roll: 16f * Wave(t, 4),
+                    headRoll: -8f * Wave(Span(t, .05f, 1f), 4), hatLift: 0.25f * Hops(Span(t, .03f, 1f), 4))),
 
             /// <summary>1c: turns round to the camera and cackles, head thrown back, hopping and shaking with laughter</summary>
             new GhostMove(GhostAction.Cackle, "Turn And Cackle", 2.2f, (t, s) =>
             {
                 float h = Hold(t, .2f, .2f);
-                return P(yaw: s * 100f * h, headYaw: s * 60f * h, lift: 0.2f * h * Mathf.Abs(Mathf.Sin(10f * Mathf.PI * t)),
-                    headPitch: -25f * h, roll: s * 8f * h * Wave(t, 8));
+                float hop = Mathf.Sin(4f * Mathf.PI * Span(t, .1f, .9f));
+                return P(yaw: s * 100f * h, headYaw: s * 60f * h, lift: 0.2f * h * hop * hop,
+                    headPitch: -25f * h, roll: s * 8f * h * Wave(t, 5));
             }),
 
             /// <summary>2a: pumps a fist overhead three times, bouncing with each pump (hand clip)</summary>
             new GhostMove(GhostAction.FistShake, "Fist Pump", 1.7f, (t, s) =>
-                P(lift: 0.12f * Bounces(t, 3)), false, GhostExtra.None, "GE_2a_FistPump"),
+                P(lift: 0.12f * Hops(t, 3)), false, GhostExtra.None, "GE_2a_FistPump"),
 
             /// <summary>5b: the hat floats up and spins once, then settles</summary>
             new GhostMove(GhostAction.Wheee, "Floating Hat", 1.5f, (t, s) =>
@@ -192,17 +209,25 @@ public static class GhostMoves
             /// <summary>9d: slumps over and snores, with floating z letters</summary>
             new GhostMove(GhostAction.Bored, "Nap", 2.5f, (t, s) =>
             {
-                float h = Hold(t, .15f, .15f);
-                return P(pitch: 30f * h, headPitch: 40f * h, tall: 1f + 0.12f * Mathf.Sin(4f * Mathf.PI * t) * h);
+                // The body slumps, the head a beat later, both settling with a little nod; two slow breaths, the head
+                // bobbing on each, and a start as it wakes
+                float body = Hold(t, .15f, .15f);
+                float head = In(t, .05f, .22f) * (1f - In(t, .82f, .97f));
+                float settle = Bump(t, .15f, .32f);
+                float breathe = Mathf.Sin(4f * Mathf.PI * Span(t, .25f, .85f)) * Window(t, .25f, .85f, .2f, .2f);
+                float wake = Bump(t, .84f, 1f);
+                return P(pitch: 30f * body + 4f * settle, headPitch: 40f * head + 8f * Bump(t, .2f, .4f) + 6f * breathe,
+                    headRoll: 8f * head, tall: 1f + 0.06f * breathe + 0.05f * wake, lift: 0.12f * wake);
             }, false, GhostExtra.Zzz),
 
             /// <summary>10b: leans side to side with the hands waggling by the tail, the tail wagging (hand clip)</summary>
             Clip(GhostAction.Taunt, "10b", "Bum Wiggle", 2.2f, (t, s) =>
-                P(roll: -15f * Window(t, .15f, .85f, .15f, .15f) * Swing(t, .27f, .3f), tailWag: 60f * Wave(t, 4))),
+                P(roll: -15f * Window(t, .15f, .85f, .3f, .3f) * Swing(t, .27f, .3f), tailWag: 60f * Wave(t, 4),
+                    headRoll: 5f * Window(t, .15f, .85f, .3f, .3f) * Swing(t, .3f, .3f))),
 
             /// <summary>11a: a big wave with one hand high overhead, the body swaying with it (hand clip)</summary>
             new GhostMove(GhostAction.BigWave, "Overhead Wave", 2.2f, (t, s) =>
-                P(roll: 6f * Wave(t, 2)), false, GhostExtra.None, "GE_11a_OverheadWave"),
+                P(roll: 6f * Wave(t, 2), headRoll: -4f * Wave(Span(t, .06f, 1f), 2)), false, GhostExtra.None, "GE_11a_OverheadWave"),
 
             /// <summary>12b: spins all the way round with a little hop</summary>
             new GhostMove(GhostAction.HatShowOff, "Spin Round", 1.7f, (t, s) =>
@@ -212,8 +237,14 @@ public static class GhostMoves
             /// 12c: the hat jumps up high and does a full flip at the top of its arc (30-60%), quick, so its open
             /// underside is seen only for a moment
             /// </summary>
-            new GhostMove(GhostAction.HatShowOff, "Hat Flip", 1.5f, (t, s) =>
-                P(hatLift: 1.6f * Arc(t), hatTip: Turn(360f, Span(t, .3f, .6f)))).WithHat(),
+            new GhostMove(GhostAction.HatShowOff, "Hat Flip", 1.8f, (t, s) =>
+            {
+                // A dip and a pop tosses it (0-30%), the head watching it up and over; a squash as it lands back (82-97%)
+                float toss = -0.12f * Bump(t, 0f, .14f) + 0.15f * Bump(t, .1f, .3f);
+                float catchIt = Bump(t, .82f, .97f);
+                return P(hatLift: 1.6f * Arc(Span(t, .08f, .9f)), hatTip: Turn(360f, Span(t, .25f, .65f)), lift: toss,
+                    headPitch: -15f * Window(t, .1f, .85f, .3f, .3f), tall: 1f - 0.07f * catchIt, wide: 1f + 0.05f * catchIt);
+            }).WithHat(),
 
             /// <summary>13a: fades in from a thin wisp, then shakes like a wet dog, the body bulging and the hat tipping with each shake</summary>
             new GhostMove(GhostAction.Materialise, "Wisp", 2.2f, (t, s) =>
@@ -231,17 +262,25 @@ public static class GhostMoves
             {
                 // Hidden only at the very first instant, then falls in
                 float hidden = t <= 0f ? 1f : 0f;
-                // Squash bump from 50% to 70%
-                float b = Mathf.Sin(Mathf.PI * Span(t, .5f, .7f));
-                return P(lift: 4f * (1f - Smooth(Span(t, 0f, .5f))), tall: 1f - 0.3f * b, wide: 1f + 0.25f * b,
-                    tailUp: 30f * Wave(Span(t, .5f, 1f), 2), fade: hidden, hatFade: hidden);
+                // Falls with gravity over the first 45%, gathering speed into the ground (no slowing before it lands),
+                // the tail streaming up; squashes over 45-62%, a little rebound hop over 62-80%, then settles
+                float u = Span(t, 0f, .45f);
+                float b = Mathf.Sin(Mathf.PI * Span(t, .45f, .62f));
+                float rebound = Bump(t, .62f, .8f);
+                return P(lift: 4f * (1f - u * u) + 0.25f * rebound, tall: 1f - 0.3f * b + 0.06f * rebound,
+                    wide: 1f + 0.25f * b, tailUp: 35f * Bump(t, 0f, .5f) + 30f * Wave(Span(t, .5f, 1f), 2),
+                    fade: hidden, hatFade: hidden, hatLift: 0.25f * Bump(t, .4f, .6f));
             }, true),
 
             /// <summary>14a: both hands stretch up overhead, then wide in a Y, the body standing tall and leaning back (hand clip)</summary>
             new GhostMove(GhostAction.WarmUp, "Big Stretch", 2.5f, (t, s) =>
             {
                 float h = Hold(t, .25f, .3f);
-                return P(tall: 1f + 0.15f * h, pitch: -8f * h);
+                float head = Hold(Span(t, .06f, 1f), .28f, .3f);
+                float tremble = Mathf.Sin(2f * Mathf.PI * 14f * t) * Window(t, .35f, .65f, .3f, .3f);
+                float settle = Bump(t, .74f, .96f);
+                return P(tall: 1f + 0.15f * h - 0.05f * settle, wide: 1f + 0.04f * settle, pitch: -8f * h + 3f * settle,
+                    headPitch: -15f * head, roll: 1.5f * tremble);
             }, false, GhostExtra.None, "GE_14a_BigStretch"),
 
             /// <summary>14b: rolls its head round slowly like loosening a stiff neck</summary>
@@ -330,13 +369,15 @@ public static class GhostMoves
             }),
 
             /// <summary>24b: cracks its neck one way, then the other, with a small hop at each</summary>
-            new GhostMove(GhostAction.KnuckleCrack, "Neck Crack", 1.5f, (t, s) =>
+            new GhostMove(GhostAction.KnuckleCrack, "Neck Crack", 2.0f, (t, s) =>
             {
-                // Snap to -40 at 10-20%, to +40 at 45-55%, then back to 0 over 75-100%
-                float roll = -40f * Smooth(Span(t, .1f, .2f)) + 80f * Smooth(Span(t, .45f, .55f))
+                // Tilts to -40 over 8-22%, to +40 over 42-56%, then back to 0 over 75-100%; a small hop and a stretch as
+                // each one cracks, the body leaning a little the other way
+                float roll = -40f * Smooth(Span(t, .08f, .22f)) + 80f * Smooth(Span(t, .42f, .56f))
                     - 40f * Smooth(Span(t, .75f, 1f));
-                float bump = 0.15f * (Arc(Span(t, .1f, .2f)) + Arc(Span(t, .45f, .55f)));
-                return P(headRoll: roll, lift: bump);
+                float crack1 = Bump(t, .16f, .3f), crack2 = Bump(t, .5f, .64f);
+                return P(headRoll: roll, lift: 0.15f * (crack1 + crack2), tall: 1f + 0.05f * (crack1 + crack2),
+                    roll: -0.12f * roll);
             }),
 
             // ---- Hand clip versions (GhostEmotes.fbx; the tables are tools/ghost-clips/clips.py). Yaw, Roll and
@@ -344,7 +385,7 @@ public static class GhostMoves
 
             /// <summary>1b: holds the parcel overhead and shakes it side to side, leaning with it</summary>
             Clip(GhostAction.Cackle, "1b", "Parcel Shake", 2.1f, (t, s) =>
-                P(roll: -10f * Window(t, .12f, .86f, .2f, .2f) * Swing(t, .27f, .3f))).Holding(GhostProp.Parcel),
+                P(roll: -10f * Window(t, .12f, .86f, .3f, .3f) * Swing(t, .27f, .3f))).Holding(GhostProp.Parcel),
 
             /// <summary>1d: spins the parcel on one raised finger, leaning away from it</summary>
             Clip(GhostAction.Cackle, "1d", "Parcel Spin", 2.2f, (t, s) =>
@@ -352,7 +393,7 @@ public static class GhostMoves
 
             /// <summary>2b: flails both arms overhead, bobbing</summary>
             Clip(GhostAction.FistShake, "2b", "Arm Flail", 1.7f, (t, s) =>
-                P(lift: 0.1f * Bounces(Span(t, .1f, .8f), 4))),
+                P(lift: 0.1f * Hops(Span(t, .1f, .8f), 4))),
 
             /// <summary>
             /// 2c: throws its hat down to its right: the hat hops up as the hand grabs it (30-48%), then flies out past
@@ -403,8 +444,10 @@ public static class GhostMoves
             /// <summary>3d: brushes its hands off, done, with a shrug (a hop and a lean) on each brush</summary>
             Clip(GhostAction.DeliveryFlourish, "3d", "Brush Off", 2.1f, (t, s) =>
             {
-                float brushes = Bump(t, .15f, .25f) + Bump(t, .35f, .45f);
-                return P(lift: 0.15f * brushes, roll: 10f * brushes);
+                float brushes = Bump(t, .11f, .29f) + Bump(t, .31f, .49f);
+                float late = Bump(t, .13f, .31f) + Bump(t, .33f, .51f);
+                return P(lift: 0.15f * brushes, roll: 10f * brushes, headRoll: -5f * late,
+                    headPitch: -8f * Window(t, .55f, .95f, .3f, .3f));
             }),
 
             /// <summary>
@@ -427,7 +470,7 @@ public static class GhostMoves
 
             /// <summary>5a: both arms up, bouncing</summary>
             Clip(GhostAction.Wheee, "5a", "Arms Up", 2.1f, (t, s) =>
-                P(lift: 0.15f * Bounces(t, 3))),
+                P(lift: 0.15f * Hops(t, 3), tailUp: 25f * Hold(t, .2f, .25f))),
 
             /// <summary>5c: a starfish jump, hands spread out wide at the sides, body wide, hat and tail up, squashing on landing</summary>
             Clip(GhostAction.Wheee, "5c", "Starfish", 1.7f, (t, s) =>
@@ -439,7 +482,7 @@ public static class GhostMoves
 
             /// <summary>7a: holds the parcel overhead and sways it slowly, leaning with it (to its left at 30% and 66%, right at 48%)</summary>
             Clip(GhostAction.TreasureHold, "7a", "Parcel Overhead", 2.2f, (t, s) =>
-                P(roll: -6f * Window(t, .15f, .8f, .2f, .2f) * Swing(t, .3f, .36f))).Holding(GhostProp.Parcel),
+                P(roll: -6f * Window(t, .15f, .8f, .3f, .3f) * Swing(t, .3f, .36f))).Holding(GhostProp.Parcel),
 
             /// <summary>7b: hugs the parcel, twisting side to side</summary>
             Clip(GhostAction.TreasureHold, "7b", "Parcel Hug", 2.5f, (t, s) =>
@@ -565,7 +608,7 @@ public static class GhostMoves
 
             /// <summary>21a: a drum solo in the air, each stroke splayed out to its own side, bobbing on the strokes</summary>
             Clip(GhostAction.Impatient, "21a", "Drum Solo", 2.2f, (t, s) =>
-                P(lift: 0.2f * Bounces(Span(t, .1f, .9f), 12))),
+                P(lift: 0.15f * Hops(Span(t, .1f, .9f), 6), headRoll: 5f * Wave(Span(t, .1f, .9f), 3))),
 
             /// <summary>21b: checks the watch on its left wrist, turning to its left and looking down at it, head tilted</summary>
             Clip(GhostAction.Impatient, "21b", "Watch Check", 2.5f, (t, s) =>
@@ -604,11 +647,20 @@ public static class GhostMoves
             }),
 
             /// <summary>16a: holds the crown up overhead (the crown: GhostProps)</summary>
-            Clip(GhostAction.Victory, "16a", "Crown Overhead", 2.5f, (t, s) => GhostPose.Rest).Holding(GhostProp.Crown, .15f, .85f),
+            Clip(GhostAction.Victory, "16a", "Crown Overhead", 2.5f, (t, s) =>
+            {
+                // Stands tall as the crown goes up, looking up at it, swaying slowly and bobbing; settles as it comes down
+                float k = Window(t, .1f, .9f, .25f, .25f);
+                float settle = Bump(t, .86f, 1f);
+                return P(tall: 1f + 0.08f * k - 0.04f * settle, wide: 1f + 0.03f * settle,
+                    headPitch: -12f * Window(t, .14f, .9f, .25f, .3f), roll: 5f * Wave(Span(t, .15f, .85f), 2),
+                    headRoll: -3f * Wave(Span(t, .2f, .9f), 2), lift: 0.08f * Hops(Span(t, .2f, .8f), 2));
+            }).Holding(GhostProp.Crown, .15f, .85f),
 
             /// <summary>16b: pumps its arms in a dance, bouncing and swaying</summary>
             Clip(GhostAction.Victory, "16b", "Arm Pump Dance", 2.5f, (t, s) =>
-                P(lift: 0.12f * Bounces(Span(t, .1f, .9f), 10), roll: 6f * Wave(Span(t, .1f, .9f), 5))),
+                P(lift: 0.12f * Hops(Span(t, .1f, .9f), 5), roll: 6f * Wave(Span(t, .1f, .9f), 3),
+                    headRoll: -4f * Wave(Span(t, .13f, .93f), 3))),
 
             /// <summary>16c: spins round with its arms out wide</summary>
             Clip(GhostAction.Victory, "16c", "Arms Out Spin", 2.5f, (t, s) =>
@@ -616,11 +668,11 @@ public static class GhostMoves
 
             /// <summary>16d: raises the roof, bobbing on each push</summary>
             Clip(GhostAction.Victory, "16d", "Raise The Roof", 2.5f, (t, s) =>
-                P(lift: 0.1f * Bounces(Span(t, .15f, .8f), 4))),
+                P(lift: 0.1f * Hops(Span(t, .15f, .8f), 4))),
 
             /// <summary>17a: pounds its fists, hopping on each</summary>
             Clip(GhostAction.Tantrum, "17a", "Fist Pound", 2.5f, (t, s) =>
-                P(lift: 0.12f * Bounces(Span(t, .12f, .9f), 10))),
+                P(lift: 0.12f * Hops(Span(t, .12f, .9f), 5), pitch: 6f * Window(t, .1f, .92f, .2f, .2f))),
 
             /// <summary>17b: flops over backwards, arms splayed, and gets up</summary>
             Clip(GhostAction.Tantrum, "17b", "Flop Back", 2.5f, (t, s) =>
@@ -639,7 +691,43 @@ public static class GhostMoves
             }),
 
             /// <summary>25a: polishes the crown held out at its side (the crown: GhostProps)</summary>
-            Clip(GhostAction.CrownPolish, "25a", "Polish", 2.5f, (t, s) => GhostPose.Rest).Holding(GhostProp.CrownLeft, .15f, .78f)
+            Clip(GhostAction.CrownPolish, "25a", "Polish", 2.5f, (t, s) =>
+            {
+                // Leans and looks to its left at the crown held out there, jiggling with the rub, and settles after
+                float k = Window(t, .12f, .82f, .25f, .25f);
+                float rub = Mathf.Sin(2f * Mathf.PI * 3f * 2.5f * t) * Window(t, .25f, .75f, .25f, .25f);
+                float settle = Bump(t, .82f, .98f);
+                return P(roll: -6f * k + 1.5f * rub, headYaw: -20f * k, headPitch: 10f * k, headRoll: -6f * k,
+                    tall: 1f - 0.03f * settle);
+            }).Holding(GhostProp.CrownLeft, .15f, .78f),
+
+            // ---- A wall hit's sway (GhostAction.WallBump): short reactions, not emotes, about a second each. They turn
+            // to the side picked; PlayerEmotes plays them smaller for a softer hit (GhostEmotes.Play's strength)
+
+            /// <summary>
+            /// 26a: knocked back by the hit, squashing, then sways side to side, dying away, the head swaying a beat
+            /// behind the body
+            /// </summary>
+            new GhostMove(GhostAction.WallBump, "Wobble", 1.0f, (t, s) =>
+            {
+                float hit = Bump(t, 0f, .2f);
+                float sway = Ring(t, 1.0f, 2.2f, 3f);
+                float late = Ring(Span(t, .07f, 1f), 0.93f, 2.2f, 3f);
+                return P(roll: s * 22f * sway, headRoll: -s * 14f * late, yaw: s * 8f * sway, pitch: -10f * hit,
+                    tall: 1f - 0.1f * hit, wide: 1f + 0.1f * hit, hatTip: -10f * hit);
+            }),
+
+            /// <summary>
+            /// 26b: a bonk: the body squashes and the hat hops, then the head wobbles like a bobblehead, dying away, the
+            /// body rocking against it
+            /// </summary>
+            new GhostMove(GhostAction.WallBump, "Knocked Silly", 1.2f, (t, s) =>
+            {
+                float hit = Bump(t, 0f, .16f);
+                float wobble = Ring(t, 1.2f, 2.6f, 2.5f);
+                return P(headRoll: s * 28f * wobble, headYaw: s * 12f * Ring(t, 1.2f, 1.3f, 2.5f), roll: -s * 8f * wobble,
+                    tall: 1f - 0.12f * hit, wide: 1f + 0.1f * hit, lift: -0.1f * hit, hatLift: 0.35f * Bump(t, .02f, .3f));
+            })
         };
     }
 }

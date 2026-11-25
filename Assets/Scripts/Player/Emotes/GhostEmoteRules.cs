@@ -14,6 +14,8 @@ public static class GhostEmoteRules
             case GhostAction.JumpScare: return 70;
             case GhostAction.DeliveryFlourish:
             case GhostAction.Materialise: return 60;
+            // A wall hit cuts into a Wheee or anything lower, never a steal's, a bump's, a scare's or a delivery's
+            case GhostAction.WallBump: return 55;
             case GhostAction.Wheee: return 50;
             case GhostAction.HoldYourHat: return 40;
             case GhostAction.TreasureHold: return 30;
@@ -35,7 +37,9 @@ public static class GhostEmoteRules
             // Short ones, so a button held or mashed can't loop the same emote back to back
             case GhostAction.Taunt:
             case GhostAction.BigWave:
-            case GhostAction.Raspberry: return 1.5f;
+            case GhostAction.Raspberry:
+            // Scraping along a wall hits it again and again: one sway, not a stutter
+            case GhostAction.WallBump: return 1.5f;
             case GhostAction.Cackle:
             case GhostAction.FistShake:
             case GhostAction.DeliveryFlourish: return 2f;

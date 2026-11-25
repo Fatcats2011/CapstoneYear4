@@ -23,9 +23,11 @@ public static class TitleScreenBuilder
 
     public const string CANVAS = "Main Menu Canvas";
     public const string STAGE = "Title Stage";
-    /// <summary>The phase into the menu: the crew's rig, and its picture over the title canvas</summary>
-    public const string INTRO_RIG = "Menu Ghost Animations";
+    /// <summary>The phase into the menu: a purple wipe on its picture, over the title canvas</summary>
     public const string INTRO_PICTURE = "Menu Ghost Reveal";
+    /// <summary>The ghost crew the phase-in used to pull back to (user, 2026-11-23: removed)</summary>
+    public const string OLD_INTRO_RIG = "Menu Ghost Animations";
+    const string INTRO_WIPE = "Assets/Rendering/Shaders/MenuTransition.mat";
     public const string BACKDROP = "Title Backdrop";
     /// <summary>The first build's painted fog and floor glow, now real on the stage</summary>
     public const string FOG = "Title Fog";
@@ -67,8 +69,7 @@ public static class TitleScreenBuilder
     const string COLOURS = "Assets/Scriptable Ojects/Player Colors";
     const string COMPANIES = "Assets/Scriptable Ojects/Company Information";
 
-    // Far from the menu's world, out of every other camera's sight: behind and to one side of the intro's rig
-    // (at -1119.75, 1.69, -9.18, its cameras looking along +z), so neither films the other
+    // Far from the menu's world, out of every other camera's sight
     static readonly Vector3 StageAt = new Vector3(-1419.75f, 1.69f, -309.18f);
     // The road: across the lane from z -2.6 to 3.6, long enough to run past both edges of the screen. Its texture is
     // ROAD_TILE units long (tools/title-backdrop.py)
@@ -102,21 +103,6 @@ public static class TitleScreenBuilder
             sizeMin = 2.8f, sizeMax = 5f, lifeMin = 14f, lifeMax = 22f, driftMin = 0.25f, driftMax = 0.45f, count = 80,
             a = new Color(0.78f, 0.70f, 1f, 0.09f), b = new Color(0.60f, 0.52f, 0.90f, 0.05f),
         },
-    };
-
-    /// <summary>
-    /// The intro's crew standing on the title stage's road. Their picture is laid over the title, so they have to land
-    /// where the road shows: the rig's cameras look up past their animation by INTRO_LOOK_UP (the lead ghost, which
-    /// the animation moves, onto the road's near side), and the three still ghosts behind it stand lower than they
-    /// were posed (onto its far side). Rig-local positions
-    /// </summary>
-    const float INTRO_LOOK_UP = 6.5f;
-    static readonly System.Collections.Generic.Dictionary<string, Vector3> IntroCrewOnTheRoad =
-        new System.Collections.Generic.Dictionary<string, Vector3>
-    {
-        { "Menu Ghost 1", new Vector3(5.12f, -1.95f, 7.29f) },
-        { "Menu Ghost 2", new Vector3(3.12f, -1.62f, 7.79f) },
-        { "Menu Ghost 3", new Vector3(0.88f, -1.61f, 7.61f) },
     };
 
     /// <summary>The engine starts this long before the wiper does, and revs away as it crosses</summary>
@@ -172,7 +158,7 @@ public static class TitleScreenBuilder
         }
         foreach (GameObject root in roots)
         {
-            if (root != null && root.name == STAGE)
+            if (root != null && (root.name == STAGE || root.name == OLD_INTRO_RIG))
                 Object.DestroyImmediate(root);
         }
 
@@ -189,23 +175,19 @@ public static class TitleScreenBuilder
         for (int i = 0; i < Behind.Length; i++)
             canvas.transform.Find(Behind[i]).SetSiblingIndex(i);
 
-        // Over everything: the phase into the menu, which the scene keeps from before
+        // Over everything: the phase into the menu, a purple wipe the scene keeps from before
         Transform introPicture = canvas.transform.Find(INTRO_PICTURE);
-        GameObject introRig = roots.FirstOrDefault(r => r != null && r.name == INTRO_RIG);
-        if (introPicture == null || introRig == null)
-            throw new System.InvalidOperationException("The menu scene has lost its intro (" + INTRO_RIG + " and " + INTRO_PICTURE + ").");
+        if (introPicture == null)
+            throw new System.InvalidOperationException("The menu scene has lost its intro (" + INTRO_PICTURE + ").");
         introPicture.SetAsLastSibling();
-        introPicture.GetComponent<Graphic>().raycastTarget = false;
-        MenuGhostReveal reveal = introRig.GetComponent<MenuGhostReveal>();
-        reveal.lookUp = INTRO_LOOK_UP;
+        Image introImage = introPicture.GetComponent<Image>();
+        introImage.raycastTarget = false;
+        MenuGhostReveal reveal = introPicture.GetComponent<MenuGhostReveal>();
+        if (reveal == null)
+            reveal = introPicture.gameObject.AddComponent<MenuGhostReveal>();
+        reveal.menuGhostRevealObject = introImage;
+        reveal.menuGhostRevealMaterialReference = IntroWipe();
         EditorUtility.SetDirty(reveal);
-        foreach (var ghost in IntroCrewOnTheRoad)
-        {
-            Transform still = introRig.transform.Find(ghost.Key);
-            if (still == null)
-                throw new System.InvalidOperationException("The intro has lost " + ghost.Key + ".");
-            still.localPosition = ghost.Value;
-        }
 
         // The stage
         GameObject stageObject = new GameObject(STAGE);
@@ -243,7 +225,7 @@ public static class TitleScreenBuilder
         stage.popFont = AssetDatabase.LoadAssetAtPath<TMP_FontAsset>(FONT);
         stage.stageCamera = camera;
         stage.ghostImage = ghosts;
-        stage.intro = introRig.GetComponent<MenuGhostReveal>();
+        stage.intro = reveal;
         EditorUtility.SetDirty(stage);
 
         if (stage.avatarPrefab == null || stage.packagePrefabs.Any(p => p == null))
@@ -507,6 +489,24 @@ public static class TitleScreenBuilder
         Material picture = MaterialAt(PICTURE_MATERIAL, Shader.Find(PICTURE_SHADER));
         EditorUtility.SetDirty(picture);
         return picture;
+    }
+
+    /// <summary>
+    /// The phase-in's wipe, without the crew's cameras: their render textures were its pictures, and MenuGhostReveal
+    /// gives it a purple one of its own
+    /// </summary>
+    static Material IntroWipe()
+    {
+        Material wipe = AssetDatabase.LoadAssetAtPath<Material>(INTRO_WIPE);
+        if (wipe == null)
+            throw new System.InvalidOperationException(INTRO_WIPE + " is missing.");
+        foreach (string slot in new[] { "_MainTex", "_ColorCamera", "_BlackCamera", "_RevealColorTex" })
+        {
+            if (wipe.HasProperty(slot))
+                wipe.SetTexture(slot, null);
+        }
+        EditorUtility.SetDirty(wipe);
+        return wipe;
     }
 
     /// <summary>The golden parcel's look: gold that glows a little by itself, since the stage has no bloom</summary>

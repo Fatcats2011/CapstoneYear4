@@ -432,6 +432,26 @@ Nothing to set up: the emotes are added when players join. Play a couch match wi
 - **Decided (2026-11-20):** the d-pad emotes stay off in matches. They work in code but nothing is bound to them, by choice.
 - **Known:** Bored is mostly hidden behind the theft replay. At night the horns bloom into two bright discs that read like eyes from behind (art: cap their glow?).
 
+## 16q. Playtest fixes, 2026-11-20 (20 minutes)
+
+- **Keyboard:** in the lobby and on Dispatch, M opens and closes MATCH RULES.
+- **Dispatch:** play a match, come back: LEAVE and MATCH RULES sit side by side, with no overlap. Switch between pad and keyboard too.
+- **Boost ring:** none on the title screen ghosts, in player select or on Dispatch, and no button prompt in the scooter there. It's back in the match.
+- **No golden round** (Kings Crown, Infection, Hot Potato, or Golden Order off): the last 10 s read "Time's Up In...".
+- **Kings Crown:**
+  - The holder wears the crown on their head at hat size, in place of their hat. On the road it's big and spinning.
+  - The holder doesn't see the pillar of light; everyone else does.
+- **Hot Potato:** the fuse is 40 s. The package is smaller and lies flat.
+- **Gold Rush:** MATCH RULES' description is short and has no numbers. The Mother Lode's carrier doesn't see its pillar either.
+- **Ghosts:**
+  - A hard hit on a wall gives a short sway.
+  - A mid-air pose stops as the ghost lands.
+  - Hands stay about their size.
+  - A held golden package stays near full size.
+  - The Dispatch ghost has its eyes.
+  - Moves feel less robotic; tell me any that still look too quick or too slow.
+- **Opening cutscene:** if the clock tower still looks broken, note what you see (the hands, the bells, the camera, a freeze). In my test the hands reach midnight and the shots play.
+
 ## 16c. Accessibility: to build, then playtest
 
 For Steam's store-page accessibility section. None of these exist yet. Today Options → ACCESSIBILITY has only Reduce motion.
